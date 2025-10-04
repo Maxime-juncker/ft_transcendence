@@ -1,0 +1,21 @@
+services:
+
+  mariadb:
+    restart: always
+    build: ./requirements/mariadb/
+    container_name: SQLite
+    env_file: ./.env
+    ports:
+      - "3306:3306"
+    volumes:
+      - sqlite:/var/lib/mysql
+    networks:
+      - transcendence
+
+networks:
+  transcendence:
+    driver: bridge
+
+volumes:
+  mariadb:
+    name: sqlite
