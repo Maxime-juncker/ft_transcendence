@@ -5,7 +5,8 @@
 /* Vos styles personnalisés pour le jeu Pong */
 @layer components {
   .game-container {
-    @apply relative bg-black w-full h-screen overflow-hidden;
+    /* @apply relative bg-black w-full h-screen overflow-hidden; */
+	@apply w-[40vw] aspect-[4/3] bg-black border-4 border-white relative;
   }
   
   .paddle {
