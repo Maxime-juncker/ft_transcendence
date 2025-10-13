@@ -2,4 +2,10 @@
 
 sqlite3 /var/lib/sqlite/app.db < /db.sql
 
-exec php-fpm83 --nodaemonize
+cd /var/www/server
+
+npm init -y
+npm install fastify
+node server.ts
+
+tail -f
