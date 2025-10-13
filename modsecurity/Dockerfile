@@ -38,8 +38,10 @@ FROM alpine:3.20 AS prod
 COPY --from=dev /usr/local/modsecurity /usr/local/modsecurity
 COPY --from=dev /coreruleset /usr/local/owasp-modsecurity-crs
 COPY --from=dev /nginx-1.26.3/objs/ngx_http_modsecurity_module.so /usr/lib/nginx/modules/
+COPY --from=dev /ModSecurity/unicode.mapping /etc/nginx/modsec/
 
 COPY conf/nginx/ /etc/nginx/
+COPY conf/modsec/ /etc/nginx/modsec/
 
 RUN apk update			&& \
 	apk add  --no-cache 	\
