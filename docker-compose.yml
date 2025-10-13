@@ -5,13 +5,10 @@ services:
     build: ./backend/
     container_name: backend
     env_file: ./.env
-    ports:
-      - "3309:3309"
-      - "9000:9000"
     volumes:
       - sqlite:/var/lib/sqlite
     networks:
-      - transcendence
+      - backend
 
   frontend:
     restart: always
@@ -24,10 +21,12 @@ services:
       - front_data:/var/www/html
     networks:
       - transcendence
+      - backend
 
 networks:
   transcendence:
     driver: bridge
+  backend:
 
 volumes:
   sqlite:
