@@ -5,6 +5,8 @@ services:
     build: ./backend/
     container_name: backend
     env_file: ./.env
+    ports:
+      - "3000:3000"
     volumes:
       - sqlite:/var/lib/sqlite
     networks:
@@ -27,6 +29,7 @@ networks:
   transcendence:
     driver: bridge
   backend:
+    driver: bridge
 
 volumes:
   sqlite:
