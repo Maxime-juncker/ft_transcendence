@@ -17,12 +17,22 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 	-days 365 \
 	-subj "$SUBJ"
 
-
 cd /var/www/html
 npm init -y
 npm install -D tailwindcss@3 postcss autoprefixer
 npx tailwindcss init -p
 
-npx tailwindcss -i ./css/input.css -o ./css/styles/output.css
+cat << EOF > ./tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./index.html"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+EOF
+
+npx tailwindcss -i ./css/input.css -o ./css/output.css
 
 exec nginx -g "daemon off;"
