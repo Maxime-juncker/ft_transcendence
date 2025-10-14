@@ -8,25 +8,26 @@ services:
     volumes:
       - sqlite:/var/lib/sqlite
     networks:
-      - backend
+      - db
 
   frontend:
     restart: always
     build: ./frontend/
     container_name: frontend
     env_file: ./.env
-    ports:
-      - "8080:8080"
+    depends_on:
+      - backend
     volumes:
       - front_data:/var/www/html
     networks:
       - transcendence
-      - backend
+      - web
 
 networks:
   transcendence:
     driver: bridge
-  backend:
+  db:
+  web:
 
 volumes:
   sqlite:
