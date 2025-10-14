@@ -1,4 +1,4 @@
 .env
-frontend/srcs/node_modules
-frontend/srcs/tailwind.config.js
-frontend/srcs/css/output.css
+node_modules/
+package-lock.json
+package.json
