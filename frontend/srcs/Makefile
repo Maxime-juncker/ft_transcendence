@@ -1,9 +1,11 @@
 
 TSC = npx tsc
 
-SRCS = test.ts
+SRCS = test.ts	\
+	   game.ts	\
+
 OBJS = $(SRCS:.ts=.js)
-OBJS_D = ts/
+OBJS_D = js/
 
 VPATH = ts
 
@@ -11,9 +13,12 @@ VPATH = ts
 all: $(OBJS)
 
 %.js: %.ts 
-	$(TSC) $<
+	$(TSC) $< --target ES2015 --outDir ./js/
 
 .PHONY: clean
 clean:
 	rm -fr $(OBJS_D)$(OBJS)
+
+.PHONY: re
+re: clean all
 

@@ -1,4 +1,4 @@
-var btn = document.getElementById("submit_btn");
+const btn = document.getElementById("submit_btn");
 if (btn) {
     btn.addEventListener('click', submit_new_user);
 }
