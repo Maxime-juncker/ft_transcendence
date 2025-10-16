@@ -23,6 +23,14 @@ class Router
 			this.showPage(page, false);
 		});
 
+		window.addEventListener('keydown', (e) =>
+		{
+			if (e.key === 'Escape' && this.currentPage === 'game')
+			{
+				this.showPage('home', false);
+			}
+		});
+
 		this.showPage(this.currentPage, false);
 	}
 

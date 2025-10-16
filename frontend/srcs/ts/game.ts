@@ -6,52 +6,85 @@ class Game
 	private static readonly PADDLE_HEIGHT: number = 20;
 	private static readonly MAX_ANGLE: number = 0.75;
 	private static readonly BASE_SPEED: number = 1.0;
+	private static readonly SPEED_INCREMENT: number = 0.0;
+	private static readonly OPACITY: string = '0.2';
 
 	private readonly leftPaddle = document.querySelector('.paddle-left') as HTMLElement;
 	private readonly rightPaddle = document.querySelector('.paddle-right') as HTMLElement;
 	private readonly ball = document.querySelector('.ball') as HTMLElement;
 	private readonly scoreLeft = document.querySelector('.score-left') as HTMLElement;
 	private readonly scoreRight = document.querySelector('.score-right') as HTMLElement;
-	private readonly pauseMessage = document.querySelector('.pause-message') as HTMLElement;
+	private readonly pauseMessage = document.querySelector('.pause-msg') as HTMLElement;
+	private readonly continueMessage = document.querySelector('.continue-msg') as HTMLElement;
+	private readonly gameContainer = document.querySelector('.game-container') as HTMLElement;
+	private readonly net = document.querySelector('.net') as HTMLElement;
 	private readonly keysPressed: Set<string> = new Set();
 
-	private keydownHandler: (event: KeyboardEvent) => void;
-	private keyupHandler: (event: KeyboardEvent) => void;
-	private leftPaddleY: number;
-	private rightPaddleY: number;
-	private ballX: number;
-	private ballY: number;
-	private ballSpeedX: number;
-	private ballSpeedY: number;
-	private totalScore: number;
-	private speed: number;
-	private pauseGame: boolean;
-	private isDestroyed: boolean;
+	private leftPaddleY: number = 50;
+	private rightPaddleY: number = 50;
+	private ballX: number = 50;
+	private ballY: number = 50;
+	private ballSpeedX: number = Math.random() < 0.5 ? 0.5 : -0.5;
+	private ballSpeedY: number = (Math.random() - 0.5) * 2;
+	private speed: number = Game.BASE_SPEED;
+	private pauseGame: boolean = false;
+	private isDestroyed: boolean = false;
+	private player1Score: number = 0;
+	private player2Score: number = 0;
+
+	public winner: number = 0;
 
 	constructor()
 	{
 		this.init();
+		this.normalizeSpeed();
 		this.setupEventListeners();
 		this.gameLoop();
 	}
 
 	private init(): void
 	{
-		this.keydownHandler = this.onKeyDown.bind(this);
-		this.keyupHandler = this.onKeyUp.bind(this);
-		this.pauseMessage.style.display = 'none';
-		this.leftPaddleY = 50;
-		this.rightPaddleY = 50;
-		this.ballX = 50;
-		this.ballY = 50;
-		this.ballSpeedX = 0.5;
-		this.ballSpeedY = 0.5;
-		this.totalScore = 0;
-		this.speed = Game.BASE_SPEED;
-		this.pauseGame = false;
-		this.isDestroyed = false;
+		this.setStyles('1');
 		this.scoreLeft.textContent = '0';
 		this.scoreRight.textContent = '0';
+		this.leftPaddle.style.top = this.leftPaddleY + '%';
+		this.rightPaddle.style.top = this.rightPaddleY + '%';
+	}
+
+	private setStyles(opacity: string): void
+	{
+		this.leftPaddle.style.opacity = opacity;
+		this.rightPaddle.style.opacity = opacity;
+		this.ball.style.opacity = opacity;
+		this.scoreLeft.style.opacity = opacity;
+		this.scoreRight.style.opacity = opacity;
+		this.net.style.display = opacity === '1' ? 'block' : 'none';
+		this.gameContainer.style.borderColor = 'rgba(255, 255, 255, ' + opacity + ')';
+		this.pauseMessage.style.display = opacity === '1' ? 'none' : 'block';
+		this.continueMessage.style.display = opacity === '1' ? 'none' : 'block';
+	}
+
+	private normalizeAngle(paddleY: number, mult: number): void
+	{
+		let relativeIntersectY = (this.ballY - paddleY) / (Game.PADDLE_HEIGHT / 2);
+		let newAngleY = relativeIntersectY * Game.MAX_ANGLE;
+
+		this.ballSpeedX = mult * Math.abs(this.ballSpeedX);
+		this.ballSpeedY = newAngleY;
+
+		let currentSpeed = Math.sqrt(this.ballSpeedX * this.ballSpeedX + this.ballSpeedY * this.ballSpeedY);
+		this.ballSpeedX = (this.ballSpeedX / currentSpeed) * this.speed;
+		this.ballSpeedY = (this.ballSpeedY / currentSpeed) * this.speed;
+	}
+
+	private normalizeSpeed(): void
+	{
+		let currentSpeed = Math.sqrt(this.ballSpeedX * this.ballSpeedX + this.ballSpeedY * this.ballSpeedY);
+		if (currentSpeed > 0)
+		{
+			this.ballSpeedX = (this.ballSpeedX / currentSpeed) * this.speed;
+			this.ballSpeedY = (this.ballSpeedY / currentSpeed) * this.speed;
+		}
 	}
 
 	private moveBall(): void
@@ -60,7 +93,7 @@ class Game
 		this.ballY += this.ballSpeedY;
 
 		// wall collision
-		if (this.ballY <= 0 || this.ballY >= 100)
+		if (this.ballY <= 2 || this.ballY >= 98)
 		{
 			this.ballSpeedY = -this.ballSpeedY;
 		}
@@ -68,47 +101,45 @@ class Game
 		// paddle collision
 		if (this.ballX <= 5 && this.ballY >= this.leftPaddleY - (Game.PADDLE_HEIGHT / 2) && this.ballY <= this.leftPaddleY + (Game.PADDLE_HEIGHT / 2))
 		{
-			this.speed += 0.08;
-			let relativeIntersectY = (this.ballY - this.leftPaddleY) / (Game.PADDLE_HEIGHT / 2);
-			let newAngleY = relativeIntersectY * Game.MAX_ANGLE;
-
-			this.ballSpeedX = Math.abs(this.ballSpeedX);
-			this.ballSpeedY = newAngleY;
-
-			let currentSpeed = Math.sqrt(this.ballSpeedX * this.ballSpeedX + this.ballSpeedY * this.ballSpeedY);
-			this.ballSpeedX = (this.ballSpeedX / currentSpeed) * this.speed;
-			this.ballSpeedY = (this.ballSpeedY / currentSpeed) * this.speed;
+			this.speed += Game.SPEED_INCREMENT;
+			this.normalizeAngle(this.leftPaddleY, 1);
 		}
 		else if (this.ballX >= 95 && this.ballY >= this.rightPaddleY - (Game.PADDLE_HEIGHT / 2) && this.ballY <= this.rightPaddleY + (Game.PADDLE_HEIGHT / 2))
 		{
-			this.speed += 0.08;
-			let relativeIntersectY = (this.ballY - this.rightPaddleY) / (Game.PADDLE_HEIGHT / 2);
-			let newAngleY = relativeIntersectY * Game.MAX_ANGLE;
-			
-			this.ballSpeedX = -Math.abs(this.ballSpeedX);
-			this.ballSpeedY = newAngleY;
-			
-			let currentSpeed = Math.sqrt(this.ballSpeedX * this.ballSpeedX + this.ballSpeedY * this.ballSpeedY);
-			this.ballSpeedX = (this.ballSpeedX / currentSpeed) * this.speed;
-			this.ballSpeedY = (this.ballSpeedY / currentSpeed) * this.speed;
+			this.speed += Game.SPEED_INCREMENT;
+			this.normalizeAngle(this.rightPaddleY, -1);
 		}
 
 		// goal !!
 		if (this.ballX < 0 || this.ballX > 100)
 		{
-			if (this.ballX < 0)
+			if (this.ballX > 100)
 			{
-				this.scoreRight.textContent = (parseInt(this.scoreRight.textContent || '0') + 1).toString();
+				this.player1Score++;
+				this.scoreLeft.textContent = this.player1Score.toString();
+				if (this.player1Score >= 5)
+				{
+					this.winner = 1;
+					this.destroy();
+				}
 			}
 			else
 			{
-				this.scoreLeft.textContent = (parseInt(this.scoreLeft.textContent || '0') + 1).toString();
+				this.player2Score++;
+				this.scoreRight.textContent = this.player2Score.toString();
+				if (this.player2Score >= 5)
+				{
+					this.winner = 2;
+					this.destroy();
+				}
 			}
+
 			this.speed = Game.BASE_SPEED;
-			this.totalScore++;
-			this.ballSpeedX = (this.totalScore % 2 === 0) ? 0.5 : -0.5;
+			this.ballSpeedX = Math.random() < 0.5 ? 0.5 : -0.5;
+			this.ballSpeedY = (Math.random() - 0.5) * 2;
+			this.normalizeSpeed();
 			this.ballX = 50;
-			this.ballY = Math.random() * 100;
+			this.ballY = 50;
 		}
 
 		this.ball.style.left = this.ballX + '%';
@@ -141,38 +172,15 @@ class Game
 
 	private gameLoop = (): void =>
 	{
-		if (this.isDestroyed)
+		if (!this.isDestroyed)
 		{
-			return ;
-		}
-		else if (!this.pauseGame)
-		{
-			this.moveBall();
-			this.movePaddle();
-		}
-		requestAnimationFrame(this.gameLoop);
-	}
-
-	private onKeyDown(event: KeyboardEvent): void
-	{
-		this.keysPressed.add(event.key);
-		if (event.key === 'p' || event.key === 'P' || event.key === ' ')
-		{
-			this.pauseGame = !this.pauseGame;
-			if (this.pauseGame)
+			if (!this.pauseGame)
 			{
-				this.pauseMessage.style.display = 'block';
+				this.moveBall();
+				this.movePaddle();
 			}
-			else
-			{
-				this.pauseMessage.style.display = 'none';
-			}
+			requestAnimationFrame(this.gameLoop);
 		}
-	}
-
-	private onKeyUp(event: KeyboardEvent): void
-	{
-		this.keysPressed.delete(event.key);
 	}
 
 	private setupEventListeners(): void
@@ -180,17 +188,10 @@ class Game
 		document.addEventListener('keydown', (event: KeyboardEvent): void =>
 		{
 			this.keysPressed.add(event.key);
-			if (event.key === 'p' || event.key === 'P' || event.key === ' ')
+			if (event.key === ' ')
 			{
 				this.pauseGame = !this.pauseGame;
-				if (this.pauseGame)
-				{
-					this.pauseMessage.style.display = 'block';
-				}
-				else
-				{
-					this.pauseMessage.style.display = 'none';
-				}
+				this.setStyles(this.pauseGame ? Game.OPACITY : '1');
 			}
 		});
 
