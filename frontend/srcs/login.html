@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>ft_trancendence: login</title>
+	<link href="https://fonts.cdnfonts.com/css/jetbrains-mono" rel="stylesheet">
 </head>
 <body class="test">
 
@@ -24,24 +25,58 @@
 
 	<h3 id="placeholder">placeholder</h3>
 
-	<div>
+	<div id="user1" class="user-container">
+		<image id="user-pp"/>
+		<div style="display: flex; flex-direction: column; justify-content: left;">
+			<h2>USERNAME</h2>
+			<p>500elo</p>
+		</div>
+		<button type="reset">logout</button>
+	</div>
+
+	<div style="margin-top: 50px;">
 		<p>&lt;debug box&gt;</p>
 		<div id="debug-box" class="debug-box">
 		</div>
 	</div>
 </body>
 
+
 <style>
+	img {
+		width: 128px;
+		height: 128px;
+		object-fit: cover;
+		background-color: whitesmoke;
+		border-radius: 50%;
+	}
 	.test
 	{
-		background-color: black;
+		font-family: 'JetBrains Mono', monospace;
+		background-color: #151515;
 		color: white;
+	}
+
+	.user-container
+	{
+		padding: 20px;
+		width:350px;
+
+		border:1px solid #ccc;
+		overflow:auto;
+		gap: 10px;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
 	}
 
 	.debug-box
 	{
 		height:250px;
 		width:1200px;
+
+		padding-inline: 10px;
 		border:1px solid #ccc;
 		overflow:auto;
 
@@ -56,5 +91,6 @@
 	}
 </style>
 
-	<script type="text/javascript" src="ts/login.js"></script>
+	<script>var exports = {};</script>
+	<script type="module" src="./dist/login.js"></script>
 </html>

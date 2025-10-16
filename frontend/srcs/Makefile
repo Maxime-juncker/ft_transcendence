@@ -1,19 +1,18 @@
+TSC = npx tsc -p tsconfig.json
 
-TSC = npx tsc
+SRCS =	login.ts User.ts \
 
-SRCS = login.ts
 OBJS = $(SRCS:.ts=.js)
-OBJS_D = ts/
-
-VPATH = ts
+OBJS_D = dist/
 
 .PHONY: all
-all: $(OBJS)
-
-%.js: %.ts 
-	$(TSC) $<
+all: 
+	$(TSC)
 
 .PHONY: clean
 clean:
-	rm -fr $(OBJS_D)$(OBJS)
+	rm -fr $(OBJS_D)
+
+.PHONY: re
+re: clean all
 

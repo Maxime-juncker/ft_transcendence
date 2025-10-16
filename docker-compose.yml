@@ -19,8 +19,6 @@ services:
     env_file: ./.env
     ports:
       - "8443:443"
-    volumes:
-      - front_data:/var/www/html
     networks:
       - transcendence
       - backend
