@@ -2,19 +2,31 @@ import { User } from './User.js';
 
 var user:User = null;
 
-const create_btn = document.getElementById("create_btn");
-if (create_btn)
-	create_btn.addEventListener('click', submit_new_user);
-else
-	console.error("no submit btn found !");
+document.getElementById("create_btn")?.addEventListener("click", submit_new_user);
+document.getElementById("login_btn")?.addEventListener('click', login);
+document.getElementById("logout_btn")?.addEventListener("click", logout);
+document.getElementById("avatar_upload_btn")?.addEventListener("click", upload_avatar);
 
+async function upload_avatar()
+{
+	if (!user)
+	{
+		setPlaceholderTxt("you need to login first");
+		return ;
+	}
 
-const login_btn = document.getElementById("login_btn");
-if (login_btn)
-	login_btn.addEventListener('click', login);
-else
-	console.error("no submit btn found !");
+	var fileInput = document.getElementById("avatar_input") as HTMLInputElement;
+	if (!fileInput)
+	{
+		console.error("no avatar_upload elt found");
+		return ;
+	}
 
+	const data = await user.setAvatar(fileInput.files[0]);
+	console.warn(user);
+	updateUser(user, document.getElementById("user1"));
+	// addLog(data.status, data.message)
+}
 
 // Todo: change using sha256
 function hash_string(name: string)
@@ -62,26 +74,41 @@ function updateUser(user:User, elt:HTMLElement)
 	var username = elt.children[1].children[0] as HTMLElement;
 	var elo = elt.children[1].children[1] as HTMLElement;
 
-	console.log(img);
-	console.log(username);
-	console.log(elo);
-	if (img)
-		img.src = user.pp_path;
-	if (username)
+	if (!img || !username || !elo)
+	{
+		console.error("can't find elt to update user");
+		return;
+	}
+
+	if (user)
+	{
+		img.src = user.getAvatarPath();
 		username.innerText = user.name;
-	if (elo)
 		elo.innerText = "500";
+	}
+	else
+	{
+		img.src = "";
+		username.innerText = "guest";
+		elo.innerText = "0";
+	}
 }
 
 
-function setUser(data)
+function setUser(data:any)
 {
+	if (!data) // logout
+	{
+		updateUser(null, document.getElementById("user1"));
+		return ;
+	}
+
 	var parsed = JSON.parse(data);
 	console.log(data);
 
-	user = new User(parsed.name, parsed.email);
-	user.pp_path = parsed.profile_picture;
+	user = new User(parsed.id, parsed.name, parsed.email, parsed.profile_picture);
 	updateUser(user, document.getElementById("user1"));
+
 	console.warn(user);
 }
 
@@ -151,4 +178,11 @@ async function login()
 
 	addLog(response.status, jsonString);
 
+}
+
+function logout()
+{
+	addLog(200, "user has logout");
+	setUser(null);
+	user = null;
 }

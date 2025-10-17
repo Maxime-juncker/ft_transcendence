@@ -31,7 +31,11 @@
 			<h2>USERNAME</h2>
 			<p>500elo</p>
 		</div>
-		<button type="reset">logout</button>
+		<button id="logout_btn">logout</button>
+		<div style="display: flex; flex-direction: column; justify-content: center; border: 1px solid #ccc; padding: 10px">
+			<input type="file" id="avatar_input" accept="image/png, image/jpeg" />
+			<button id="avatar_upload_btn">send</button>
+		</div>
 	</div>
 
 	<div style="margin-top: 50px;">
@@ -60,7 +64,6 @@
 	.user-container
 	{
 		padding: 20px;
-		width:350px;
 
 		border:1px solid #ccc;
 		overflow:auto;

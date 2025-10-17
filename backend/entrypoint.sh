@@ -5,9 +5,10 @@ sqlite3 /var/lib/sqlite/app.sqlite < /db.sql
 cd /var/www/server
 
 npm init -y
-npm install fastify typescript @types/node sqlite3 sqlite undici
+npm install fastify typescript @types/node sqlite3 sqlite undici @fastify/multipart @fastify/static sharp file-type
 
-make re
+npx tsc
 
-node js/server.js
+exec node ./dist/server.js
+# tail -f
 

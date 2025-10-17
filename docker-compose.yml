@@ -1,7 +1,7 @@
 services:
 
   backend:
-    # restart: always
+    restart: always
     build: ./backend/
     container_name: backend
     env_file: ./.env
@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     volumes:
       - sqlite:/var/lib/sqlite
+      - avatars:/var/www/avatars
     networks:
       - backend
 
@@ -36,3 +37,5 @@ volumes:
     name: sqlite
   front_data:
     name: front_data
+  avatars:
+    name: avatars

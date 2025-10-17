@@ -1,10 +1,21 @@
-const Fastify = require('fastify')
-const sqlite  = require('sqlite3');
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
+import fs from 'fs';
+import path from 'path';
+
+import Fastify from 'fastify';
+import type { FastifyRequest } from 'fastify';
+import fastifyStatic from '@fastify/static';
+import sqlite3 from 'sqlite3';
+
+const uploadDir : string = "/var/www/avatars/"
 
 const fastify = Fastify({ logger: true })
 
+await fastify.register(import('@fastify/multipart'));
+
 // setup db
-const db = new sqlite.Database('/var/lib/sqlite/app.sqlite', sqlite.OPEN_READWRITE, (err) => {
+const db = new sqlite3.Database('/var/lib/sqlite/app.sqlite', sqlite3.OPEN_READWRITE, (err) => {
 	if (err) {
 		return console.error('Failed to connect:', err.message);
 	}
@@ -72,6 +83,51 @@ fastify.post('/api/create_user', (request:any, reply:any) => {
 		}
 	})
 })
+
+fastify.post('/api/upload/avatar', async (request, reply) => {
+
+	const data = await request.file();
+	if (!data)
+		return reply.code(400).send({ error: "no file uploaded" });
+
+	const filename = data.filename;
+	const filepath = path.join(uploadDir, filename);
+    const id = request.headers['id'] as string;
+	console.log(`id: ${id}`);
+
+	try
+	{
+		await pipeline(data.file, createWriteStream(filepath));
+
+		db.run("UPDATE users SET profile_picture = ? WHERE id = ?", ["/api/images/" + filename , id], function(err) {
+			if (err) {
+				// handle the error
+			}
+			console.log(`Rows updated: ${this.changes}`);
+		});
+
+		return {
+			Success:	true,
+			filename:	filename,
+			mimetype:	data.mimetype,
+			encoding:	data.encoding,
+			path:		filepath
+		};
+	}
+	catch (error)
+	{
+		fastify.log.error(error);
+		return reply.code(500).send({ error: "failed to upload file" });
+
+	}
+})
+
+
+fastify.register(fastifyStatic, {
+  root: uploadDir,
+  prefix: '/api/images/' // URL prefix
+});
+
 
 const start = async () => {
 	try {

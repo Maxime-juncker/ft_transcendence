@@ -10,5 +10,6 @@ COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 COPY src/ /var/www/server
+COPY package.json /var/www/server/package.json
 
 CMD ["bash", "/entrypoint.sh"] 

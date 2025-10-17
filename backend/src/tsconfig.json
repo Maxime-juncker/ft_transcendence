@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "module": "esnext",
-    "target": "es6",
+	"module": "es2022",
+	"target": "es2017",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": ["node"]
+    "types": ["node"],
+    "outDir": "./dist",
   },
-  "include": ["src/**/*"],
+  "include": ["ts/**/*"],
   "exclude": ["node_modules"]
 }
