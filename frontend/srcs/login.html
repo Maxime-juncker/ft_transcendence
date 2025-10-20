@@ -1,27 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>ft_trancendence: login</title>
-</head>
-<body class="test">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>ft_trancendence: login</title>
+		<link href="https://fonts.cdnfonts.com/css/jetbrains-mono" rel="stylesheet">
+	</head>
+	<body class="test">
 
-	<h1>Ft_trancendence login</h1>
-	<input id="email" type="email" placeholder="email">
-	<input id="passw" type="password" placeholder="password">
-	<input id="username" type="text" placeholder="username">
+		<h1>create new user</h1>
+		<div>
+			<input id="create_email" type="email" placeholder="email">
+			<input id="create_passw" type="password" placeholder="password">
+			<input id="create_username" type="text" placeholder="username">
 
-	<button id="submit_btn" type="submit">submit</button>
-</body>
+			<button id="create_btn" type="submit">submit</button>
+		</div>
+		<h1>login</h1>
+		<div>
+			<input id="login_email" type="email" placeholder="email">
+			<input id="login_passw" type="password" placeholder="password">
+			<button id="login_btn" type="submit">submit</button>
+		</div>
 
-<style>
+		<h3 id="placeholder">placeholder</h3>
+
+		<div id="user1" class="user-container">
+			<image id="user-pp"/>
+			<div style="display: flex; flex-direction: column; justify-content: left;">
+				<h2>USERNAME</h2>
+				<p>500elo</p>
+			</div>
+			<button id="logout_btn">logout</button>
+			<div style="display: flex; flex-direction: column; justify-content: center; border: 1px solid #ccc; padding: 10px">
+				<input type="file" id="avatar_input" accept="image/png, image/jpeg" />
+				<button id="avatar_upload_btn">send</button>
+			</div>
+			<div class="friend-menu" style="border: solid 1px #ccc;">
+				<h1>add friend</h1>
+				<input id="add_friend_input" placeholder="enter name"/>
+				<button id="add_friend_btn">send invite</button>
+			</div>
+
+			<div>
+				<h1>friend req</h1>
+				<div class="friend-req">
+					<div class="request">
+						<p>name</p>
+						<button>accpet</button>
+					</div>
+
+					<div class="request">
+						<p>name</p>
+						<button>accpet</button>
+					</div>
+
+					<div class="request">
+						<p>name</p>
+						<button>accpet</button>
+					</div>
+
+					<div class="request">
+						<p>name</p>
+						<button>accpet</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div style="margin-top: 50px;">
+			<p>&lt;debug box&gt;</p>
+			<div id="debug-box" class="debug-box">
+			</div>
+		</div>
+	</body>
+
+
+	<style>
+	img {
+		width: 128px;
+		height: 128px;
+		object-fit: cover;
+		background-color: whitesmoke;
+		border-radius: 50%;
+	}
 	.test
 	{
-		background-color: black;
+		font-family: 'JetBrains Mono', monospace;
+		background-color: #151515;
 		color: white;
 	}
-</style>
 
-	<script type="text/javascript" src="ts/test.js"></script>
+	.user-container
+	{
+		padding: 20px;
+
+		border:1px solid #ccc;
+		overflow:auto;
+		gap: 10px;
+
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+	}
+
+	.debug-box
+	{
+		height:250px;
+		width:1200px;
+
+		padding-inline: 10px;
+		border:1px solid #ccc;
+		overflow:auto;
+
+		display: flex;
+		flex-direction: column;
+
+	}
+
+	.debug-text
+	{
+		margin: 5px;
+	}
+
+	.friend-req
+	{
+		border: solid 1px #ccc;
+		padding: 10px;
+		overflow: auto;
+		height: 50px;
+
+	}
+	.request
+	{
+		height: 20px;
+		align-items: center;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	</style>
+
+	<script>var exports = {};</script>
+	<script type="module" src="./dist/login.js"></script>
 </html>

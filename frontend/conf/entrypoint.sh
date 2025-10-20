@@ -20,7 +20,7 @@ openssl req -x509 -nodes -newkey rsa:2048 \
 cd /var/www/html
 
 npm init -y
-npm install -D tailwindcss@3 postcss autoprefixer
+npm install -D tailwindcss@3 postcss autoprefixer typescript
 cat << EOF > tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default { content: ["index.html"], theme: { extend: {}, }, plugins: [], }

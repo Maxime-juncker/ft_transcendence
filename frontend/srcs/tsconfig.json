@@ -1,13 +1,15 @@
 {
-	"compilerOptions":
-	{
-		"target": "ES2015",
-		"lib": ["ES2015", "DOM"],
-		"outDir": "js",
-		"rootDir": "ts",
-		"strict": false
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "ESNext",
+    "strict": false,
+	"moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "skipLibCheck": true
 	},
-
-	"include": [ "ts/**/*.ts" ],
-	"exclude": [ "../../node_modules" ]
+  "include": ["ts/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
+
