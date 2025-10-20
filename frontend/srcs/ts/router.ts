@@ -69,7 +69,7 @@ class Router
 		}
 		if (page === 'game')
 		{
-			this.gameInstance = new Game();
+			this.gameInstance = new GameClient();
 		}
 	}
 };
@@ -78,7 +78,7 @@ const router = new Router();
 
 document.getElementById('1player')?.addEventListener('click', () =>
 {
-	// TODO: AI mode
+	router.navigateTo('game', { mode: 1 });
 });
 
 document.getElementById('2player')?.addEventListener('click', () =>
