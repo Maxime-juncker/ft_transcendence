@@ -25,49 +25,45 @@
 
 		<h3 id="placeholder">placeholder</h3>
 
-		<div id="user1" class="user-container">
-			<image id="user-pp"/>
-			<div style="display: flex; flex-direction: column; justify-content: left;">
-				<h2>USERNAME</h2>
-				<p>500elo</p>
-			</div>
-			<button id="logout_btn">logout</button>
-			<div style="display: flex; flex-direction: column; justify-content: center; border: 1px solid #ccc; padding: 10px">
-				<input type="file" id="avatar_input" accept="image/png, image/jpeg" />
-				<button id="avatar_upload_btn">send</button>
-			</div>
-			<div class="friend-menu" style="border: solid 1px #ccc;">
-				<h1>add friend</h1>
-				<input id="add_friend_input" placeholder="enter name"/>
-				<button id="add_friend_btn">send invite</button>
-			</div>
+		<div id="user-list">
+		</div>
 
-			<div>
-				<h1>friend req</h1>
-				<div class="friend-req">
-					<div class="request">
-						<p>name</p>
-						<button>accpet</button>
-					</div>
+		<button id="logout_btn">logout</button>
+		<div style="display: flex; flex-direction: column; justify-content: center; border: 1px solid #ccc; padding: 10px">
+			<input type="file" id="avatar_input" accept="image/png, image/jpeg" />
+			<button id="avatar_upload_btn">send</button>
+		</div>
+		<div class="friend-menu" style="border: solid 1px #ccc;">
+			<h1>add friend</h1>
+			<input id="add_friend_input" placeholder="enter name"/>
+			<button id="add_friend_btn">send invite</button>
+		</div>
 
-					<div class="request">
-						<p>name</p>
-						<button>accpet</button>
-					</div>
+		<div>
+			<h1>friend req</h1>
+			<div class="friend-req">
+				<div class="request">
+					<p>name</p>
+					<button>accpet</button>
+				</div>
 
-					<div class="request">
-						<p>name</p>
-						<button>accpet</button>
-					</div>
+				<div class="request">
+					<p>name</p>
+					<button>accpet</button>
+				</div>
 
-					<div class="request">
-						<p>name</p>
-						<button>accpet</button>
-					</div>
+				<div class="request">
+					<p>name</p>
+					<button>accpet</button>
+				</div>
+
+				<div class="request">
+					<p>name</p>
+					<button>accpet</button>
 				</div>
 			</div>
-
 		</div>
+
 
 		<div style="margin-top: 50px;">
 			<p>&lt;debug box&gt;</p>
@@ -78,9 +74,10 @@
 
 
 	<style>
-	img {
-		width: 128px;
-		height: 128px;
+	.user-avatar
+	{
+		width: 52px;
+		height: 52px;
 		object-fit: cover;
 		background-color: whitesmoke;
 		border-radius: 50%;
@@ -94,7 +91,8 @@
 
 	.user-container
 	{
-		padding: 20px;
+		width: 150px;
+		heigh: 20px;
 
 		border:1px solid #ccc;
 		overflow:auto;
@@ -103,6 +101,7 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+		align-items: center;
 	}
 
 	.debug-box

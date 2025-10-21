@@ -1,10 +1,9 @@
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
-import fs from 'fs';
 import path from 'path';
 
-import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import Fastify from "fastify";
 
 import sqlite3 from 'sqlite3';
 
@@ -54,6 +53,7 @@ function dbPost(sql:string, arg:any) : number
 	return 200;
 }
 
+
 fastify.post('/api/add_friend', (request:any, reply:any) => {
 
 	const { user_id, friend_name } = request.body;
@@ -90,9 +90,39 @@ fastify.post('/api/login', (request:any, reply:any) => {
 			reply.code(200).send(row);
 		}
 	})
-
 })
 
+interface GetProfileQuerystring {
+	profile_name: string;
+}
+
+fastify.route<{
+	Querystring: GetProfileQuerystring
+}>({
+	method: 'GET',
+	url: '/api/get_profile',
+	schema: {
+		querystring: {
+			type: 'object',
+			properties: {
+				profile_name: { type: 'string' }
+			},
+			required: ['profile_name']
+		}
+	},
+	handler: (request, reply) => {
+		const { profile_name }  = request.query;
+		const sql = 'SELECT id, name, profile_picture FROM users WHERE name = ?';
+		db.get(sql, [profile_name], function (err: any, row: any) {
+			if (err)
+				return reply.code(500).send({ message: `database error: ${err.message}` });
+			else if (!row)
+				return reply.code(404).send({ message: "profile not found" });
+			else
+				return reply.code(200).send(row);
+		})
+	}
+})
 fastify.post('/api/create_user', (request:any, reply:any) => {
 	const { email, passw, username } = request.body;
 	const sql = 'INSERT INTO users (name, email, passw, profile_picture) VALUES (?, ?, ?, ?)';

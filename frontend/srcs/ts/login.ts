@@ -1,4 +1,4 @@
-import { User } from './User.js';
+import { User, UserElement } from './User.js';
 
 var user:User = null;
 
@@ -7,6 +7,15 @@ document.getElementById("login_btn")?.addEventListener('click', login);
 document.getElementById("logout_btn")?.addEventListener("click", logout);
 document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
 document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
+document.getElementById("test-btn")?.addEventListener("click", test);
+
+const main_user_elt:UserElement = new UserElement(user, document.body);
+
+async function test()
+{
+	const parent = document.getElementById("user-list") as HTMLElement;
+	const elt:UserElement = new UserElement(user, parent);
+}
 
 async function sendFriendInvite()
 {
@@ -17,7 +26,17 @@ async function sendFriendInvite()
 		return ;
 	}
 
-	
+	const params = { profile_name: inviteInput.value };
+	const queryString = new URLSearchParams(params).toString();
+	const response = await fetch(`/api/get_profile?${queryString}`);
+	const data = await response.json();
+    console.log(data);
+
+
+	const newuser = new User(data.id, data.name, "", data.profile_picture);
+	const parent = document.getElementById("user-list") as HTMLElement;
+	const elt:UserElement = new UserElement(newuser, parent);
+
 }
 
 async function uploadAvatar()
@@ -36,7 +55,7 @@ async function uploadAvatar()
 	}
 
 	await user.setAvatar(fileInput.files[0]);
-	updateUser(user, document.getElementById("user1"));
+	main_user_elt.updateHtml(user);
 }
 
 // Todo: change using sha256
@@ -79,39 +98,12 @@ function addLog(code:number, msg:string)
 	parent.prepend(child);
 }
 
-function updateUser(user:User, elt:HTMLElement)
-{
-	var img = elt.children[0] as HTMLImageElement;
-	var username = elt.children[1].children[0] as HTMLElement;
-	var elo = elt.children[1].children[1] as HTMLElement;
-
-	if (!img || !username || !elo)
-	{
-		console.error("can't find elt to update user");
-		return;
-	}
-
-	if (user)
-	{
-		img.src = user.getAvatarPath();
-		username.innerText = user.name;
-		elo.innerText = "500";
-	}
-	else
-	{
-		img.src = "";
-		username.innerText = "guest";
-		elo.innerText = "0";
-	}
-}
-
-
 // TODO: set user status based on login / logout
 function setUser(data:any)
 {
 	if (!data) // logout
 	{
-		updateUser(null, document.getElementById("user1"));
+		main_user_elt.updateHtml(user);
 		return ;
 	}
 
@@ -119,8 +111,7 @@ function setUser(data:any)
 	console.log(data);
 
 	user = new User(parsed.id, parsed.name, parsed.email, parsed.profile_picture);
-	updateUser(user, document.getElementById("user1"));
-
+	main_user_elt.updateHtml(user);
 }
 
 async function submitNewUser()
@@ -143,7 +134,7 @@ async function submitNewUser()
 	const data = await response.json();
 
 	const jsonString: string = JSON.stringify(data);
-	if (response.status == 201)
+	if (response.status == 200)
 		setPlaceholderTxt("user created");
 	else if (response.status == 403)
 		setPlaceholderTxt("email invalid");
@@ -193,6 +184,6 @@ async function login()
 function logout()
 {
 	addLog(200, "user has logout");
-	setUser(null);
 	user = null;
+	setUser(null);
 }
