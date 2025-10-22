@@ -1,3 +1,26 @@
+import { hashString } from './sha256.js'
+
+async function getUserInfoFromId(id:string) : Promise<Response>
+{
+	const params = { user_id: id };
+	const queryString = new URLSearchParams(params).toString();
+	var response = await fetch(`/api/get_profile_id?${queryString}`);
+
+	return response;
+}
+
+async function getUserFromId(id:string) : Promise<User>
+{
+	const response = await getUserInfoFromId(id);
+	if (response.status != 200)
+		return null
+	
+	const data = await response.json();
+	var user = new User();
+	user.setUser(data.id, data.name, "", data.profile_picture);
+	return user;
+}
+
 export class User
 {
 	/* public vars */
@@ -11,8 +34,24 @@ export class User
 	
 	private m_friends:		User[];
 
+	constructor()
+	{
+		this.m_id = -1;
+		this.name = "";
+		this.m_email = "";
+		this.m_avatarPath = ""; // TODO: change with default img path
+	}
 
-	constructor(id:number, name:string, email:string, avatar: string)
+	public async getUserFromId(id:string) : Promise<Response>
+	{
+		const params = { user_id: id };
+		const queryString = new URLSearchParams(params).toString();
+		var response = await fetch(`/api/get_profile_id?${queryString}`);
+
+		return response;
+	}
+
+	public setUser(id:number, name:string, email:string, avatar: string)
 	{
 		this.m_id = id;
 		this.name = name;
@@ -20,19 +59,64 @@ export class User
 		this.m_avatarPath = avatar;
 	}
 
-	public addFriend(friend:User)
+	public async updateFriendList() : Promise<number>
 	{
-		if (!friend)
+		this.m_friends = [];
+
+		const params = { user_id: this.getId().toString() };
+		const queryString = new URLSearchParams(params).toString();
+		var response = await fetch(`/api/get_friends?${queryString}`);
+		var data = await response.json();
+
+		for (let i = 0; i < data.length; i++)
 		{
-			console.error("friend is null");
-			return ;
+			const element = data[i];
+
+			var id = element.user_id == this.getId() ? element.friend_id : element.user_id;
+			this.m_friends.push(await getUserFromId(id));
+			// const parent = document.getElementById("user-list") as HTMLElement;
+			// const elt:UserElement = new UserElement(await getUserFromId(id), parent, UserElementType.FRIEND);
 		}
-		this.m_friends.push(friend);
+		return 0;
+	}
+
+	public async updateSelf() : Promise<number>
+	{
+		if (this.getId() == -1)
+			return 1;
+		var response = await getUserInfoFromId(this.getId().toString());
+		if (response.status != 200)
+			return response.status;
+		var data = await response.json();
+		this.name = data.name;
+		this.m_avatarPath = data.profile_picture;
+		// TODO: add/update status here
+
+		this.updateFriendList();
+
+		return response.status;
 	}
 
 	public getFriends() : User[]
 	{
 		return this.m_friends;
+	}
+
+	protected async addFriendToDB(friend_name: string) : Promise<number>
+	{
+		var response = await fetch("/api/add_friend", {
+			method: "POST",
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+				friend_name: friend_name
+			})
+		});
+		var data = await response.json();
+		console.log(data.id);
+		return response.status;
 	}
 
 	public getId() : number
@@ -45,7 +129,7 @@ export class User
 		return this.m_avatarPath + "?" + new Date().getTime();
 	}
 
-	public async setAvatar(file:File) : Promise<any>
+	public async uploadAvatar(file:File) : Promise<any>
 	{
 		const formData = new FormData();
 		if (!file)
@@ -82,8 +166,6 @@ export enum UserElementType
 
 export class UserElement
 {
-	private	m_user:				User;
-
 	private m_htmlAvatar:		HTMLImageElement;
 	private m_htmlName:			HTMLElement;
 	private m_htmlContainer:	HTMLElement;
@@ -95,8 +177,6 @@ export class UserElement
 
 	constructor(user:User, parent:HTMLElement, type:UserElementType)
 	{
-		this.m_user = user;
-
 		this.m_htmlContainer = document.createElement("div");
 		this.m_htmlContainer.className = "user-container";
 
@@ -124,6 +204,10 @@ export class UserElement
 		this.updateHtml(user);
 	}
 
+	public getLogoutBtn() :		HTMLButtonElement { return this.m_htmlLogoutBtn; }
+	public getSettingsBtn() :	HTMLButtonElement { return this.m_htmlSettingsBtn; }
+	public getFriendBtn() :		HTMLButtonElement { return this.m_htmlFriendBtn; }
+
 
 	public setType(type: UserElementType)
 	{
@@ -141,7 +225,6 @@ export class UserElement
 
 	public updateHtml(user:User) : void
 	{
-		this.m_user = user;
 		if (!user)
 		{
 			this.m_htmlAvatar.src = ""; // TODO: add default avatar
@@ -151,5 +234,90 @@ export class UserElement
 
 		this.m_htmlAvatar.src = user.getAvatarPath();
 		this.m_htmlName.innerText = user.name;
+	}
+}
+
+// TODO: handle user status (un)available / buzy / etc...
+export class MainUser extends User
+{
+	private	m_htmlFriendContainer:		HTMLElement;
+
+	private	m_userElement:				UserElement;
+	private m_friendsElement:			Map<User, UserElement>;
+
+	constructor(parent:HTMLElement, friendsContainer:HTMLElement)
+	{
+		super()
+		this.m_htmlFriendContainer = friendsContainer;
+		this.m_userElement = new UserElement(null, parent, UserElementType.MAIN);
+		this.m_friendsElement = new Map<User, UserElement>();
+
+		this.m_userElement.getLogoutBtn().addEventListener("click", (e) => this.logout());
+	}
+
+	public async login(email:string, passw:string) : Promise<{status: number, data:any }>
+	{
+		if (this.getId() != -1)
+			return { status: -1, data: null };
+
+		const response = await fetch("/api/login", {
+			method: "POST",
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				email: email,
+				passw: hashString(passw),
+			})
+		});
+		const data = await response.json();
+
+		if (response.status == 200)
+		{
+			this.setUser(data.id, data.name, data.email, data.profile_picture);
+			this.m_userElement.updateHtml(this);
+		}
+
+		return { status: response.status, data: data };
+	}
+
+	public logout()
+	{
+		this.setUser(-1, "", "", "");
+		this.m_userElement.updateHtml(null);
+		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
+	}
+
+	public async setAvatar(file: File) : Promise<number> // TODO: check si multipart upload ok
+	{
+		if (this.getId() == -1 || !file)
+			return 1;
+
+		await this.uploadAvatar(file);
+		this.m_userElement.updateHtml(this);
+
+		return 0;
+	}
+
+	// TODO: marche pas
+	public async updateFriendContainer()
+	{
+		await this.updateSelf();
+
+		for (let i = 0; i < this.getFriends().length; i++)
+		{
+			const elt:UserElement = new UserElement(this.getFriends[i], this.m_htmlFriendContainer, UserElementType.FRIEND);
+		}
+	}
+
+	public async addFriend(friend_name: string) : Promise<number>
+	{
+		if (!friend_name || friend_name == "")
+			return 1;
+
+		const status = await this.addFriendToDB(friend_name);
+		this.updateSelf();
+
+		return status;
 	}
 }
