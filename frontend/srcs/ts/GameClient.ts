@@ -8,7 +8,6 @@ export class GameClient
 
 	constructor()
 	{
-		console.log('GameClient initialized');
 		this.initElements();
 		this.setStyles();
 		this.setOpacity('1');
@@ -23,7 +22,6 @@ export class GameClient
 			const response = await fetch('http://localhost:3000/create-game', { method: 'POST' });
 			const data = await response.json();
 			this.gameId = data.gameId;
-			console.log('Game created:', this.gameId);
 		}
 		catch (error)
 		{
@@ -39,7 +37,7 @@ export class GameClient
 			{
 				const response = await fetch(`http://localhost:3000/game-state/${this.gameId}`);
 				const gameState = await response.json();
-				this.updateDisplay(gameState);
+				this.updateDisplay(gameState.state);
 			}
 			catch (error)
 			{
@@ -55,13 +53,8 @@ export class GameClient
 			await fetch(`http://localhost:3000/game-action/${this.gameId}`,
 			{
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					type: type,
-					key: key
-				})
+				headers: { 'Content-Type': 'application/json', },
+				body: JSON.stringify({ type: type, key: key })
 			});
 		}
 		catch (error)
@@ -72,16 +65,17 @@ export class GameClient
 
 	private updateDisplay(gameState: any): void
 	{
-		this.HTMLelements.leftPaddle.style.top = gameState.state.leftPaddleY + '%';
-		this.HTMLelements.rightPaddle.style.top = gameState.state.rightPaddleY + '%';
-		this.HTMLelements.ball.style.left = gameState.state.ballX + '%';
-		this.HTMLelements.ball.style.top = gameState.state.ballY + '%';
-		this.HTMLelements.scoreLeft.textContent = gameState.state.player1Score.toString();
-		this.HTMLelements.scoreRight.textContent = gameState.state.player2Score.toString();
+		this.HTMLelements.leftPaddle.style.top = gameState.leftPaddleY + '%';
+		this.HTMLelements.rightPaddle.style.top = gameState.rightPaddleY + '%';
+		this.HTMLelements.ball.style.left = gameState.ballX + '%';
+		this.HTMLelements.ball.style.top = gameState.ballY + '%';
+		this.HTMLelements.scoreLeft.textContent = gameState.player1Score.toString();
+		this.HTMLelements.scoreRight.textContent = gameState.player2Score.toString();
 
-		if (gameState.state.end)
+		if (gameState.end)
 		{
-			this.showWinner(gameState.state.player1Score > gameState.state.player2Score ? 1 : 2);
+			this.showWinner(gameState.player1Score > gameState.player2Score ? 1 : 2);
+			this.stopPolling();
 		}
 	}
 
@@ -99,10 +93,15 @@ export class GameClient
 
 	private startPolling(): void
 	{
-		this.pollingInterval = setInterval(() =>
+		this.pollingInterval = setInterval(() => { this.fetchGameState(); }, 16);
+	}
+
+	private stopPolling(): void
+	{
+		if (this.pollingInterval)
 		{
-			this.fetchGameState();
-		}, 100);
+			clearInterval(this.pollingInterval);
+		}
 	}
 
 	private launchCountdown(): void
@@ -126,7 +125,6 @@ export class GameClient
 				this.HTMLelements.countdownElement.style.display = 'none';
 				this.setupEventListeners();
 				this.startPolling();
-				this.gameLoop();
 			}
 		}, 1000);
 	}
@@ -147,19 +145,10 @@ export class GameClient
 		{
 			clearInterval(this.pollingInterval);
 		}
-		
+
 		document.removeEventListener('keydown', this.keydownHandler);
 		document.removeEventListener('keyup', this.keyupHandler);
 		this.keysPressed.clear();
-	}
-
-	private gameLoop = (): void =>
-	{
-		// if (!this.fetchGameState)
-		{
-			this.updateDisplay(this.fetchGameState);
-			requestAnimationFrame(this.gameLoop);
-		}
 	}
 
 	private initElements(): void
@@ -208,7 +197,6 @@ export class GameClient
 		this.HTMLelements.rightPaddle.style.top = '50%';
 		this.HTMLelements.rightPaddle.style.transform = 'translateY(-50%)';
 
-		// ✅ STYLES DE LA BALLE
 		this.HTMLelements.ball.style.width = '2%';
 		this.HTMLelements.ball.style.height = '2%';
 		this.HTMLelements.ball.style.background = 'white';
@@ -217,6 +205,7 @@ export class GameClient
 		this.HTMLelements.ball.style.top = '50%';
 		this.HTMLelements.ball.style.transform = 'translate(-50%, -50%)';
 		this.HTMLelements.ball.style.borderRadius = '50%';
+		this.HTMLelements.ball.style.setProperty('aspect-ratio', '1 / 1');
 	}
 
 	private setOpacity(opacity: string): void

@@ -1,12 +1,12 @@
-import { GameClient } from './game.js';
+import { GameClient } from './GameClient.js';
 
-class Router
+export class Router
 {
 	private static readonly EXIT_KEY: string = 'Escape';
 
-	currentPage: string;
+	currentPage: string = 'home';
 	pages: Map<string, HTMLDivElement> = new Map();
-	gameInstance: GameClient | null;
+	gameInstance: GameClient | null = null;
 
 	constructor()
 	{
@@ -27,8 +27,6 @@ class Router
 				this.pages.set(pageName, element);
 			}
 		});
-
-		this.currentPage = 'home';
 	}
 
 	private setupEventListeners(): void
@@ -64,7 +62,6 @@ class Router
 	private showPage(page: string)
 	{
 		this.clearPages();
-
 		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
 

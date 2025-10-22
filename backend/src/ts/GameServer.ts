@@ -1,4 +1,4 @@
-import { fastify, FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 
 class GameInstance
@@ -16,10 +16,10 @@ class GameInstance
 	private static readonly MIN_X_BALL: number = GameInstance.PADDLE_PADDING + GameInstance.PADDLE_WIDTH + GameInstance.MIN_Y_BALL;
 	private static readonly MAX_X_BALL: number = 100 - GameInstance.MIN_X_BALL;
 	private static readonly MAX_ANGLE: number = 0.75;
-	private static readonly SPEED: number = 1.0;
+	private static readonly SPEED: number = 0.5;
 	private static readonly SPEED_INCREMENT: number = 0.0;
 	private static readonly POINTS_TO_WIN: number = 2;
-	private static readonly PLAYER1_UP_KEY: string = 'w';
+	private static readonly PLAYER1_UP_KEY: string = 'z';
 	private static readonly PLAYER1_DOWN_KEY: string = 's';
 	private static readonly PLAYER2_UP_KEY: string = 'ArrowUp';
 	private static readonly PLAYER2_DOWN_KEY: string = 'ArrowDown';
@@ -28,9 +28,11 @@ class GameInstance
 
 	/* GAME STATE */
 	private keysPressed: Set<string> = new Set();
-	private currentGameState: string = '';
+	private speed: number = GameInstance.SPEED;
+	private ballSpeedX: number = (Math.random() < 0.5) ? 0.5 : -0.5;
+	private ballSpeedY: number = (Math.random() - 0.5) * 2;
 
-	gameState: any = 
+	gameState: any =
 	{
 		leftPaddleY: 50,
 		rightPaddleY: 50,
@@ -38,15 +40,21 @@ class GameInstance
 		ballY: 50,
 		player1Score: 0,
 		player2Score: 0,
-		speed: GameInstance.SPEED,
+		pause: false,
 		end: false,
-		ballSpeedX: (Math.random() < 0.5) ? 0.5 : -0.5,
-		ballSpeedY: (Math.random() - 0.5) * 2,
 	};
 
 	constructor()
 	{
+		this.normalizeSpeed();
 		this.gameLoop();
+	}
+
+	private normalizeSpeed(): void
+	{
+		let currentSpeed = Math.sqrt(this.ballSpeedX * this.ballSpeedX + this.ballSpeedY * this.ballSpeedY);
+		this.ballSpeedX = (this.ballSpeedX / currentSpeed) * this.speed;
+		this.ballSpeedY = (this.ballSpeedY / currentSpeed) * this.speed;
 	}
 
 	private gameLoop = (): void =>
@@ -55,53 +63,16 @@ class GameInstance
 		{
 			if (!this.gameState.end)
 			{
-				this.movePaddle();
 				this.moveBall();
-				this.broadcastGameState();
+				this.movePaddle();
 			}
 		}, GameInstance.FRAME_TIME);
 	}
 
-	private broadcastGameState(): void
-	{
-		this.currentGameState = JSON.stringify(
-		{
-			type: 'gameState',
-			state: this.gameState,
-		});
-	}
-
-	public getCurrentGameState(): any
-	{
-		return {
-			type: 'gameState',
-			state: this.gameState,
-		};
-	}
-
-	public handleAction(body: any): void
-	{
-		if (body.type === 'keydown')
-		{
-			this.keysPressed.add(body.key);
-		}
-		else if (body.type === 'keyup')
-		{
-			this.keysPressed.delete(body.key);
-		}
-	}
-
-	private normalizeSpeed(): void
-	{
-		let currentSpeed = Math.sqrt(this.gameState.ballSpeedX * this.gameState.ballSpeedX + this.gameState.ballSpeedY * this.gameState.ballSpeedY);
-		this.gameState.ballSpeedX = (this.gameState.ballSpeedX / currentSpeed) * this.gameState.speed;
-		this.gameState.ballSpeedY = (this.gameState.ballSpeedY / currentSpeed) * this.gameState.speed;
-	}
-
 	private moveBall(): void
 	{
-		this.gameState.ballX += this.gameState.ballSpeedX;
-		this.gameState.ballY += this.gameState.ballSpeedY;
+		this.gameState.ballX += this.ballSpeedX;
+		this.gameState.ballY += this.ballSpeedY;
 
 		if (this.goal())
 		{
@@ -110,7 +81,7 @@ class GameInstance
 		}
 		else if (this.collideWall())
 		{
-			this.gameState.ballSpeedY = -this.gameState.ballSpeedY;
+			this.ballSpeedY = -this.ballSpeedY;
 			this.normalizeSpeed();
 		}
 		else if (this.collidePaddleLeft())
@@ -134,12 +105,12 @@ class GameInstance
 		if (player === 1)
 		{
 			this.gameState.player1Score = newScore;
-			this.gameState.ballSpeedX = 0.5;
+			this.ballSpeedX = 0.5;
 		}
 		else
 		{
 			this.gameState.player2Score = newScore;
-			this.gameState.ballSpeedX = -0.5;
+			this.ballSpeedX = -0.5;
 		}
 
 		if (newScore >= GameInstance.POINTS_TO_WIN)
@@ -150,11 +121,16 @@ class GameInstance
 
 	private resetBall(): void
 	{
-		this.gameState.speed = GameInstance.SPEED;
-		this.gameState.ballSpeedY = (Math.random() - 0.5) * 2;
+		this.speed = GameInstance.SPEED;
+		this.ballSpeedY = (Math.random() - 0.5) * 2;
 		this.normalizeSpeed();
 		this.gameState.ballX = 50;
 		this.gameState.ballY = 50;
+	}
+
+	private collideWall(): boolean
+	{
+		return (this.gameState.ballY <= GameInstance.MIN_Y_BALL || this.gameState.ballY >= GameInstance.MAX_Y_BALL);
 	}
 
 	private collidePaddleLeft(): boolean
@@ -173,15 +149,10 @@ class GameInstance
 
 	private bounce(paddleY: number, mult: number): void
 	{
-		this.gameState.speed += GameInstance.SPEED_INCREMENT;
-		this.gameState.ballSpeedX = mult * Math.abs(this.gameState.ballSpeedX);
-		this.gameState.ballSpeedY = (this.gameState.ballY - paddleY) / GameInstance.MIN_Y_PADDLE * GameInstance.MAX_ANGLE;
+		this.speed += GameInstance.SPEED_INCREMENT;
+		this.ballSpeedX = mult * Math.abs(this.ballSpeedX);
+		this.ballSpeedY = (this.gameState.ballY - paddleY) / GameInstance.MIN_Y_PADDLE * GameInstance.MAX_ANGLE;
 		this.normalizeSpeed();
-	}
-
-	private collideWall(): boolean
-	{
-		return (this.gameState.ballY <= GameInstance.MIN_Y_BALL || this.gameState.ballY >= GameInstance.MAX_Y_BALL);
 	}
 
 	private movePaddle(): void
@@ -203,12 +174,32 @@ class GameInstance
 			this.gameState.rightPaddleY = Math.min(GameInstance.MAX_Y_PADDLE, this.gameState.rightPaddleY + GameInstance.PADDLE_SPEED);
 		}
 	}
+
+	public getCurrentGameState(): any
+	{
+		return {
+			type: 'gameState',
+			state: this.gameState,
+		};
+	}
+
+	public handleKeyPress(body: any): void
+	{
+		if (body.type === 'keydown')
+		{
+			this.keysPressed.add(body.key);
+		}
+		else if (body.type === 'keyup')
+		{
+			this.keysPressed.delete(body.key);
+		}
+	}
 }
 
-class GameServer
+export class GameServer
 {
 	private activeGames: Map<string, GameInstance> = new Map();
-	private server: FastifyInstance;
+	private server!: FastifyInstance;
 
 	constructor()
 	{
@@ -217,7 +208,7 @@ class GameServer
 
 	private async start(): Promise<void>
 	{
-		this.server = fastify();
+		this.server = Fastify();
 
 		try
 		{
@@ -233,25 +224,51 @@ class GameServer
 	{
 		await this.server.register(cors, { origin: true });
 
+		// this.server.post('/game-start/:gameId', (request, reply) =>
+		// {
+		// 	const { gameId } = request.params as any;
+		// 	const game = this.activeGames.get(gameId);
+
+		// 	if (game)
+		// 	{
+		// 		reply.send( { success: true } );
+		// 	}
+		// });
+
+		// this.server.get('/game-state/:gameId', (request, reply) =>
+		// {
+		// 	const { gameId } = request.params as any;
+		// 	const game = this.activeGames.get(gameId);
+
+		// 	if (game)
+		// 	{
+		// 		reply.send(game.getCurrentGameState());
+		// 	}
+		// 	else
+		// 	{
+		// 		reply.status(404).send( { error: 'Game not found' } );
+		// 	}
+		// });
+
 		this.server.post('/create-game', (request, reply) =>
 		{
 			const gameId = this.generateGameId();
 			this.activeGames.set(gameId, new GameInstance());
-			reply.send({ gameId: gameId });
+			reply.send( { gameId: gameId } );
 		});
 
 		this.server.get('/game-state/:gameId', (request, reply) =>
 		{
 			const { gameId } = request.params as any;
 			const game = this.activeGames.get(gameId);
-			
+
 			if (game)
 			{
 				reply.send(game.getCurrentGameState());
 			}
 			else
 			{
-				reply.status(404).send({ error: 'Game not found' });
+				reply.status(404).send( { error: 'Game not found' } );
 			}
 		});
 
@@ -260,11 +277,11 @@ class GameServer
 			const { gameId } = request.params as any;
 			const body = request.body as any;
 			const game = this.activeGames.get(gameId);
-			
+
 			if (game)
 			{
-				game.handleAction(body);
-				reply.send({ success: true });
+				game.handleKeyPress(body);
+				reply.send( { success: true } );
 			}
 			else
 			{
@@ -275,10 +292,10 @@ class GameServer
 		this.server.get('/active-games', (request, reply) =>
 		{
 			const games = Array.from(this.activeGames.keys());
-			reply.send({ games: games });
+			reply.send( { games: games } );
 		});
 
-		await this.server.listen({ port: 3000, host: '0.0.0.0' });
+		await this.server.listen( { port: 3000, host: '0.0.0.0' } );
 	}
 
 	private generateGameId(): string
@@ -286,5 +303,3 @@ class GameServer
 		return Math.random().toString(36).substring(2, 8);
 	}
 }
-
-new GameServer();
