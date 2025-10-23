@@ -10,15 +10,16 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS friends (
-	user_id			INTEGER NOT NULL,
-	friend_id		INTEGER NOT NULL,
+	user1_id		INTEGER NOT NULL,
+	user2_id		INTEGER NOT NULL,
+
 	is_accepted		INTEGER NOT NULL,
 
-    PRIMARY KEY (user_id, friend_id) ,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (friend_id) REFERENCES users(id),
+    PRIMARY KEY (user1_id, user2_id) ,
+    FOREIGN KEY (user1_id) REFERENCES users(id),
+    FOREIGN KEY (user2_id) REFERENCES users(id),
 
-	CHECK(user_id < friend_id)
+	CHECK(user1_id < user2_id)
 );
 
 CREATE TABLE IF NOT EXISTS game_result (

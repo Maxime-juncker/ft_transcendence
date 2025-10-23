@@ -36,22 +36,27 @@ function validate_email(email:string)
     );
 }
 
-function dbPost(sql:string, arg:any) : number
-{
-	db.run(sql, arg, function (err:any) {
+fastify.delete('/api/remove_friend/:user1/:user2', (request, reply) => {
+	var { user1, user2 } = request.params as {
+		user1: number,
+		user2: number
+	};
+
+	if (user1 > user2)
+	{
+		const tmp = user1;
+		user1 = user2;
+		user2 = tmp;
+	}
+
+	const sql = "DELETE from friends WHERE user1_id = ? and user2_id = ?";
+	db.run(sql, [user1.toString(), user2.toString()], function(err) {
 		if (err)
-		{
-			console.error('Insert error:', err);
-			return 500;
-		}
+			return reply.code(500).send({ message: `database error: ${err}` });
 		else
-		{
-			console.log(`Inserted row with id ${this.lastID}`);
-			return 200;
-		}
+			return reply.code(200).send({ message: `friend removed` });
 	})
-	return 200;
-}
+})
 
 fastify.post('/api/add_friend', (request:any, reply:any) => {
 
@@ -79,13 +84,20 @@ fastify.post('/api/add_friend', (request:any, reply:any) => {
 
 			console.log(user_id);
 			console.log(friend_id);
-			sql = 'INSERT INTO friends (user_id, friend_id, is_accepted) VALUES (?, ?, ?)';
+			sql = 'INSERT INTO friends (user1_id, user2_id, is_accepted) VALUES (?, ?, ?)';
 
-			const code = dbPost(sql, [user_id, friend_id, "0"]);
-			if (code == 500)
-				return reply.code(500).send({ message: `database error` })
-			else
-				return reply.code(200).send({ message: `Success`});
+			db.run(sql, [user_id, friend_id, false], function (err:any) {
+				if (err)
+				{
+					console.error('Insert error:', err);
+					return reply.code(500).send({ message: "database error" });
+				}
+				else
+				{
+					console.log(`Inserted row with id ${this.lastID}`);
+					return reply.code(200).send({ message: "success" });
+				}
+			})
 		}
 	});
 
@@ -128,7 +140,7 @@ fastify.get<{ Querystring: { user_id: string } }>
 	handler: (request, reply) =>
 	{
 		const { user_id } = request.query;
-		const sql = "select * FROM friends where user_id = ? or friend_id = ?;";
+		const sql = "select * FROM friends where user1_id = ? or user2_id = ?;";
 		
 		db.all(sql, [user_id, user_id], function(err, rows) {
 			if (err)
@@ -200,16 +212,20 @@ fastify.post('/api/create_user', (request:any, reply:any) => {
 	const sql = 'INSERT INTO users (name, email, passw, profile_picture) VALUES (?, ?, ?, ?)';
 
 	if (!validate_email(email))
-	{
-		reply.code(403).send({ message: "error: email not valid" });
-		return ;
-	}
+		return reply.code(403).send({ message: "error: email not valid" });
 
-	const code = dbPost(sql, [username, email, passw, ""]);
-	if (code == 500)
-		return reply.code(500).send({ message: `database error`});
-	else
-		reply.code(200).send({ message: `Success`});
+	db.run(sql, [username, email, passw, ""], function (err:any) {
+		if (err)
+		{
+			console.error('Insert error:', err);
+			return reply.code(500).send({ message: `database error ${err}`});;
+		}
+		else
+		{
+			console.log(`Inserted row with id ${this.lastID}`);
+			return reply.code(500).send({ message: `Success`});;
+		}
+	})
 })
 
 function hash_string(name: string)

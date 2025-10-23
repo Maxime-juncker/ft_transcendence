@@ -12,8 +12,18 @@ var user:MainUser = new MainUser(document.body, document.getElementById("user-li
 async function sendFriendInvite()
 {
 	var inviteInput = document.getElementById("add_friend_input") as HTMLInputElement;
-	user.addFriend(inviteInput.value);
-	// getFriends();
+	var status = await user.addFriend(inviteInput.value);
+	if (status == 1)
+		addLog(500, "some field are empty");
+	else if (status == 2)
+		addLog(500, "please login to add friends")
+	else if (status == 200)
+		addLog(status, "friend request sent!");
+	else if (status == 404)
+		addLog(status, "user profile not found!");
+	else
+		addLog(status, "database error!");
+	
 }
 
 async function uploadAvatar()
@@ -66,6 +76,12 @@ async function submitNewUser()
 	var		passw = (<HTMLInputElement>document.getElementById("create_passw")).value;
 	var		username = (<HTMLInputElement>document.getElementById("create_username")).value;
 
+	if (email == "" || passw == "" || username == "")
+	{
+		addLog(500, "some field are empty");
+		return ;
+	}
+
 	const response = await fetch("/api/create_user", {
 		method: "POST",
 		headers: {
@@ -80,14 +96,13 @@ async function submitNewUser()
 	const data = await response.json();
 
 	const jsonString: string = JSON.stringify(data);
+	addLog(response.status, jsonString);
 	if (response.status == 200)
 		setPlaceholderTxt("user created");
 	else if (response.status == 403)
 		setPlaceholderTxt("email invalid");
 	else 
 		setPlaceholderTxt("database error");
-
-	addLog(response.status, jsonString);
 }
 
 async function login()
@@ -103,12 +118,12 @@ async function login()
 	}
 
 	const jsonString: string = JSON.stringify(data);
+	addLog(status, jsonString);
 	if (status == 404)
 		setPlaceholderTxt("passw or email invalid");
 	else if (status == 500) 
 		setPlaceholderTxt("database error");
 	else if (status == 200)
 		setPlaceholderTxt("connected !");
-	addLog(status, jsonString);
 }
 

@@ -72,10 +72,8 @@ export class User
 		{
 			const element = data[i];
 
-			var id = element.user_id == this.getId() ? element.friend_id : element.user_id;
+			var id = element.user1_id == this.getId() ? element.user2_id : element.user1_id;
 			this.m_friends.push(await getUserFromId(id));
-			// const parent = document.getElementById("user-list") as HTMLElement;
-			// const elt:UserElement = new UserElement(await getUserFromId(id), parent, UserElementType.FRIEND);
 		}
 		return 0;
 	}
@@ -92,7 +90,7 @@ export class User
 		this.m_avatarPath = data.profile_picture;
 		// TODO: add/update status here
 
-		this.updateFriendList();
+		await this.updateFriendList();
 
 		return response.status;
 	}
@@ -115,7 +113,6 @@ export class User
 			})
 		});
 		var data = await response.json();
-		console.log(data.id);
 		return response.status;
 	}
 
@@ -148,7 +145,6 @@ export class User
 			
 		});
 		var data = await response.json();
-		console.log(data);
 
 		this.m_avatarPath = "/api/images/" + data.filename;
 
@@ -276,6 +272,7 @@ export class MainUser extends User
 		{
 			this.setUser(data.id, data.name, data.email, data.profile_picture);
 			this.m_userElement.updateHtml(this);
+			this.updateFriendContainer();
 		}
 
 		return { status: response.status, data: data };
@@ -299,14 +296,30 @@ export class MainUser extends User
 		return 0;
 	}
 
-	// TODO: marche pas
+	public async removeFriends(user: User) : Promise<Response>
+	{
+		const url = `/api/remove_friend/${this.getId()}/${user.getId()}`;
+		const response = await fetch(url, { method: "DELETE" });
+
+		await this.updateSelf();
+		await this.updateFriendContainer();
+
+		return response;
+	}
+
 	public async updateFriendContainer()
 	{
+		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
 		await this.updateSelf();
+		var friends = this.getFriends();
 
-		for (let i = 0; i < this.getFriends().length; i++)
+		for (let i = 0; i < friends.length; i++)
 		{
-			const elt:UserElement = new UserElement(this.getFriends[i], this.m_htmlFriendContainer, UserElementType.FRIEND);
+			const elt:UserElement = new UserElement(friends[i], this.m_htmlFriendContainer, UserElementType.FRIEND);
+			this.m_friendsElement.set(friends[i], elt);
+			elt.getFriendBtn().addEventListener('click', () => {
+				this.removeFriends(friends[i]);
+			})
 		}
 	}
 
@@ -314,9 +327,12 @@ export class MainUser extends User
 	{
 		if (!friend_name || friend_name == "")
 			return 1;
+		if (this.getId() == -1)
+			return 2;
 
 		const status = await this.addFriendToDB(friend_name);
-		this.updateSelf();
+		await this.updateSelf();
+		await this.updateFriendContainer();
 
 		return status;
 	}
