@@ -4,9 +4,10 @@ CREATE TABLE IF NOT EXISTS users (
 	email	STRING NOT NULL UNIQUE,
 	passw	STRING NOT NULL,
 
-	status			INTEGER, -- (un)avalaible - buzy - silent
-	elo				INTEGER,
-	profile_picture	STRING
+	is_login		INTEGER NOT NULL, -- is not override status
+	status			INTEGER NOT NULL, -- (un)avalaible - buzy - silent
+	elo				INTEGER NOT NULL,
+	profile_picture	STRING  NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS friends (

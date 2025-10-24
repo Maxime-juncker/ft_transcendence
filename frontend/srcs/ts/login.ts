@@ -5,6 +5,7 @@ document.getElementById("create_btn")?.addEventListener("click", submitNewUser);
 document.getElementById("login_btn")?.addEventListener('click', login);
 document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
 document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
+document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
 
 var user:MainUser = new MainUser(document.body, document.getElementById("user-list"));
 
@@ -127,3 +128,4 @@ async function login()
 		setPlaceholderTxt("connected !");
 }
 
+const intervalId = setInterval(() => user.refreshSelf(), 10000);

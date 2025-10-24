@@ -58,6 +58,17 @@ fastify.delete('/api/remove_friend/:user1/:user2', (request, reply) => {
 	})
 })
 
+fastify.post('/api/set_status', (request:any, reply:any) => {
+	const { user_id, newStatus } = request.body;
+
+	const sql = "UPDATE users SET status = ? WHERE id = ?;";
+	db.run(sql, [newStatus, user_id], function (err) {
+		if (err)
+			return reply.code(500).send({ message: "Database error" });
+		return reply.code(200).send({ message: "Success" });
+	})
+})
+
 fastify.post('/api/add_friend', (request:any, reply:any) => {
 
 	var { user_id, friend_name } = request.body;
@@ -105,7 +116,7 @@ fastify.post('/api/add_friend', (request:any, reply:any) => {
 
 fastify.post('/api/login', (request:any, reply:any) => {
 	const { email, passw } = request.body;
-	const sql = 'SELECT * FROM users WHERE email = ? AND passw = ?';
+	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
 
 	db.get(sql, [email, passw], function (err:any, row:any)
 	{
@@ -168,7 +179,7 @@ fastify.get<{ Querystring: { user_id: string } }>
 	},
 	handler: (request, reply) => {
 		const { user_id }  = request.query;
-		const sql = 'SELECT id, name, profile_picture FROM users WHERE id = ?';
+		const sql = 'SELECT id, name, profile_picture, elo, status, is_login FROM users WHERE id = ?';
 		db.get(sql, [user_id], function (err: any, row: any) {
 			if (err)
 				return reply.code(500).send({ message: `database error: ${err.message}` });
@@ -195,7 +206,7 @@ fastify.get<{ Querystring: { profile_name: string } }>
 	},
 	handler: (request, reply) => {
 		const { profile_name }  = request.query;
-		const sql = 'SELECT id, name, profile_picture FROM users WHERE name = ?';
+		const sql = 'SELECT id, name, profile_picture, elo, status, is_login FROM users WHERE name = ?';
 		db.get(sql, [profile_name], function (err: any, row: any) {
 			if (err)
 				return reply.code(500).send({ message: `database error: ${err.message}` });
@@ -207,14 +218,30 @@ fastify.get<{ Querystring: { profile_name: string } }>
 	}
 })
 
-fastify.post('/api/create_user', (request:any, reply:any) => {
+fastify.post('/api/logout_user', (request: any, reply: any) => {
+	const { user_id } = request.body;
+	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
+
+	db.run(sql, [user_id], function(err) {
+		if (err)
+		{
+			console.error(`update failed on table users: ${err}`);
+			return reply.code(500).send({ message: "Database error" });
+		}
+		return reply.code(200).send({ message: "Success" });
+	})
+
+
+})
+
+fastify.post('/api/create_user', (request: any, reply: any) => {
 	const { email, passw, username } = request.body;
-	const sql = 'INSERT INTO users (name, email, passw, profile_picture) VALUES (?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, passw, profile_picture, elo, status, is_login) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
 	if (!validate_email(email))
 		return reply.code(403).send({ message: "error: email not valid" });
 
-	db.run(sql, [username, email, passw, ""], function (err:any) {
+	db.run(sql, [username, email, passw, "", 100, 0, 0], function (err:any) {
 		if (err)
 		{
 			console.error('Insert error:', err);
@@ -223,7 +250,7 @@ fastify.post('/api/create_user', (request:any, reply:any) => {
 		else
 		{
 			console.log(`Inserted row with id ${this.lastID}`);
-			return reply.code(500).send({ message: `Success`});;
+			return reply.code(200).send({ message: `Success`});;
 		}
 	})
 })
@@ -257,8 +284,7 @@ fastify.post('/api/upload/avatar', async (request, reply) => {
 	{
 		await pipeline(data.file, createWriteStream(filepath));
 
-		db.run("UPDATE users SET profile_picture = ? WHERE id = ?", ["/api/images/" + filename , id], function(err) {
-
+		db.run("UPDATE users SET profile_picture = ? WHERE id = ?", ["/api/images/" + filename , id], function() {
 			console.log(`${email} has changed is avatar. location=${filepath}`);
 		});
 

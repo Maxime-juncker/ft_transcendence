@@ -1,4 +1,26 @@
 import { hashString } from './sha256.js'
+import { UserElement, UserElementType } from './UserElement.js';
+
+// *********************** TODO *********************** //
+// Add settings page									//
+// Add user status										//
+// friends request										//
+// view user profile									//
+// match history										//
+// stats (win loses, winrate, etc)						//
+// default avatar										//
+// unavailable not a status => to replace with is login //
+// **************************************************** //
+
+export enum UserStatus
+{
+	UNKNOW = -1,
+	UNAVAILABLE = 0,
+	AVAILABLE,			// user online
+	BUSY,				// overide IN_GAME / AVAILABLE
+	INVISIBLE,			// overide IN_GAME / AVAILABLE same ui as unavailable
+	IN_GAME,			// show when user in game
+}
 
 async function getUserInfoFromId(id:string) : Promise<Response>
 {
@@ -17,7 +39,8 @@ async function getUserFromId(id:string) : Promise<User>
 	
 	const data = await response.json();
 	var user = new User();
-	user.setUser(data.id, data.name, "", data.profile_picture);
+	var status = data.is_login ? data.status : UserStatus.UNAVAILABLE;
+	user.setUser(data.id, data.name, "", data.profile_picture, status);
 	return user;
 }
 
@@ -33,6 +56,7 @@ export class User
 	private m_avatarPath:	string;
 	
 	private m_friends:		User[];
+	private m_status:		UserStatus;
 
 	constructor()
 	{
@@ -40,6 +64,26 @@ export class User
 		this.name = "";
 		this.m_email = "";
 		this.m_avatarPath = ""; // TODO: change with default img path
+		this.m_status = UserStatus.UNKNOW;
+	}
+
+	public getStatus() : UserStatus { return this.m_status; }
+	public async setStatus(status: UserStatus) : Promise<Response>
+	{
+		this.m_status = status;
+		console.log(`settings status to: ${status}`);
+
+		var response = await fetch("/api/set_status", {
+			method: "POST",
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+				newStatus: this.m_status.toString()
+			})
+		});
+		return response;
 	}
 
 	public async getUserFromId(id:string) : Promise<Response>
@@ -51,12 +95,26 @@ export class User
 		return response;
 	}
 
-	public setUser(id:number, name:string, email:string, avatar: string)
+	public setUser(id:number, name:string, email:string, avatar: string, status: UserStatus)
 	{
 		this.m_id = id;
 		this.name = name;
 		this.m_email = email;
 		this.m_avatarPath = avatar;
+		this.m_status = status;
+	}
+
+	public async logoutDB()
+	{
+		const response = await fetch("/api/logout_user", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+			})
+		});
+		this.setUser(-1, "", "", "", UserStatus.UNKNOW);
+		return response;
 	}
 
 	public async updateFriendList() : Promise<number>
@@ -88,7 +146,7 @@ export class User
 		var data = await response.json();
 		this.name = data.name;
 		this.m_avatarPath = data.profile_picture;
-		// TODO: add/update status here
+		this.m_status = data.status;
 
 		await this.updateFriendList();
 
@@ -104,15 +162,12 @@ export class User
 	{
 		var response = await fetch("/api/add_friend", {
 			method: "POST",
-			headers: {
-				'content-type': 'application/json'
-			},
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				user_id: this.getId().toString(),
 				friend_name: friend_name
 			})
 		});
-		var data = await response.json();
 		return response.status;
 	}
 
@@ -150,88 +205,8 @@ export class User
 
 		return response;
 	}
-
 }
 
-export enum UserElementType
-{
-	MAIN = 0,
-	STANDARD,
-	FRIEND
-}
-
-export class UserElement
-{
-	private m_htmlAvatar:		HTMLImageElement;
-	private m_htmlName:			HTMLElement;
-	private m_htmlContainer:	HTMLElement;
-
-	private m_htmlBtnContainer:	HTMLElement;
-	private m_htmlLogoutBtn:	HTMLButtonElement;
-	private m_htmlSettingsBtn:	HTMLButtonElement;
-	private m_htmlFriendBtn:	HTMLButtonElement;
-
-	constructor(user:User, parent:HTMLElement, type:UserElementType)
-	{
-		this.m_htmlContainer = document.createElement("div");
-		this.m_htmlContainer.className = "user-container";
-
-		this.m_htmlAvatar = document.createElement("img");
-		this.m_htmlAvatar.className = "user-avatar";
-		this.m_htmlAvatar.id = "user-avatar";
-
-		this.m_htmlName = document.createElement("h3")
-
-		this.m_htmlBtnContainer = document.createElement("div");
-		this.m_htmlLogoutBtn = document.createElement("button");
-		this.m_htmlLogoutBtn.innerText = "logout";
-		this.m_htmlSettingsBtn = document.createElement("button");
-		this.m_htmlSettingsBtn.innerText = "settings";
-		this.m_htmlFriendBtn = document.createElement("button");
-		this.m_htmlFriendBtn.innerText = "remove";
-
-		this.m_htmlContainer.prepend(this.m_htmlBtnContainer);
-		this.m_htmlContainer.prepend(this.m_htmlName);
-		this.m_htmlContainer.prepend(this.m_htmlAvatar);
-
-		parent.prepend(this.m_htmlContainer);
-
-		this.setType(type);
-		this.updateHtml(user);
-	}
-
-	public getLogoutBtn() :		HTMLButtonElement { return this.m_htmlLogoutBtn; }
-	public getSettingsBtn() :	HTMLButtonElement { return this.m_htmlSettingsBtn; }
-	public getFriendBtn() :		HTMLButtonElement { return this.m_htmlFriendBtn; }
-
-
-	public setType(type: UserElementType)
-	{
-		switch (type) {
-			case UserElementType.MAIN:
-				this.m_htmlBtnContainer.prepend(this.m_htmlSettingsBtn);	
-				this.m_htmlBtnContainer.prepend(this.m_htmlLogoutBtn);	
-				break;
-			case UserElementType.FRIEND:
-				this.m_htmlBtnContainer.prepend(this.m_htmlFriendBtn);	
-			default:
-				break;
-		}
-	}
-
-	public updateHtml(user:User) : void
-	{
-		if (!user)
-		{
-			this.m_htmlAvatar.src = ""; // TODO: add default avatar
-			this.m_htmlName.innerText = "guest";
-			return ;
-		}
-
-		this.m_htmlAvatar.src = user.getAvatarPath();
-		this.m_htmlName.innerText = user.name;
-	}
-}
 
 // TODO: handle user status (un)available / buzy / etc...
 export class MainUser extends User
@@ -239,16 +214,51 @@ export class MainUser extends User
 	private	m_htmlFriendContainer:		HTMLElement;
 
 	private	m_userElement:				UserElement;
-	private m_friendsElement:			Map<User, UserElement>;
+	private m_friendsElement:			UserElement[];
+
+	private async updateStatus(newStatus: string, user: User, userHtml: UserElement)
+	{
+		switch (newStatus) {
+			case "available":
+				await user.setStatus(UserStatus.AVAILABLE);
+				break;
+			case "unavailable":
+				await user.setStatus(UserStatus.UNAVAILABLE);		
+				break;
+			case "busy":
+				await user.setStatus(UserStatus.BUSY);		
+				break;
+			case "in_game":
+				await user.setStatus(UserStatus.IN_GAME);		
+				break;
+			case "debug":
+				await user.setStatus(UserStatus.UNKNOW);		
+				break;
+			default:
+				await user.setStatus(UserStatus.UNKNOW);		
+				break;
+		}
+		userHtml.updateHtml(user);
+	}
 
 	constructor(parent:HTMLElement, friendsContainer:HTMLElement)
 	{
 		super()
 		this.m_htmlFriendContainer = friendsContainer;
 		this.m_userElement = new UserElement(null, parent, UserElementType.MAIN);
-		this.m_friendsElement = new Map<User, UserElement>();
+		this.m_friendsElement = [];
 
-		this.m_userElement.getLogoutBtn().addEventListener("click", (e) => this.logout());
+		this.m_userElement.getLogoutBtn().addEventListener("click", () => this.logout());
+		this.m_userElement.getStatusSelect().addEventListener("change", () => this.updateStatus(this.m_userElement.getStatusSelect().value, this, this.m_userElement));
+	}
+
+	public async refreshSelf()
+	{
+		if (this.getId() == -1)
+			return ;
+		await this.updateSelf();
+		await this.updateFriendContainer();
+		this.m_userElement.updateHtml(this);
 	}
 
 	public async login(email:string, passw:string) : Promise<{status: number, data:any }>
@@ -270,19 +280,21 @@ export class MainUser extends User
 
 		if (response.status == 200)
 		{
-			this.setUser(data.id, data.name, data.email, data.profile_picture);
-			this.m_userElement.updateHtml(this);
-			this.updateFriendContainer();
+			var status = data.is_login ? data.status : UserStatus.UNAVAILABLE;
+			this.setUser(data.id, data.name, data.email, data.profile_picture, status);
+			this.setStatus(this.getStatus());
+			await this.refreshSelf();
 		}
 
 		return { status: response.status, data: data };
 	}
 
-	public logout()
+	public async logout()
 	{
-		this.setUser(-1, "", "", "");
+		await this.logoutDB();
 		this.m_userElement.updateHtml(null);
 		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
+		this.m_friendsElement = [];
 	}
 
 	public async setAvatar(file: File) : Promise<number> // TODO: check si multipart upload ok
@@ -307,19 +319,30 @@ export class MainUser extends User
 		return response;
 	}
 
-	public async updateFriendContainer()
+	private rebuildFriendContainer(friends:any)
 	{
+		this.m_friendsElement = [];
 		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
-		await this.updateSelf();
-		var friends = this.getFriends();
-
 		for (let i = 0; i < friends.length; i++)
 		{
 			const elt:UserElement = new UserElement(friends[i], this.m_htmlFriendContainer, UserElementType.FRIEND);
-			this.m_friendsElement.set(friends[i], elt);
+			this.m_friendsElement.push(elt);
 			elt.getFriendBtn().addEventListener('click', () => {
 				this.removeFriends(friends[i]);
 			})
+		}
+	}
+
+	public async updateFriendContainer()
+	{
+		await this.updateSelf();
+		var friends = this.getFriends();
+
+		if (friends.length != this.m_friendsElement.length)
+			this.rebuildFriendContainer(friends);
+		for (let i = 0; i < friends.length; i++)
+		{
+			this.m_friendsElement[i].updateHtml(friends[i]);
 		}
 	}
 
