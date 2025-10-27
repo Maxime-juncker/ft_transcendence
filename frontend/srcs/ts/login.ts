@@ -6,6 +6,7 @@ document.getElementById("login_btn")?.addEventListener('click', login);
 document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
 document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
 document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
+document.getElementById("new_totp")?.addEventListener("click", new_totp);
 
 var user:MainUser = new MainUser(document.body, document.getElementById("user-list"));
 
@@ -110,8 +111,9 @@ async function login()
 {
 	var	emailInput = document.getElementById("login_email") as HTMLInputElement;
 	var	passwInput = document.getElementById("login_passw") as HTMLInputElement;
+	var totpInput = document.getElementById("login_totp") as HTMLInputElement;
 
-	const { status, data } = await user.login(emailInput.value, passwInput.value);
+	const { status, data } = await user.login(emailInput.value, passwInput.value, totpInput.value);
 	if (status == -1)
 	{
 		setPlaceholderTxt("please logout first.");
@@ -121,11 +123,22 @@ async function login()
 	const jsonString: string = JSON.stringify(data);
 	addLog(status, jsonString);
 	if (status == 404)
-		setPlaceholderTxt("passw or email invalid");
+		setPlaceholderTxt("passw or email or totp invalid");
 	else if (status == 500) 
 		setPlaceholderTxt("database error");
 	else if (status == 200)
 		setPlaceholderTxt("connected !");
+}
+
+async function new_totp()
+{
+	const otpauth: string = await user.newTotp();
+	if (!otpauth)
+	{
+		setPlaceholderTxt("you need to login first");
+		return ;
+	}
+	addLog(200, otpauth);
 }
 
 const intervalId = setInterval(() => user.refreshSelf(), 10000);

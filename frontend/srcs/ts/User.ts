@@ -176,6 +176,11 @@ export class User
 		return this.m_id;
 	}
 
+	public getEmail() : string
+	{
+		return this.m_email;
+	}
+
 	public getAvatarPath() : string
 	{
 		return this.m_avatarPath + "?" + new Date().getTime();
@@ -261,7 +266,7 @@ export class MainUser extends User
 		this.m_userElement.updateHtml(this);
 	}
 
-	public async login(email:string, passw:string) : Promise<{status: number, data:any }>
+	public async login(email:string, passw:string, totp:string) : Promise<{status: number, data:any }>
 	{
 		if (this.getId() != -1)
 			return { status: -1, data: null };
@@ -274,6 +279,7 @@ export class MainUser extends User
 			body: JSON.stringify({
 				email: email,
 				passw: hashString(passw),
+				totp: totp
 			})
 		});
 		const data = await response.json();
@@ -358,5 +364,25 @@ export class MainUser extends User
 		await this.updateFriendContainer();
 
 		return status;
+	}
+
+	public async newTotp() : Promise<string>
+	{
+		if (this.getId() == -1)
+			return null;
+
+		var response = await fetch("/api/totp/reset", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+			})
+			
+		});
+		var data = await response.json();
+
+		var otpauth = "otpauth://totp/Transcendence:" + this.getEmail() + "?secret=" + data.seed + "&issuer=Transcendence";
+
+		return otpauth;
 	}
 }

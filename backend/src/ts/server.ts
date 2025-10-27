@@ -5,6 +5,7 @@ import sqlite3 from 'sqlite3';
 import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar } from './users/userManagment.js';
 import { getFriends, getUserById, getUserByName } from './users/user.js';
 import { addFriend, removeFriend } from './users/friends.js';
+import { new_totp as newTotp } from './users/totp.js'
 
 /* directory of avatars */
 export const uploadDir : string = "/var/www/avatars/"
@@ -108,6 +109,10 @@ fastify.post('/api/create_user', (request: any, reply: any) => {
 
 fastify.post('/api/login', (request:any, reply:any) => {
 	return loginUser(request, reply, db);
+})
+
+fastify.post('/api/totp/reset', (request:any, reply:any) => {
+	return newTotp(request, reply, db);
 })
 
 fastify.post('/api/logout_user', (request: any, reply: any) => {

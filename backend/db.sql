@@ -1,8 +1,10 @@
 CREATE TABLE IF NOT EXISTS users (
-	id		INTEGER PRIMARY KEY AUTOINCREMENT,
-	name	STRING NOT NULL UNIQUE,
-	email	STRING NOT NULL UNIQUE,
-	passw	STRING NOT NULL,
+	id			INTEGER PRIMARY KEY AUTOINCREMENT,
+	name		STRING NOT NULL UNIQUE,
+	email		STRING NOT NULL UNIQUE,
+	passw		STRING NOT NULL,
+	totp_enable	BOOLEAN NOT NULL,
+	totp_seed	STRING NOT NULL,
 
 	is_login		INTEGER NOT NULL, -- is not override status
 	status			INTEGER NOT NULL, -- (un)avalaible - buzy - silent

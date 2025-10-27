@@ -4,6 +4,7 @@ import { createWriteStream } from 'fs';
 import path from 'path';
 
 import { uploadDir } from "../server.js";
+import { check_totp } from "./totp.js";
 
 function validate_email(email:string)
 {
@@ -29,7 +30,7 @@ function hash_string(name: string)
 
 export function login_user(request: any, reply: any, db: sqlite3.Database)
 {
-	const { email, passw } = request.body;
+	const { email, passw, totp } = request.body;
 	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
 
 	db.get(sql, [email, passw], function (err:any, row:any)
@@ -38,6 +39,8 @@ export function login_user(request: any, reply: any, db: sqlite3.Database)
 			reply.code(500).send({ message: `database error: ${err.message}` });
 		if (!row)
 			reply.code(404).send({ message: "email or password invalid" });
+		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
+			reply.code(404).send({ message: "totp invalid" });
 		else
 			reply.code(200).send(row);
 	})
@@ -46,12 +49,12 @@ export function login_user(request: any, reply: any, db: sqlite3.Database)
 export function create_user(request: any, reply: any, db: sqlite3.Database)
 {
 	const { email, passw, username } = request.body;
-	const sql = 'INSERT INTO users (name, email, passw, profile_picture, elo, status, is_login) VALUES (?, ?, ?, ?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, passw, totp_enable, totp_seed, profile_picture, elo, status, is_login) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
 	if (!validate_email(email))
 		return reply.code(403).send({ message: "error: email not valid" });
 
-	db.run(sql, [username, email, passw, "", 100, 0, 0], function (err:any) {
+	db.run(sql, [username, email, passw, false, "", "", 100, 0, 0], function (err:any) {
 		if (err)
 		{
 			console.error('Insert error:', err);
