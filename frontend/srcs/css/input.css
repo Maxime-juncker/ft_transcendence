@@ -33,4 +33,7 @@
 	.continue-msg	{ @apply centered text-[2vw] top-[70%] w-[80vw] animation }
 	.winner-msg		{ @apply centered text-[3vw] top-[40%] w-[80vw] }
 	.play-again-msg	{ @apply centered text-[2vw] top-[70%] w-[80vw] animation }
+	.player1		{ @apply absolute top-0 left-0 text-[2vw] m-[1vw]; }
+	.player2		{ @apply absolute top-0 right-0 text-[2vw] m-[1vw]; }
+	.searching-msg	{ @apply centered text-[2vw] animation }
 }

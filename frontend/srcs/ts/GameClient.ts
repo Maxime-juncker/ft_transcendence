@@ -5,9 +5,15 @@ export class GameClient
 	private countdownInterval: any | null = null;
 	private parameters: any = null;
 	private pollingInterval: any | null = null;
+	private playerName = Math.random().toString(36).substring(2, 10);
 
 	constructor(mode: string)
 	{
+		if (!mode)
+		{
+			return ;
+		}
+
 		this.initHTMLelements();
 		this.hideElements();
 		this.createGame(mode).then(() =>
@@ -40,17 +46,23 @@ export class GameClient
 		this.HTMLelements.get('continue-msg')!.style.display = 'none';
 		this.HTMLelements.get('winner-msg')!.style.display = 'none';
 		this.HTMLelements.get('play-again-msg')!.style.display = 'none';
+		this.HTMLelements.get('player1')!.textContent = this.playerName;
+		this.HTMLelements.get('player1')!.style.display = 'block';
+		this.HTMLelements.get('searching-msg')!.textContent = 'Searching for opponent...';
+		this.HTMLelements.get('searching-msg')!.style.display = 'block';
 	}
 
 	private async createGame(mode: string): Promise<void>
 	{
 		try
 		{
-			const response = await fetch('http://localhost:3000/create-game',
+			const response = await fetch('/api/create-game',
 			{
-				method: 'POST', body: JSON.stringify(
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(
 				{
-					mode: mode, playerId: Math.random().toString(36).substring(2)
+					mode: mode, playerName: this.playerName,
 				}),
 			});
 			const data = await response.json();
@@ -67,7 +79,7 @@ export class GameClient
 		this.HTMLelements.get('game')!.style.borderBlockColor = `rgba(${this.parameters.color}, ${opacity})`;
 		for (const element of this.HTMLelements.values())
 		{
-			if (element.tagName === 'DIV' && element != this.HTMLelements.get('net'))
+			if (element.tagName === 'DIV')
 			{
 				element.style.backgroundColor = `rgba(${this.parameters.color}, ${opacity})`;
 			}
@@ -93,6 +105,8 @@ export class GameClient
 		this.HTMLelements.get('paddle-right')!.style.display = 'block';
 		this.HTMLelements.get('score-left')!.style.display = 'block';
 		this.HTMLelements.get('score-right')!.style.display = 'block';
+		this.HTMLelements.get('player2')!.textContent = this.parameters.opponentName;
+		this.HTMLelements.get('searching-msg')!.style.display = 'none';
 	}
 
 	private launchCountdown(): void
@@ -125,7 +139,7 @@ export class GameClient
 
 		try
 		{
-			await fetch(`http://localhost:3000/ready/${this.parameters.gameId}`,
+			await fetch(`/api/ready/${this.parameters.gameId}`,
 			{
 				method: 'POST',
 			});
@@ -142,7 +156,7 @@ export class GameClient
 		{
 			try
 			{
-				const response = await fetch(`http://localhost:3000/game-state/${this.parameters.gameId}`);
+				const response = await fetch(`/api/game-state/${this.parameters.gameId}`);
 				const gameState = await response.json();
 				this.updateDisplay(gameState.state);
 			}
@@ -157,7 +171,7 @@ export class GameClient
 	{
 		try
 		{
-			await fetch(`http://localhost:3000/game-action/${this.parameters.gameId}`,
+			await fetch(`/api/game-action/${this.parameters.gameId}`,
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
