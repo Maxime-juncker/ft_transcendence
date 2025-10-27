@@ -12,6 +12,11 @@ services:
       - avatars:/var/www/avatars
     networks:
       - backend
+    develop:
+      watch:
+        - path: ./backend/src
+          action: rebuild
+          target: /var/www/server
 
   frontend:
     restart: always
@@ -25,6 +30,14 @@ services:
       - backend
     depends_on:
       - backend
+    develop:
+      watch:
+        - path: ./frontend/srcs
+          action: rebuild
+          target: /var/www/html
+        - path: ./frontend/conf/nginx.conf
+          action: rebuild
+          target: /etc/nginx/nginx.conf
 
 networks:
   transcendence:
