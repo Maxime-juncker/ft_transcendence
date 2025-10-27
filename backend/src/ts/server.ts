@@ -4,7 +4,7 @@ import sqlite3 from 'sqlite3';
 
 import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar } from './users/userManagment.js';
 import { getFriends, getUserById, getUserByName } from './users/user.js';
-import { addFriend, removeFriend } from './users/friends.js';
+import { addFriend, removeFriend, acceptFriend } from './users/friends.js';
 
 /* directory of avatars */
 export const uploadDir : string = "/var/www/avatars/"
@@ -36,6 +36,10 @@ fastify.register(fastifyStatic, {
 //
 fastify.delete('/api/remove_friend/:user1/:user2', (request, reply) => {
 	return removeFriend(request, reply, db);
+})
+
+fastify.post('/api/accept_friend/:user1/:user2', (request: any, reply: any) => {
+	return acceptFriend(request, reply, db);
 })
 
 fastify.post('/api/add_friend', (request:any, reply:any) => {
@@ -135,14 +139,24 @@ const start = async () => {
 	}
 }
 
+function shutdownDb()
+{
+	const sql = "UPDATE users SET is_login = 0";
+	db.run(sql, function(err: any) {
+		if (err)
+			console.error(`error on shutdown: ${err}`);
+		db.close();
+		console.log('shutdown complete, bye.');
+		process.exit(0);
+	})
+}
+
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {
 	process.on(signal, async () => {
 		console.log(`Received ${signal}, shuting down...`);
 		await fastify.close();
-		db.close();
-		console.log('shutdown complete, bye.');
-		process.exit(0);
+		shutdownDb();
 	});
 });
 

@@ -26,6 +26,7 @@ export function removeFriend(request: any, reply: any, db: sqlite3.Database)
 export function addFriend(request: any, reply: any, db: sqlite3.Database)
 {
 	var { user_id, friend_name } = request.body;
+	const sender_id = user_id;
 
 	var sql = 'SELECT id FROM users WHERE name = ?';
 	db.get(sql, [friend_name], function(err:any, row:any)
@@ -49,9 +50,9 @@ export function addFriend(request: any, reply: any, db: sqlite3.Database)
 
 			console.log(user_id);
 			console.log(friend_id);
-			sql = 'INSERT INTO friends (user1_id, user2_id, is_accepted) VALUES (?, ?, ?)';
+			sql = 'INSERT INTO friends (user1_id, user2_id, pending, sender_id) VALUES (?, ?, ?, ?)';
 
-			db.run(sql, [user_id, friend_id, false], function (err:any) {
+			db.run(sql, [user_id, friend_id, true, sender_id], function (err:any) {
 				if (err)
 				{
 					console.error('Insert error:', err);
@@ -65,4 +66,29 @@ export function addFriend(request: any, reply: any, db: sqlite3.Database)
 			})
 		}
 	});
+}
+
+export function acceptFriend(request: any, reply: any, db: sqlite3.Database)
+{
+	var { user1, user2 } = request.params as {
+		user1: number,
+		user2: number
+	};
+
+	const sender_id = user1;
+
+	if (user1 > user2)
+	{
+		const tmp = user1;
+		user1 = user2;
+		user2 = tmp;
+	}
+	var sql = 'UPDATE friends SET pending = 0 WHERE user1_id = ? AND user2_id = ? AND sender_id != ? RETURNING *';
+	db.get(sql, [user1, user2, sender_id], function(err: any, row: any) {
+		if (err)
+			return reply.code(500).send({ message: "database error" });
+		if (!row)
+			return reply.code(500).send({ message: "could not find request" });
+		return reply.code(200).send({ message: "Success" });
+	})
 }

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
 	email	STRING NOT NULL UNIQUE,
 	passw	STRING NOT NULL,
 
-	is_login		INTEGER NOT NULL, -- is not override status
+	is_login		INTEGER NOT NULL, -- if false => override status
 	status			INTEGER NOT NULL, -- (un)avalaible - buzy - silent
 	elo				INTEGER NOT NULL,
 	profile_picture	STRING  NOT NULL
@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS friends (
 	user1_id		INTEGER NOT NULL,
 	user2_id		INTEGER NOT NULL,
 
-	is_accepted		INTEGER NOT NULL,
+	pending			INTEGER NOT NULL,
+	sender_id		INTERER NOT NULL,
 
     PRIMARY KEY (user1_id, user2_id) ,
     FOREIGN KEY (user1_id) REFERENCES users(id),

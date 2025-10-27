@@ -7,7 +7,7 @@ document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAv
 document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
 document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
 
-var user:MainUser = new MainUser(document.body, document.getElementById("user-list"));
+var user:MainUser = new MainUser(document.body, document.getElementById("friends_list"), document.getElementById("friends_pndg_list"));
 
 
 async function sendFriendInvite()
@@ -128,4 +128,10 @@ async function login()
 		setPlaceholderTxt("connected !");
 }
 
-const intervalId = setInterval(() => user.refreshSelf(), 10000);
+var intervalId: any;
+try {
+	 intervalId = setInterval(() => user.refreshSelf(), 10000);
+} catch (error) {
+	console.log(error);
+	clearInterval(intervalId);
+}
