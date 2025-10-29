@@ -1,4 +1,4 @@
-import sqlite3 from "sqlite3";
+import { Database } from "sqlite";
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import path from 'path';
@@ -27,72 +27,75 @@ function hash_string(name: string)
 	return hash;
 }
 
-export function login_user(request: any, reply: any, db: sqlite3.Database)
+export async function login_user(request: any, reply: any, db: Database)
 {
 	const { email, passw } = request.body;
 	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
 
-	db.get(sql, [email, passw], function (err:any, row:any)
-	{
-		if (err)
-			reply.code(500).send({ message: `database error: ${err.message}` });
+	try {
+		const row = await db.get(sql, [email, passw]);
 		if (!row)
 			reply.code(404).send({ message: "email or password invalid" });
-		else
-			reply.code(200).send(row);
-	})
+		reply.code(200).send(row);
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return reply.code(500).send({ message: `database error ${err}` });
+	}
 }
 
-export function create_user(request: any, reply: any, db: sqlite3.Database)
+export async function create_user(request: any, reply: any, db: Database)
 {
 	const { email, passw, username } = request.body;
-	const sql = 'INSERT INTO users (name, email, passw, profile_picture, elo, status, is_login) VALUES (?, ?, ?, ?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, passw, profile_picture, status, is_login) VALUES (?, ?, ?, ?, ?, ?)';
 
 	if (!validate_email(email))
 		return reply.code(403).send({ message: "error: email not valid" });
 
-	db.run(sql, [username, email, passw, "", 100, 0, 0], function (err:any) {
-		if (err)
-		{
-			console.error('Insert error:', err);
-			return reply.code(500).send({ message: `database error ${err}`});;
-		}
-		else
-		{
-			console.log(`Inserted row with id ${this.lastID}`);
-			return reply.code(200).send({ message: `Success`});;
-		}
-	})
+	try {
+		const result = await db.run(sql, [username, email, passw, "", 0, 0]);
+		console.log(`Inserted row with id ${result.changes}`);
+		return reply.code(200).send({ message: `Success`});;
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return reply.code(500).send({ message: `database error ${err}` });
+	}
 }
 
-export function logout_user(request: any, reply:any, db: sqlite3.Database)
+export async function logout_user(request: any, reply:any, db: Database)
 {
 	const { user_id } = request.body;
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
 
-	db.run(sql, [user_id], function(err) {
-		if (err)
-		{
-			console.error(`update failed on table users: ${err}`);
-			return reply.code(500).send({ message: "Database error" });
-		}
+	try {
+		const result = await db.run(sql, [user_id]);
+		console.log(`Inserted row with id ${result.changes}`);
 		return reply.code(200).send({ message: "Success" });
-	})
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return reply.code(500).send({ message: `database error ${err}` });
+	}
 }
 
-export function set_user_status(request: any, reply: any, db: sqlite3.Database)
+export async function set_user_status(request: any, reply: any, db: Database)
 {
 	const { user_id, newStatus } = request.body;
 
 	const sql = "UPDATE users SET status = ? WHERE id = ?;";
-	db.run(sql, [newStatus, user_id], function (err) {
-		if (err)
-			return reply.code(500).send({ message: "Database error" });
+	try {
+		const result = await db.run(sql, [newStatus, user_id]);
+		console.log(`Inserted row with id ${result.changes}`);
 		return reply.code(200).send({ message: "Success" });
-	})
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return reply.code(500).send({ message: `database error ${err}` });
+	}
 }
 
-export async function uploadAvatar(request: any, reply: any, db: sqlite3.Database)
+export async function uploadAvatar(request: any, reply: any, db: Database)
 {
 	const data = await request.file();
 	if (!data)
@@ -107,9 +110,10 @@ export async function uploadAvatar(request: any, reply: any, db: sqlite3.Databas
 	{
 		await pipeline(data.file, createWriteStream(filepath));
 
-		db.run("UPDATE users SET profile_picture = ? WHERE id = ?", ["/api/images/" + filename , id], function() {
-			console.log(`${email} has changed is avatar. location=${filepath}`);
-		});
+		const sql = "UPDATE users SET profile_picture = ? WHERE id = ?";
+		await db.run(sql, ["/api/images/" + filename , id]);
+
+		console.log(`${email} has changed is avatar. location=${filepath}`);
 
 		return {
 			Success:	true,

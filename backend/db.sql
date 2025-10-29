@@ -6,8 +6,13 @@ CREATE TABLE IF NOT EXISTS users (
 
 	is_login		INTEGER NOT NULL, -- if false => override status
 	status			INTEGER NOT NULL, -- (un)avalaible - buzy - silent
-	elo				INTEGER NOT NULL,
-	profile_picture	STRING  NOT NULL
+
+	elo				INTEGER NOT NULL DEFAULT 500,
+	wins			INTEGER NOT NULL DEFAULT 0,
+	losses			INTEGER NOT NULL DEFAULT 0,
+	game_played		INTEGER NOT NULL DEFAULT 0,
+
+	profile_picture	STRING  NOT NULL DEFAULT ""
 );
 
 CREATE TABLE IF NOT EXISTS friends (
@@ -24,13 +29,16 @@ CREATE TABLE IF NOT EXISTS friends (
 	CHECK(user1_id < user2_id)
 );
 
-CREATE TABLE IF NOT EXISTS game_result (
+CREATE TABLE IF NOT EXISTS games (
 	id				INTEGER PRIMARY KEY AUTOINCREMENT,
 
-	player1_id		INTEGER,
-	player2_id		INTEGER,
-	player1_score	INTEGER,
-	player2_score	INTEGER,
+	user1_id		INTEGER NOT NULL,
+	user2_id		INTEGER,
+	user1_score		INTEGER,
+	user2_score		INTEGER,
 
-	timer			INTEGER
+    FOREIGN KEY (user1_id) REFERENCES users(id),
+    FOREIGN KEY (user2_id) REFERENCES users(id),
+
+	CHECK(user1_id < user2_id)
 );

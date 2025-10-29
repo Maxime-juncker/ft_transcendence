@@ -11,9 +11,9 @@ import { UserElement, UserElementType } from './UserElement.js';
 
 export enum UserStatus
 {
-	UNKNOW = -1,
-	UNAVAILABLE = 0,
-	AVAILABLE,			// user online
+	UNKNOW = -2,
+	UNAVAILABLE = -1,
+	AVAILABLE = 0,			// user online
 	BUSY,				// overide IN_GAME / AVAILABLE
 	INVISIBLE,			// overide IN_GAME / AVAILABLE same ui as unavailable
 	IN_GAME,			// show when user in game
@@ -371,7 +371,6 @@ export class MainUser extends User
 		if (pndgFriends.length != this.m_pndgFriendsElements.length)
 			this.m_pndgFriendsElements = this.rebuildFriendContainer(pndgFriends, this.m_htmlPndgFriendContainer, this.m_pndgFriendsElements, true);
 
-		console.log(this.m_pndgFriendsElements);
 		for (let i = 0; i < friends.length; i++)
 			this.m_friendsElements[i].updateHtml(friends[i]);
 		for (let i = 0; i < pndgFriends.length; i++)

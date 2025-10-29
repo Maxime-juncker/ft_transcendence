@@ -1,6 +1,3 @@
-import { getDB } from "./server.js";
-import { getUserByName } from "./users/user.js";
-
 const connections = new Set();
 
 async function handleCommand(str: string, connection) : Promise<string>

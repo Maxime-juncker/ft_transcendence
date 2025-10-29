@@ -1,15 +1,16 @@
 import { strToCol } from './sha256.js';
-import { User, UserStatus } from './User.js'
-
-// *********************** TODO *********************** //
-// send to all
-// send to user
-// trigger cmd (/cmd arg1 arg2)
-// **************************************************** //
+import { User, UserStatus, MainUser } from './User.js'
 
 function applyMsgStyle(msg: string) : string
 {
 	return `[${msg}]`;
+}
+
+function serverReply(msg: string) : Message
+{
+	const user = new User();
+	user.setUser(-1, "<server>", "", "", UserStatus.UNKNOW);
+	return new Message(user, msg);
 }
 
 class Message
@@ -30,12 +31,12 @@ class Message
 	public getMsg() : string	{ return this.m_msg; }
 	public isCmd() : boolean	{ return this.m_isCmd; }
 
-	public async sendToAll(ws: WebSocket, chatbox: HTMLElement)
+	public async sendToAll(chat: Chat)
 	{
-		if (this.m_isCmd && await this.execLocalCommand(chatbox) === true) return;
+		if (this.m_isCmd && await this.execLocalCommand(chat) === true) return;
 
 		const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: this.m_isCmd };
-		ws.send(JSON.stringify(packet));
+		chat.getWs().send(JSON.stringify(packet));
 	}
 
 	public toHtml(className: string) : HTMLElement
@@ -56,17 +57,32 @@ class Message
 		return container;
 	}
 
-	public async execLocalCommand(chatbox: HTMLElement) : Promise<boolean>
+	public async execLocalCommand(chat: Chat) : Promise<boolean>
 	{
 		if (!this.m_isCmd) return false;
 
 		const args: string[] = this.m_msg.split(/\s+/);
-		console.log(args);
+		var code: number;
 		switch (args[0])
 		{
 			case "/clear":
-				chatbox.innerHTML = "";
+				chat.getChatbox().innerHTML = "";
 				return true;
+			case "/addFriend":
+				code = await chat.getUser()?.addFriend(args[1]);
+				if (code == 404) chat.displayMessage(serverReply("user not found"))
+				if (code == 200) chat.displayMessage(serverReply("request sent"))
+				return true;
+			case "/getGameHistory":
+				var response = await fetch(`/api/get_history_name/${args[1]}`, { method : "GET" })
+				console.log(response);
+				var data = await response.json();
+				console.log(data);
+				code = response.status;
+				if (code == 404) chat.displayMessage(serverReply("no history"))
+				if (code == 200) chat.displayMessage(serverReply(JSON.stringify(data)));
+				return true;
+			// case "/addGame":
 		}
 		return false; // command is not local
 	}
@@ -78,10 +94,10 @@ export class Chat
 
 	private m_chatbox:		HTMLElement;
 	private m_chatInput:	HTMLInputElement;
-	private m_user:			User;
+	private m_user:			MainUser;
 	private	m_ws:			WebSocket;
 
-	constructor(user: User, chatbox: HTMLElement, chatInput: HTMLInputElement)
+	constructor(user: MainUser, chatbox: HTMLElement, chatInput: HTMLInputElement)
 	{
 		if (!chatbox || !chatInput || !user)
 		{
@@ -99,9 +115,12 @@ export class Chat
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
 	}
-	public getChatlog(): Message[]	{ return this.m_chatlog; }
+	public getChatlog(): Message[]		{ return this.m_chatlog; }
+	public getChatbox(): HTMLElement	{ return this.m_chatbox; }
+	public getUser(): MainUser			{ return this.m_user; }
+	public getWs(): WebSocket			{ return this.m_ws; }
 
-	private sendMsgFromInput(event:any)
+	private sendMsgFromInput(event: any)
 	{
 		if (event.key == 'Enter' && this.m_chatInput.value != "")
 		{
@@ -110,18 +129,20 @@ export class Chat
 		}
 	}
 
-	private receiveMessage(event:any)
+	private receiveMessage(event: any)
 	{
-		console.log(event.data);
 		const json = JSON.parse(event.data);
-		console.log(`${json}`);
 		const username = json.username;
 		const message = json.message;
 
 		const user = new User();
 		user.setUser(-1, username, "", "", UserStatus.UNKNOW); // TODO: ajouter un user.ToJSON() et envoyer toutes les infos au serv
 		const newMsg = new Message(user, message);
+		this.displayMessage(newMsg);
+	}
 
+	public displayMessage(newMsg: Message)
+	{
 		this.m_chatbox.prepend(newMsg.toHtml("user-msg"));
 		this.m_chatlog.push(newMsg);
 	}
@@ -132,7 +153,7 @@ export class Chat
 		var newMsg = new Message(sender, msg);
 
 		this.m_chatbox.prepend(newMsg.toHtml("user-msg"));
-		await newMsg.sendToAll(this.m_ws, this.m_chatbox);
+		await newMsg.sendToAll(this);
 		this.m_chatlog.push(newMsg);
 	}
 }
