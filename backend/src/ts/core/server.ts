@@ -4,10 +4,10 @@ import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 
-import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from './users/userManagment.js';
-import { addGameToHistReq, getFriends, getUserById, getUserByNameReq, getUserHistByName } from './users/user.js';
-import { addFriend, removeFriend, acceptFriend } from './users/friends.js';
-import { chatSocket } from './chat.js'
+import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from '@modules/users/userManagment.js';
+import { addGameToHistReq, getFriends, getUserById, getUserByNameReq, getUserHistByName } from 'modules/users/user.js';
+import { addFriend, removeFriend, acceptFriend } from '@modules/users/friends.js';
+import { chatSocket } from '@modules/chat/chat.js';
 
 export interface DbResponse {
 	code:	number;

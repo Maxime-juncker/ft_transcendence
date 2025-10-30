@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite'
-import { DbResponse } from '../server.js';
+import { DbResponse } from '@core/server.js';
 
 interface GameRes {
 	user1_name:		string;
