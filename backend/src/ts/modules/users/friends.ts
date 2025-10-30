@@ -1,4 +1,3 @@
-import sqlite3 from 'sqlite3'
 import { Database } from 'sqlite';
 
 export async function removeFriend(request: any, reply: any, db: Database)

@@ -1,5 +1,5 @@
-import { getDB } from './server.js';
-import { getUserByName, getUserStats } from './users/user.js';
+import { getDB } from '@core/server.js';
+import { getUserByName, getUserStats } from '@modules/users/user.js';
 const connections = new Set();
 
 async function handleCommand(str: string, connection) : Promise<string>

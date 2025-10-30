@@ -3,9 +3,8 @@ import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { DbResponse } from "../server.js";
 
-import { uploadDir } from "../server.js";
+import { DbResponse, uploadDir } from "@core/server.js";
 
 function validate_email(email:string)
 {
