@@ -1,4 +1,4 @@
-import { strToCol } from './sha256.js';
+import { strToCol, hashString } from './sha256.js';
 import { User, UserStatus, MainUser } from './User.js'
 
 function applyMsgStyle(msg: string) : string
@@ -114,11 +114,25 @@ class Message
 						user2_score: args[4]
 					})
 				});
-				console.log(response);
 				var data = await response.json();
-				console.log(data);
-				code = response.status;
 				chat.displayMessage(serverReply(JSON.stringify(data)))
+				return true;
+			case "/UpdateMe":
+				var response = await fetch(`/api/update_user`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						oldName: args[1],
+						oldPassw: hashString(args[2]),
+						name: args[3],
+						email: args[4],
+						passw: hashString(args[5])
+					})
+				});
+				var data = await response.json();
+				chat.displayMessage(serverReply(JSON.stringify(data)))
+				if (chat.getUser().name == args[1])
+					chat.getUser().logout();
 				return true;
 		}
 		return false; // command is not local

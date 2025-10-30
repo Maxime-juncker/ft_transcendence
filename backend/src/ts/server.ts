@@ -4,10 +4,15 @@ import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 
-import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar } from './users/userManagment.js';
+import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from './users/userManagment.js';
 import { addGameToHistReq, getFriends, getUserById, getUserByNameReq, getUserHistByName } from './users/user.js';
 import { addFriend, removeFriend, acceptFriend } from './users/friends.js';
 import { chatSocket } from './chat.js'
+
+export interface DbResponse {
+	code:	number;
+	data:	any; // will be an error string if code != 200
+}
 
 /* directory of avatars */
 export const uploadDir : string = "/var/www/avatars/"
@@ -59,6 +64,10 @@ fastify.get('/api/get_history_name/:username', async (request: FastifyRequest, r
 
 fastify.post('/api/add_game_history', async (request: FastifyRequest, reply: FastifyReply) => {
 	return await addGameToHistReq(request, reply, db);
+})
+
+fastify.post('/api/update_user', async (request: FastifyRequest, reply: FastifyReply) => {
+	return await updateUserReq(request, reply, db);
 })
 
 fastify.get<{ Querystring: { user_id: string } }>
@@ -147,7 +156,6 @@ fastify.register(async function (fastify) {
     });
 });
 
-
 //
 // fastify
 //
@@ -183,6 +191,5 @@ signals.forEach(signal => {
 		shutdownDb();
 	});
 });
-
 
 start()

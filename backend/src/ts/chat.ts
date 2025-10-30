@@ -1,5 +1,6 @@
 import { getDB } from './server.js';
 import { getUserByName, getUserStats } from './users/user.js';
+import { updateUser, UserUpdate } from './users/userManagment.js';
 const connections = new Set();
 
 async function handleCommand(str: string, connection) : Promise<string>
@@ -15,6 +16,16 @@ async function handleCommand(str: string, connection) : Promise<string>
 		case "/stats":
 			response = await getUserStats(args[1], getDB());
 			return JSON.stringify(response[1]);
+		// case "/UpdateMe":
+		// 	const userUpdate: UserUpdate = {
+		// 		oldName: args[1],
+		// 		oldPassw: args[2],
+		// 		name: args[3],
+		// 		passw: args[4],
+		// 		email: args[5]
+		// 	};
+		// 	response = await updateUser(userUpdate, getDB());
+		// 	return JSON.stringify(response[1]);
 		case "/ping":
 			return "pong";
 		default:

@@ -1,16 +1,12 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite'
+import { DbResponse } from '../server.js';
 
 interface GameRes {
 	user1_name:		string;
 	user2_name:		string;
 	user1_score:	number;
 	user2_score:	number;
-}
-
-interface UserResponse {
-	code:	number;
-	data:	any; // will be an error string if code != 200
 }
 
 export async function updateUserStats(user: any, win: boolean, db: Database)
@@ -28,7 +24,7 @@ export async function updateUserStats(user: any, win: boolean, db: Database)
 	}
 }
 
-export async function getUserByName(username: string, db: Database) : Promise<UserResponse>
+export async function getUserByName(username: string, db: Database) : Promise<DbResponse>
 {
 	const sql = 'SELECT id, name, profile_picture, elo, status, is_login FROM users WHERE name = ?';
 	try {
@@ -80,7 +76,7 @@ export async function getUserStats(username: string, db: Database) : Promise<[ n
 	}
 	catch (err) {
 		console.error(`database err: ${err}`)
-		return [404, { message: "database error" }];
+		return [500, { message: "database error" }];
 	}
 }
 

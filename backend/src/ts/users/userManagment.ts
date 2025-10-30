@@ -2,6 +2,8 @@ import { Database } from "sqlite";
 import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import path from 'path';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { DbResponse } from "../server.js";
 
 import { uploadDir } from "../server.js";
 
@@ -12,6 +14,14 @@ function validate_email(email:string)
     .match(
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
+}
+
+export interface UserUpdate {
+	oldName:	string;
+	oldPassw:	string;
+	name:		string;
+	passw:		string;
+	email:		string;
 }
 
 function hash_string(name: string)
@@ -61,6 +71,38 @@ export async function create_user(request: any, reply: any, db: Database)
 		console.error(`database err: ${err}`);
 		return reply.code(500).send({ message: `database error ${err}` });
 	}
+}
+
+export async function updateUser(update: UserUpdate, db: Database) : Promise<DbResponse>
+{
+	console.log(update);
+
+	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE name = ? AND passw = ? RETURNING id";
+	try {
+		const row = await db.get(sql, [update.name, update.email, update.passw, update.oldName, update.oldPassw]);
+		if (!row)
+			return { code: 404, data: { message: "user not found" }};
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return { code: 500, data: { message: "database error" }};
+	}
+}
+
+export async function updateUserReq(request: FastifyRequest, reply: FastifyReply, db: Database)
+{
+	const { oldName, oldPassw, name, email, passw } = request.body as {
+		oldName:	string,
+		oldPassw:	string,
+		name:		string,
+		email:		string,
+		passw:		string
+	};
+	const update: UserUpdate = { oldName, oldPassw, name, email, passw };
+	console.log(update);
+	const result = await updateUser(update, db);
+	return reply.code(result.code).send(result.data);
 }
 
 export async function logout_user(request: any, reply:any, db: Database)
