@@ -17,7 +17,7 @@ class GameInstance
 	private static readonly MAX_ANGLE: number = 0.5;
 	private static readonly SPEED: number = 0.8;
 	private static readonly SPEED_INCREMENT: number = 0.0;
-	private static readonly POINTS_TO_WIN: number = 1;
+	private static readonly POINTS_TO_WIN: number = 11;
 	private static readonly PLAYER1_UP_KEY: string = 'z';
 	private static readonly PLAYER1_DOWN_KEY: string = 's';
 	private static readonly PLAYER2_UP_KEY: string = 'ArrowUp';
@@ -199,8 +199,7 @@ class GameInstance
 	{
 		if (body.type === 'keydown')
 		{
-			this.handleKeyPressPlayer1(body);
-			this.handleKeyPressPlayer2(body);
+			this.keysPressed.add(body.key);
 		}
 		else if (body.type === 'keyup')
 		{
@@ -208,47 +207,14 @@ class GameInstance
 		}
 	}
 
-	public handleKeyPressPlayer1(body: any): void
-	{
-		if (body.key == GameInstance.PLAYER1_UP_KEY
-			|| body.key == GameInstance.PLAYER1_DOWN_KEY)
-		{
-			this.keysPressed.add(body.key);
-		}
-	}
-
-	public handleKeyPressPlayer2(body: any): void
-	{
-		if (body.key == GameInstance.PLAYER2_UP_KEY
-			|| body.key == GameInstance.PLAYER2_DOWN_KEY)
-		{
-			this.keysPressed.add(body.key);
-		}
-	}
-
 	public setReady(isReady: boolean): void
 	{
 		this.isReady = isReady;
-	}
-
-	public getMode(): string
-	{
-		return (this.mode);
 	}
 }
 
 export class GameServer
 {
-	private static readonly PADDLE_HEIGHT: number = 15;
-	private static readonly PADDLE_WIDTH: number = 2;
-	private static readonly PADDLE_PADDING: number = 2;
-	private static readonly BALL_SIZE: number = 2;
-	private static readonly BACKGROUND_OPACITY: string = '0.4';
-	private static readonly PLAY_AGAIN_KEY: string = 'Enter';
-	private static readonly PLAY_AGAIN_MSG: string = `Press ${GameServer.PLAY_AGAIN_KEY} to play again`;
-	private static readonly FPS: number = 60;
-	private static readonly COLOR: string = '255, 255, 255';
-	private static readonly COUNTDOWN_START: number = 3;
 
 	private activeGames: Map<string, [string, string, GameInstance]> = new Map();
 	private playerWaiting: { reply: any, playerName: string } | null = null;
@@ -275,140 +241,120 @@ export class GameServer
 
 	private async launchServer(): Promise<void>
 	{
-		this.createGame();
-		this.ready();
-		this.sendGameState();
-		this.getAction();
+
 	}
 
-	private createGame(): void
-	{
-		this.server.post('/api/create-game', (request, reply) =>
-		{
-			try
-			{
-				const body = request.body as any;
+	// private createGame(): void
+	// {
+	// 	this.server.post('/api/create-game', (request, reply) =>
+	// 	{
+	// 		try
+	// 		{
+	// 			const body = request.body as any;
 
-				if (body.mode === '1player')
-				{
-					if (this.playerWaiting)
-					{
-						const gameId = crypto.randomUUID();
-						this.activeGames.set(gameId, [this.playerWaiting.playerName, body.playerName, new GameInstance(body.mode)]);
-						this.playerWaiting.reply.status(201).send(this.getParameters(this.playerWaiting.playerName, gameId, body.playerName));
-						reply.status(201).send(this.getParameters(body.playerName, gameId, this.playerWaiting.playerName));
-						this.playerWaiting = null;
-					}
-					else
-					{
-						this.playerWaiting = { reply, playerName: body.playerName };
-					}
-				}
-				else
-				{
-					const gameId = crypto.randomUUID();
-					this.activeGames.set(gameId, [body.playerName, null, new GameInstance(body.mode)]);
-					reply.status(201).send(this.getParameters(body.playerName, gameId, null));
-				}
-			}
-			catch (error)
-			{
-				reply.status(500).send();
-			}
-		});
-	}
+	// 			if (body.mode === '1player')
+	// 			{
+	// 				if (this.playerWaiting)
+	// 				{
+	// 					const gameId = crypto.randomUUID();
+	// 					this.activeGames.set(gameId, [this.playerWaiting.playerName, body.playerName, new GameInstance(body.mode)]);
+	// 					this.playerWaiting.reply.status(201).send(this.getParameters(this.playerWaiting.playerName, gameId, body.playerName));
+	// 					reply.status(201).send(this.getParameters(body.playerName, gameId, this.playerWaiting.playerName));
+	// 					this.playerWaiting = null;
+	// 				}
+	// 				else
+	// 				{
+	// 					this.playerWaiting = { reply, playerName: body.playerName };
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				const gameId = crypto.randomUUID();
+	// 				this.activeGames.set(gameId, [body.playerName, null, new GameInstance(body.mode)]);
+	// 				reply.status(201).send(this.getParameters(body.playerName, gameId, null));
+	// 			}
+	// 		}
+	// 		catch (error)
+	// 		{
+	// 			reply.status(500).send();
+	// 		}
+	// 	});
+	// }
 
-	private ready(): void
-	{
-		this.server.post('/api/ready/:gameId', (request, reply) =>
-		{
-			const { gameId } = request.params as any;
-			const gameData = this.activeGames.get(gameId);
+	// private ready(): void
+	// {
+	// 	this.server.post('/api/ready/:gameId', (request, reply) =>
+	// 	{
+	// 		const { gameId } = request.params as any;
+	// 		const gameData = this.activeGames.get(gameId);
 
-			if (gameData)
-			{
-				gameData[2].setReady(true);
-				reply.status(200).send();
-			}
-			else
-			{
-				reply.status(404).send();
-			}
-		});
-	}
+	// 		if (gameData)
+	// 		{
+	// 			gameData[2].setReady(true);
+	// 			reply.status(200).send();
+	// 		}
+	// 		else
+	// 		{
+	// 			reply.status(404).send();
+	// 		}
+	// 	});
+	// }
 
-	private getParameters(player: string, gameId: string, opponentName: string): any
-	{
-		return {
-			gameId: gameId,
-			paddleHeight: GameServer.PADDLE_HEIGHT,
-			paddleWidth: GameServer.PADDLE_WIDTH,
-			paddlePadding: GameServer.PADDLE_PADDING,
-			ballSize: GameServer.BALL_SIZE,
-			backgroundOpacity: GameServer.BACKGROUND_OPACITY,
-			playAgainMsg: GameServer.PLAY_AGAIN_MSG,
-			countdownStart: GameServer.COUNTDOWN_START,
-			fps: GameServer.FPS,
-			color: GameServer.COLOR,
-			opponentName: opponentName || 'player2',
-		};
-	}
+	// private sendGameState(): void
+	// {
+	// 	this.server.get('/api/game-state/:gameId', (request, reply) =>
+	// 	{
+	// 		const { gameId } = request.params as any;
+	// 		const gameData = this.activeGames.get(gameId);
 
-	private sendGameState(): void
-	{
-		this.server.get('/api/game-state/:gameId', (request, reply) =>
-		{
-			const { gameId } = request.params as any;
-			const gameData = this.activeGames.get(gameId);
+	// 		if (gameData)
+	// 		{
+	// 			const gameInstance = gameData[2];
+	// 			reply.status(200).send(gameInstance.getCurrentGameState());
 
-			if (gameData)
-			{
-				const gameInstance = gameData[2];
-				reply.status(200).send(gameInstance.getCurrentGameState());
+	// 			if (gameInstance.getCurrentGameState().isGameOver)
+	// 			{
+	// 				this.activeGames.delete(gameId);
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			reply.status(404).send();
+	// 		}
+	// 	});
+	// }
 
-				if (gameInstance.getCurrentGameState().isGameOver)
-				{
-					this.activeGames.delete(gameId);
-				}
-			}
-			else
-			{
-				reply.status(404).send();
-			}
-		});
-	}
+	// private getAction(): void
+	// {
+	// 	this.server.post('/api/game-action/:gameId', (request, reply) =>
+	// 	{
+	// 		const { gameId } = request.params as any;
+	// 		const body = request.body as any;
+	// 		const gameData = this.activeGames.get(gameId);
 
-	private getAction(): void
-	{
-		this.server.post('/api/game-action/:gameId', (request, reply) =>
-		{
-			const { gameId } = request.params as any;
-			const body = request.body as any;
-			const gameData = this.activeGames.get(gameId);
-
-			if (gameData)
-			{
-				const [player1Name, player2Name, gameInstance] = gameData;
-				if (gameInstance.getMode() === '2player')
-				{
-					gameInstance.handleKeyPress(body);
-					reply.status(200).send();
-				}
-				else if (body.player === player1Name)
-				{
-					gameInstance.handleKeyPressPlayer1(body);
-					reply.status(200).send();
-				}
-				else if (body.player === player2Name)
-				{
-					gameInstance.handleKeyPressPlayer2(body);
-					reply.status(200).send();
-				}
-			}
-			else
-			{
-				reply.status(404).send();
-			}
-		});
-	}
+	// 		if (gameData)
+	// 		{
+	// 			const [player1Name, player2Name, gameInstance] = gameData;
+	// 			if (gameInstance.getMode() === '2player')
+	// 			{
+	// 				gameInstance.handleKeyPress(body);
+	// 				reply.status(200).send();
+	// 			}
+	// 			else if (body.player === player1Name)
+	// 			{
+	// 				gameInstance.handleKeyPressPlayer1(body);
+	// 				reply.status(200).send();
+	// 			}
+	// 			else if (body.player === player2Name)
+	// 			{
+	// 				gameInstance.handleKeyPressPlayer2(body);
+	// 				reply.status(200).send();
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			reply.status(404).send();
+	// 		}
+	// 	});
+	// }
 }
