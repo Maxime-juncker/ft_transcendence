@@ -9,15 +9,21 @@ function applyMsgStyle(msg: string) : string
 function helpMsg() : string
 {
 	const msg: string = ` -- help --
-	/test                 test connection to server
-	/clear                clear chat
-	/inspect {username}   show info of user
-	/stats {username}     show stats of user
-    /addFriend {username} send friend request to user
-	/getHist {username}   show matchs history of user
+TERMINAL
+	/ping   test connection to server
+	/clear	clear chat
 
+GAME MANAGMENT
 	/addGame {user1 user2, score1, score2}	add game to history
-	`;
+
+USER MANAGMENT
+	/updateMe {oldPassw, name, email, passw}	update your profile infos
+	/stats {username}							show stats of user
+	/inspect {username}							show info of user
+	/addFriend {username}						send friend request to user
+	/getHist {username}							show matchs history of user
+`;
+
 	return msg;
 }
 
@@ -118,11 +124,12 @@ class Message
 				chat.displayMessage(serverReply(JSON.stringify(data)))
 				return true;
 			case "/UpdateMe":
+				if (chat.getUser().getId() == -1) return true; // not login
 				var response = await fetch(`/api/update_user`, {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({
-						oldName: args[1],
+						oldName: chat.getUser().name,
 						oldPassw: await hashString(args[2]),
 						name: args[3],
 						email: args[4],

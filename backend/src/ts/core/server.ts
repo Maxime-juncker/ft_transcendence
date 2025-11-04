@@ -1,16 +1,16 @@
 import fastifyStatic from '@fastify/static';
-import cors from '@fastify/cors';
 import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 
-import { login_user as loginUser, create_user, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from '@modules/users/userManagment.js';
+import { login_user as loginUser, createUserReq, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from '@modules/users/userManagment.js';
 import { addGameToHistReq, getFriends, getUserById, getUserByNameReq, getUserHistByName } from 'modules/users/user.js';
 import { addFriend, removeFriend, acceptFriend } from '@modules/users/friends.js';
 import { chatSocket } from '@modules/chat/chat.js';
 import { registerCorsProvider } from 'providers/cors.js';
-import { registerOAuth2GoogleProvider } from 'providers/oauth2.js';
+import { registerOAuth2Providers } from 'providers/oauth2.js';
 import { googleOAuth2Routes } from '@modules/oauth2/google.route.js';
+import { fortyTwoOAuth2Routes } from '@modules/oauth2/42oauth.route.js';
 
 export interface DbResponse {
 	code:	number;
@@ -23,14 +23,13 @@ export const uploadDir : string = "/var/www/avatars/"
 //
 // setup dependencies
 //
-/* setup fastify */
 const fastify = Fastify({ logger: false })
 await fastify.register(import('@fastify/multipart'));
 await fastify.register(import('@fastify/websocket'));
 
-// google
-registerOAuth2GoogleProvider(fastify);
-fastify.register(googleOAuth2Routes);
+await registerOAuth2Providers(fastify); // oauth2 for google
+// await fastify.register(googleOAuth2Routes);
+await fastify.register(fortyTwoOAuth2Routes);
 
 registerCorsProvider(fastify);
 
@@ -134,7 +133,7 @@ fastify.get<{ Querystring: { profile_name: string } }>
 // User managment
 //
 fastify.post('/api/create_user', (request: any, reply: any) => {
-	return create_user(request, reply, db);
+	return createUserReq(request, reply, db);
 })
 
 fastify.post('/api/login', (request:any, reply:any) => {
@@ -199,3 +198,6 @@ signals.forEach(signal => {
 });
 
 start()
+
+console.log("Fastify routes:")
+console.log(fastify.printRoutes());

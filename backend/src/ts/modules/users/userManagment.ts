@@ -36,6 +36,22 @@ function hash_string(name: string)
 	return hash;
 }
 
+export async function loginOAuth2(id: string, email: string, source: number, db: Database) : Promise<DbResponse>
+{
+	var sql = 'UPDATE users SET is_login = 1 WHERE oauth_id = ? AND email = ? AND source = ? RETURNING *';
+	try {
+		const row = await db.get(sql, [id, email, source]);
+		if (!row)
+			return { code: 404, data: {message: "user not found" }};
+		console.log(row);
+		return { code: 200, data: row}
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return { code: 500, data: { message: `database error: ${err}` }};
+	}
+}
+
 export async function login_user(request: any, reply: any, db: Database)
 {
 	const { email, passw } = request.body;
@@ -53,24 +69,52 @@ export async function login_user(request: any, reply: any, db: Database)
 	}
 }
 
-export async function create_user(request: any, reply: any, db: Database)
+export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
-	const { email, passw, username } = request.body;
-	console.log(`pass: ${passw}`);
-	const sql = 'INSERT INTO users (name, email, passw, profile_picture, status, is_login) VALUES (?, ?, ?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar) VALUES (?, ?, ?, ?, ?)';
 
+	
 	if (!validate_email(email))
-		return reply.code(403).send({ message: "error: email not valid" });
+		return { code: 403, data: { message: "error: email not valid" }};
 
 	try {
-		const result = await db.run(sql, [username, email, passw, "", 0, 0]);
+		const result = await db.run(sql, [name, email, id, source, avatar]);
 		console.log(`Inserted row with id ${result.lastID}`);
-		return reply.code(200).send({ message: `Success`});;
+		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
 		console.error(`database err: ${err}`);
-		return reply.code(500).send({ message: `database error ${err}` });
+		return { code: 500, data: { message: `database error: ${err}` }};
 	}
+}
+export async function createUser(email: string, passw: string, username: string, source: number, db: Database) : Promise<DbResponse>
+{
+	const sql = 'INSERT INTO users (name, email, passw, avatar, status, is_login, source) VALUES (?, ?, ?, ?, ?, ?, ?)';
+
+	if (!validate_email(email))
+		return { code: 403, data: { message: "error: email not valid" }};
+
+	try {
+		const result = await db.run(sql, [username, email, passw, "", 0, 0, source]);
+		console.log(`Inserted row with id ${result.lastID}`);
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err) {
+		console.error(`database err: ${err}`);
+		return { code: 500, data: { message: `database error: ${err}` }};
+	}
+}
+
+export async function createUserReq(request: FastifyRequest, reply: FastifyReply, db: Database)
+{
+	const { email, passw, username } = request.body as {
+		email: string,
+		passw: string,
+		username: string
+	};
+	const res = await createUser(email, passw, username, 0, db);
+	return reply.code(res.code).send(res.data);
+
 }
 
 export async function updateUser(update: UserUpdate, db: Database) : Promise<DbResponse>
@@ -152,7 +196,7 @@ export async function uploadAvatar(request: any, reply: any, db: Database)
 	{
 		await pipeline(data.file, createWriteStream(filepath));
 
-		const sql = "UPDATE users SET profile_picture = ? WHERE id = ?";
+		const sql = "UPDATE users SET avatar = ? WHERE id = ?";
 		await db.run(sql, ["/api/images/" + filename , id]);
 
 		console.log(`${email} has changed is avatar. location=${filepath}`);

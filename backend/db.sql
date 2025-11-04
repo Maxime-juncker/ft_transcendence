@@ -1,17 +1,21 @@
 CREATE TABLE IF NOT EXISTS users (
-	id		INTEGER PRIMARY KEY AUTOINCREMENT,
-	name	STRING NOT NULL UNIQUE,
-	email	STRING NOT NULL UNIQUE,
-	passw	STRING NOT NULL,
+	id				INTEGER PRIMARY KEY AUTOINCREMENT,
+	name			STRING NOT NULL UNIQUE,
+	email			STRING NOT NULL UNIQUE,
+	passw			STRING NOT NULL DEFAULT "",
 
-	is_login		INTEGER NOT NULL, -- if false => override status
-	status			INTEGER NOT NULL, -- (un)avalaible - buzy - silent
+	is_login		INTEGER NOT NULL DEFAULT 0, -- if false => override status
+	status			INTEGER NOT NULL DEFAULT 0, -- (un)avalaible - buzy - silent
 
 	elo				INTEGER NOT NULL DEFAULT 1000,
 	wins			INTEGER NOT NULL DEFAULT 0,
 	games_played	INTEGER NOT NULL DEFAULT 0,
 
-	profile_picture	STRING  NOT NULL DEFAULT ""
+	avatar			STRING  NOT NULL DEFAULT "",
+
+	-- 0 = internal; 1 == oauth google
+	source			INTEGER	NOT NULL DEFAULT 0,
+	oauth_id		STRING NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS friends (

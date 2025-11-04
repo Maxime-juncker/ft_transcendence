@@ -26,7 +26,7 @@ export async function updateUserStats(user: any, win: boolean, db: Database)
 
 export async function getUserByName(username: string, db: Database) : Promise<DbResponse>
 {
-	const sql = 'SELECT id, name, profile_picture, elo, status, is_login FROM users WHERE name = ?';
+	const sql = 'SELECT id, name, avatar, elo, status, is_login FROM users WHERE name = ?';
 	try {
 		const row = await db.get(sql, [username])
 		if (!row)
@@ -139,7 +139,7 @@ export async function getFriends(request: any, reply: any, db: Database)
 export async function getUserById(request: any, reply: any, db: Database)
 {
 	const { user_id }  = request.query;
-	const sql = 'SELECT id, name, profile_picture, elo, status, is_login FROM users WHERE id = ?';
+	const sql = 'SELECT id, name, avatar, elo, status, is_login FROM users WHERE id = ?';
 
 	try {
 		const row = await db.get(sql, [user_id])

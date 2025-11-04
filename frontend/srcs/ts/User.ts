@@ -37,7 +37,7 @@ async function getUserFromId(id:string) : Promise<User>
 	const data = await response.json();
 	var user = new User();
 	var status = data.is_login ? data.status : UserStatus.UNAVAILABLE;
-	user.setUser(data.id, data.name, "", data.profile_picture, status);
+	user.setUser(data.id, data.name, "", data.avatar, status);
 	return user;
 }
 
@@ -82,7 +82,8 @@ export class User
 	public getFriends() : User[] { return this.m_friends; }
 	public getPndgFriends() : User[] { return this.m_pndgFriends; }
 	public getId() : number { return this.m_id; }
-	public getAvatarPath() : string { return this.m_avatarPath + "?" + new Date().getTime(); }
+	// public getAvatarPath() : string { return this.m_avatarPath + "?" + new Date().getTime(); }
+	public getAvatarPath() : string { return this.m_avatarPath; }
 	public async getUserFromId(id:string) : Promise<Response>
 	{
 		const params = { user_id: id };
@@ -158,7 +159,7 @@ export class User
 
 		var data = await response.json();
 		this.name = data.name;
-		this.m_avatarPath = data.profile_picture;
+		this.m_avatarPath = data.avatar;
 		this.m_status = data.status;
 		await this.updateFriendList();
 
@@ -226,6 +227,23 @@ export class MainUser extends User
 		this.m_userElement.getStatusSelect().addEventListener("change", () => this.updateStatus(this.m_userElement.getStatusSelect().value, this, this.m_userElement));
 	}
 
+	public async oauth2Login(accessToken: string)
+	{
+		console.log(accessToken);
+		var response = await fetch(`/api/login/forty_two/login?${accessToken}`);
+		const data = await response.json();
+
+		if (response.status == 200)
+		{
+			var status = data.status;
+			this.setUser(data.id, data.name, data.email, data.avatar, status);
+			this.setStatus(this.getStatus());
+			await this.refreshSelf();
+		}
+
+		return { status: response.status, data: data };
+	}
+
 	public async login(email:string, passw:string) : Promise<{status: number, data:any }>
 	{
 		if (this.getId() != -1)
@@ -246,7 +264,7 @@ export class MainUser extends User
 		if (response.status == 200)
 		{
 			var status = data.status;
-			this.setUser(data.id, data.name, data.email, data.profile_picture, status);
+			this.setUser(data.id, data.name, data.email, data.avatar, status);
 			this.setStatus(this.getStatus());
 			await this.refreshSelf();
 		}

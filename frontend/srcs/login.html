@@ -8,9 +8,11 @@
 	</head>
 	<body class="test">
 
-		<a href="https://localhost:8433/api/oauth2/google">
-			Google Login
+		<a href="https://localhost:8081/api/login/google">
+			login google
 		</a>
+
+		<button id="google_log_btn">log with google</button>
 
 		<h1>create new user</h1>
 		<div>
@@ -64,7 +66,7 @@
 
 	.debug-box
 	{
-		height:250px;
+		height:500px;
 		width:1200px;
 
 		padding-inline: 10px;
@@ -94,6 +96,8 @@
 
 	.user-msg p
 	{
+		white-space: pre;
+		tab-size: 4;
 		margin: 0;
 		font-size: medium;
 		color: white;

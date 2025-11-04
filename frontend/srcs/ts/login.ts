@@ -133,14 +133,30 @@ document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAv
 document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
 document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
 document.getElementById("chat_send_btn")?.addEventListener("click", () => chat.sendMsg(user, chatInput.value));
+document.getElementById("google_log_btn")?.addEventListener("click", () => loginGoogle());
 
 setInterval(() => user.refreshSelf(), 10000);
 
-// for OAth
-if (getUrlVar()["Access_token"])
+function loginGoogle()
 {
-	setCookie("google_access_token", getUrlVar()["Access_token"][1], 1);
-	console.log("login successful");
+	const url = window.location.href.split("/")[0];
+	window.location.href = (`${url}/api/login/forty_two`);
+}
+
+// for OAth
+// if (getUrlVar()["state"])
+// {
+// 	setCookie("google_access_token", getUrlVar()["state"][1], 1);
+// 	console.log(getUrlVar()["state"]);
+// 	const q = window.location.href.split("?")[1];
+// 	user.oauth2Login(q);
+// }
+
+if (getUrlVar()["code"]) // 42api
+{
+	console.log(getUrlVar()["code"]);
+	const q = window.location.href.split("?")[1];
+	user.oauth2Login(q);
 }
 
 
