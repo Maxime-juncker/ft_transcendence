@@ -39,9 +39,8 @@ export function githubOAuth2Routes (
 			const avatar = data.avatar_url;
 
 			var res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, getDB());
-			if (res.code == 200 || res.code == 500)
-				res = await loginOAuth2(id, AuthSource.GITHUB, getDB());
-			return reply.code(res.code).send(res.data);
+			const url = `https://${process.env.HOST}:8081/login.html?event=oauth_redir&id=${id}&source=${AuthSource.GITHUB}`;
+			return reply.redirect(url);
 		})
 	})
 	done();

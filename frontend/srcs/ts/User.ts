@@ -227,11 +227,19 @@ export class MainUser extends User
 		this.m_userElement.getStatusSelect().addEventListener("change", () => this.updateStatus(this.m_userElement.getStatusSelect().value, this, this.m_userElement));
 	}
 
-	public async oauth2Login(accessToken: string)
+	public async oauth2Login(id: string, source: number)
 	{
-		console.log(accessToken);
-		var response = await fetch(`/api/login/forty_two/login?${accessToken}`);
+		console.log(id, source);
+		var response = await fetch(`/api/oauth2/login`, {
+			method: "POST",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				id: id,
+				source: source
+			})
+		});
 		const data = await response.json();
+		console.log(data);
 
 		if (response.status == 200)
 		{

@@ -28,7 +28,7 @@ const googleOAuth2Options : any = {
 		auth: OAuth2.GOOGLE_CONFIGURATION
 	},
 	startRedirectPath: '/api/login/google',
-	callbackUri: 'https://localhost:8081/login.html'
+	callbackUri: `https://${process.env.HOST}:8081/login.html`
 };
 
 const githubOAuth2Options : any = {
@@ -41,7 +41,7 @@ const githubOAuth2Options : any = {
 		auth: OAuth2.GITHUB_CONFIGURATION
 	},
 	startRedirectPath: '/api/oauth2/github',
-	callbackUri: 'https://localhost:8081/api/oauth2/github/callback'
+	callbackUri: `https://${process.env.HOST}:8081/api/oauth2/github/callback`
 };
 
 const fortyTwoOAuth2Options : any = {
@@ -59,7 +59,7 @@ const fortyTwoOAuth2Options : any = {
 		}
 	},
 	startRedirectPath: '/api/oauth2/forty_two',
-	callbackUri: 'https://localhost:8081/api/oauth2/forty_two/callback',
+	callbackUri: `https://${process.env.HOST}:8081/api/oauth2/forty_two/callback`,
 	scope: 'public'
 };
 

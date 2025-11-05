@@ -36,13 +36,23 @@ function hash_string(name: string)
 	return hash;
 }
 
+export async function loginOAuth2Req(request: FastifyRequest, reply: FastifyReply, db: Database) {
+	const { id, source } = request.body as {
+		id: string,
+		source: number,
+	}
+	console.log(request.body, id, source);
+	const res = await loginOAuth2(id, source, db);
+	return reply.code(res.code).send(res.data);
+}
+
 export async function loginOAuth2(id: string, source: number, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE oauth_id = ? AND source = ? RETURNING *';
 	try {
 		const row = await db.get(sql, [id, source]);
 		if (!row)
-			return { code: 404, data: {message: "user not found" }};
+			return { code: 404, data: { message: "user not found" }};
 		console.log(row);
 		return { code: 200, data: row}
 	}

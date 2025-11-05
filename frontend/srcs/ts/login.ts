@@ -150,11 +150,14 @@ function loginFortyTwo()
 	window.location.href = (`${url}/api/oauth2/forty_two`);
 }
 
-if (getUrlVar()["code"]) // 42api
+if (getUrlVar()["event"]) // 42api
 {
-	console.log(getUrlVar()["code"]);
-	const q = window.location.href.split("?")[1];
-	user.oauth2Login(q);
+	const vars = getUrlVar();
+	const ev = vars["event"];
+	console.log(vars);
+	if (ev == "oauth_redir") {
+		user.oauth2Login(vars["id"], vars["source"]);
+	}
 }
 
 

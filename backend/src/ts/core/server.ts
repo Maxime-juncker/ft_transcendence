@@ -3,7 +3,7 @@ import Fastify, { FastifyRequest, FastifyReply } from "fastify";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 
-import { login_user as loginUser, createUserReq, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq } from '@modules/users/userManagment.js';
+import { login_user as loginUser, createUserReq, logout_user, set_user_status as setUserStatus, uploadAvatar, updateUserReq, loginOAuth2Req } from '@modules/users/userManagment.js';
 import { addGameToHistReq, getFriends, getUserById, getUserByNameReq, getUserHistByName } from 'modules/users/user.js';
 import { addFriend, removeFriend, acceptFriend } from '@modules/users/friends.js';
 import { chatSocket } from '@modules/chat/chat.js';
@@ -134,6 +134,10 @@ fastify.get<{ Querystring: { profile_name: string } }>
 //
 fastify.post('/api/create_user', (request: any, reply: any) => {
 	return createUserReq(request, reply, db);
+})
+
+fastify.post('/api/oauth2/login', (request: any, reply: any) => {
+	return loginOAuth2Req(request, reply, db);
 })
 
 fastify.post('/api/login', (request:any, reply:any) => {

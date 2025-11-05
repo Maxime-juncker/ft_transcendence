@@ -9,7 +9,6 @@ export function fortyTwoOAuth2Routes (
 	done: () => void,
 )
 {
-
 	fastify.get('/api/oauth2/forty_two/callback', function(request, reply) {
 
 		fastify.FortyTwoOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
@@ -18,8 +17,6 @@ export function fortyTwoOAuth2Routes (
 				reply.send(err);
 				return;
 			}
-			console.log(request.url);
-			console.log(result.token.access_token);
 			const fetchResult = await fetch('https://api.intra.42.fr/v2/me', {
 				headers: {
 					Authorization: 'Bearer ' + result.token.access_token
@@ -39,11 +36,11 @@ export function fortyTwoOAuth2Routes (
 			const email = data.email;
 			const avatar = data.image.link;
 
-			console.log(name, email, id);
 			var res = await createUserOAuth2(email, name, id, AuthSource.FORTY_TWO, avatar, getDB());
 			if (res.code == 200 || res.code == 500)
 				res = await loginOAuth2(id, AuthSource.FORTY_TWO, getDB());
-			return reply.redirect("https://localhost:8081/login.html").send({ message: "hello" });
+			const url = `https://${process.env.HOST}:8081/login.html?event=oauth_redir&id=${id}&source=${AuthSource.FORTY_TWO}`;
+			return reply.redirect(url);
 		})
 	})
 	done();
