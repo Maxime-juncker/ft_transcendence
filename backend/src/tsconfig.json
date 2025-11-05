@@ -1,5 +1,6 @@
 {
-	"compilerOptions": {
+	"compilerOptions":
+	{
 		"module": "es2022",
 		"target": "es2017",
 		"moduleResolution": "node",
@@ -7,6 +8,6 @@
 		"types": ["node"],
 		"outDir": "./dist",
 	},
-	"include": ["ts/**/*"],
+	"include": ["ts/*"],
 	"exclude": ["node_modules"]
 }

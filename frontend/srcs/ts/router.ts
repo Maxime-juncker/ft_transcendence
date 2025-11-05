@@ -5,13 +5,12 @@ export class Router
 	private static readonly EXIT_KEY: string = 'Escape';
 	private static readonly homeButton1: string = 'one player';
 	private static readonly homeButton2: string = 'two player';
-	private button1Element = document.getElementById('1player') as HTMLDivElement;
-	private button2Element = document.getElementById('2player') as HTMLDivElement;
+	private button1Element = document.getElementById('1player') as HTMLButtonElement;
+	private button2Element = document.getElementById('2player') as HTMLButtonElement;
 
 	currentPage: string = 'home';
 	pages: Map<string, HTMLDivElement> = new Map();
 	gameInstance: GameClient | null = null;
-
 
 	constructor()
 	{
