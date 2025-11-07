@@ -1,8 +1,9 @@
 import fastifyStatic from '@fastify/static';
-import Fastify, { FastifyRequest, FastifyReply } from "fastify";
+import Fastify from "fastify";
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 
+import * as core from '@core/core.js';
 import { chatSocket } from '@modules/chat/chat.js';
 import { registerCorsProvider } from 'providers/cors.js';
 import { registerOAuth2Providers } from 'providers/oauth2.js';
@@ -14,24 +15,16 @@ import { userRoutes } from '@modules/users/user.route.js';
 
 import { loadConfig } from '@core/init.js';
 
-export interface DbResponse {
-	code:	number;
-	data:	any;
-}
-
 /* setup sqlite3 */
 const db = await open({
 	filename: '/var/lib/sqlite/app.sqlite',
 	driver: sqlite3.Database
 });
+
 const fastify = Fastify({ logger: false })
 await loadConfig("/config.json", db);
 
-// directory of avatars
-export const uploadDir : string = "/var/www/avatars/"
-
 // setup dependencies
-
 await fastify.register(import('@fastify/multipart'));
 await fastify.register(import('@fastify/websocket'));
 
@@ -46,7 +39,7 @@ registerCorsProvider(fastify);
 
 /* root to access avatars */
 fastify.register(fastifyStatic, {
-  root: uploadDir,
+  root: core.uploadDir,
   prefix: '/api/images/',
 });
 

@@ -1,6 +1,13 @@
 import { getDB } from '@core/server.js';
 import { getUserByName, getUserStats } from '@modules/users/user.js';
-const connections = new Set();
+import { WebSocket } from '@fastify/websocket';
+
+interface ChatConn {
+	ws:			WebSocket;
+	login:		string;
+}
+
+const connections = new Set<ChatConn>();
 
 async function handleCommand(str: string, connection) : Promise<string>
 {
@@ -21,7 +28,14 @@ async function handleCommand(str: string, connection) : Promise<string>
 	}
 }
 
-async function onMessage(message: any, connection: any, clientIp: any)
+async function newMessage(data: JSON, conn: ChatConn) : Promise<string>
+{
+	const res = await getUserByName(conn.login, getDB());
+	if (res.code != 200)
+		return "";
+}
+
+async function onMessage(message: any, connection: ChatConn, clientIp: any)
 {
 	try
 	{
@@ -35,7 +49,7 @@ async function onMessage(message: any, connection: any, clientIp: any)
 					message: result
 				});
 				console.log(str);
-				connection.send(str);
+				connection.ws.send(str);
 				return ;
 			}
 			console.log(`${clientIp}: ${msg}`);
@@ -47,13 +61,13 @@ async function onMessage(message: any, connection: any, clientIp: any)
 	}
 }
 
-export function chatSocket(connection: any, request: any)
+export function chatSocket(connection: WebSocket, request: any)
 {
 	const clientIp = request.socket.remoteAddress;
-	console.log(`Client connected from: ${clientIp}`);
+	console.log(`Client connected from: ${request.url}`);
 	connection.send(JSON.stringify({ username: "<SERVER>", message: "welcome to room chat!" }));
 
-	connections.add(connection);
+	connections.add({ ws: connection, login: "Guest"});
 	broadcast(JSON.stringify({ username: "<SERVER>", message: `${clientIp}: has joined the room!`}), connection);
 	connection.on('message', async (message: any) => onMessage(message, connection, clientIp));
 
@@ -70,12 +84,12 @@ export function chatSocket(connection: any, request: any)
 
 function broadcast(message: any, sender = null)
 {
-	connections.forEach((conn: any) => {
-		if (conn !== sender && conn.readyState === conn.OPEN)
+	connections.forEach((conn: ChatConn) => {
+		if (conn.ws !== sender && conn.ws.readyState === conn.ws.OPEN)
 		{
 			try
 			{
-				conn.send(message);
+				conn.ws.send(message);
 			}
 			catch (err: any)
 			{

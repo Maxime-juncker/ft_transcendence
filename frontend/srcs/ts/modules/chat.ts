@@ -1,40 +1,9 @@
-import { strToCol, hashString } from './sha256.js';
-import { User, UserStatus, MainUser } from './User.js'
+import { strToCol, hashString } from 'sha256.js';
+import { User, UserStatus, MainUser } from 'User.js'
+import * as usr from './chat_user.js';
+import * as utils from './chat_utils.js'
 
-function applyMsgStyle(msg: string) : string
-{
-	return `[${msg}]`;
-}
-
-function helpMsg() : string
-{
-	const msg: string = ` -- help --
-TERMINAL
-	/ping   test connection to server
-	/clear	clear chat
-
-GAME MANAGMENT
-	/addGame {user1 user2, score1, score2}	add game to history
-
-USER MANAGMENT
-	/updateMe {oldPassw, name, email, passw}	update your profile infos
-	/stats {username}							show stats of user
-	/inspect {username}							show info of user
-	/addFriend {username}						send friend request to user
-	/getHist {username}							show matchs history of user
-`;
-
-	return msg;
-}
-
-function serverReply(msg: string) : Message
-{
-	const user = new User();
-	user.setUser(-1, "<SERVER>", "", "", UserStatus.UNKNOW);
-	return new Message(user, msg);
-}
-
-class Message
+export class Message
 {
 	private m_sender:	User;
 	private m_msg:		string;
@@ -66,7 +35,7 @@ class Message
 		container.className = className;
 
 		const senderTxt = document.createElement("h1");
-		senderTxt.innerText = applyMsgStyle(this.m_sender.name);
+		senderTxt.innerText = utils.applyMsgStyle(this.m_sender.name);
 		senderTxt.style.color = strToCol(this.m_sender.name);
 
 		const msg = document.createElement("p");
@@ -86,17 +55,26 @@ class Message
 		var code: number;
 		switch (args[0])
 		{
+			case "/block":
+				chat.displayMessage(await usr.block(chat.getUser().getId(), args[1]));
+				return true;
+			case "/unblock":
+				chat.displayMessage(await usr.unblock(chat.getUser().getId(), args[1]));
+				return true;
+			case "/getblock":
+				chat.displayMessage(await usr.getBlocked(chat.getUser().getId()));
+				return true;
 			case "/clear":
 				chat.getChatbox().innerHTML = "";
 				return true;
 			case "/help":
-				chat.displayMessage(serverReply(helpMsg()))
+				chat.displayMessage(utils.serverReply(utils.helpMsg()))
 				return true;
 			case "/addFriend":
 				if (args.length != 2) return ;
 				code = await chat.getUser()?.addFriend(args[1]);
-				if (code == 404) chat.displayMessage(serverReply("user not found"))
-				if (code == 200) chat.displayMessage(serverReply("request sent"))
+				if (code == 404) chat.displayMessage(utils.serverReply("user not found"))
+				if (code == 200) chat.displayMessage(utils.serverReply("request sent"))
 				return true;
 			case "/getHist":
 				if (args.length != 2) return ;
@@ -105,8 +83,8 @@ class Message
 				var data = await response.json();
 				console.log(data);
 				code = response.status;
-				if (code == 404) chat.displayMessage(serverReply("no history"))
-				if (code == 200) chat.displayMessage(serverReply(JSON.stringify(data)));
+				if (code == 404) chat.displayMessage(utils.serverReply("no history"))
+				if (code == 200) chat.displayMessage(utils.serverReply(JSON.stringify(data)));
 				return true;
 			case "/addGame":
 				if (args.length != 5) return ;
@@ -121,7 +99,7 @@ class Message
 					})
 				});
 				var data = await response.json();
-				chat.displayMessage(serverReply(JSON.stringify(data)))
+				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
 				return true;
 			case "/UpdateMe":
 				if (chat.getUser().getId() == -1) return true; // not login
@@ -137,7 +115,7 @@ class Message
 					})
 				});
 				var data = await response.json();
-				chat.displayMessage(serverReply(JSON.stringify(data)))
+				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
 				if (chat.getUser().name == args[1])
 					chat.getUser().logout();
 				return true;
@@ -166,9 +144,11 @@ export class Chat
 		this.m_chatInput = chatInput;
 		this.m_user = user;
 		this.m_chatlog = [];
+		user.onLogin((user: MainUser) => this.resetChat(user));
+		user.onLogout((user: MainUser) => this.resetChat(user));
 
 		console.log(`connecting to chat websocket: ${window.location.host}`)
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?login=${user.getId()}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
@@ -177,6 +157,15 @@ export class Chat
 	public getChatbox(): HTMLElement	{ return this.m_chatbox; }
 	public getUser(): MainUser			{ return this.m_user; }
 	public getWs(): WebSocket			{ return this.m_ws; }
+
+	public resetChat(user: MainUser) : void
+	{
+		console.log(`connecting to chat websocket: ${window.location.host}`)
+		this.m_ws.close();
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?login=${this.m_user.name}`);
+
+		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
+	}
 
 	private sendMsgFromInput(event: any)
 	{
@@ -204,7 +193,6 @@ export class Chat
 		this.m_chatbox.prepend(newMsg.toHtml("user-msg"));
 		this.m_chatlog.push(newMsg);
 	}
-
 
 	public async sendMsg(sender: User, msg: string)
 	{

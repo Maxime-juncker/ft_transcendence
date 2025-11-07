@@ -9,6 +9,13 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 		return await user.getUserHistByName(request, reply, getDB());
 	})
 
+	fastify.get('/get_blocked_users/:userid', async (request: FastifyRequest, reply: FastifyReply) => {
+		const { user_id } = request.params as { user_id: number };
+
+		const res = await user.getBlockedUsrById(user_id, getDB());
+		return reply.code(res.code).send(res.data);
+	})
+
 	fastify.post('/add_game_history', async (request: FastifyRequest, reply: FastifyReply) => {
 		const { user1_name, user2_name, user1_score, user2_score } = request.body as {
 			user1_name:		string,
@@ -38,7 +45,6 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				handler: async (request, reply) => {
 					const { user_id } = request.query as { user_id: number };
 					const res = await user.getUserById(user_id, getDB());
-					console.log(res.data);
 					return reply.code(res.code).send(res.data);
 				}
 			}

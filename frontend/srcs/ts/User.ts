@@ -139,7 +139,6 @@ export class User {
 			return response.status;
 
 		var data = await response.json();
-		console.log(data);
 		this.name = data.name;
 		this.m_avatarPath = data.avatar;
 		this.m_status = data.status;
@@ -193,6 +192,9 @@ export class MainUser extends User {
 	private m_friendsElements: UserElement[];
 	private m_pndgFriendsElements: UserElement[];
 
+	private m_onLoginCb:	Array<(user: MainUser) => void>;
+	private m_onLogoutCb:	Array<(user: MainUser) => void>;
+
 	constructor(parent: HTMLElement, friendsContainer: HTMLElement, pndgFriendsContainer: HTMLElement) {
 		super()
 		this.m_htmlFriendContainer = friendsContainer;
@@ -203,7 +205,13 @@ export class MainUser extends User {
 
 		this.m_userElement.getBtn2().addEventListener("click", () => this.logout());
 		this.m_userElement.getStatusSelect().addEventListener("change", () => this.updateStatus(this.m_userElement.getStatusSelect().value, this, this.m_userElement));
+
+		this.m_onLoginCb = [];
+		this.m_onLogoutCb = [];
 	}
+
+	public onLogin(cb: ((user: MainUser) => void)) { this.m_onLoginCb.push(cb); }
+	public onLogout(cb: ((user: MainUser) => void)) { this.m_onLogoutCb.push(cb); }
 
 	public async oauth2Login(id: string, source: number) {
 		var response = await fetch(`/api/oauth2/login`, {
@@ -215,13 +223,14 @@ export class MainUser extends User {
 			})
 		});
 		const data = await response.json();
-		console.log(data);
 
 		if (response.status == 200) {
 			var status = data.status;
 			this.setUser(data.id, data.name, data.email, data.avatar, status);
 			this.setStatus(this.getStatus());
 			await this.refreshSelf();
+
+			this.m_onLoginCb.forEach(cb => cb(this));
 		}
 
 		return { status: response.status, data: data };
@@ -248,6 +257,8 @@ export class MainUser extends User {
 			this.setUser(data.id, data.name, data.email, data.avatar, status);
 			this.setStatus(this.getStatus());
 			await this.refreshSelf();
+
+			this.m_onLoginCb.forEach(cb => cb(this));
 		}
 
 		return { status: response.status, data: data };
@@ -259,6 +270,8 @@ export class MainUser extends User {
 		this.m_userElement.updateHtml(null);
 		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
 		this.m_friendsElements = [];
+
+		this.m_onLogoutCb.forEach(cb => cb(this));
 	}
 
 	public async refreshSelf()
@@ -326,7 +339,6 @@ export class MainUser extends User {
 		await this.updateFriendContainer();
 
 		const data = await response.json();
-		console.log(`${response.status} : ${JSON.stringify(data)}`);
 		return response;
 	}
 

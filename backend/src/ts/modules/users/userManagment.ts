@@ -4,8 +4,9 @@ import { createWriteStream } from 'fs';
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
-import { DbResponse, uploadDir, getDB } from "@core/server.js";
-import { getUserById } from "./user.js";
+import { getDB } from "@core/server.js";
+import { DbResponse, uploadDir } from "@core/core.js";
+import { getUserById, getUserByName } from "./user.js";
 
 function validate_email(email:string)
 {
@@ -188,5 +189,39 @@ export async function uploadAvatar(request: any, reply: any, db: Database)
 	{
 		console.error(error);
 		return reply.code(500).send({ error: "failed to upload file" });
+	}
+}
+
+export async function blockUser(user_id: number, loginToBlock: string, db: Database) : Promise<DbResponse>
+{
+	const res = await getUserByName(loginToBlock, db);
+	if (res.code != 200)
+		return res;
+
+	const sql = "INSERT INTO blocked_usr (user1_id, user2_id) VALUES(?, ?)";
+	try {
+		await db.run(sql, [user_id, res.data.id]);
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err) {
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
+export async function unBlockUser(user_id: number, loginToUnBlock: string, db: Database) : Promise<DbResponse>
+{
+	const res = await getUserByName(loginToUnBlock, db);
+	if (res.code != 200)
+		return res;
+
+	const sql = "DELETE from blocked_usr WHERE user1_id = ? AND user2_id = ?";
+	try {
+		await db.run(sql, [user_id, res.data.id]);
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err) {
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
 	}
 }

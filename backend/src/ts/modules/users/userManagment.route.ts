@@ -55,4 +55,19 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 	fastify.post('/update', async (request: FastifyRequest, reply: FastifyReply) => {
 		return await mgmt.updateUserReq(request, reply, getDB());
 	})
+
+	fastify.post('/block/:id/:username', async (request: FastifyRequest, reply: FastifyReply) => {
+		const { id, username } = request.params as { id: number, username: string };
+		console.log(request.params, id, username);
+
+		const res = await mgmt.blockUser(id, username, getDB());
+		return reply.code(res.code).send(res.data);
+	})
+
+	fastify.delete('/unblock/:id/:username', async (request: FastifyRequest, reply: FastifyReply) => {
+		const { id, username } = request.params as { id: number, username: string };
+
+		const res = await mgmt.unBlockUser(id, username, getDB());
+		return reply.code(res.code).send(res.data);
+	})
 }

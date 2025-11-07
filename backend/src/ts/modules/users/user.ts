@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite'
-import { DbResponse } from '@core/server.js';
+import { DbResponse } from '@core/core.js';
 
 export interface GameRes {
 	user1_name:		string;
@@ -125,4 +125,20 @@ export async function getUserByNameReq(request: FastifyRequest, reply: FastifyRe
 	const { profile_name }  = request.query as { profile_name: string };
 	const response = await getUserByName(profile_name, db);
 	return reply.code(response.code).send(response.data);
+}
+
+export async function getBlockedUsrById(id: number, db: Database) : Promise<DbResponse>
+{
+	const sql = "SELECT user2_id FROM blocked_usr WHERE user1_id = ?";
+	try {
+		const rows = await db.all(sql, [id]);
+		if (!rows || rows.length == 0)
+			return { code: 404, data: { message: "no blocked users" }};
+		return { code: 200, data: rows };
+	}
+	catch (err) {
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+
 }
