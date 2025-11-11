@@ -1,11 +1,29 @@
-import { getDB } from '@core/server.js';
-import { getBlockedUsrById, getUserByName, getUserStats } from '@modules/users/user.js';
+import * as core from '@core/core.js';
+import { getBlockedUsrById, getUserById, getUserByName, getUserStats } from '@modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import * as utils from 'utils.js';
 import { FastifyRequest } from 'fastify';
 
-const connections = new Map<WebSocket, number>(); // websocket => user login
+//TODO: if a user block someone everyone is blocked ?
+export const connections = new Map<WebSocket, number>(); // websocket => user login
 
+function serverMsg(str: string): string
+{
+	return JSON.stringify({ username: "<SERVER>", message: str });
+}
+
+async function getUserLoginByWs(ws: WebSocket): Promise<string>
+{
+	if (!connections.has(ws))
+		return "";
+	const res = await getUserById(connections.get(ws), core.db);
+	if (res.code != 200)
+		return res.data;
+	return res.data.name;
+}
+
+// TODO: use flag in chat (e.g: if flag == DM them msg is underlined)
+// TODO: move to front
 async function handleCommand(str: string, connection) : Promise<string>
 {
 	const args: string[] = str.split(/\s+/);
@@ -13,10 +31,10 @@ async function handleCommand(str: string, connection) : Promise<string>
 	switch (args[0])
 	{
 		case "/inspect":
-			response = await getUserByName(args[1], getDB());
+			response = await getUserByName(args[1], core.db);
 			return JSON.stringify(response.data);
 		case "/stats":
-			response = await getUserStats(args[1], getDB());
+			response = await getUserStats(args[1], core.db);
 			return JSON.stringify(response[1]);
 		case "/ping":
 			return "pong";
@@ -25,7 +43,7 @@ async function handleCommand(str: string, connection) : Promise<string>
 	}
 }
 
-async function onMessage(message: any, connection: WebSocket, clientIp: any)
+async function onMessage(message: any, connection: WebSocket)
 {
 	try
 	{
@@ -34,15 +52,13 @@ async function onMessage(message: any, connection: WebSocket, clientIp: any)
 		if (json.isCmd === true)
 		{
 			const result = await handleCommand(json.message, connection);
-			const str = JSON.stringify({
-				username: "<SERVER>",
-				message: result
-			});
+			if (result == "") // no server feedback
+				return ;
+			const str = serverMsg(result);
 			console.log(str);
 			connection.send(str);
 			return ;
 		}
-		console.log(`${clientIp}: ${msg}`);
 		await broadcast(msg, connection);
 	}
 	catch (err)
@@ -53,30 +69,30 @@ async function onMessage(message: any, connection: WebSocket, clientIp: any)
 
 export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 {
-
 	try {
-		const clientIp = request.socket.remoteAddress;
-		ws.send(JSON.stringify({ username: "<SERVER>", message: "welcome to room chat!" }));
+		ws.send(serverMsg("welcome to room chat!"));
+		console.log(request.url);
 
-
-		const login = utils.getUrlVar(request.url)["login"];
-		var res = await getUserByName(login, getDB());
-		var id = -1; // will stay at -1 if user is not login
+		const id = utils.getUrlVar(request.url)["userid"];
+		var res = await getUserById(id, core.db);
+		var login = "Guest"; // will stay at -1 if user is not login
 		if (res.code === 200)
-			id = res.data.id;
+			login = res.data.name;
 		
 		connections.set(ws, id);
-		ws.on('message', async (message: any) => onMessage(message, ws, clientIp));
+		ws.on('message', async (message: any) => onMessage(message, ws));
 
 		ws.on('error', (error: any) => {
-			console.error(`${clientIp}: websocket error: ${error}`);
+			console.error(`${login}: websocket error: ${error}`);
 		})
 
 		ws.on('close', (code: any, reason: any) => {
 			connections.delete(ws);
-			broadcast(JSON.stringify({ username: "<SERVER>", message: `${clientIp}: has left the room` }), ws);
-			console.log(`${clientIp}: disconnected - Code: ${code}, Reason: ${reason?.toString() || 'none'}`);
+			broadcast(serverMsg(`${login} has left the room`), ws);
+			console.log(`${login}: disconnected - Code: ${code}, Reason: ${reason?.toString() || 'none'}`);
 		});
+
+		broadcast(serverMsg(`${login} has join the room`), ws);
 	}
 	catch (err)
 	{
@@ -87,7 +103,7 @@ export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 async function getBlockUsr(userid: number)
 {
 	var blockedUsr = [];
-	var res = await getBlockedUsrById(userid, getDB());
+	var res = await getBlockedUsrById(userid, core.db);
 	if (res.code == 200)
 		blockedUsr = res.data;
 	return blockedUsr;
@@ -109,6 +125,7 @@ async function isBlocked(blockedUsr: any, key: WebSocket, sender: WebSocket): Pr
 async function broadcast(message: any, sender: WebSocket = null)
 {
 
+	console.log("broadcasting: ", message);
 	const blockedUsrSender = await getBlockUsr(connections.get(sender));
 	connections.forEach(async (id: number, conn: WebSocket) => {
 
@@ -120,10 +137,10 @@ async function broadcast(message: any, sender: WebSocket = null)
 			if (await isBlocked(blockedUsrSender, conn, sender) ||
 				await isBlocked(blockedUsr, sender, conn))
 			{
+				console.log("msg will be blocked");
 				const val = await JSON.parse(message);
 				val.message = "[REDACTED]";
 				message = JSON.stringify(val);
-				console.log(val);
 			}
 			conn.send(message);
 		}

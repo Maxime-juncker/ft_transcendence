@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { createUserOAuth2, loginOAuth2 } from '@modules/users/userManagment.js';
-import { getDB } from '@core/server.js';
+import * as core from '@core/core.js';
 import { AuthSource } from '@modules/oauth2/routes.js'
 
 export function githubOAuth2Routes (
@@ -37,7 +37,7 @@ export function githubOAuth2Routes (
 			const email = data.email;
 			const avatar = data.avatar_url;
 
-			var res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, getDB());
+			var res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
 			const url = `https://${process.env.HOST}:8081/login.html?event=oauth_redir&id=${id}&source=${AuthSource.GITHUB}`;
 			return reply.redirect(url);
 		})

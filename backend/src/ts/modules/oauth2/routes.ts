@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import { getDB } from "@core/server.js";
+import * as core from '@core/core.js';
 import { loginOAuth2 } from "@modules/users/userManagment.js";
 
 import { fortyTwoOAuth2Routes } from "./fortyTwo.route.js";
@@ -20,7 +20,7 @@ export async function OAuthRoutes(fastify: FastifyInstance, options: FastifyPlug
 			source: number,
 		}
 		console.log(request.body, id, source);
-		const res = await loginOAuth2(id, source, getDB());
+		const res = await loginOAuth2(id, source, core.db);
 		return reply.code(res.code).send(res.data);
 	});
 

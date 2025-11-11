@@ -86,6 +86,19 @@ export class Message
 				if (code == 404) chat.displayMessage(utils.serverReply("no history"))
 				if (code == 200) chat.displayMessage(utils.serverReply(JSON.stringify(data)));
 				return true;
+			case "/dm":
+				var response = await fetch(`/api/chat/dm`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						login: chat.getUser().name,
+						username: args[1],
+						msg: this.m_msg,
+					})
+				});
+				var data = await response.json();
+				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
+				return true;
 			case "/addGame":
 				if (args.length != 5) return ;
 				var response = await fetch(`/api/user/add_game_history`, {
@@ -147,8 +160,9 @@ export class Chat
 		user.onLogin((user: MainUser) => this.resetChat(user));
 		user.onLogout((user: MainUser) => this.resetChat(user));
 
+		// TODO: merge with resetChat
 		console.log(`connecting to chat websocket: ${window.location.host}`)
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?login=${user.getId()}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${user.getId()}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
@@ -162,7 +176,7 @@ export class Chat
 	{
 		console.log(`connecting to chat websocket: ${window.location.host}`)
 		this.m_ws.close();
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?login=${this.m_user.name}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.getId()}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 	}

@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import { getDB } from '@core/server.js';
+import * as core from '@core/core.js';
 import * as friends from '@modules/users/friends.js'
 
 export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
@@ -11,7 +11,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			user2: number
 		};
 
-		const res = await friends.removeFriend(user1, user2, getDB());
+		const res = await friends.removeFriend(user1, user2, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -21,7 +21,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			user2: number
 		};
 
-		const res = await friends.acceptFriend(user1, user2, getDB());
+		const res = await friends.acceptFriend(user1, user2, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -31,7 +31,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			friend_name: string
 		};
 
-		const res = await friends.addFriend(user_id, friend_name, getDB());
+		const res = await friends.addFriend(user_id, friend_name, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -49,7 +49,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 					}
 				},
 				handler: (request, reply) => {
-					return friends.getFriends(request, reply, getDB());
+					return friends.getFriends(request, reply, core.db);
 				}
 			})
 }

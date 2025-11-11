@@ -1,18 +1,18 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
-import { getDB } from '@core/server.js'
+import * as core from '@core/core.js';
 import * as user from '@modules/users/user.js'
 
 export async function userRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
 
 	fastify.get('/get_history_name/:username', async (request: FastifyRequest, reply: FastifyReply) => {
-		return await user.getUserHistByName(request, reply, getDB());
+		return await user.getUserHistByName(request, reply, core.db);
 	})
 
 	fastify.get('/get_blocked_users/:userid', async (request: FastifyRequest, reply: FastifyReply) => {
 		const { userid } = request.params as { userid: number };
 
-		const res = await user.getBlockedUsrById(userid, getDB());
+		const res = await user.getBlockedUsrById(userid, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -25,7 +25,7 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 		};
 		var game = { user1_name, user2_name, user1_score, user2_score };
 
-		const res = await user.addGameToHist(game, getDB());
+		const res = await user.addGameToHist(game, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -44,7 +44,7 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				},
 				handler: async (request, reply) => {
 					const { user_id } = request.query as { user_id: number };
-					const res = await user.getUserById(user_id, getDB());
+					const res = await user.getUserById(user_id, core.db);
 					return reply.code(res.code).send(res.data);
 				}
 			}
@@ -65,7 +65,7 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				},
 				handler: async (request, reply) => {
 					const { profile_name }  = request.query as { profile_name: string };
-					const response = await user.getUserByName(profile_name, getDB());
+					const response = await user.getUserByName(profile_name, core.db);
 					return reply.code(response.code).send(response.data);
 				}
 			}

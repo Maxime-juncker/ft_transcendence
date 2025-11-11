@@ -4,7 +4,7 @@ import { createWriteStream } from 'fs';
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
 
-import { getDB } from "@core/server.js";
+import * as core from '@core/core.js';
 import { DbResponse, uploadDir } from "@core/core.js";
 import { getUserById, getUserByName } from "./user.js";
 
@@ -71,7 +71,7 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 
 export async function updateUserRank(userId: number, newRank: number, login: string) : Promise<DbResponse>
 {
-	const res = await getUserById(userId, getDB());
+	const res = await getUserById(userId, core.db);
 	if (res.code != 200) return res;
 
 	if (res.data.rank < newRank)

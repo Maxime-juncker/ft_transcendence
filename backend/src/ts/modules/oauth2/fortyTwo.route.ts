@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { createUserOAuth2, loginOAuth2 } from '@modules/users/userManagment.js';
-import { getDB } from '@core/server.js';
+import * as core from '@core/core.js';
 import { AuthSource } from '@modules/oauth2/routes.js'
 
 export function fortyTwoOAuth2Routes (
@@ -36,9 +36,9 @@ export function fortyTwoOAuth2Routes (
 			const email = data.email;
 			const avatar = data.image.link;
 
-			var res = await createUserOAuth2(email, name, id, AuthSource.FORTY_TWO, avatar, getDB());
+			var res = await createUserOAuth2(email, name, id, AuthSource.FORTY_TWO, avatar, core.db);
 			if (res.code == 200 || res.code == 500)
-				res = await loginOAuth2(id, AuthSource.FORTY_TWO, getDB());
+				res = await loginOAuth2(id, AuthSource.FORTY_TWO, core.db);
 			const url = `https://${process.env.HOST}:8081/login.html?event=oauth_redir&id=${id}&source=${AuthSource.FORTY_TWO}`;
 			return reply.redirect(url);
 		})
