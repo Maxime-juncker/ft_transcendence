@@ -1,11 +1,10 @@
 #!/bin/bash
 
-sqlite3 /var/lib/sqlite/app.db < /db.sql
+sqlite3 /var/lib/sqlite/app.sqlite < /db.sql
 
 cd /var/www/server
 
-npm init -y
-npm install fastify
-node server.ts
+npm install
+npm run build
+exec npm run start
 
-tail -f

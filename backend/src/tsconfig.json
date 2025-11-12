@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+	"module": "es2022",
+	"target": "es2017",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["node"],
+    "outDir": "./dist",
+	"baseUrl": "./ts",
+	"paths": {
+		"@core/*": ["core/*"],
+		"@modules/*": ["modules/*"]
+	}
+  },
+  "include": ["ts/**/*"],
+  "exclude": ["node_modules"]
+}

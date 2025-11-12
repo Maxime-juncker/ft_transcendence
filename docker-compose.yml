@@ -1,7 +1,7 @@
 services:
 
   backend:
-    # restart: always
+    restart: always
     build: ./backend/
     container_name: backend
     env_file: ./.env
@@ -9,6 +9,7 @@ services:
       - "3000:3000"
     volumes:
       - sqlite:/var/lib/sqlite
+      - avatars:/var/www/avatars
     networks:
       - db
 
@@ -19,8 +20,6 @@ services:
     env_file: ./.env
     depends_on:
       - backend
-    volumes:
-      - front_data:/var/www/html
     networks:
       - web
       - db
@@ -39,6 +38,7 @@ services:
     networks:
       - transcendence
       - web
+      - db
 
 networks:
   transcendence:
@@ -49,7 +49,7 @@ networks:
 volumes:
   sqlite:
     name: sqlite
-  front_data:
-    name: front_data
   cert:
     name: cert
+  avatars:
+    name: avatars
