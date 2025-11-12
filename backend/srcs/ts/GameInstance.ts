@@ -193,25 +193,22 @@ export class GameInstance
 
 	public handleKeyPress(keysPressed: Set<string>): void
 	{
-		keysPressed.forEach(key =>
+		keysPressed.forEach(key => { this.keysPressed.add(this.getKey(key)); });
+	}
+
+	private getKey(key: string): string
+	{
+		switch (key)
 		{
-			if (key === '1U')
-			{
-				this.keysPressed.add(GameInstance.PLAYER1_UP_KEY);
-			}
-			else if (key === '1D')
-			{
-				this.keysPressed.add(GameInstance.PLAYER1_DOWN_KEY);
-			}
-			else if (key === '2U')
-			{
-				this.keysPressed.add(GameInstance.PLAYER2_UP_KEY);
-			}
-			else if (key === '2D')
-			{
-				this.keysPressed.add(GameInstance.PLAYER2_DOWN_KEY);
-			}
-		});
+			case '1U':
+				return (GameInstance.PLAYER1_UP_KEY);
+			case '1D':
+				return (GameInstance.PLAYER1_DOWN_KEY);
+			case '2U':
+				return (GameInstance.PLAYER2_UP_KEY);
+			case '2D':
+				return (GameInstance.PLAYER2_DOWN_KEY);
+		}
 	}
 
 	set running(isRunning: boolean)

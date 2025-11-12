@@ -68,7 +68,6 @@ export class ServerSideRendering
 	{
 		this.server.get('*', (request, reply) =>
 		{
-			console.log(`Serving page for ${request.url}`);
 			reply.type('text/html').send(this.getPage());
 		});
 	}

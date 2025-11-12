@@ -15,7 +15,7 @@ export class GameClient
 	private static readonly PLAY_AGAIN_MSG: string = `Press ${GameClient.PLAY_AGAIN_KEY} to play again`;
 	private static readonly COLOR: string = '255, 255, 255';
 	private static readonly COUNTDOWN_START: number = 3;
-	private static readonly PLAYER1_UP_KEY: string = 'z';
+	private static readonly PLAYER1_UP_KEY: string = 'w';
 	private static readonly PLAYER1_DOWN_KEY: string = 's';
 	private static readonly PLAYER2_UP_KEY: string = 'ArrowUp';
 	private static readonly PLAYER2_DOWN_KEY: string = 'ArrowDown';
@@ -242,12 +242,16 @@ export class GameClient
 		{
 			case GameClient.PLAYER1_UP_KEY:
 				this.keysToSend += '1U';
+				break ;
 			case GameClient.PLAYER1_DOWN_KEY:
 				this.keysToSend += '1D';
+				break ;
 			case GameClient.PLAYER2_UP_KEY:
 				this.keysToSend += '2U';
+				break ;
 			case GameClient.PLAYER2_DOWN_KEY:
 				this.keysToSend += '2D';
+				break ;
 		}
 	}
 
