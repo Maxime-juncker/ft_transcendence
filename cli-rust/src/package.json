@@ -1,0 +1,10 @@
+{
+    "name" : "cli-app",
+    "version": "1.0.0",
+    "description": "cli app to interact with pong webapp",
+    "license": "ISC",
+    "main" : "./cli.js",
+    "dependencies": {
+        "commander" : "^14.0.2"
+    }
+}
