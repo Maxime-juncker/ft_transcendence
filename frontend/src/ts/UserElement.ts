@@ -42,7 +42,7 @@ export class UserElement
 		this.m_htmlAvatar = document.createElement("img");
 		this.m_htmlAvatar.className = "user-avatar";
 
-		this.m_htmlName = document.createElement("h3")
+		this.m_htmlName = document.createElement("p")
 		
 		this.m_htmlStatusSelect = document.createElement("select")
 

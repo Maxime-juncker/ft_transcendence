@@ -117,6 +117,17 @@ export class Message
 				var data = await response.json();
 				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
 				return true;
+			case "/deleteMe":
+				if (chat.getUser().getId() == -1) return true; // not login
+				var response = await fetch ('api/user/delete', {
+					method: "DELETE",
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ user_id: chat.getUser().getId() })
+				});
+				var data = await response.json();
+				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
+				chat.getUser().logout();
+				return true;
 			case "/UpdateMe":
 				if (chat.getUser().getId() == -1) return true; // not login
 				var response = await fetch(`/api/user/update`, {

@@ -3,11 +3,12 @@ import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { randomBytes } from "crypto";
 
 import * as core from '@core/core.js';
 import { DbResponse, uploadDir } from "@core/core.js";
 import { getUserById, getUserByName } from "./user.js";
-import { getFriends } from "./friends.js";
+import { hashString } from "@modules/sha256.js";
 
 function validate_email(email:string)
 {
@@ -24,19 +25,6 @@ export interface UserUpdate {
 	name:		string;
 	passw:		string;
 	email:		string;
-}
-
-function hash_string(name: string)
-{
-	let hash = 0;
-
-	for	(let i = 0; i < name.length; i++)
-	{
-		let c = name.charCodeAt(i);
-		hash = ((hash << 5) - hash) + c;
-		hash = hash & hash;
-	}
-	return hash;
 }
 
 export async function loginSession(id: string, db: Database) : Promise<DbResponse>
@@ -153,7 +141,21 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 	if (res.code != 200)
 		return res;
 
-	return null;
+	const rBytes = randomBytes(64).toString('hex');
+	const name = `DELETED_USER${user_id}${randomBytes(2).toString('hex')}`
+	console.log(rBytes);
+	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE id = ?"; // TODO: to continue;
+	try
+	{
+		const result = await db.run(sql, [name, rBytes, rBytes, user_id]);
+		console.log(`user has been deleted ${result.changes}`)
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err)
+	{
+		console.log(`Database Error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
 }
 
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
@@ -207,7 +209,7 @@ export async function uploadAvatar(request: any, reply: any, db: Database)
 		return reply.code(400).send({ error: "no file uploaded" });
 
     const email = request.headers['email'] as string;
-	const filename = hash_string(email).toString();
+	const filename = await hashString(email);
 	const filepath = path.join(uploadDir, filename);
     const id = request.headers['id'] as string;
 

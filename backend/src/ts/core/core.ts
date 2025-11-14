@@ -32,7 +32,7 @@ export async function createServer()
 	});
 
 	fastify = Fastify({ logger: false });
-	sessionKey = randomBytes(64).toString('hex');
+	sessionKey = process.env.SESSION_SECRET;
 	console.log("server created");
 }
 
