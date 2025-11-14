@@ -1,7 +1,6 @@
 import { hashString } from 'sha256.js'
 import { Chat } from '@modules/chat.js'
 import { MainUser } from './User.js';
-import { getUrlVar } from './utils.js';
 
 async function sendFriendInvite()
 {
@@ -108,8 +107,9 @@ async function login()
 {
 	var	emailInput = document.getElementById("login_email") as HTMLInputElement;
 	var	passwInput = document.getElementById("login_passw") as HTMLInputElement;
+	var totpInput = document.getElementById("login_totp") as HTMLInputElement;
 
-	const { status, data } = await user.login(emailInput.value, passwInput.value);
+	const { status, data } = await user.login(emailInput.value, passwInput.value, totpInput.value);
 	if (status == -1)
 	{
 		setPlaceholderTxt("please logout first.");
@@ -119,11 +119,78 @@ async function login()
 	const jsonString: string = JSON.stringify(data);
 	addLog(status, jsonString);
 	if (status == 404)
-		setPlaceholderTxt("passw or email invalid");
+		setPlaceholderTxt("passw or email or totp invalid");
 	else if (status == 500) 
 		setPlaceholderTxt("database error");
 	else if (status == 200)
 		setPlaceholderTxt("connected !");
+}
+
+async function new_totp()
+{
+	const { status, data } = await user.newTotp();
+	var qrcode = data.qrcode;
+	if (!qrcode)
+	{
+		setPlaceholderTxt("you need to login first");
+		return ;
+	}
+	else
+	{
+		const img = document.createElement('img');
+		img.id = "qrcode_img"
+		img.src = qrcode;
+		img.alt = "TOTP qrcode";
+		document.getElementById('qrcode_holder').appendChild(img);
+	}
+	addLog(status, JSON.stringify(data));
+}
+
+async function del_totp()
+{
+	const status = await user.delTotp();
+
+	switch(status)
+	{
+		case 200:
+			setPlaceholderTxt("Totp removed");
+			break;
+		case 500:
+			setPlaceholderTxt("Database error");
+			break;
+		case 404:
+			setPlaceholderTxt("you need to login first");
+			break;
+		default:
+			setPlaceholderTxt("Unknow error");
+			break;
+	}
+}
+
+async function validate_totp()
+{
+	var totp = document.getElementById("totp_check") as HTMLInputElement;
+
+	const status = await user.validateTotp(totp.value);
+
+	switch(status)
+	{
+		case 200:
+			setPlaceholderTxt("Totp validated");
+			const img = document.getElementById("qrcode_img");
+			if (img)
+				img.remove();
+			break;
+		case 500:
+			setPlaceholderTxt("Database error");
+			break;
+		case 404:
+			setPlaceholderTxt("you need to login first");
+			break;
+		default:
+			setPlaceholderTxt("Unknow error");
+			break;
+	}
 }
 
 
@@ -139,6 +206,9 @@ document.getElementById("refresh_btn")?.addEventListener("click", () => user.ref
 document.getElementById("chat_send_btn")?.addEventListener("click", () => chat.sendMsg(user, chatInput.value));
 document.getElementById("forty_two_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
 document.getElementById("github_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
+document.getElementById("new_totp")?.addEventListener("click", new_totp);
+document.getElementById("del_totp")?.addEventListener("click", del_totp);
+document.getElementById("totp_check_send")?.addEventListener("click", validate_totp);
 
 setInterval(() => user.refreshSelf(), 60000);
 

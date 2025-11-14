@@ -9,6 +9,8 @@ import * as core from '@core/core.js';
 import { DbResponse, uploadDir } from "@core/core.js";
 import { getUserById, getUserByName } from "./user.js";
 import { hashString } from "@modules/sha256.js";
+import { check_totp } from "@modules/2fa/totp.js";
+
 
 function validate_email(email:string)
 {
@@ -43,7 +45,7 @@ export async function loginSession(id: string, db: Database) : Promise<DbRespons
 	}
 }
 
-export async function login(email: string, passw: string, db: Database) : Promise<DbResponse>
+export async function login(email: string, passw: string, totp: string, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
 
@@ -51,6 +53,9 @@ export async function login(email: string, passw: string, db: Database) : Promis
 		const row = await core.db.get(sql, [email, passw]);
 		if (!row)
 			return { code: 404, data: { message: "email or password invalid"}};
+		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
+			return { code: 404, data: { message: "totp invalid"}};
+
 		return { code: 200, data: row};
 	}
 	catch (err) {

@@ -11,6 +11,7 @@ import { OAuthRoutes } from '@modules/oauth2/routes.js';
 import { friendsRoutes } from '@modules/users/friends.route.js';
 import { userRoutes } from '@modules/users/user.route.js';
 import { chatRoutes } from '@modules/chat/chat.route.js';
+import { totpRoutes } from '@modules/2fa/2fa.route.js';
 
 import * as core from '@core/core.js';
 
@@ -53,6 +54,7 @@ export async function initFastify()
 	await core.fastify.register(friendsRoutes, { prefix: '/api/friends'});
 	await core.fastify.register(userRoutes, { prefix: '/api/user'});
 	await core.fastify.register(chatRoutes);
+	await core.fastify.register(totpRoutes);
 
 	registerCorsProvider(core.fastify);
 

@@ -24,8 +24,18 @@
 		<div>
 			<input id="login_email" type="email" placeholder="email">
 			<input id="login_passw" type="password" placeholder="password">
+			<input id="login_totp" type="totp" placeholder="totp">
 			<button id="login_btn" type="submit">submit</button>
 			<button id="refresh_btn" type="submit">refresh self</button>
+		</div>
+		<h1>totp</h1>
+		<div>
+			<button id="del_totp" type="button">delete totp</button>
+			<button id="new_totp" type="button">request new</button>
+			<input id="totp_check" type="totp" placeholder="totp">
+			<button id="totp_check_send" type="submit">check</button>
+		</div>
+		<div id="qrcode_holder">
 		</div>
 
 		<h3 id="placeholder">placeholder</h3>
@@ -57,5 +67,4 @@
 
 	<script>var exports = {};</script>
 	<script type="module" src="./dist/login.js"></script>
-	<script type="module" src="./dist/Chat.js"></script>
 </html>

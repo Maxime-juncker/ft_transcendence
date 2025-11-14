@@ -64,23 +64,33 @@ export class ServerSideRendering
 		</head>
 
 		<body>
-			<button id="forty_two_log_btn">log with intra</button>
-			<button id="github_log_btn">log with github</button>
+		<button id="forty_two_log_btn">log with intra</button>
+		<button id="github_log_btn">log with github</button>
 
-			<h1>create new user</h1>
-			<div>
-				<input id="create_email" type="email" placeholder="email">
-				<input id="create_passw" type="password" placeholder="password">
-				<input id="create_username" type="text" placeholder="username">
+		<h1>create new user</h1>
+		<div>
+			<input id="create_email" type="email" placeholder="email">
+			<input id="create_passw" type="password" placeholder="password">
+			<input id="create_username" type="text" placeholder="username">
 
-				<button id="create_btn" type="submit">submit</button>
+			<button id="create_btn" type="submit">submit</button>
 			</div>
 			<h1>login</h1>
 			<div>
 				<input id="login_email" type="email" placeholder="email">
 				<input id="login_passw" type="password" placeholder="password">
+				<input id="login_totp" type="totp" placeholder="totp">
 				<button id="login_btn" type="submit">submit</button>
 				<button id="refresh_btn" type="submit">refresh self</button>
+			</div>
+			<h1>totp</h1>
+			<div>
+				<button id="del_totp" type="button">delete totp</button>
+				<button id="new_totp" type="button">request new</button>
+				<input id="totp_check" type="totp" placeholder="totp">
+				<button id="totp_check_send" type="submit">check</button>
+			</div>
+			<div id="qrcode_holder">
 			</div>
 
 			<h3 id="placeholder">placeholder</h3>
@@ -111,7 +121,6 @@ export class ServerSideRendering
 
 			<script>var exports = {};</script>
 			<script type="module" src="./dist/login.js"></script>
-			<script type="module" src="./dist/Chat.js"></script>
 	`;
 
 	constructor(server: FastifyInstance)

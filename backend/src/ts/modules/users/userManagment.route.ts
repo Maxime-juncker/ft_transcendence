@@ -31,8 +31,8 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 	})
 
 	fastify.post('/login', async (request: any, reply: FastifyReply) => {
-		const { email, passw } = request.body as { email: string, passw: string };
-		const res = await mgmt.login(email, passw, core.db);
+		const { email, passw, totp } = request.body as { email: string, passw: string, totp: string };
+		const res = await mgmt.login(email, passw, totp, core.db);
 		if (res.code == 200)
 		{
 			request.session.user = res.data.id;

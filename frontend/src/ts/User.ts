@@ -76,6 +76,7 @@ export class User {
 	public getFriends(): User[] { return this.m_friends; }
 	public getPndgFriends(): User[] { return this.m_pndgFriends; }
 	public getId(): number { return this.m_id; }
+	public getEmail(): string { return this.m_email; }
 	// public getAvatarPath() : string { return this.m_avatarPath + "?" + new Date().getTime(); }
 	public getAvatarPath(): string { return this.m_avatarPath; }
 
@@ -252,7 +253,7 @@ export class MainUser extends User {
 		}
 	}
 
-	public async login(email: string, passw: string): Promise<{ status: number, data: any }> {
+	public async login(email: string, passw: string, totp: string): Promise<{ status: number, data: any }> {
 		if (this.getId() != -1)
 			return { status: -1, data: null };
 
@@ -264,6 +265,7 @@ export class MainUser extends User {
 			body: JSON.stringify({
 				email: email,
 				passw: await hashString(passw),
+				totp: totp
 			})
 		});
 		const data = await response.json();
@@ -401,5 +403,58 @@ export class MainUser extends User {
 		await this.updateFriendContainer();
 
 		return status;
+	}
+
+	public async newTotp() : Promise<{status: number, data: any}>
+	{
+		if (this.getId() == -1)
+			return null;
+
+		var response = await fetch("/api/totp/reset", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+				email: this.getEmail(),
+			})
+			
+		});
+		var data = await response.json();
+		return { status: response.status, data: data };
+	}
+
+	public async delTotp() : Promise<number>
+	{
+		if (this.getId() == -1)
+			return 404;
+
+		var response = await fetch("/api/totp/remove", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+			})
+			
+		});
+
+		return response.status;
+	}
+
+	public async validateTotp(totp: string) : Promise<number>
+	{
+		if (this.getId() == -1)
+			return 404;
+
+		var response = await fetch("/api/totp/validate", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.getId().toString(),
+				totp: totp,
+			})
+			
+		});
+
+		return response.status;
 	}
 }
