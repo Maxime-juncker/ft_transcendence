@@ -90,13 +90,14 @@ export class Message
 				chat.displayMessage(utils.serverReply(JSON.stringify(data)));
 				return true;
 			case "/dm":
+				const match = this.m_msg.match(/^\/dm\s+\S+\s+(.+)$/);
 				var response = await fetch(`/api/chat/dm`, {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
 					body: JSON.stringify({
 						login: chat.getUser().name,
 						username: args[1],
-						msg: this.m_msg,
+						msg: match ? match[1] : "is whispering to you!!",
 					})
 				});
 				var data = await response.json();

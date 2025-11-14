@@ -6,15 +6,14 @@ export async function totpRoutes(fastify: FastifyInstance, options: FastifyPlugi
 {
 	fastify.post('/api/totp/reset', async (request:any, reply:any) => {
 		const res = await newTotp(request, reply, core.db);
-		console.log(res.code, res.data);
 		return reply.code(res.code).send(res.data);
 	})
 
-	fastify.post('/api/totp/remove', (request:any, reply:any) => {
+	fastify.post('/api/totp/remove', async (request:any, reply:any) => {
 		return delTotp(request, reply, core.db);
 	})
 
-	fastify.post('/api/totp/validate', (request:any, reply:any) => {
+	fastify.post('/api/totp/validate', async (request:any, reply:any) => {
 		return validateTotp(request, reply, core.db);
 	})
 }

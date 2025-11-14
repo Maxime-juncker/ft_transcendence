@@ -77,9 +77,7 @@ export async function validate_totp(request: any, reply: any, db: Database)
 		{
 			const sql = "UPDATE users SET totp_enable = 1 WHERE id = ?";
 			await db.get(sql, [user_id])
-			{
-				reply.code(200).send({ message: "ok, totp fully enabled"});
-			}
+			reply.code(200).send({ message: "ok, totp fully enabled"});
 		}
 		else
 			reply.code(404).send({ message: "failed to validate totp" });
