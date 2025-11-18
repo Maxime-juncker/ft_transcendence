@@ -277,7 +277,8 @@ export class MainUser extends User {
 	{
 		await this.logoutDB();
 		this.m_userElement.updateHtml(null);
-		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
+		if (this.m_htmlFriendContainer)
+			this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
 		this.m_friendsElements = [];
 
 		this.m_onLogoutCb.forEach(cb => cb(this));

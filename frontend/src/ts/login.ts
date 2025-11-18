@@ -195,6 +195,12 @@ async function validate_totp()
 
 
 var user: MainUser = new MainUser(document.body, document.getElementById("friends_list"), document.getElementById("friends_pndg_list"));
+await user.loginSession();
+if (user.getId() != -1)
+	window.location.href = window.location.origin + "/lobby";
+
+user.onLogin((user) => { window.location.href = window.location.origin + "/lobby" })
+
 const chatInput: HTMLInputElement = document.getElementById("chat_input") as HTMLInputElement;
 const chat = new Chat(user, document.getElementById("chatbox"), chatInput);
 
@@ -214,18 +220,6 @@ setInterval(() => user.refreshSelf(), 60000);
 
 function oauthLogin(path: string)
 {
-	const url = window.location.href.split("/")[0];
-	window.location.href = (`${url}${path}`);
+	window.location.href = (`${window.location.origin}${path}`);
 }
 
-// const vars = getUrlVar();
-// if (vars && vars["event"]) // 42api
-// {
-// 	const ev = vars["event"];
-// 	console.log(vars);
-// 	if (ev == "oauth_redir") {
-// 		user.oauth2Login(vars["id"], vars["source"]);
-// 	}
-// }
-
-user.loginSession();

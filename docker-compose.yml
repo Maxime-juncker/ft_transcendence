@@ -30,7 +30,7 @@ services:
       - db
     develop:
       watch:
-        - path: ./frontend/srcs
+        - path: ./frontend/src
           action: rebuild
           target: /var/www/html
 
