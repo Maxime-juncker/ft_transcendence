@@ -12,6 +12,31 @@ export const lobbyPage = `
 
 		<p>you are login !</p>
 
+		<h3 id="placeholder">placeholder</h3>
+
+		<div id="friends_list" style="border: 1px solid #ccc;">
+		</div>
+		<h1>------</h1>
+		<div id="friends_pndg_list" style="border: 1px solid #ccc;">
+		</div>
+
+		<div style="display: flex; flex-direction: column; justify-content: center; border: 1px solid #ccc; padding: 10px">
+			<input type="file" id="avatar_input" accept="image/png, image/jpeg" />
+			<button id="avatar_upload_btn">send</button>
+		</div>
+		<div class="friend-menu" style="border: solid 1px #ccc;">
+			<h1>add friend</h1>
+			<input id="add_friend_input" placeholder="enter name"/>
+			<button id="add_friend_btn">send invite</button>
+		</div>
+
+		<div style="margin-top: 50px;">
+			<p>&lt;chat&gt;</p>
+			<div id="chatbox" class="debug-box">
+			</div>
+			<input id="chat_input" placeholder="enter msg...">
+			<button id="chat_send_btn">send</button>
+		</div>
 	</body>
 
 	<script>var exports = {};</script>

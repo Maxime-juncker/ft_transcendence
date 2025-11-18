@@ -4,8 +4,6 @@ import { UserElement, UserElementType } from './UserElement.js';
 // *********************** TODO *********************** //
 // Add settings page									//
 // view user profile									//
-// match history										//
-// stats (win loses, winrate, etc)						//
 // default avatar										//
 // **************************************************** //
 
@@ -241,7 +239,7 @@ export class MainUser extends User {
 	{
 		const response = await fetch("/api/user/get_session");
 		const data = await response.json();
-		console.log(response.status, data);
+		console.log("get session: ", response.status, data);
 
 		if (response.status == 200) {
 			var status = data.status;

@@ -106,7 +106,7 @@ export async function getUserHistByName(request: FastifyRequest, reply: FastifyR
 
 export async function getUserById(user_id: number, db: Database) : Promise<DbResponse>
 {
-	const sql = 'SELECT id, name, avatar, status, is_login, rank FROM users WHERE id = ?';
+	const sql = 'SELECT id, name, avatar, status, is_login, source, rank FROM users WHERE id = ?';
 
 	try {
 		const row = await db.get(sql, [user_id])

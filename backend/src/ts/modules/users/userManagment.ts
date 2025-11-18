@@ -10,6 +10,7 @@ import { DbResponse, uploadDir } from "@core/core.js";
 import { getUserById, getUserByName } from "./user.js";
 import { hashString } from "@modules/sha256.js";
 import { check_totp } from "@modules/2fa/totp.js";
+import { AuthSource } from "@modules/oauth2/routes.js";
 
 
 function validate_email(email:string)
@@ -29,14 +30,35 @@ export interface UserUpdate {
 	email:		string;
 }
 
+export async function createGuest(alias: string): Promise<DbResponse>
+{
+	const res = await getUserByName("(guest) " + alias, core.db); // move guest thing in front ?
+	if (res.code != 404)
+		return { code: 409, data: { message: "alias already taken" }};
+
+	const sql = "INSERT INTO users (name, source) VALUES (?, ?) RETURNING id";
+	try
+	{
+		const id = await core.db.get(sql, ["(guest) " + alias, AuthSource.GUEST]);
+		return { code: 200, data: id};
+	}
+	catch (err)
+	{
+		console.error(`database err: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+
+}
+
 export async function loginSession(id: string, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE id = ? RETURNING *';
 
+	console.log("id:", id);
 	try {
 		const row = await core.db.get(sql, [id]);
 		if (!row)
-			return { code: 404, data: { message: "email or password invalid"}};
+			return { code: 404, data: { message: "user not found"}};
 		return { code: 200, data: row};
 	}
 	catch (err) {
@@ -55,6 +77,8 @@ export async function login(email: string, passw: string, totp: string, db: Data
 			return { code: 404, data: { message: "email or password invalid"}};
 		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
 			return { code: 404, data: { message: "totp invalid"}};
+		if (row.source == AuthSource.GUEST)
+			return { code: 404, data: { message: "cannot login as guest profile"}};
 
 		return { code: 200, data: row};
 	}
@@ -110,6 +134,9 @@ export async function createUser(email: string, passw: string, username: string,
 
 	if (!validate_email(email))
 		return { code: 403, data: { message: "error: email not valid" }};
+	const res = await getUserByName(username, core.db);	
+	if (res.code != 404)
+		return { code: 409, data: { message: "alias already taken" }};
 
 	try {
 		const result = await db.run(sql, [username, email, passw, source]);
@@ -142,12 +169,24 @@ export async function updateUser(update: UserUpdate, db: Database) : Promise<DbR
 // TODO: logout user => delete all user that where friends => delete from db
 export async function deleteUser(user_id: number, db: Database) : Promise<DbResponse>
 {
-	var res = await logoutUser(user_id, db);
+	var res = await getUserById(user_id, db);
+	var prefix = "DELETED_USER";
 	if (res.code != 200)
-		return res;
+	{
+		console.error("login out none existing user in logoutUser? id:", user_id);
+		return res; // should not happen
+	}
+	if (res.data.source != AuthSource.GUEST)
+	{
+		res = await logoutUser(user_id, db);
+		if (res.code != 200)
+			return res;
+	}
+	else
+		prefix = "GUEST";
 
 	const rBytes = randomBytes(64).toString('hex');
-	const name = `DELETED_USER${user_id}${randomBytes(2).toString('hex')}`
+	const name = `${prefix}${user_id}${randomBytes(2).toString('hex')}`
 	console.log(rBytes);
 	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE id = ?"; // TODO: to continue;
 	try
@@ -165,6 +204,15 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
+	const res = await getUserById(user_id, db);
+	if (res.code != 200)
+	{
+		console.error("login out none existing user in logoutUser? id:", user_id);
+		return res; // should not happen
+	}
+	if (res.data.source == AuthSource.GUEST) // delete user
+		return deleteUser(user_id, db);
+
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
 
 	try {

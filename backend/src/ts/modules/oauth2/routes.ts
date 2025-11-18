@@ -6,6 +6,7 @@ import { fortyTwoOAuth2Routes } from "./fortyTwo.route.js";
 import { githubOAuth2Routes } from "./github.route.js";
 
 export enum AuthSource {
+	GUEST = -1, // guest profile are deleted on logout
 	INTERNAL = 0,
 	GOOGLE,
 	GITHUB,

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 	avatar			STRING  NOT NULL DEFAULT "",
 
-	-- 0=internal; 1=oauth google
+	-- 0=internal; 1=oauth 42; 2=oauth github; -1=guest
 	source			INTEGER	NOT NULL DEFAULT 0,
 	oauth_id		STRING NOT NULL DEFAULT 0,
 	
