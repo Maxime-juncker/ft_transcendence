@@ -1,4 +1,3 @@
-export const homePage = `
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -11,39 +10,39 @@ export const homePage = `
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnected" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-		<link rel="stylesheet" href="/css/output.css">
+		<link rel="stylesheet" href="../../../css/output.css">
 	</head>
 
 	<body>
-		<section class="home">
-			<h1>PONG</h1>
+		<section id="home" class="page">
+			<h1 class="text-white">PONG</h1>
 			<button id="game"></button>
 			<button id="tournament"></button>
 		</section>
 
-		<section class="game-menu">
+		<section id="game-menu" class="page">
 			<h1>PONG</h1>
 			<button id="local-game"></button>
 			<button id="online-game"></button>
 			<button id="bot-game"></button>
 		</section>
 
-		<section class="game">
-			<div class="paddle-left"></div>
-			<div class="paddle-right"></div>
-			<div class="net"></div>
-			<div class="ball"></div>
-			<p class="score-left"></p>
-			<p class="score-right"></p>
-			<p class="countdown"></p>
-			<p class="winner-msg"></p>
-			<p class="play-again-msg"></p>
-			<p class="player1"></p>
-			<p class="player2"></p>
-			<p class="searching-msg"></p>
+		<section id="game" class="page bg-black w-[50vw] aspect-[4/3] border-[0.5vw] border-white box-sizing: content-box">
+			<div id="paddle-left" class="paddle"></div>
+			<div id="paddle-right" class="paddle"></div>
+			<div id="net" class="centered h-full border-l-[0.35vw] border-dashed border-white"></div>
+			<div id="ball" class="centered bg-white aspect-square"></div>
+			<p id="score-left"></p>
+			<p id="score-right"></p>
+			<p id="countdown"></p>
+			<p id="winner-msg"></p>
+			<p id="play-again-msg"></p>
+			<p id="player1"></p>
+			<p id="player2"></p>
+			<p id="searching-msg"></p>
 		</section>
 
-		<section class="tournament-menu">
+		<section id="tournament-menu">
 			<h2 id="title"></h2>
 			<button id="four"></button>
 			<button id="eight"></button>
@@ -51,7 +50,7 @@ export const homePage = `
 			<button id="thirty-two"></button>
 		</section>
 
-		<section class="tournament">
+		<section id="tournament">
 			<h2>Oups.. Working on it, comeback later</h2>
 		</section>
 
@@ -59,4 +58,3 @@ export const homePage = `
 		<script type="module" src="dist/router.js"></script>
 	</body>
 </html>
-`;

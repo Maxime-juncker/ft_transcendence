@@ -1,9 +1,11 @@
 import { FastifyInstance } from 'fastify';
-import { homePage } from './home.js';
-import { loginPage } from './login.js';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 export class ServerSideRendering
 {
+	private static readonly homePage: string = path.join(__dirname, 'index.html');
+
 	constructor(server: FastifyInstance)
 	{
 		this.setupRoutes(server);
@@ -13,12 +15,20 @@ export class ServerSideRendering
 	{
 		server.get('/', (request, reply) =>
 		{
-			reply.type('text/html').send(homePage);
+			reply.type('text/html').send(this.readFile(ServerSideRendering.homePage));
 		});
+	}
 
-		server.get('/login', (request, reply) =>
+	private async readFile(filePath: string): Promise<string>
+	{
+		try
 		{
-			reply.type('text/html').send(loginPage);
-		});
+			const data = await fs.readFile(filePath, 'utf-8');
+			return (data);
+		}
+		catch (error)
+		{
+			console.error(`Error reading file at ${filePath}:`, error);
+		}
 	}
 }
