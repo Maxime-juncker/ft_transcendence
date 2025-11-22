@@ -19,7 +19,7 @@
 	
 
 	header {
-		@apply	translate-y-25 flex items-center justify-center w-full h-[10vh];
+		@apply	flex items-center justify-center w-full h-[10vh];
 	}
 
 	main {

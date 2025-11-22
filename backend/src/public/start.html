@@ -6,6 +6,7 @@
 		<title>FT_TRANSCENDENCE</title>
 		<link href="/public/dist/start.css" rel="stylesheet">
 		<link href="/public/dist/global.css" rel="stylesheet">
+		<link href="/public/test.css" rel="stylesheet">
 
 		<script src="https://cdn.tailwindcss.com"></script>
 	</head>
@@ -34,43 +35,60 @@
 				</div>
 				<div id="btn-container">
 				</div>
-			</template>
+		</template>
 
-		<header>
-			<div class="banner">
-				<div id="line1"></div>
-				<div id="line2"></div>
-				<div id="line3"></div>
-				<div id="line4"></div>
+			<!-- must be here for crt effect -->
+		<!-- <div class="bootup-mask">fds</div> -->
+		<div class="bootup-lines"></div>
+		<h1 class="bootup-text">HDMI-1</h1>
+
+		<div class="crt">
+			<header>
+				<div class="banner">
+					<div id="line1"></div>
+					<div id="line2"></div>
+					<div id="line3"></div>
+					<div id="line4"></div>
+				</div>
+				<div class="banner-text">
+					<h1>
+						FT_TRANSCENDENCE
+					</h1>
+				</div>
+			</header>
+
+	
+
+			<div class="crt-mask"></div> 
+			<div class="scanline">
+				<div class="scan"></div>
 			</div>
-			<div class="banner-text">
-				<h1>
-					FT_TRANSCENDENCE
-				</h1>
-			</div>
-		</header>
-		
-		<section id="main" class="main">
-			<div class="banner" style="
-					position: absolute; rotate: -45deg;
-					transform: translateY(40vw)">
-				<div id="line1"></div>
-				<div id="line2"></div>
-				<div id="line3"></div>
-				<div id="line4"></div>
-			</div>
-			<div id="user" class="user">
-				<h1 id="profile-header">user</h1>
-				<div id="profile-container" class="profile-container"></div>
-			</div>
-			<div class="play-menu">
-				<button id="play_btn">PLAY</button>
-				<button id="play_btn">SETTINGS</button>
-			</div>
-			<div id="leaderboard">
-				tmp
-			</div>
-		</section>
+			
+			<section id="main" class="main">
+
+
+				<div class="banner" style="
+						position: absolute; rotate: -45deg;
+						transform: translateY(40vw)">
+					<div id="line1"></div>
+					<div id="line2"></div>
+					<div id="line3"></div>
+					<div id="line4"></div>
+				</div>
+				<div id="user" class="user">
+					<h1 id="profile-header">user</h1>
+					<div id="profile-container" class="profile-container"></div>
+				</div>
+				<div class="play-menu">
+					<button id="play_btn">PLAY</button>
+					<button id="play_btn">SETTINGS</button>
+				</div>
+				<div id="leaderboard">
+					tmp
+				</div>
+			</section>
+		</div>
+
 	</body>
 
 <script>var exports = {};</script>
