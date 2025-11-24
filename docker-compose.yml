@@ -9,7 +9,7 @@ services:
       - "3000:3000"
     volumes:
       - sqlite:/var/lib/sqlite
-      - avatars:/var/www/avatars
+      - ./backend/src/public:/var/www/server/public
     networks:
       - db
     develop:

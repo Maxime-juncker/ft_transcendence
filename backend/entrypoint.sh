@@ -9,7 +9,6 @@ npm run build
 mkdir -p public/dist/
 mkdir -p public/avatars/
 
-
 npx tailwindcss -i public/game.css -o public/dist/game.css
 npx tailwindcss -i public/global.css -o public/dist/global.css
 npx tailwindcss -i public/start.css -o public/dist/start.css

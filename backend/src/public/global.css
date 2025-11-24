@@ -32,11 +32,24 @@
 				hover:brightness-[1.4];
 	}
 
-
 }
 
-.avatar {
-	@apply w-full h-full object-cover bg-gray-100 rounded-full border-2 border-(--darker);
+@layer components
+{
+	.avatar {
+		@apply w-full h-full object-cover bg-gray-100 rounded-full border-2 border-(--darker);
+	}
+	
+	
+	
+	.banner {
+		@apply	w-full flex flex-wrap gap-5 my-10;
+	}
+	
+	.line {
+		@apply	h-2 w-full bg-(--red) m-0 p-0;
+	}
+	
 }
 
 .user-profile {
@@ -62,26 +75,6 @@
 }
 .user-profile #user-stats h1 {
 	@apply	text-center;
-}
-
-.banner {
-	@apply	w-full flex flex-wrap gap-5 my-10;
-}
-
-.banner #line1 {
-	@apply	h-2 w-full bg-(--red) m-0 p-0;
-}
-
-.banner #line2 {
-	@apply	h-2 w-full bg-(--yellow) m-0 p-0;
-}
-
-.banner #line3 {
-	@apply	h-2 w-full bg-(--blue) m-0 p-0;
-}
-
-.banner #line4 {
-	@apply	h-2 w-full bg-(--green) m-0 p-0;
 }
 
 .banner-text {
@@ -110,3 +103,4 @@
 	@apply	bg-(--green) text-(--dark) border-2 border-(--dark) py-1
 			hover:brightness-[1.1] active:brightness-[1.5];
 }
+
