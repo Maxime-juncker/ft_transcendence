@@ -167,11 +167,9 @@ export async function updateUser(update: UserUpdate, db: Database) : Promise<DbR
 	}
 }
 
-// TODO: logout user => delete all user that where friends => delete from db
 export async function deleteUser(user_id: number, db: Database) : Promise<DbResponse>
 {
 	var res = await getUserById(user_id, db);
-	var prefix = "DELETED_USER";
 	if (res.code != 200)
 	{
 		console.error("login out none existing user in logoutUser? id:", user_id);
@@ -183,16 +181,14 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 		if (res.code != 200)
 			return res;
 	}
-	else
-		prefix = "GUEST";
 
 	const rBytes = randomBytes(64).toString('hex');
-	const name = `${prefix}${user_id}${randomBytes(2).toString('hex')}`
+	const name = `DELETED_USER${user_id}${randomBytes(2).toString('hex')}`
 	console.log(rBytes);
-	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE id = ?"; // TODO: to continue;
+	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE id = ? oauth_id = ?"; // TODO: to continue;
 	try
 	{
-		const result = await db.run(sql, [name, rBytes, rBytes, user_id]);
+		const result = await db.run(sql, [name, rBytes, rBytes, user_id, rBytes]);
 		console.log(`user has been deleted ${result.changes}`)
 		return { code: 200, data: { message: "Success" }};
 	}
@@ -211,8 +207,6 @@ export async function logoutUser(user_id: number, db: Database) : Promise<DbResp
 		console.error("login out none existing user in logoutUser? id:", user_id);
 		return res; // should not happen
 	}
-	if (res.data.source == AuthSource.GUEST) // delete user
-		return deleteUser(user_id, db);
 
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
 

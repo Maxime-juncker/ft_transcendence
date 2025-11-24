@@ -29,22 +29,30 @@ export class Message
 		chat.getWs().send(JSON.stringify(packet));
 	}
 
-	public toHtml(className: string) : HTMLElement
+	public toHtml() : HTMLElement
 	{
-		const container = document.createElement("div");
-		container.className = className;
 
-		const senderTxt = document.createElement("h1");
+		const template = document.getElementById("chat-item-template") as HTMLTemplateElement;
+		if (!template)
+		{
+			console.error("no template found for user element");
+			return ;
+		}
+
+		const clone = template.content.cloneNode(true) as HTMLElement;
+		const senderTxt = clone.querySelector("#sender") as HTMLElement;
+		if (!senderTxt)
+			console.warn("no senderTxt found");
+
 		senderTxt.innerText = utils.applyMsgStyle(this.m_sender.name);
 		senderTxt.style.color = strToCol(this.m_sender.name);
 
-		const msg = document.createElement("p");
-		msg.innerText = this.getMsg();
+		const msgTxt = clone.querySelector("#message") as HTMLElement;
+		if (!msgTxt)
+			console.warn("no senderTxt found");
+		msgTxt.innerText = this.getMsg();
 
-		container.prepend(msg);
-		container.prepend(senderTxt);
-		
-		return container;
+		return clone;
 	}
 
 	public async execLocalCommand(chat: Chat) : Promise<boolean>
@@ -219,7 +227,7 @@ export class Chat
 
 	public displayMessage(newMsg: Message)
 	{
-		this.m_chatbox.prepend(newMsg.toHtml("user-msg"));
+		this.m_chatbox.prepend(newMsg.toHtml());
 		this.m_chatlog.push(newMsg);
 	}
 
@@ -227,7 +235,7 @@ export class Chat
 	{
 		var newMsg = new Message(sender, msg);
 
-		this.m_chatbox.prepend(newMsg.toHtml("user-msg"));
+		this.m_chatbox.prepend(newMsg.toHtml());
 		await newMsg.sendToAll(this);
 		this.m_chatlog.push(newMsg);
 	}

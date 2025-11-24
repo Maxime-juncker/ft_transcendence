@@ -26,13 +26,9 @@
 		@apply flex-1 flex justify-center flex-col items-center gap-6;
 	}
 
-	input {
-		@apply	bg-(--dark) border-b-2 border-(--blue) px-3 py-2
-				focus:outline-none focus:border-(--yellow)
-				hover:brightness-[1.4];
-	}
 
 }
+
 
 @layer components
 {
@@ -40,10 +36,8 @@
 		@apply w-full h-full object-cover bg-gray-100 rounded-full border-2 border-(--darker);
 	}
 	
-	
-	
 	.banner {
-		@apply	w-full flex flex-wrap gap-5 my-10;
+		@apply	w-full flex flex-wrap gap-5;
 	}
 	
 	.line {
@@ -65,10 +59,10 @@
 	@apply	absolute bottom-0 left-0 right-0 text-center
 			rounded-full bg-(--dark) border-2 border-(--darker) text-sm;
 }
-
+.user-menu #user-status,
 .user-profile #user-status {
 	@apply	absolute h-[15px] w-[15px] rounded-full
-			bottom-[25%] right-0.5 bg-(--red);
+			bottom-[25%] bg-(--red);
 }
 .user-profile #user-stats {
 	@apply	flex-1 flex flex-col items-center justify-center;
@@ -104,3 +98,33 @@
 			hover:brightness-[1.1] active:brightness-[1.5];
 }
 
+.header-small {
+	@apply w-full h-25 bg-(--dark) flex align-middle justify-between items-center;
+}
+
+.banner-small {
+	@apply h-full flex align-middle justify-center items-center
+}
+.banner-small h1 {
+	@apply bg-(--dark) z-1 text-2xl py-1 px-3 font-bold;
+}
+
+.small-lines {
+	@apply absolute w-[30%] flex flex-wrap gap-3;
+}
+
+.btn-container {
+	@apply flex h-full bg-(--green) ml-5;
+}
+
+.user-menu {
+	@apply relative py-3 flex h-full justify-center items-center mr-5 gap-3;
+}
+
+.user-menu #user-menu-container {
+	@apply right-10 -bottom-20 px-3 py-2 w-35 bg-(--dark) border-2 border-(--purple) rounded-md  absolute;
+}
+
+.hide {
+	@apply opacity-0;
+}
