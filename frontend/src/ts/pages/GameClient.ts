@@ -18,7 +18,7 @@ enum Keys
 	PLAY_AGAIN = 'Enter',
 	DEFAULT_UP = 'ArrowUp',
 	DEFAULT_DOWN = 'ArrowDown',
-	PLAYER1_UP = 'z',
+	PLAYER1_UP = 'w',
 	PLAYER1_DOWN = 's',
 	PLAYER2_UP = 'ArrowUp',
 	PLAYER2_DOWN = 'ArrowDown',
@@ -71,7 +71,7 @@ export class GameClient extends Utils
 		Array.from(section.children).forEach((child) =>
 		{
 			const element = child as HTMLDivElement;
-			this.HTMLelements.set(element.classList[0], element);
+			this.HTMLelements.set(element.id, element);
 			element.style.display = 'none';
 		});
 

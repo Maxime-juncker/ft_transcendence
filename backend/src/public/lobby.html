@@ -78,7 +78,7 @@
 					<div class="w-full aspect-4/3">
 						<section id="home" class="page bg-[--darker]">
 							<h1 class="text-white">PONG</h1>
-							<button id="game">hello</button>
+							<button id="game"></button>
 							<button id="tournament"></button>
 						</section>
 
@@ -89,19 +89,19 @@
 							<button id="bot-game"></button>
 						</section>
 
-						<section id="game" class="game page bg-black  w-full border-[0.5vw] border-white box-sizing: content-box">
-							<div id="paddle-left" class="paddle-right paddle"></div>
-							<div id="paddle-right" class="paddle-left paddle"></div>
-							<div id="net" class="net centered h-full border-l-[0.35vw] border-dashed border-white"></div>
+						<section id="game" class="relative game page bg-black  w-full border-[0.5vw] border-white box-sizing: content-box">
+							<div id="paddle-left" class="absolute bg-red-500 -translate-y-1/2"></div>
+							<div id="paddle-right" class="absolute bg-red-500 -translate-y-1/2"></div>
+							<div id="net" class="absolute left-1/2 top-0 -translate-x-1/2 h-full border-l-[0.35vw] border-dashed border-white"></div>
 							<div id="ball" class="ball centered bg-white aspect-square"></div>
-							<p id="score-left" class="score-left"></p>
-							<p id="score-right" class="score-right"></p>
-							<p id="countdown" class="countdown"></p>
-							<p id="winner-msg" class="winner-msg"></p>
-							<p id="play-again-msg" class="play-again-msg"></p>
-							<p id="player1" class="player1"></p>
-							<p id="player2" class="player2"></p>
-							<p id="searching-msg" class="searching-msg"></p>
+							<p id="score-left" class="absolute text-[3vw] top-[2%] text-right right-1/2 mr-[2vw]"></p>
+							<p id="score-right" class="absolute text-[3vw] top-[2%] text-left left-1/2 ml-[2vw]"></p>
+							<p id="countdown" class="centered text-[3vw]"></p>
+							<p id="winner-msg" class="centered text-[3vw] top-[40%] w-[80vw]"></p>
+							<p id="play-again-msg" class="centered text-[2vw] top-[70%] w-[80vw] animation"></p>
+							<p id="player1" class="absolute top-0 left-0 text-[2vw] m-[1vw]"></p>
+							<p id="player2" class="absolute top-0 right-0 text-[2vw] m-[1vw]"></p>
+							<p id="searching-msg" class="centered text-[2vw] animation"></p>
 						</section>
 
 						<section id="tournament-menu">

@@ -3,15 +3,16 @@
 @layer base
 {
 	body	{ @apply bg-[url('../assets/background.jpg')]; }
+	h1		{ @apply text animation text-[10vh] my-[10vh]; }
 	p		{ @apply relative text-white font-bold rounded-lg text-center; font-family: 'Orbitron', 'Courier New', monospace; }
-	button	{ @apply text-[4vh] border-white w-fit self-center w-[40vh] py-[1.5vh] my-[1vh] rounded-xl hover:bg-white hover:text-black active:scale-90 duration-200; }
+	button	{ @apply text-[4vh] border-white w-fit self-center py-[1.5vh] my-[1vh] rounded-xl hover:bg-white hover:text-black active:scale-90 duration-200; }
 }
 
 @layer components
 {
 	.animation		{ @apply animate-pulse duration-500; }
 	.centered		{ @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2; }
-	.paddle			{ @apply absolute bg-red-500; }
+	.paddle			{ @apply absolute bg-red-500 -translate-y-1/2; }
 	.page			{ @apply relative flex flex-col gap-[5vh] h-full w-full }
 
 	.game-menu			{ @apply relative flex flex-col gap-[5vh]; }
