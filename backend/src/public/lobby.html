@@ -7,8 +7,8 @@
 		<link href="/public/dist/global.css" rel="stylesheet">
 		<link href="/public/dist/lobby.css" rel="stylesheet">
 		<link href="/public/test.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-		
+		<link href="/public/dist/output.css" rel="stylesheet">
+
 		<script src="https://cdn.tailwindcss.com"></script>
 	</head>
 	<body>
@@ -64,24 +64,105 @@
 				<div class="scan"></div>
 			</div>
 
-			<div class="h-full w-full grid grid-cols-[1fr_2fr] gap-4 p-6">
+			<div class="h-full w-full flex gap-10 p-6 px-40">
 
-				<div class="w-full h-full border-[3px] border-[--blue] rounded-md flex flex-col">
-
-					<div id="chat-out" class="flex-1 bg-[--darker]">
+				<div class="w-[35%] h-full border-[3px] border-[--blue] rounded-md flex flex-col">
+					<div id="chat-out" class="flex-1 flex-col-reverse bg-[--darker]">
 					</div>	
-
 					<input id="chat-in" wrap="soft" placeholder="enter message..."
 						class="h-15 py-2 px-3 bg-[--dark] focus:outline-none
 						border-t-2 border-t-[--blue] border-b-0 hover:brightness-1">
-
 				</div>
-				<div class="gameview w-full h-full border-4 border-[--red] rounded-md">
 
+				<div class="border-4 flex flex-col border-[--red] rounded-md w-[65%]">
+					<div class="w-full aspect-4/3">
+						<section id="home" class="page bg-[--darker]">
+							<h1 class="text-white">PONG</h1>
+							<button id="game">hello</button>
+							<button id="tournament"></button>
+						</section>
+
+						<section id="game-menu" class="page bg-black">
+							<h1>PONG</h1>
+							<button id="local-game"></button>
+							<button id="online-game"></button>
+							<button id="bot-game"></button>
+						</section>
+
+						<section id="game" class="game page bg-black  w-full border-[0.5vw] border-white box-sizing: content-box">
+							<div id="paddle-left" class="paddle-right paddle"></div>
+							<div id="paddle-right" class="paddle-left paddle"></div>
+							<div id="net" class="net centered h-full border-l-[0.35vw] border-dashed border-white"></div>
+							<div id="ball" class="ball centered bg-white aspect-square"></div>
+							<p id="score-left" class="score-left"></p>
+							<p id="score-right" class="score-right"></p>
+							<p id="countdown" class="countdown"></p>
+							<p id="winner-msg" class="winner-msg"></p>
+							<p id="play-again-msg" class="play-again-msg"></p>
+							<p id="player1" class="player1"></p>
+							<p id="player2" class="player2"></p>
+							<p id="searching-msg" class="searching-msg"></p>
+						</section>
+
+						<section id="tournament-menu">
+							<h2 id="title"></h2>
+							<button id="four"></button>
+							<button id="eight"></button>
+							<button id="sixteen"></button>
+							<button id="thirty-two"></button>
+						</section>
+
+						<section id="tournament">
+							<h2>Oups.. Working on it, comeback later</h2>
+						</section>
+					</div>
+					<div class="h-full w-full bg-[--dark] border-t-[3px] border-t-[--red]
+						flex justify-between items-center align-middle">
+						<!-- <h1>test</h1> -->
+						<!-- <h1>test</h1> -->
+						<div id="user-profile"
+							class="user-profile">
+							<div id="avatar-container">
+								<img
+									id="avatar-img"
+									src="" 
+									alt="Profile" 
+									class="avatar"/>
+
+								<div id="avatar-name">
+									user
+								</div>
+								<div id="user-status"> </div>
+							</div>
+
+							<div id="user-stats">
+								<h1>elo: 500p</h1>
+								<h1>W/L: 42%</h1>
+							</div>
+						</div>
+
+						<div id="user-profile"
+							class="user-profile">
+							<div id="avatar-container">
+								<img
+									id="avatar-img"
+									src="" 
+									alt="Profile" 
+									class="avatar"/>
+
+								<div id="avatar-name">
+									user
+								</div>
+								<div id="user-status"> </div>
+							</div>
+
+							<div id="user-stats">
+								<h1>elo: 500p</h1>
+								<h1>W/L: 42%</h1>
+							</div>
+						</div>
+					</div>
 				</div>
-			</div>
-
-		</div>
 
 	</body>
 	<script>var exports = {};</script>

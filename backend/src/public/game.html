@@ -10,7 +10,7 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnected" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-		<link rel="stylesheet" href="http:">
+		<link rel="stylesheet" href="/public/dist/output.css">
 	</head>
 
 	<body>
@@ -27,19 +27,19 @@
 			<button id="bot-game"></button>
 		</section>
 
-		<section id="game" class="page bg-black w-[50vw] aspect-[4/3] border-[0.5vw] border-white box-sizing: content-box">
-			<div id="paddle-left" class="paddle"></div>
-			<div id="paddle-right" class="paddle"></div>
-			<div id="net" class="centered h-full border-l-[0.35vw] border-dashed border-white"></div>
-			<div id="ball" class="centered bg-white aspect-square"></div>
-			<p id="score-left"></p>
-			<p id="score-right"></p>
-			<p id="countdown"></p>
-			<p id="winner-msg"></p>
-			<p id="play-again-msg"></p>
-			<p id="player1"></p>
-			<p id="player2"></p>
-			<p id="searching-msg"></p>
+		<section id="game" class="game page bg-black w-[50vw] aspect-[4/3] border-[0.5vw] border-white box-sizing: content-box">
+			<div id="paddle-left" class="paddle-right paddle"></div>
+			<div id="paddle-right" class="paddle-left paddle"></div>
+			<div id="net" class="net centered h-full border-l-[0.35vw] border-dashed border-white"></div>
+			<div id="ball" class="ball centered bg-white aspect-square"></div>
+			<p id="score-left" class="score-left"></p>
+			<p id="score-right" class="score-right"></p>
+			<p id="countdown" class="countdown"></p>
+			<p id="winner-msg" class="winner-msg"></p>
+			<p id="play-again-msg" class="play-again-msg"></p>
+			<p id="player1" class="player1"></p>
+			<p id="player2" class="player2"></p>
+			<p id="searching-msg" class="searching-msg"></p>
 		</section>
 
 		<section id="tournament-menu">

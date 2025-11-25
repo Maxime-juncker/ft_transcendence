@@ -1,12 +1,14 @@
 import { MainUser } from "User.js";
 import { Chat } from "modules/chat.js";
+import { Router } from "router.js";
 
 console.log(document.getElementById("user-container"));
 var user: MainUser = new MainUser(document.getElementById("user-container"), null, null);
 await user.loginSession();
+new Router();
 
-if (user.getId() == -1) // user not login
-	window.location.href = window.location.origin;
+// if (user.getId() == -1) // user not login
+// 	window.location.href = window.location.origin;
 
 user.onLogout((user) => { window.location.href = window.location.origin })
 

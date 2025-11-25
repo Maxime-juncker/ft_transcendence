@@ -3,6 +3,7 @@ import { GameMenu } from 'pages/GameMenu.js';
 import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { Tournament } from 'pages/Tournament.js';
+import { MainUser } from "User.js";
 
 export class Router
 {
@@ -70,6 +71,7 @@ export class Router
 			this.currentClass.destroy();
 		}
 
+		console.log(page, mode);
 		this.pages.get(this.currentPage)!.style.display = 'none';
 		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
@@ -96,4 +98,3 @@ export class Router
 	}
 }
 
-new Router();
