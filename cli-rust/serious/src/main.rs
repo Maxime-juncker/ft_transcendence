@@ -31,7 +31,9 @@ fn main() -> Result<()> {
 
   let original_size = terminal::size()?;
   let location = get_location();
-  //create-guest-session(&location);
+  match create-guest-session(&location) {
+    
+  };
   let game_main: infos = infos {original_size, location};
   global_setup(&stdout)?;
   // set_welcome(&stdout)?;
