@@ -16,8 +16,6 @@ export class Utils
 
 	protected setContent(className: string, content: string, show: boolean = false): void
 	{
-		console.log(this.HTMLelements);
-		console.log(className);
 		this.HTMLelements.get(className)!.textContent = content;
 		if (show) this.show(className);
 	}

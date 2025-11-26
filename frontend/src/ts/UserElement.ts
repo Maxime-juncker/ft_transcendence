@@ -30,9 +30,9 @@ export class UserElement
 	private m_htmlBtn2:			HTMLButtonElement;
 	private m_htmlStatusSelect:	HTMLSelectElement;
 
-	constructor(user: User, parent: HTMLElement, type: UserElementType)
+	constructor(user: User, parent: HTMLElement, type: UserElementType, templateName: string = "user-profile-template")
 	{
-		const template = document.getElementById("user-profile-template") as HTMLTemplateElement;
+		const template = document.getElementById(templateName) as HTMLTemplateElement;
 		if (!template)
 		{
 			console.error("no template found for user element");

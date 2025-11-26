@@ -24,7 +24,7 @@ async function getUserInfoFromId(id: string): Promise<Response> {
 	return response;
 }
 
-async function getUserFromId(id: string): Promise<User> {
+export async function getUserFromId(id: string): Promise<User> {
 	const response = await getUserInfoFromId(id);
 	if (response.status != 200)
 		return null

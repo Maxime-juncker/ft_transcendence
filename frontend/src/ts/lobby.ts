@@ -5,7 +5,7 @@ import { Router } from "router.js";
 console.log(document.getElementById("user-container"));
 var user: MainUser = new MainUser(document.getElementById("user-container"), null, null);
 await user.loginSession();
-new Router();
+new Router(user);
 
 // if (user.getId() == -1) // user not login
 // 	window.location.href = window.location.origin;

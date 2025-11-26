@@ -1,5 +1,7 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
+import { getUserFromId, User } from 'User.js';
+import { UserElement, UserElementType } from 'UserElement.js';
 
 enum Params
 {
@@ -37,24 +39,45 @@ export class GameClient extends Utils
 
 	private keysPressed: Set<string> = new Set();
 	private countdownInterval: any | null = null;
-	private playerName = Math.random().toString(36).substring(2, 10); // NEEDS TO GET THE USERNAME FROM AUTH
-	private opponentName: string | null = null;
-	private gameId: string | null = null;
-	private socket : WebSocket | null = null;
-	private interval: any | null = null;
-	private end: boolean = false;
-	private playerId: string | null = null;
-	private keysToSend: string = '';
+	private gameId:			string | null = null;
+	private socket :		WebSocket | null = null;
+	private interval:		any | null = null;
+	private end:			boolean = false;
+	private playerId:		string | null = null;
+	private keysToSend:		string = '';
 
-	constructor(private mode: string)
+	private m_user:			User | null;
+	private m_user2:		User;
+	private m_player1:		UserElement;
+	private m_player2:		UserElement;
+	private m_playerContainer: HTMLElement;
+
+	constructor(private mode: string, user: User = null)
 	{
 		super();
+
+		this.m_playerContainer = document.getElementById("player-container");
+		if (!this.m_playerContainer)
+		{
+			console.error("no player-container found");
+			return ;
+		}
+
+		this.m_user = user;
+		this.createPlayerHtml();
 
 		if (this.isModeValid())
 		{
 			this.init();
 			this.createGame();
 		}
+	}
+
+	private createPlayerHtml()
+	{
+		this.m_playerContainer.innerHTML = "";
+		this.m_player1 = new UserElement(this.m_user, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
+		this.m_player2 = new UserElement(this.m_user2, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
 	}
 
 	private isModeValid(): boolean
@@ -75,7 +98,6 @@ export class GameClient extends Utils
 			element.style.display = 'none';
 		});
 
-		this.setContent('player1', this.playerName, true);
 		this.setContent('searching-msg', Msgs.SEARCHING, true);
 		this.setColors('1');
 	}
@@ -108,13 +130,17 @@ export class GameClient extends Utils
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, playerName: this.playerName }),
+				body: JSON.stringify({ mode: this.mode, playerName: this.m_user.getId() }),
 			});
 
 			const data = await response.json();
+			console.log(data);
 			this.gameId = data.gameId;
-			this.opponentName = data.opponentName;
 			this.playerId = data.playerId;
+			
+			this.m_user2 = await getUserFromId(data.opponentId);
+			this.createPlayerHtml();
+			this.m_player2.updateHtml(this.m_user2);
 
 			this.launchCountdown();
 		}
@@ -160,8 +186,9 @@ export class GameClient extends Utils
 		this.setWidth('ball', Params.BALL_SIZE + '%', true);
 		this.setContent('score-left', '0', true);
 		this.setContent('score-right', '0', true);
-		this.setContent('player2', this.opponentName, true);
 		this.show('net');
+
+		this.m_player2.updateHtml(this.m_user2);
 	}
 
 	async startGame(): Promise<void>

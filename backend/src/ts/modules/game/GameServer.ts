@@ -47,18 +47,18 @@ export class GameServer
 				if (mode === 'local')
 				{
 					const gameId = crypto.randomUUID();
-					const opponentName = 'Guest';
-					const game = new GameInstance(mode, name, opponentName);
+					const opponentId = 'Guest';
+					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
-					reply.status(201).send({ gameId, opponentName, playerId: '1' });
+					reply.status(201).send({ gameId, opponentId: opponentId, playerId: '1' });
 				}
 				else if (mode === 'online')
 				{
 					if (this.playerPending)
 					{
 						const gameId = crypto.randomUUID();
-						this.playerPending.reply.status(201).send({ gameId, opponentName: name, playerId: 1 });
-						reply.status(201).send({ gameId, opponentName: this.playerPending.name, playerId: 2 });
+						this.playerPending.reply.status(201).send({ gameId, opponentId: name, playerId: 1 });
+						reply.status(201).send({ gameId, opponentId: this.playerPending.name, playerId: 2 });
 						this.activeGames.set(gameId, new GameInstance(mode, this.playerPending.name, name));
 						this.playerPending = null;
 					}
@@ -70,10 +70,10 @@ export class GameServer
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();
-					const opponentName = 'Bot';
-					const game = new GameInstance(mode, name, opponentName);
+					const opponentId = 'Bot';
+					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
-					reply.status(201).send({ gameId, opponentName, playerId: '1' });
+					reply.status(201).send({ gameId, opponentId: opponentId, playerId: '1' });
 				}
 				else
 				{

@@ -15,10 +15,36 @@
 
 		<template id="chat-item-template">
 			<div class="w-full flex gap-3 px-2 my-1">
-				<h1 id="sender"></h1>	
-				<p id="message"></p>
+				<h1 class="font-bold" id="sender"></h1>	
+				<p class="font-medium" id="message"></p>
 			</div>
 		</template>
+
+		<template id="user-game-template">
+				<div id="user-profile"
+					class="user-profile">
+					<div id="avatar-container">
+						<img
+						id="avatar-img"
+						src="" 
+						alt="Profile" 
+						class="avatar"/>
+						
+						<div id="avatar-name">
+							user
+						</div>
+						<div id="user-status"> </div>
+					</div>
+
+					<div id="user-stats">
+						<h1>elo: 500p</h1>
+						<h1>W/L: 42%</h1>
+					</div>
+				</div>
+				<div id="btn-container">
+				</div>
+		</template>
+
 
 		<template id="user-profile-template">
 			<div class="user-menu">
@@ -99,8 +125,6 @@
 							<p id="countdown" class="centered text-[3vw]"></p>
 							<p id="winner-msg" class="centered text-[3vw] top-[40%] w-[80vw]"></p>
 							<p id="play-again-msg" class="centered text-[2vw] top-[70%] w-[80vw] animation"></p>
-							<p id="player1" class="absolute top-0 left-0 text-[2vw] m-[1vw]"></p>
-							<p id="player2" class="absolute top-0 right-0 text-[2vw] m-[1vw]"></p>
 							<p id="searching-msg" class="centered text-[2vw] animation"></p>
 						</section>
 
@@ -116,51 +140,8 @@
 							<h2>Oups.. Working on it, comeback later</h2>
 						</section>
 					</div>
-					<div class="h-full w-full bg-[--dark] border-t-[3px] border-t-[--red]
-						flex justify-between items-center align-middle">
-						<!-- <h1>test</h1> -->
-						<!-- <h1>test</h1> -->
-						<div id="user-profile"
-							class="user-profile">
-							<div id="avatar-container">
-								<img
-									id="avatar-img"
-									src="" 
-									alt="Profile" 
-									class="avatar"/>
-
-								<div id="avatar-name">
-									user
-								</div>
-								<div id="user-status"> </div>
-							</div>
-
-							<div id="user-stats">
-								<h1>elo: 500p</h1>
-								<h1>W/L: 42%</h1>
-							</div>
-						</div>
-
-						<div id="user-profile"
-							class="user-profile">
-							<div id="avatar-container">
-								<img
-									id="avatar-img"
-									src="" 
-									alt="Profile" 
-									class="avatar"/>
-
-								<div id="avatar-name">
-									user
-								</div>
-								<div id="user-status"> </div>
-							</div>
-
-							<div id="user-stats">
-								<h1>elo: 500p</h1>
-								<h1>W/L: 42%</h1>
-							</div>
-						</div>
+					<div id="player-container" class="h-full w-full bg-[--dark] border-t-[3px] border-t-[--red]
+						flex flex-row-reverse justify-between items-center align-middle">
 					</div>
 				</div>
 

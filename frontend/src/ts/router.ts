@@ -3,7 +3,8 @@ import { GameMenu } from 'pages/GameMenu.js';
 import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { Tournament } from 'pages/Tournament.js';
-import { MainUser } from "User.js";
+import { User } from "User.js";
+import { UserElement } from 'UserElement.js';
 
 export class Router
 {
@@ -19,9 +20,12 @@ export class Router
 	currentClass: any = null;
 	pages: Map<string, HTMLDivElement> = new Map();
 	gameInstance: GameClient | null = null;
+	m_user:			User;
+	m_player1:		UserElement;
 
-	constructor()
+	constructor(user: User = null)
 	{
+		this.m_user = user;
 		this.loadPages();
 		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
@@ -92,7 +96,6 @@ export class Router
 			this.currentClass.destroy();
 		}
 
-		console.log(page, mode);
 		this.pages.get(this.currentPage)!.style.display = 'none';
 		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
@@ -108,7 +111,7 @@ export class Router
 			case 'game-menu':
 				return (new GameMenu(this));
 			case 'game':
-				return (new GameClient(mode!));
+				return (new GameClient(mode!, this.m_user));
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
 			case 'tournament':

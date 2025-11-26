@@ -13,13 +13,13 @@ await gameServer.init();
 // console.log("Fastify routes:")
 // console.log(core.fastify.printRoutes());
 
-const signals = ['SIGINT', 'SIGTERM'] as const;
-signals.forEach(signal => {
-	process.on(signal, async () => {
-		console.log(`Received ${signal}, shuting down...`);
-		core.shutdown();
-	});
-});
+// const signals = ['SIGINT', 'SIGTERM'] as const;
+// signals.forEach(signal => {
+// 	process.on(signal, async () => {
+// 		console.log(`Received ${signal}, shuting down...`);
+// 		core.shutdown();
+// 	});
+// });
 
 await core.start()
 
