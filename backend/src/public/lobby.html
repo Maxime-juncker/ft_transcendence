@@ -100,25 +100,44 @@
 
 				<div class="border-4 flex flex-col border-[--red] w-[65%]">
 					<div class="w-full h-[85%]">
-						<section id="home" class="page bg-[--darkest] ">
-							<button class="btn text-6xl font-bold" id="game"></button>
-							<button class="btn text-6xl font-bold" id="tournament"></button>
+						<section id="home" class="page px-[30%] bg-[--darkest] ">
+							<button class="btn w-full text-6xl font-bold" id="game"></button>
+							<button class="btn w-full text-6xl font-bold" id="tournament"></button>
 						</section>
 
-						<section id="game-menu" class="page bg-[--darkest]">
-							<button class="btn text-6xl font-bold" id="local-game"></button>
-							<button class="btn text-6xl font-bold" id="online-game"></button>
-							<button class="btn text-6xl font-bold" id="bot-game"></button>
+						<section id="game-menu" class="page px-[30%] bg-[--darkest]">
+							<button class="btn w-full text-6xl font-bold" id="local-game"></button>
+							<button class="btn w-full text-6xl font-bold" id="online-game"></button>
+							<button class="btn w-full text-6xl font-bold" id="bot-game"></button>
 						</section>
 
-						<section id="game" class="relative game page bg-[--darkest] w-full box-sizing: content-box">
-							<div id="paddle-left" class="absolute bg-[--blue] -translate-y-1/2"></div>
-							<div id="paddle-right" class="absolute bg-[--blue] -translate-y-1/2"></div>
+						<section id="game" class="relative game page bg-[--darkest] w-full box-sizing: content-box overflow-hidden flex justify-center align-middle items-center">
+							<div id="paddle-left" class="absolute h-[15%]">
+								<div class="relative h-full -top-[50%]">
+									<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+									<div class="relative bg-[--blue] w-2 h-full">
+									</div>
+								</div>
+							</div>
+							<div id="paddle-right" class="absolute h-[15%]">
+								<div class="relative h-full -top-[50%]">
+									<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+									<div class="relative bg-[--blue] w-2 h-full">
+									</div>
+								</div>
+							</div>
+
 							<div id="net" class="absolute left-1/2 top-0 -translate-x-1/2 h-full border-l-[0.35vw] border-dashed border-[--yellow]"></div>
-							<div id="ball" class="ball centered bg-[--red] aspect-square"></div>
-							<p id="score-left" class="absolute text-[3vw] top-[50%] text-right left-1/4"></p>
-							<p id="score-right" class="absolute text-[3vw] top-[2%] text-left left-1/2 ml-[2vw]"></p>
-							<p id="countdown" class="centered text-[3vw]"></p>
+							<div id="ball" class="absolute">
+								<div class="relative">
+									<div class="absolute inset-0 aspect-square bg-[--red] w-[30px] h-[30px] opacity-40 -left-[50%] -top-[50%] blur-md rounded-xl"></div>
+									<div class="relative bg-[--red] aspect-square w-[15px] h-[15px]">
+									</div>
+								</div>
+							</div>
+							<p id="score-left" class="absolute text-[15vw] left-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
+							<p id="score-right" class="absolute text-[15vw] right-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
+							<p id="countdown" class="text-[3vw] text-[--darker] bg-[--white] rounded-none p-1 px-5"></p>
 							<p id="winner-msg" class="centered text-[3vw] top-[40%] w-[80vw]"></p>
 							<p id="play-again-msg" class="centered text-[2vw] top-[70%] w-[80vw] animation"></p>
 							<p id="searching-msg" class="centered text-[2vw] animation"></p>
@@ -137,7 +156,7 @@
 						</section>
 					</div>
 					<div id="player-container" class="h-[15%] w-full bg-[--dark] border-t-4 border-t-[--red]
-						flex flex-row-reverse justify-between items-center align-middle">
+						flex flex-row-reverse justify-around items-center align-middle">
 					</div>
 				</div>
 

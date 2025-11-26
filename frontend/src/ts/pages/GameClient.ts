@@ -11,9 +11,29 @@ enum Params
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = '255, 255, 255',
-	COUNTDOWN_START = 1,
+	COUNTDOWN_START = 3,
 	IPS = 60,
 }
+
+const scoreAnimationParams = {
+	duration: 150,
+	iterations: 2
+};
+
+const scoreAnimation = [
+	{
+		opacity: '0.25',
+		transform: "scale(1)"
+	},
+	{
+		opacity: '0.1',
+		transform: "scale(1.01)"
+	},
+	{
+		opacity: '0.25',
+		transform: "scale(1)"
+	}
+];
 
 enum Keys
 {
@@ -46,11 +66,13 @@ export class GameClient extends Utils
 	private playerId:		string | null = null;
 	private keysToSend:		string = '';
 
-	private m_user:			User | null;
-	private m_user2:		User;
-	private m_player1:		UserElement;
-	private m_player2:		UserElement;
-	private m_playerContainer: HTMLElement;
+	private m_user:				User | null;
+	private m_user2:			User;
+	private m_player1:			UserElement;
+	private m_player2:			UserElement;
+	private m_playerContainer:	HTMLElement;
+	private	m_prevP1Score:		number;
+	private	m_prevP2Score:		number;
 
 	constructor(private mode: string, user: User = null)
 	{
@@ -325,6 +347,21 @@ export class GameClient extends Utils
 		this.setTop('ball', gameState.ballY + '%');
 		this.setContent('score-left', gameState.player1Score.toString());
 		this.setContent('score-right', gameState.player2Score.toString());
+
+		if (gameState.player1Score != this.m_prevP1Score)
+		{
+			let score = document.querySelector("#score-left");
+			score.animate(scoreAnimation, scoreAnimationParams);
+		}
+
+		if (gameState.player2Score != this.m_prevP2Score)
+		{
+			let score = document.querySelector("#score-right");
+			score.animate(scoreAnimation, scoreAnimationParams);
+		}
+
+		this.m_prevP1Score = gameState.player1Score;
+		this.m_prevP2Score = gameState.player2Score;
 	}
 
 	private stopGameLoop(): void
