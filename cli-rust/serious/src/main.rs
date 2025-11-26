@@ -4,9 +4,10 @@ use std::{
 };
 
 mod welcome;
-use crate::welcome::{global_setup};
+use crate::welcome::{global_setup, game_setup};
 
-use std::process::Command;
+mod login;
+//HEEEEERE TO CONTINUE
 
 use std::io::{Result};
 
@@ -20,21 +21,34 @@ use crossterm::{
 
 pub const NUM_ROWS: u16 = 30;
 pub const NUM_COLS: u16 = 10;
+struct infos {
+  original_size: (u16, u16),
+  location: String,
+}
 
 fn main() -> Result<()> {
   let mut stdout: Stdout = stdout();
 
   let original_size = terminal::size()?;
-  global_setup(&stdout);
+  let location = get_location();
+  //create-guest-session(&location);
+  let game_main: infos = infos {original_size, location};
+  global_setup(&stdout)?;
   // set_welcome(&stdout)?;
-
-
 
   'drawing: loop {
       let event = event::read()?;
 
       if should_exit(&event)? == true {
         break;
+      }
+      else if let Event::Key(key_event) = event {
+        if key_event.code == KeyCode::Char('1') {
+          game_loop(&stdout, &game_main)?;
+          break ;
+        } else if key_event.code == KeyCode::Char('2') {
+
+        } else if key_event.code == KeyCode::Char('3') {}
       }
 
       // if let Event::Resize(x, y) = event {
@@ -43,17 +57,51 @@ fn main() -> Result<()> {
       // }
 
 
-    //.. our clean up from above
   }
 
-  cleanup_terminal(&stdout, original_size)?;
+  cleanup_terminal(&stdout, &game_main)?;
 
   Ok(())
 
 }
 
+fn get_location() -> String {
+    let mut args = env::args();
+    args.next();
+    let first = match args.next() {
+        Some(addr) => addr,
+        None => {
+            eprintln!("No argument provided");
+            std::process::exit(1);
+        }
+    };
+    first
+}
+
+fn game_loop(stdout: &Stdout, game_main: &infos) -> Result<()> {
+  game_setup(&stdout)?;
+  
+  loop {
+    let event: Event = event::read()?;
+
+    if should_exit(&event)? == true {
+      break cleanup_terminal(&stdout, &game_main)?; //should quit
+    } else if let Event::Key(key_event) = event {
+        if key_event.code == KeyCode::Char('1') {
+//          local game;
+            break;
+        } else if key_event.code == KeyCode::Char('2') {
+//          online game;
+        } else if key_event.code == KeyCode::Char('3') {
+//          bot;
+        } 
+      }
+  }
+  Ok(())
+}
+
 fn should_exit(event: &Event) -> Result<bool> {
-    if let Event::Key(key_event) = event.to_owned() {
+    if let Event::Key(key_event) = event {
       if key_event.code == KeyCode::Esc || 
       (key_event.code == KeyCode::Char('c') 
       && key_event.modifiers == KeyModifiers::CONTROL) {
@@ -63,14 +111,13 @@ fn should_exit(event: &Event) -> Result<bool> {
     return Ok(false);
 }
 
-fn cleanup_terminal(mut stdout: &Stdout, original_size: (u16, u16)) -> std::io::Result<()> {
+fn cleanup_terminal(mut stdout: &Stdout, game_main: &infos) -> std::io::Result<()> {
   stdout.execute(cursor::Show)?;
   stdout.execute(terminal::LeaveAlternateScreen)?;
-  stdout.execute(terminal::SetSize(original_size.0, original_size.1))?;
+  stdout.execute(terminal::SetSize(game_main.original_size.0, game_main.original_size.1))?;
   terminal::disable_raw_mode()?;
   Ok(())
 }
-
 
 // use std::env;
 // use std::io;
@@ -86,8 +133,6 @@ fn cleanup_terminal(mut stdout: &Stdout, original_size: (u16, u16)) -> std::io::
 //             std::process::exit(1);
 //         }
 //     };
-//     println!("Thank you for {first}");
-
 //     let mut stdout = io::stdout();
 //     stdout.execute(terminal::Clear(terminal::ClearType::All))?;
 //     Ok(())

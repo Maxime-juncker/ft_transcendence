@@ -5,4 +5,7 @@ edition = "2024"
 
 [dependencies]
 crossterm = "0.29.0"
+env = "1.0.1"
+reqwest = "0.12.24"
 terminal = "0.2.1"
+tokio = { version = "1", features = ["full"] }

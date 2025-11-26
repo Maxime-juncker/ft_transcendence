@@ -1,0 +1,40 @@
+Interface et rendu CLI
+crossterm - C'est la crate de référence pour :
+
+Capturer les entrées clavier en temps réel (mode raw)
+Manipuler le curseur et effacer l'écran
+Gérer les couleurs et le style du texte
+Compatible multi-plateforme
+
+tui-rs (ou ratatui, son fork maintenu) - Pour créer des interfaces textuelles sophistiquées avec :
+
+Des widgets (tableaux, barres de progression, graphiques)
+Un système de layout flexible
+Idéal pour ton tableau de bord
+
+Communication HTTP avec ton API
+reqwest - Client HTTP async/sync simple :
+
+Supporte JSON nativement
+Gestion des sessions/cookies si nécessaire
+Peut gérer WebSockets pour du temps réel
+
+tokio - Runtime async indispensable si tu choisis reqwest en mode async
+serde et serde_json - Pour sérialiser/désérialiser les données JSON échangées avec ton API NodeJS
+Boucle de jeu
+Pour le Pong, tu auras besoin d'une game loop :
+
+Utilise std::time::Instant pour calculer les delta times
+std::thread::sleep pour contrôler le framerate
+Combine avec crossterm::event::poll pour vérifier les inputs sans bloquer
+
+Architecture suggérée
+Pense à séparer :
+
+Module API - Toutes tes requêtes HTTP
+Module Game - Logique du jeu (positions, collisions)
+Module Render - Affichage via crossterm/tui
+Module Input - Gestion des contrôles
+
+
+https://blog.stackademic.com/rust-terminal-manipulation-with-crossterm-d14e76617a3d

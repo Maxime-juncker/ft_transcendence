@@ -1,0 +1,10 @@
+tokio crate
+
+runtime. Event-driven, non-blocking I/O platform for writing async apps in Rust
+
+majors components:
+    - Tools for async tasks --> channels, timeouts, sleeps, interval
+    - async I/O (TCP/UDP sockets), fs operations, process, 
+        signal management
+    - runtime for executing async code
+

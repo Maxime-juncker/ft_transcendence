@@ -3,8 +3,6 @@ use std::{
     time::Duration,
 };
 
-use std::process::Command;
-
 use std::io::{Result};
 
 use crossterm::{
@@ -29,11 +27,18 @@ const LOGO: &str = r#"
   "#;
 
 pub fn global_setup(mut stdout: &Stdout) -> std::io::Result<()> {
-    setup_terminal(&stdout);
-    set_styles(&stdout);
-    borders(&stdout);
+    setup_terminal(&stdout)?;
+    set_styles(&stdout)?;
+    borders(&stdout)?;
     draw_logo(&stdout, LOGO)?;
-    // set_options(&stdout);
+    set_welcome_options(&stdout)?;
+    stdout.flush()?;
+    Ok(())
+}
+
+pub fn game_setup(mut stdout: &Stdout) -> std::io::Result<()> {
+    clean_options(&stdout)?;
+    set_game_options(&stdout)?;
     stdout.flush()?;
     Ok(())
 }
@@ -87,6 +92,10 @@ fn draw_logo(mut stdout: &Stdout, logo: &str) -> std::io::Result<()> {
             .queue(cursor::MoveTo((NUM_ROWS - 40) / 2, 2 + i as u16))?
             .queue(Print(line))?;
     }
+    Ok(())
+}
+
+fn set_welcome_options(mut stdout: &Stdout) -> std::io::Result<()> {
     stdout
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
         .queue(Print("1. GAME"))?
@@ -97,7 +106,24 @@ fn draw_logo(mut stdout: &Stdout, logo: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-// fn set_options(mut stdout: &Stdout) -> std::io::Result<()> {
-//     stdout
-//         .queue
-// }
+fn set_game_options(mut stdout: &Stdout) -> std::io::Result<()> {
+    stdout
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
+        .queue(Print("1. LOCAL"))?
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 16))?
+        .queue(Print("2. ONLINE"))?
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 19))?
+        .queue(Print("3. BOT"))?;
+    Ok(())
+}
+
+fn clean_options(mut stdout: &Stdout) -> std::io::Result<()> {
+    stdout
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
+        .queue(Print("                          "))?
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 16))?
+        .queue(Print("                          "))?
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 19))?
+        .queue(Print("                          "))?;
+    Ok(())
+}
