@@ -5,12 +5,14 @@ use std::{
 };
 
 use std::thread::sleep;
-use serde_json::Value;
+use serde_json::{Value, Number};
 
 use reqwest::{Client};
 
 mod welcome;
 use crate::welcome::{global_setup, game_setup};
+mod game;
+use crate::game::{create_game};
 
 mod login;
 //HEEEEERE TO CONTINUE
@@ -28,9 +30,10 @@ use crossterm::{
 
 pub const NUM_ROWS: u16 = 30;
 pub const NUM_COLS: u16 = 10;
-struct infos {
+struct Infos {
   original_size: (u16, u16),
   location: String,
+  id: u64,
 }
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -40,15 +43,10 @@ async fn main() -> Result<()> {
   let mut location = get_location();
   location = format!("https://{location}");
   println!("{location}");
-  create_guest_session(&location, &stdout).await.unwrap();
-//   {
-//     Ok(ret) => println!("{:?}", ret),
-//     _ => {eprintln!("Errooooor"); std::process::exit(2)},
-//   };
-    sleep(Duration::from_secs(3));
-  let game_main: infos = infos {original_size, location};
+  let num = create_guest_session(&location, &stdout).await.unwrap();
+  sleep(Duration::from_secs(3));
+  let game_main = Infos {original_size, location, id: num,};
   global_setup(&stdout)?;
-  // set_welcome(&stdout)?;
 
   'drawing: loop {
       let event = event::read()?;
@@ -79,7 +77,7 @@ async fn main() -> Result<()> {
 
 }
 
-async fn create_guest_session(location: &String, mut stdout: &Stdout) -> Result<()> {
+async fn create_guest_session(location: &String, mut stdout: &Stdout) -> Option<u64> {
     let apiloc = format!("{location}/api/user/guest_cli");
     let client = Client::builder()
         .danger_accept_invalid_certs(true)
@@ -91,10 +89,10 @@ async fn create_guest_session(location: &String, mut stdout: &Stdout) -> Result<
         .unwrap();
 
     let value: serde_json::Value = res.json().await.unwrap();
-    let return_value = &value["data"]["id"];
+    let return_value = value["data"]["id"].as_u64();
     println!("HERE WE ARE {:?}", value);
-    println!("return val {}", return_value);
-    Ok(())
+    println!("Return : {:?}", return_value);
+    return_value
 }
 
 fn get_location() -> String {
@@ -110,7 +108,7 @@ fn get_location() -> String {
     first
 }
 
-fn game_loop(stdout: &Stdout, game_main: &infos) -> Result<()> {
+fn game_loop(stdout: &Stdout, game_main: &Infos) -> Result<()> {
   game_setup(&stdout)?;
   
   loop {
@@ -120,7 +118,7 @@ fn game_loop(stdout: &Stdout, game_main: &infos) -> Result<()> {
       break cleanup_terminal(&stdout, &game_main)?; //should quit
     } else if let Event::Key(key_event) = event {
         if key_event.code == KeyCode::Char('1') {
-//          local game;
+            create_game(game_main, "local");
             break;
         } else if key_event.code == KeyCode::Char('2') {
 //          online game;
@@ -143,7 +141,7 @@ fn should_exit(event: &Event) -> Result<bool> {
     return Ok(false);
 }
 
-fn cleanup_terminal(mut stdout: &Stdout, game_main: &infos) -> std::io::Result<()> {
+fn cleanup_terminal(mut stdout: &Stdout, game_main: &Infos) -> std::io::Result<()> {
   stdout.execute(cursor::Show)?;
   stdout.execute(terminal::LeaveAlternateScreen)?;
   stdout.execute(terminal::SetSize(game_main.original_size.0, game_main.original_size.1))?;

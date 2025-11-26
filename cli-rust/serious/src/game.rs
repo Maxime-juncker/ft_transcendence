@@ -31,21 +31,23 @@ enum Msgs
 }
 
 
-pub fn create_game(game_main: &infos, mode: String) -> impl Future<Result<()>> {
+pub fn create_game(game_main: &Infos, mode: String) -> impl Future<Result<()>> {
     let client = reqwest::Client::new();
     let mut map = Hasmap::new();
     map.insert("mode", &mode);
-//    map.insert("playerName", userid);
-    let url = format!("https://{infos.location}/api/create-game");
-    let response = client.post(url)
+	map.insert("playerName", userid);
+    let url = format!("{game_main.location}/api/create-game");
+    let response: serde_json::Value = client.post(url)
         .headers("{ 'Content-Type': 'application/json' }")
         .json(&map)
         .send()
-        .await?
+        .await
+		.unwrap()
         .json()
-        .await?;
+        .await
+		.unwrap();
 
-    console.log(response);
+    println!("Response: {:?}", response);
 
 
 }
