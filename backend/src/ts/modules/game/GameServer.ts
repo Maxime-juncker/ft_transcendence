@@ -2,6 +2,7 @@ import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
 import { FastifyReply } from 'fastify/types/reply';
+import { connect } from 'http2';
 
 export class GameServer
 {
@@ -27,6 +28,7 @@ export class GameServer
 			this.createGame();
 			this.startGame();
 			this.sendGameState();
+			this.deletePlayer();
 		}
 		catch (error)
 		{
@@ -222,6 +224,54 @@ export class GameServer
 			{
 				console.error('Error in websocket connection:', error);
 				connection.close();
+			}
+		});
+	}
+
+	private deletePlayer(): void
+	{
+		this.server.post('/api/delete-player', (request, reply) =>
+		{
+			try
+			{
+				const body = request.body as { playerName?: string; gameId?: string };
+				const name = body.playerName;
+
+				if (name && this.playerPending && this.playerPending.name === name)
+				{
+					this.playerPending = null;
+					reply.status(200).send({ message: `Player ${name} deleted` });
+					return ;
+				}
+
+				const gameId = body.gameId;
+				if (gameId)
+				{
+					const game = this.activeGames.get(gameId);
+
+					if (!game)
+					{
+						reply.status(404).send({ error: 'Game not found' });
+					}
+
+					if (game.player1Name === name)
+					{
+						game.winnerName = game.player2Name;
+					}
+					else if (game.player2Name === name)
+					{
+						game.winnerName = game.player1Name;
+					}
+					else
+					{
+						reply.status(404).send({ error: 'Player not found in game' });
+					}
+				}
+			}
+			catch (error)
+			{
+				console.error('Error deleting player:', error);
+				reply.status(500).send({ error });
 			}
 		});
 	}

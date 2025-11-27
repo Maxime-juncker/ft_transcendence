@@ -285,6 +285,21 @@ export class GameInstance
 		this._scoreUpdated = value;
 	}
 
+	set winner(value: string | null)
+	{
+		this._winner = value;
+	}
+
+	get player1Name(): string | null
+	{
+		return (this._namePlayer1);
+	}
+
+	get player2Name(): string | null
+	{
+		return (this._namePlayer2);
+	}
+
 	public destroy(): void
 	{
 		clearInterval(this._interval);

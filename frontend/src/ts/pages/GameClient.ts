@@ -159,7 +159,7 @@ export class GameClient extends Utils
 			console.log(data);
 			this.gameId = data.gameId;
 			this.playerId = data.playerId;
-
+			
 			this.m_user2 = await getUserFromId(data.opponentId);
 			this.createPlayerHtml();
 			this.m_player2.updateHtml(this.m_user2);
@@ -203,8 +203,6 @@ export class GameClient extends Utils
 		this.setWidth('paddle-right', Params.PADDLE_WIDTH + '%');
 		this.setLeft('paddle-left', Params.PADDLE_PADDING + '%', true);
 		this.setRight('paddle-right', Params.PADDLE_PADDING + '%', true);
-		console.log('Paddle left display: ', this.HTMLelements.get('paddle-left')!.style.display);
-		console.log('Paddle right display: ', this.HTMLelements.get('paddle-right')!.style.display);
 		this.setWidth('ball', Params.BALL_SIZE + '%', true);
 		this.setContent('score-left', '0', true);
 		this.setContent('score-right', '0', true);
@@ -260,8 +258,15 @@ export class GameClient extends Utils
 		document.addEventListener('keyup', this.keyupHandler);
 	}
 
-	private beforeUnloadHandler = (): void =>
+	private beforeUnloadHandler = async (): Promise<void> =>
 	{
+		await fetch(`https://${window.location.host}/api/delete-player`,
+		{
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ gameId: this.gameId, playerId: this.playerId }),
+		});
+
 		this.destroy();
 	}
 
