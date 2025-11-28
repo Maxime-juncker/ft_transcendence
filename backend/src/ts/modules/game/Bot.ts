@@ -27,9 +27,16 @@ export class Bot
 
 	private init(gameState: ArrayBuffer)
 	{
-		this.gameInstance = new GameInstance('dev', 'Bot', 'Player');
-		this.gameInstance.state = new GameState(gameState);
-		this.gameInstance.running = true;
+		try
+		{
+			this.gameInstance = new GameInstance('dev', 'Bot', 'Player');
+			this.gameInstance.state = new GameState(gameState);
+			this.gameInstance.running = true;
+		}
+		catch (error)
+		{
+			console.error('Error initializing game state:', error);
+		}
 	}
 
 	private async start(gameId: string): Promise<void>
@@ -71,7 +78,14 @@ export class Bot
 		}
 		else
 		{
-			this.gameInstance.state = new GameState(data);
+			try
+			{
+				this.gameInstance.state = new GameState(data);
+			}
+			catch (error)
+			{
+				console.error('Error updating game state:', error);
+			}
 		}
 	}
 

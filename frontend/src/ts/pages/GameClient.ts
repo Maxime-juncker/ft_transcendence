@@ -260,14 +260,20 @@ export class GameClient extends Utils
 
 	private beforeUnloadHandler = async (): Promise<void> =>
 	{
+		await this.sendDeletePlayer();
+		await this.destroy();
+	}
+
+	private sendDeletePlayer = async (): Promise<void> =>
+	{
+		console.log("Deleting player from game...");
+
 		await fetch(`https://${window.location.host}/api/delete-player`,
 		{
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ gameId: this.gameId, playerId: this.playerId }),
+			body: JSON.stringify({  gameId: this.gameId, playerId: this.playerId }),
 		});
-
-		this.destroy();
 	}
 
 	private keydownHandler = (event: KeyboardEvent): void =>
@@ -347,7 +353,14 @@ export class GameClient extends Utils
 		}
 		else
 		{
-			this.updateDisplay(new GameState(data));
+			try
+			{
+				this.updateDisplay(new GameState(data));
+			}
+			catch (error)
+			{
+				console.error('Error updating game state:', error);
+			}
 		}
 	}
 
@@ -398,13 +411,14 @@ export class GameClient extends Utils
 		this.setColor('play-again-msg', Params.COLOR, undefined, true);
 	}
 
-	public destroy(): void
+	public async destroy(): Promise<void>
 	{
 		if (this.countdownInterval)
 		{
 			clearInterval(this.countdownInterval);
 		}
 
+		await this.sendDeletePlayer();
 		this.socket?.close();
 		this.stopGameLoop();
 		window.removeEventListener('beforeunload', this.beforeUnloadHandler);

@@ -234,38 +234,48 @@ export class GameServer
 		{
 			try
 			{
-				const body = request.body as { playerName?: string; gameId?: string };
+				const body = request.body as { gameId?: string, playerName?: string };
 				const name = body.playerName;
+				if (!name)
+				{
+					throw new Error('Player name is required');
+				}
+
+				console.log(`Request to delete player: ${name}`);
 
 				if (name && this.playerPending && this.playerPending.name === name)
 				{
 					this.playerPending = null;
 					reply.status(200).send({ message: `Player ${name} deleted` });
+					console.log(`Player ${name} deleted from pending players`);
 					return ;
 				}
 
 				const gameId = body.gameId;
-				if (gameId)
+				if (!gameId)
 				{
-					const game = this.activeGames.get(gameId);
+					throw new Error('Game ID is required');
+				}
 
-					if (!game)
-					{
-						reply.status(404).send({ error: 'Game not found' });
-					}
+				const game = this.activeGames.get(gameId);
+				if (!game)
+				{
+					reply.status(404).send({ error: 'Game not found' });
+				}
 
-					if (game.player1Name === name)
-					{
-						game.winnerName = game.player2Name;
-					}
-					else if (game.player2Name === name)
-					{
-						game.winnerName = game.player1Name;
-					}
-					else
-					{
-						reply.status(404).send({ error: 'Player not found in game' });
-					}
+				if (game.player1Name === name)
+				{
+					game.winnerName = game.player2Name;
+					console.log(`Player ${name} deleted from game ${gameId}`);
+				}
+				else if (game.player2Name === name)
+				{
+					game.winnerName = game.player1Name;
+					console.log(`Player ${name} deleted from game ${gameId}`);
+				}
+				else
+				{
+					reply.status(404).send({ error: 'Player not found in game' });
 				}
 			}
 			catch (error)

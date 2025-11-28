@@ -40,6 +40,11 @@ export class GameState
 		}
 		else
 		{
+			if (buffer.byteLength !== GameState.BUFFER_SIZE)
+			{
+				throw new Error(`Invalid buffer size: expected ${GameState.BUFFER_SIZE}, got ${buffer.byteLength}`);
+			}
+
 			this.buffer = buffer;
 			this.floatArray = new Float32Array(this.buffer, 0, GameState.FLOAT_NB);
 			this.intArray = new Uint8Array(this.buffer, GameState.FLOAT_SIZE, GameState.INT_NB);
