@@ -260,7 +260,7 @@ export class GameClient extends Utils
 
 	private beforeUnloadHandler = async (): Promise<void> =>
 	{
-		await this.sendDeletePlayer();
+		// await this.sendDeletePlayer();
 		await this.destroy();
 	}
 
@@ -418,7 +418,7 @@ export class GameClient extends Utils
 			clearInterval(this.countdownInterval);
 		}
 
-		await this.sendDeletePlayer();
+		// await this.sendDeletePlayer();
 		this.socket?.close();
 		this.stopGameLoop();
 		window.removeEventListener('beforeunload', this.beforeUnloadHandler);

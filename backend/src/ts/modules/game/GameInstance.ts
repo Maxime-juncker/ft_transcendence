@@ -153,7 +153,8 @@ export class GameInstance
 
 	private collidePaddleLeft(): boolean
 	{
-		return (this._gameState.ballX <= Parameters.MIN_X_BALL
+		return (this._gameState.ballX <= Parameters.MIN_X_BALL - Parameters.BALL_SIZE
+			&& this._gameState.ballX >= Parameters.MIN_X_BALL - Parameters.BALL_SIZE - 0.5
 			&& this._gameState.ballY >= this._gameState.leftPaddleY - Parameters.MIN_Y_PADDLE
 			&& this._gameState.ballY <= this._gameState.leftPaddleY + Parameters.MIN_Y_PADDLE);
 	}

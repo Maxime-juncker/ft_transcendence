@@ -56,31 +56,44 @@ export class Router
 
 		window.addEventListener('keydown', (e) =>
 		{
-			switch (e.key)
+			const el = document.getElementById('menu')!;
+			if (el)
 			{
-				case Router.EXIT_KEY:
-					history.back();
-					break ;
-				case Router.HOME_KEY:
-					this.navigateTo('home', '');
-					break ;
-				case Router.GAME_KEY:
-					this.navigateTo('game-menu', '');
-					break ;
-				case Router.GAME_ONLINE_KEY:
-					this.navigateTo('game', 'online');
-					break ;
-				case Router.GAME_LOCAL_KEY:
-					this.navigateTo('game', 'local');
-					break ;
-				case Router.GAME_BOT_KEY:
-					this.navigateTo('game', 'bot');
-					break ;
-				case Router.TOURNAMENT_KEY:
-					this.navigateTo('tournament-menu', '');
-					break ;
+				const activeTag = document.activeElement ? document.activeElement.tagName : null;
+				if (activeTag && !(activeTag === 'INPUT' || activeTag === 'TEXTAREA'))
+				{
+					this.findKey(e.key);
+				}
 			}
 		});
+	}
+
+	private findKey(key: string): void
+	{
+		switch (key)
+		{
+			case Router.EXIT_KEY:
+				history.back();
+				break ;
+			case Router.HOME_KEY:
+				this.navigateTo('home', '');
+				break ;
+			case Router.GAME_KEY:
+				this.navigateTo('game-menu', '');
+				break ;
+			case Router.GAME_ONLINE_KEY:
+				this.navigateTo('game', 'online');
+				break ;
+			case Router.GAME_LOCAL_KEY:
+				this.navigateTo('game', 'local');
+				break ;
+			case Router.GAME_BOT_KEY:
+				this.navigateTo('game', 'bot');
+				break ;
+			case Router.TOURNAMENT_KEY:
+				this.navigateTo('tournament-menu', '');
+				break ;
+		}
 	}
 
 	public navigateTo(page: string, mode: string): void
