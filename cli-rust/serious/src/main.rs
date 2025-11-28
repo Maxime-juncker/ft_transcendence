@@ -36,14 +36,18 @@ struct Infos {
   client: Client,
 }
 
+// impl Infos {
+//   fn clone(&self)
+// }
+
 #[tokio::main]
 async fn main() -> Result<()> {
   let mut stdout: Stdout = stdout();
 
   let original_size = terminal::size()?;
-  let mut location = get_location();
-  location = format!("https://{location}");
-  println!("{location}");
+  let location = get_location();
+  // location = format!("{location}");
+  // println!("{location}");
   let (num, client) = create_guest_session(&location, &stdout).await?;
   sleep(Duration::from_secs(3));
   let game_main = Infos {original_size, location, id: num, client};
@@ -69,7 +73,6 @@ async fn main() -> Result<()> {
       //   set_terminal_size();
       // }
 
-
   }
 
   cleanup_terminal(&stdout, &game_main)?;
@@ -91,7 +94,7 @@ fn get_location() -> String {
     first
 }
 
-async fn game_loop(stdout: &Stdout, game_main: &Infos) -> Result<()> {
+async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos) -> Result<()> {
   game_setup(&stdout)?;
   
   loop {
@@ -103,7 +106,7 @@ async fn game_loop(stdout: &Stdout, game_main: &Infos) -> Result<()> {
         if key_event.code == KeyCode::Char('1') {
           break;
         } else if key_event.code == KeyCode::Char('2') {
-          let _var = match create_game(game_main, "online").await {
+          let _var = match create_game(&game_main, "online").await {
             Ok(()) => (),
             _ => return Err(anyhow::anyhow!("Error creating game")),
           };
