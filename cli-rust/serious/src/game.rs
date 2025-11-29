@@ -184,7 +184,7 @@ impl Game {
 		Ok(())
 	}
 	fn decode_and_display(&self, msg: Bytes, mut stdout: &Stdout) {
-		eprintln!("{:?}", msg);
+		// eprintln!("{:?}", msg);
 		// sleep(Duration::from_secs(1));
 		let decoded = Self::decode(msg, stdout);
 		display(decoded, stdout);
@@ -201,7 +201,7 @@ impl Game {
 		(left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score)
 	}
 	async fn send_game(ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>, mut receiver: mpsc::Receiver<u8>) -> Result<()> {
-		eprintln!("Here we are");
+		// eprintln!("Here we are");
 		tokio::spawn( async move {
 			match receiver.recv().await {
 				Some(_) => {return Ok(());},
@@ -212,7 +212,7 @@ impl Game {
 		loop {
 			let mut to_send = String::new();
 			let event = event::read()?;
-			eprintln!("Event read");
+			// eprintln!("Event read");
 			if let Event::Key(key_event) = event {
 				let to_append: char = match key_event.code {
 					KeyCode::Up => 'U',

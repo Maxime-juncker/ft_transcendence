@@ -140,7 +140,7 @@ pub fn display(message: (f32, f32, f32, f32, f32, f32, u8, u8), mut stdout: &Std
         .queue(Print("o"))?
         .queue(cursor::MoveTo(1, left_y))?
         .queue(Print("I"))?
-        .queue(cursor::MoveTo(NUM_COLS - 1, right_y))?
+        .queue(cursor::MoveTo(NUM_ROWS - 1, right_y))?
         .queue(Print("I"))?;
     stdout.flush()?;
     Ok(())
