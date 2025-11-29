@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
   // location = format!("{location}");
   // println!("{location}");
   let (num, client) = create_guest_session(&location, &stdout).await?;
-  sleep(Duration::from_secs(3));
+  sleep(Duration::from_secs(1));
   let game_main = Infos {original_size, location, id: num, client};
   global_setup(&stdout)?;
 
@@ -106,7 +106,7 @@ async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos) -> Result<()> {
         if key_event.code == KeyCode::Char('1') {
           break;
         } else if key_event.code == KeyCode::Char('2') {
-          let _var = match create_game(&game_main, "online").await {
+          let _var = match create_game(&game_main, &stdout, "online").await {
             Ok(()) => (),
             _ => return Err(anyhow::anyhow!("Error creating game")),
           };

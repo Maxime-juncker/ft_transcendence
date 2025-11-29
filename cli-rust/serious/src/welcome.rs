@@ -28,7 +28,7 @@ const LOGO: &str = r#"
 
 pub fn global_setup(mut stdout: &Stdout) -> std::io::Result<()> {
     setup_terminal(&stdout)?;
-    set_styles(&stdout)?;
+    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
     borders(&stdout)?;
     draw_logo(&stdout, LOGO)?;
     set_welcome_options(&stdout)?;
@@ -51,13 +51,6 @@ fn setup_terminal(mut stdout: &Stdout) -> std::io::Result<()> {
     Ok(())
 }
   
-fn set_styles(mut stdout: &Stdout) -> std::io::Result<()> {
-    // stdout.execute(SetBackgroundColor(Color::Grey))?;
-    // stdout.execute(SetForegroundColor(Color::Red))?;
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-    Ok(())
-}
-
 fn borders(mut stdout: &Stdout) -> std::io::Result<()> {
     for y in 1..NUM_COLS {
         stdout
@@ -127,3 +120,33 @@ fn clean_options(mut stdout: &Stdout) -> std::io::Result<()> {
         .queue(Print("                          "))?;
     Ok(())
 }
+
+fn normalize(message: (f32, f32, f32, f32, f32, f32, u8, u8)) -> (u16, u16, u16, u16, f32, f32, u8, u8) {
+    let (left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score) = message;
+    let my_left_y = (left_y * NUM_COLS as f32 / 100.0) as u16;
+    let my_right_y = (right_y * NUM_COLS as f32 / 100.0) as u16;
+    let my_ball_y = (ball_y * NUM_COLS as f32 / 100.0) as u16;
+    let my_ball_x = (ball_x * NUM_ROWS as f32 / 100.0) as u16;
+    (my_left_y, my_right_y, my_ball_x, my_ball_y, speed_x, speed_y, player1_score, player2_score)
+}
+
+pub fn display(message: (f32, f32, f32, f32, f32, f32, u8, u8), mut stdout: &Stdout) -> Result<()> {
+    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
+    let normalized = normalize(message);
+    let (left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score) = normalized;
+    // borders(&stdout)?;
+    stdout
+        .queue(cursor::MoveTo(ball_x, ball_y))?
+        .queue(Print("o"))?
+        .queue(cursor::MoveTo(1, left_y))?
+        .queue(Print("I"))?
+        .queue(cursor::MoveTo(NUM_COLS - 1, right_y))?
+        .queue(Print("I"))?;
+    stdout.flush()?;
+    Ok(())
+}
+
+	// PADDLE_HEIGHT = 15,
+	// PADDLE_WIDTH = 1,
+	// PADDLE_PADDING = 2,
+	// BALL_SIZE = 2,

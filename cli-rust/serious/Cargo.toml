@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.100"
+bytes = "1.11.0"
 crossterm = "0.29.0"
 env = "1.0.1"
 futures-util = "0.3.31"
