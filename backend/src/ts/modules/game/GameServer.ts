@@ -66,7 +66,6 @@ export class GameServer
 					const gameId = crypto.randomUUID();
 					const data = await getUserByName("bot", core.db);
 					const opponentId = data.data.id;
-					// const opponentId = "0";
 					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
 					return reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
@@ -159,7 +158,7 @@ export class GameServer
 					}
 
 					const winner = game?.winnerName;
-					if (winner)
+					if (winner !== null)
 					{
 						connection.send(JSON.stringify({ type: 'winner', winner }));
 					}

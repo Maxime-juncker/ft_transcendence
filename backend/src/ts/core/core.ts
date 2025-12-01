@@ -52,11 +52,14 @@ export async function shutdown()
 	await fastify.close();
 
 	const sql = "UPDATE users SET is_login = 0";
-	db.run(sql, function(err: any) {
-		if (err)
-			console.error(`error on shutdown: ${err}`);
-		db.close();
-		console.log('shutdown complete, bye.');
-		process.exit(0);
-	})
+	try {
+		await db.run(sql); 
+	}
+	catch (err)
+	{
+		console.error(`error on shutdown: ${err}`);
+	}
+	db.close();
+	console.log('shutdown complete, bye.');
+	process.exit(0);
 }

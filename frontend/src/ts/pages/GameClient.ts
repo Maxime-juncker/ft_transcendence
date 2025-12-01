@@ -3,6 +3,7 @@ import { GameState } from './GameState.js';
 import { User, getUserFromId } from 'User.js';
 import { Chat } from 'modules/chat.js';
 import { UserElement, UserElementType } from 'UserElement.js';
+import { Router } from 'router.js';
 
 enum Params
 {
@@ -11,7 +12,7 @@ enum Params
 	PADDLE_PADDING = 2,
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
-	COLOR = '255, 255, 255',
+	COLOR = 'var(--white)',
 	COUNTDOWN_START = 1,
 	IPS = 60,
 }
@@ -51,7 +52,7 @@ enum Msgs
 {
 	SEARCHING = 'Searching for opponent...',
 	WIN = 'wins !',
-	PLAY_AGAIN = `Press ${Keys.PLAY_AGAIN} to play again`,
+	PLAY_AGAIN = `Press ${Keys.PLAY_AGAIN} to go back`,
 }
 
 export class GameClient extends Utils
@@ -74,11 +75,13 @@ export class GameClient extends Utils
 	private m_playerContainer:	HTMLElement;
 	private	m_prevP1Score:		number;
 	private	m_prevP2Score:		number;
+	private m_router:			Router;
 
-	constructor(private mode: string, user: User = null, chat: Chat = null)
+	constructor(router: Router, private mode: string, user: User = null, chat: Chat = null)
 	{
 		super();
 
+		this.m_router = router;
 		this.m_playerContainer = document.getElementById("player-container");
 		if (!this.m_playerContainer)
 		{
@@ -296,8 +299,7 @@ export class GameClient extends Utils
 
 		if (event.key === Keys.PLAY_AGAIN && this.end)
 		{
-			this.destroy();
-			new GameClient(this.mode);
+			this.m_router.navigateTo("home", "");
 		}
 	}
 
@@ -405,14 +407,20 @@ export class GameClient extends Utils
 		}
 	}
 
-	private showWinner(winner: string): void
+	private async showWinner(winner: number)
 	{
+		var winnerName = "Player2";
+		if (winner >= 1) // db id start at 1
+		{
+			const usr = await getUserFromId(winner);
+			winnerName = usr.name;
+		}
 		this.setColors(Params.BACKGROUND_OPACITY);
 		this.hide('net');
 		this.hide('ball');
 		this.hide('paddle-left');
 		this.hide('paddle-right');
-		this.setInnerHTML('winner-msg', `${winner}<br>${Msgs.WIN}`);
+		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
 		this.setContent('play-again-msg', Msgs.PLAY_AGAIN);
 		this.setColor('play-again-msg', Params.COLOR, undefined, true);

@@ -15,8 +15,8 @@
 
 		<template id="chat-item-template">
 			<div class="w-full flex gap-3 px-2 my-1">
-				<h1 class="font-bold" id="sender"></h1>	
-				<p class="font-medium" id="message"></p>
+				<h1 class="font-bold text-left" id="sender"></h1>	
+				<p class="font-medium text-left" id="message"></p>
 			</div>
 		</template>
 
@@ -68,7 +68,7 @@
 			</div>
 		</template>
 
-		<div class="crt">
+		<div class="crt h-full">
 			<div class="scanline z-99">
 				<div class="scan"></div>
 			</div>
@@ -87,11 +87,10 @@
 				</div>
 			</header>
 
-
-			<div class="h-full w-full flex flex-col gap-10 py-15 sm:flex-row md:px-5 lg:px-20">
+			<div class="h-[90%] w-full flex flex-col gap-10 py-15 sm:flex-row md:px-5 lg:px-20">
 
 				<div class="w-[35%] h-full border-4 border-[--blue] flex flex-col">
-					<div id="chat-out" class="flex-1 flex-col-reverse bg-[--darker]">
+					<div id="chat-out" class="flex h-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-[--darker]">
 					</div>	
 					<input id="chat-in" wrap="soft" placeholder="enter message..."
 						class="h-15 py-2 px-3 bg-[--dark] focus:outline-none
@@ -138,9 +137,9 @@
 							<p id="score-left" class="absolute text-[15vw] left-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
 							<p id="score-right" class="absolute text-[15vw] right-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
 							<p id="countdown" class="text-[3vw] text-[--darker] bg-[--white] rounded-none p-1 px-5"></p>
-							<p id="winner-msg" class="centered text-[3vw] top-[40%] w-[80vw]"></p>
-							<p id="play-again-msg" class="centered text-[2vw] top-[70%] w-[80vw] animation"></p>
-							<p id="searching-msg" class="centered text-[2vw] animation"></p>
+							<p id="winner-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
+							<p id="play-again-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
+							<p id="searching-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
 						</section>
 
 						<section id="tournament-menu">

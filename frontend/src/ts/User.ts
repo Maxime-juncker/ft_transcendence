@@ -16,15 +16,15 @@ export enum UserStatus {
 	IN_GAME,			// show when user in game
 }
 
-async function getUserInfoFromId(id: string): Promise<Response> {
+async function getUserInfoFromId(id: number): Promise<Response> {
 	const params = { user_id: id };
-	const queryString = new URLSearchParams(params).toString();
-	var response = await fetch(`/api/user/get_profile_id?${queryString}`);
+	// const queryString = new URLSearchParams(params).toString();
+	var response = await fetch(`/api/user/get_profile_id?user_id=${id.toString()}`);
 	
 	return response;
 }
 
-export async function getUserFromId(id: string): Promise<User> {
+export async function getUserFromId(id: number): Promise<User> {
 	const response = await getUserInfoFromId(id);
 	if (response.status != 200)
 		return null
@@ -133,7 +133,7 @@ export class User {
 		if (this.getId() == -1)
 			return 1;
 
-		var response = await getUserInfoFromId(this.getId().toString());
+		var response = await getUserInfoFromId(this.getId());
 		if (response.status != 200)
 			return response.status;
 

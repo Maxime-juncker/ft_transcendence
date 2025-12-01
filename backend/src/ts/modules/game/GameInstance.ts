@@ -136,10 +136,12 @@ export class GameInstance
 		{
 			this._winner = player;
 			this._isRunning = false;
-			console.log(`${player} won the game`);
-			var res: GameRes = { user1_id: this._Player1Id, user2_id: this._Player2Id, user1_score: this._gameState.player1Score, user2_score: this._gameState.player2Score};
-
-			addGameToHist(res, core.db);
+			console.log(`${this._winner} won the game (mode: ${this.mode})`);
+			if (this.mode == 'online')
+			{
+				var res: GameRes = { user1_id: this._Player1Id, user2_id: this._Player2Id, user1_score: this._gameState.player1Score, user2_score: this._gameState.player2Score};
+				addGameToHist(res, core.db);
+			}
 		}
 	}
 

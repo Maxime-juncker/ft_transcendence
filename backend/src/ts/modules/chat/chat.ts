@@ -8,7 +8,7 @@ import { GameInstance } from 'modules/game/GameInstance.js'
 
 //TODO: if a user block someone everyone is blocked ?
 export const connections = new Map<WebSocket, number>(); // websocket => user login
-export const matchQueue = [];
+var matchQueue = [];
 
 function serverMsg(str: string): string
 {
@@ -59,6 +59,12 @@ async function notifyMatch(id: number, opponentId: number, gameId: string, playe
 		const res = JSON.stringify({ username: "SERVER", message: "START", opponentId: opponentId, gameId: gameId, playerSide: playerSide});
 		sendTo(id, res)
 		sendTo(id, serverMsg(`you will play against: ${await getPlayerName(opponentId)}`));
+}
+
+export function removePlayerFromQueue(playerId: number)
+{
+	matchQueue = matchQueue.filter(num => num != Number(playerId));
+	console.log(playerId, "has been removed from matchQueue");
 }
 
 export async function addPlayerToQueue(playerId: number, server: GameServer): Promise<string>
@@ -124,9 +130,10 @@ export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 		})
 
 		ws.on('close', (code: any, reason: any) => {
+			removePlayerFromQueue(connections.get(ws));
 			connections.delete(ws);
 			broadcast(serverMsg(`${login} has left the room`), ws);
-			// console.log(`${login}: disconnected - Code: ${code}, Reason: ${reason?.toString() || 'none'}`);
+			console.log(`${login}: disconnected - Code: ${code}, Reason: ${reason?.toString() || 'none'}`);
 		});
 
 		broadcast(serverMsg(`${login} has join the room`), ws);

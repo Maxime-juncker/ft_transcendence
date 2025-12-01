@@ -2,21 +2,30 @@ import { MainUser } from "User.js";
 import { Chat } from "modules/chat.js";
 import { Router } from "router.js";
 
-console.log(document.getElementById("user-container"));
 var user: MainUser = new MainUser(document.getElementById("user-container"), null, null);
 await user.loginSession();
-
+user.onLogout((user) => { window.location.href = window.location.origin })
 if (user.getId() == -1) // user not login
 	window.location.href = window.location.origin;
 
-user.onLogout((user) => { window.location.href = window.location.origin })
+const chatInput: HTMLInputElement = document.getElementById("chat-in") as HTMLInputElement;
+const chat = new Chat(user, document.getElementById("chat-out"), chatInput);
+new Router(user, chat);
+
 
 const userMenuContainer = document.getElementById("user-menu-container");
+
 document.getElementById("user-menu-btn").addEventListener('click', () => {
 	userMenuContainer.classList.toggle("hide");
 });
 document.getElementById("logout_btn")?.addEventListener("click", () => user.logout());
 document.getElementById("banner")?.addEventListener("click", () => window.location.href = window.location.origin);
+document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
+document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
+document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
+document.getElementById("chat_send_btn")?.addEventListener("click", () => chat.sendMsg(user, chatInput.value));
+
+setInterval(() => user.refreshSelf(), 60000);
 
 
 async function sendFriendInvite()
@@ -72,14 +81,4 @@ function setPlaceholderTxt(msg: string)
 	txt.innerText = msg;
 }
 
-const chatInput: HTMLInputElement = document.getElementById("chat-in") as HTMLInputElement;
-const chat = new Chat(user, document.getElementById("chat-out"), chatInput);
-new Router(user, chat);
-
-document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
-document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
-document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
-document.getElementById("chat_send_btn")?.addEventListener("click", () => chat.sendMsg(user, chatInput.value));
-
-setInterval(() => user.refreshSelf(), 60000);
 

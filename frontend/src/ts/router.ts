@@ -57,31 +57,38 @@ export class Router
 			this.showPage(page, null);
 		});
 
-		window.addEventListener('keydown', (e) =>
+		window.addEventListener('keydown', async (e) =>
 		{
 			switch (e.key)
 			{
 				case Router.EXIT_KEY:
+					await fetch("/api/chat/removeQueue", { 
+							method: "DELETE",
+							headers: { 'content-type': 'application/json' },
+							body: JSON.stringify({
+								id: this.m_user.getId()
+							})
+						});
 					history.back();
 					break ;
-				case Router.HOME_KEY:
-					this.navigateTo('home', '');
-					break ;
-				case Router.GAME_KEY:
-					this.navigateTo('game-menu', '');
-					break ;
-				case Router.GAME_ONLINE_KEY:
-					this.navigateTo('game', 'online');
-					break ;
-				case Router.GAME_LOCAL_KEY:
-					this.navigateTo('game', 'local');
-					break ;
-				case Router.GAME_BOT_KEY:
-					this.navigateTo('game', 'bot');
-					break ;
-				case Router.TOURNAMENT_KEY:
-					this.navigateTo('tournament-menu', '');
-					break ;
+				// case Router.HOME_KEY:
+				// 	this.navigateTo('home', '');
+				// 	break ;
+				// case Router.GAME_KEY:
+				// 	this.navigateTo('game-menu', '');
+				// 	break ;
+				// case Router.GAME_ONLINE_KEY:
+				// 	this.navigateTo('game', 'online');
+				// 	break ;
+				// case Router.GAME_LOCAL_KEY:
+				// 	this.navigateTo('game', 'local');
+				// 	break ;
+				// case Router.GAME_BOT_KEY:
+				// 	this.navigateTo('game', 'bot');
+				// 	break ;
+				// case Router.TOURNAMENT_KEY:
+				// 	this.navigateTo('tournament-menu', '');
+				// 	break ;
 			}
 		});
 	}
@@ -114,7 +121,7 @@ export class Router
 			case 'game-menu':
 				return (new GameMenu(this));
 			case 'game':
-				return (new GameClient(mode!, this.m_user, this.m_chat));
+				return (new GameClient(this, mode!, this.m_user, this.m_chat));
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
 			case 'tournament':
