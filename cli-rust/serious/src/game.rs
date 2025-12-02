@@ -23,7 +23,6 @@ use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::Connector;
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-
 use std::thread::{sleep};
 
 use anyhow::{Result, anyhow};
@@ -84,7 +83,7 @@ struct Game {
 // 	PLAY_AGAIN = "Press ${Keys.PLAY_AGAIN} to play again",
 // }
 
-pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str) -> Result<(), Box<dyn Error>> {
+pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<(), Box<dyn Error>> {
 	let mut map = HashMap::new();
 	let mut headers = HeaderMap::new();
 	headers.insert("Content-Type", "application/json".parse()?);
@@ -105,17 +104,32 @@ pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str) -> 
         .await
 		.unwrap();
 
-    println!("Response: {:?}", response);
+	
+	// let message = game_main.ws_stream.next().await.unwrap();
+	
+	// eprintln!("Message: {:?}", message);
+	
+	// let message: serde_json::Value = message
+    //     .json()
+    //     .await
+	// 	.unwrap();
+	// let mgame_main.receiver;
+	// eprintln!("before");
+	eprintln!("Response: {:?}", response);
+	let response = receiver.recv().await.unwrap();
+	
 	let game = match Game::new(game_main, response) {
 		Ok(game) => game,
 		Err(e) => {
-			eprintln!("EEEEEEEEE: {:?}", e);
+			// eprintln!("EEEEEEEEE: {:?}", e);
 			std::process::exit(1);
 		},
 	};
+	eprintln!("WE ARE HERE");
 	game.start_game(stdout).await?;
 	Ok(())
 }
+
 
 impl Game {
 	fn new(info: &Infos, value: serde_json::Value) -> Result<Game> {
@@ -164,7 +178,7 @@ impl Game {
 			).await
 			.unwrap();
 		let (mut ws_write, mut ws_read) = ws_stream.split();
-		eprintln!("Coucou les copains");
+		// eprintln!("Coucou les copains");
 		let (sender, mut receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
 		tokio::spawn(async move {
 			Self::send_game(&mut ws_write, receiver).await;
@@ -179,7 +193,6 @@ impl Game {
 				},
 				_ => {continue;},
 			};
-
 		};
 		Ok(())
 	}

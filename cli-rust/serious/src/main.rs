@@ -4,6 +4,10 @@ use std::{
   future::Future
 };
 
+use tokio_tungstenite::MaybeTlsStream;
+use tokio_tungstenite::WebSocketStream;
+use tokio::net::TcpStream;
+
 use anyhow::{Result, anyhow};
 use std::thread::sleep;
 use serde_json::{Value, Number};
@@ -17,6 +21,7 @@ use crate::game::{create_game};
 
 mod login;
 use crate::login::{create_guest_session};
+use tokio::sync::mpsc;
 
 use crossterm::{
   cursor,
@@ -34,6 +39,7 @@ struct Infos {
   location: String,
   id: u64,
   client: Client,
+  // ws_stream: WebSocketStream<MaybeTlsStream<TcpStream>>,
 }
 
 // impl Infos {
@@ -48,7 +54,7 @@ async fn main() -> Result<()> {
   let location = get_location();
   // location = format!("{location}");
   // println!("{location}");
-  let (num, client) = create_guest_session(&location, &stdout).await?;
+  let (num, client, receiver) = create_guest_session(&location, &stdout).await?;
   sleep(Duration::from_secs(1));
   let game_main = Infos {original_size, location, id: num, client};
   global_setup(&stdout)?;
@@ -61,7 +67,7 @@ async fn main() -> Result<()> {
       }
       else if let Event::Key(key_event) = event {
         if key_event.code == KeyCode::Char('1') {
-          game_loop(&stdout, &game_main).await?;
+          game_loop(&stdout, &game_main, receiver).await?;
           break ;
         } else if key_event.code == KeyCode::Char('2') {
 
@@ -94,7 +100,7 @@ fn get_location() -> String {
     first
 }
 
-async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos) -> Result<()> {
+async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos, receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
   game_setup(&stdout)?;
   
   loop {
@@ -106,7 +112,7 @@ async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos) -> Result<()> {
         if key_event.code == KeyCode::Char('1') {
           break;
         } else if key_event.code == KeyCode::Char('2') {
-          let _var = match create_game(&game_main, &stdout, "online").await {
+          let _var = match create_game(&game_main, &stdout, "online", receiver).await {
             Ok(()) => (),
             _ => return Err(anyhow::anyhow!("Error creating game")),
           };
