@@ -13,8 +13,10 @@ use std::{
 	io::{Stdout, stdout},
 };
 
-use crate::welcome::display;
 
+
+use crate::welcome::display;
+use crate::{should_exit, cleanup_and_quit};
 use bytes::Bytes;
 
 use tokio_tungstenite::connect_async_tls_with_config;
@@ -34,6 +36,7 @@ use tokio::net::TcpStream;
 
 struct Game {
 	location: String,
+	original_size: (u16, u16),
 	id: u64,
 	client: Client,
 	game_id: String,
@@ -83,7 +86,7 @@ struct Game {
 // 	PLAY_AGAIN = "Press ${Keys.PLAY_AGAIN} to play again",
 // }
 
-pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<(), Box<dyn Error>> {
+pub async fn create_game<'a>(game_main: &Infos, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<(), Box<dyn Error>> {
 	let mut map = HashMap::new();
 	let mut headers = HeaderMap::new();
 	headers.insert("Content-Type", "application/json".parse()?);
@@ -114,8 +117,23 @@ pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str, mut
     //     .await
 	// 	.unwrap();
 	// let mgame_main.receiver;
-	eprintln!("before");
+	eprintln!("Waiting for connection");
+	// let mut response ;
 	let response = receiver.recv().await.unwrap();
+	// response = 
+	// match receiver.try_recv().unwrap() {
+	// loop {
+	// 		Ok(value) => value,
+	// 		_ => {
+	// 			let event = event::read()?;
+	// 				// eprintln!("Event read");
+	// 				let stdout = stdout();
+	// 				if should_exit(&event)? == true {
+	// 					cleanup_and_quit(&stdout, &original_size)?;
+	// 				}
+	// 		};
+	// 	};
+	// }
 	eprintln!("Response received: {:?}", response);
 	
 	let game = match Game::new(game_main, response) {
@@ -126,10 +144,9 @@ pub async fn create_game<'a>(game_main: &Infos, stdout: &Stdout, mode: &str, mut
 		},
 	};
 	eprintln!("WE ARE HERE");
-	game.start_game(stdout).await?;
+	game.start_game().await?;
 	Ok(())
 }
-
 
 impl Game {
 	fn new(info: &Infos, value: serde_json::Value) -> Result<Game> {
@@ -146,7 +163,7 @@ impl Game {
 			None => return Err(anyhow::anyhow!("No player Id in response")),
 		};
 		eprintln!("ok");
-		Ok(Game{location: info.location.clone(), id: info.id, client: info.client.clone(), game_id, opponent_id, player_side})
+		Ok(Game{location: info.location.clone(), original_size: info.original_size, id: info.id, client: info.client.clone(), game_id, opponent_id, player_side})
 	}
 	// async fn launch_countdown(&self) -> Result<()> {
 	// 	//3...2....1....0 -->
@@ -154,7 +171,7 @@ impl Game {
 	// 	self.start_game().await?;
 	// 	Ok(())
 	// }
-	async fn start_game(&self, mut stdout: &Stdout) -> Result<()> {
+	async fn start_game(&self) -> Result<()> {
 		let url = format!("https://{}/api/start-game/{}", self.location, self.game_id);
 		let toprint = self.client.post(url).send().await.unwrap();
 		// eprintln!("POST RESPONSE  {:?}", toprint);
@@ -181,12 +198,13 @@ impl Game {
 		let (mut ws_write, mut ws_read) = ws_stream.split();
 		// eprintln!("Coucou les copains");
 		let (sender, mut receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
+		let cloned_size = self.original_size.clone();
 		tokio::spawn(async move {
-			Self::send_game(&mut ws_write, receiver).await;
+			Self::send_game(&mut ws_write, receiver, cloned_size).await;
 		}); 
 		while let Some(msg) = ws_read.next().await {
 			match msg? {
-				Message::Binary(text) => {self.decode_and_display(text, stdout)},
+				Message::Binary(text) => {self.decode_and_display(text)},
 				Message::Close(_) => {
 					let u: u8 = 1;
 					sender.send(u).await.unwrap();
@@ -197,13 +215,13 @@ impl Game {
 		};
 		Ok(())
 	}
-	fn decode_and_display(&self, msg: Bytes, mut stdout: &Stdout) {
+	fn decode_and_display(&self, msg: Bytes) {
 		// eprintln!("{:?}", msg);
 		// sleep(Duration::from_secs(1));
-		let decoded = Self::decode(msg, stdout);
-		display(decoded, stdout);
+		let decoded = Self::decode(msg);
+		display(decoded);
 	}
-	fn decode(msg: Bytes, mut stdout: &Stdout) -> (f32, f32, f32, f32, f32, f32, u8, u8) {
+	fn decode(msg: Bytes) -> (f32, f32, f32, f32, f32, f32, u8, u8) {
 		//if msg.len() < 26 Error  
 		
 		let left_y: f32 = f32::from_le_bytes(msg[0..4].try_into().unwrap());
@@ -216,41 +234,55 @@ impl Game {
 		let player2_score: u8 =  msg[25];
 		(left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score)
 	}
-	async fn send_game(ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>, mut receiver: mpsc::Receiver<u8>) -> Result<()> {
+	async fn send_game(ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>, mut receiver: mpsc::Receiver<u8>, original_size: (u16, u16)) -> Result<()> {
 		// eprintln!("Here we are");
 		tokio::spawn( async move {
 			match receiver.recv().await {
 				Some(_) => {return Ok(());},
 				_ => {return Err(anyhow::anyhow!("error from receiver"))}, 
 			}
-			return Err(anyhow::anyhow!("Error, parent task hung hup"));
+			// return Err(anyhow::anyhow!("Error, parent task hung hup"));
 		});
+		let mut up:bool = false;
+		let mut down: bool = false;
 		loop {
-			let event = event::read()?;
-			// eprintln!("Event read");
-			if let Event::Key(key_event) = event {
-				match key_event.code {
-					KeyCode::Up => {loop {
-						let mut to_send = String::new();
-						let to_append = match key_event.kind {
-							KeyEventKind::Press => 'U',
-							KeyEventKind::Repeat => 'U',
-							KeyEventKind::Release => {break;}
-						};
-						to_send.push(to_append);
-						ws_write.send(to_send.into()).await?;
-					}},
-					KeyCode::Down =>{loop {
-						let mut to_send = String::new();
-						let to_append = match key_event.kind {
-							KeyEventKind::Press => 'D',
-							KeyEventKind::Repeat => 'D',
-							KeyEventKind::Release => {break;}
-						};
-						to_send.push(to_append);
-						ws_write.send(to_send.into()).await?;
-					}},
-					_ => {break Ok(()) ;},
+			let mut to_send = String::new();
+			eprintln!("\n\nloop begin");
+			to_send.clear();
+			if up == true {
+				eprintln!("U");
+				to_send.push('U');
+			}
+			if down == true {
+				eprintln!("D");
+				to_send.push('D');
+			}
+			ws_write.send(to_send.into()).await?;
+			if poll(Duration::from_millis(16))? {
+
+				let event = event::read()?;
+				eprintln!("Event read");
+				// if should_exit(&event)? == true {
+					// 	cleanup_and_quit(&original_size)?;
+					// }
+					if let Event::Key(key_event) = event {
+						match key_event.code {
+							KeyCode::Up => {
+								up = match key_event.kind {
+									KeyEventKind::Press => true,
+									KeyEventKind::Repeat => {continue;},
+									KeyEventKind::Release => false,
+								};
+							},
+							KeyCode::Down =>{
+								down = match key_event.kind {
+									KeyEventKind::Press => true,
+									KeyEventKind::Repeat => {continue;},
+									KeyEventKind::Release => false,
+								};
+							},
+							_ => {continue;},
+					}
 				};
 			}
 		}

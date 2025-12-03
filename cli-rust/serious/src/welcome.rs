@@ -7,7 +7,7 @@ use std::io::{Result};
 
 use crossterm::{
     cursor,
-    event::{self, poll, Event, KeyCode, KeyModifiers},
+    event::{PushKeyboardEnhancementFlags, KeyboardEnhancementFlags, self, poll, Event, KeyCode, KeyModifiers},
     style::*,
     terminal,
     ExecutableCommand,
@@ -26,47 +26,50 @@ const LOGO: &str = r#"
   ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ 
   "#;
 
-pub fn global_setup(mut stdout: &Stdout) -> std::io::Result<()> {
-    setup_terminal(&stdout)?;
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-    borders(&stdout)?;
-    draw_logo(&stdout, LOGO)?;
-    set_welcome_options(&stdout)?;
-    stdout.flush()?;
+pub fn global_setup() -> std::io::Result<()> {
+    setup_terminal()?;
+    stdout().execute(terminal::Clear(terminal::ClearType::All))?;
+    stdout().execute(PushKeyboardEnhancementFlags(
+        KeyboardEnhancementFlags::REPORT_EVENT_TYPES
+    ))?;
+    borders()?;
+    draw_logo(LOGO)?;
+    set_welcome_options()?;
+    stdout().flush()?;
     Ok(())
 }
 
-pub fn game_setup(mut stdout: &Stdout) -> std::io::Result<()> {
-    clean_options(&stdout)?;
-    set_game_options(&stdout)?;
-    stdout.flush()?;
+pub fn game_setup() -> std::io::Result<()> {
+    clean_options()?;
+    set_game_options()?;
+    stdout().flush()?;
     Ok(())
 }
 
-fn setup_terminal(mut stdout: &Stdout) -> std::io::Result<()> {
+fn setup_terminal() -> std::io::Result<()> {
     terminal::enable_raw_mode()?;
-    stdout.execute(terminal::EnterAlternateScreen)?;
-    stdout.execute(cursor::Hide)?;
-    stdout.execute(terminal::SetSize(NUM_ROWS, NUM_COLS))?;
+    stdout().execute(terminal::EnterAlternateScreen)?;
+    stdout().execute(cursor::Hide)?;
+    stdout().execute(terminal::SetSize(NUM_ROWS, NUM_COLS))?;
     Ok(())
 }
   
-fn borders(mut stdout: &Stdout) -> std::io::Result<()> {
+fn borders() -> std::io::Result<()> {
     for y in 1..NUM_COLS {
-        stdout
+        stdout()
             .queue(cursor::MoveTo(0, y))?
             .queue(Print("||"))?
             .queue(cursor::MoveTo(NUM_ROWS, y))?
             .queue(Print("||"))?;
     }
     for x in 2..NUM_ROWS - 1 {
-        stdout
+        stdout()
             .queue(cursor::MoveTo(x, 0))?
             .queue(Print("="))?
             .queue(cursor::MoveTo(x, NUM_COLS))?
             .queue(Print("="))?;
     }
-    stdout
+    stdout()
         .queue(cursor::MoveTo(0,0))?
         .queue(Print("*"))?
         .queue(cursor::MoveTo(0,NUM_COLS))?
@@ -78,18 +81,18 @@ fn borders(mut stdout: &Stdout) -> std::io::Result<()> {
     Ok(())
 }
 
-fn draw_logo(mut stdout: &Stdout, logo: &str) -> std::io::Result<()> {
+fn draw_logo(logo: &str) -> std::io::Result<()> {
     
     for (i, line) in logo.lines().enumerate() {
-        stdout
+        stdout()
             .queue(cursor::MoveTo((NUM_ROWS - 40) / 2, 2 + i as u16))?
             .queue(Print(line))?;
     }
     Ok(())
 }
 
-fn set_welcome_options(mut stdout: &Stdout) -> std::io::Result<()> {
-    stdout
+fn set_welcome_options() -> std::io::Result<()> {
+    stdout()
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
         .queue(Print("1. GAME"))?
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 16))?
@@ -99,19 +102,21 @@ fn set_welcome_options(mut stdout: &Stdout) -> std::io::Result<()> {
     Ok(())
 }
 
-fn set_game_options(mut stdout: &Stdout) -> std::io::Result<()> {
-    stdout
+fn set_game_options() -> std::io::Result<()> {
+    stdout()
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
         .queue(Print("1. LOCAL"))?
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 16))?
         .queue(Print("2. ONLINE"))?
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 19))?
-        .queue(Print("3. BOT"))?;
+        .queue(Print("3. BOT"))?
+        .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 22))?
+        .queue(Print("4. GO BACK"))?;
     Ok(())
 }
 
-fn clean_options(mut stdout: &Stdout) -> std::io::Result<()> {
-    stdout
+fn clean_options() -> std::io::Result<()> {
+    stdout()
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 13))?
         .queue(Print("                          "))?
         .queue(cursor::MoveTo((NUM_ROWS - 6) / 2, 16))?
@@ -130,19 +135,19 @@ fn normalize(message: (f32, f32, f32, f32, f32, f32, u8, u8)) -> (u16, u16, u16,
     (my_left_y, my_right_y, my_ball_x, my_ball_y, speed_x, speed_y, player1_score, player2_score)
 }
 
-pub fn display(message: (f32, f32, f32, f32, f32, f32, u8, u8), mut stdout: &Stdout) -> Result<()> {
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
+pub fn display(message: (f32, f32, f32, f32, f32, f32, u8, u8)) -> Result<()> {
+    stdout().execute(terminal::Clear(terminal::ClearType::All))?;
     let normalized = normalize(message);
     let (left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score) = normalized;
     // borders(&stdout)?;
-    stdout
+    stdout()
         .queue(cursor::MoveTo(ball_x, ball_y))?
         .queue(Print("o"))?
         .queue(cursor::MoveTo(1, left_y))?
         .queue(Print("I"))?
         .queue(cursor::MoveTo(NUM_ROWS - 1, right_y))?
         .queue(Print("I"))?;
-    stdout.flush()?;
+    stdout().flush()?;
     Ok(())
 }
 

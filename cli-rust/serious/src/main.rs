@@ -1,6 +1,7 @@
 use std::{
   io::{Write, stdout, Stdout},
   time::Duration,
+  thread,
   future::Future
 };
 
@@ -21,11 +22,11 @@ use crate::game::{create_game};
 
 mod login;
 use crate::login::{create_guest_session};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 
 use crossterm::{
   cursor,
-  event::{self, poll, Event, KeyCode, KeyModifiers},
+  event::{self, PopKeyboardEnhancementFlags, poll, Event, KeyCode, KeyModifiers},
   style::*,
   terminal,
   ExecutableCommand,
@@ -48,53 +49,54 @@ struct Infos {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  // let stdout = Arc::new(Mutex<Stdout>::new(stdout()));
-  let stdout = stdout();
-
+  if crossterm::event::supports_keyboard_enhancement()? {
+    eprintln!("Keyboard enhancement supporté"); 
+  } else {
+    eprintln!("PAS supporté !");
+  }
   let original_size = terminal::size()?;
+  let for_signal = original_size.clone();
+  global_setup()?;
+  ctrlc_async::set_handler(move || {
+    eprintln!("here");
+    cleanup_and_quit(&for_signal).unwrap();
+  })?;
   let location = get_location();
   // location = format!("{location}");
   // println!("{location}");
-  let (num, client, receiver) = create_guest_session(&location, &stdout).await?;
+  let (num, client, receiver) = create_guest_session(&location).await?;
   sleep(Duration::from_secs(1));
   let game_main = Infos {original_size, location, id: num, client};
-  global_setup(&stdout)?;
-  tokio::spawn({ loop {
-    let event = event::read()?;
 
-    if should_exit(&event)? == true {
-      // eprintln!("here")
-      std::process::exit(1);
-      }
-    }
-});
-
-  'drawing: loop {
-      let event = event::read()?;
-
-      if should_exit(&event)? == true {
-        break;
-      }
-      else if let Event::Key(key_event) = event {
-        if key_event.code == KeyCode::Char('1') {
-          game_loop(&stdout, &game_main, receiver).await?;
-          break ;
-        } else if key_event.code == KeyCode::Char('2') {
-
-        } else if key_event.code == KeyCode::Char('3') {}
-      }
-
+  welcome_screen(&game_main, receiver).await?;
       // if let Event::Resize(x, y) = event {
       //   println!("HERE");
       //   set_terminal_size();
       // }
 
-  }
-
-  cleanup_terminal(&stdout, &game_main)?;
+  cleanup_and_quit(&original_size)?;
 
   Ok(())
 
+}
+
+async fn welcome_screen(game_main: &Infos, receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
+    loop {
+      let event = event::read()?;
+
+      // if should_exit(&event)? == true {
+      //   cleanup_and_quit(&stdout, &game_main.original_size)?;
+      // }
+      // else 
+      if let Event::Key(key_event) = event {
+        if key_event.code == KeyCode::Char('1') {
+          game_loop(&game_main, receiver).await?;
+          break Ok(());
+        } else if key_event.code == KeyCode::Char('2') {
+
+        } else if key_event.code == KeyCode::Char('3') {}
+      }
+    }
 }
 
 fn get_location() -> String {
@@ -110,25 +112,27 @@ fn get_location() -> String {
     first
 }
 
-async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos, receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
-  game_setup(&stdout)?;
+async fn game_loop<'a>(game_main: &'a Infos, receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
+  game_setup()?;
   
   loop {
     let event: Event = event::read()?;
 
-    if should_exit(&event)? == true {
-      break cleanup_terminal(&stdout, &game_main)?; //should quit
-    } else if let Event::Key(key_event) = event {
+    // if should_exit(&event)? == true {
+    //   break cleanup_and_quit(&stdout, &game_main.original_size)?; //should quit
+    // } else 
+    if let Event::Key(key_event) = event {
         if key_event.code == KeyCode::Char('1') {
           break;
         } else if key_event.code == KeyCode::Char('2') {
-          let _var = match create_game(&game_main, &stdout, "online", receiver).await {
+          let _var = match create_game(&game_main, "online", receiver).await {
             Ok(()) => (),
             _ => return Err(anyhow::anyhow!("Error creating game")),
           };
           break;
 //          online game;
         } else if key_event.code == KeyCode::Char('3') {
+          break;
 //          bot;
         } 
       }
@@ -136,7 +140,7 @@ async fn game_loop<'a>(stdout: &Stdout, game_main: &'a Infos, receiver: mpsc::Re
   Ok(())
 }
 
-fn should_exit(event: &Event) -> Result<bool> {
+pub fn should_exit(event: &Event) -> Result<bool> {
     if let Event::Key(key_event) = event {
       if key_event.code == KeyCode::Esc || 
       (key_event.code == KeyCode::Char('c') 
@@ -147,11 +151,13 @@ fn should_exit(event: &Event) -> Result<bool> {
     return Ok(false);
 }
 
-fn cleanup_terminal(mut stdout: &Stdout, game_main: &Infos) -> std::io::Result<()> {
-  stdout.execute(cursor::Show)?;
-  stdout.execute(terminal::LeaveAlternateScreen)?;
-  stdout.execute(terminal::SetSize(game_main.original_size.0, game_main.original_size.1))?;
+pub fn cleanup_and_quit(original_size: &(u16, u16)) -> std::io::Result<()> {
+  stdout().execute(cursor::Show)?;
+  stdout().execute(terminal::LeaveAlternateScreen)?;
+  stdout().execute(terminal::SetSize(original_size.0, original_size.1))?;
+  stdout().execute(PopKeyboardEnhancementFlags)?;
   terminal::disable_raw_mode()?;
+  std::process::exit(0);
   Ok(())
 }
 

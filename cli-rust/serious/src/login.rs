@@ -14,7 +14,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 
 
-pub async fn create_guest_session(location: &String, mut stdout: &Stdout) -> 
+pub async fn create_guest_session(location: &String) -> 
                                         Result<(u64, Client, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{location}/api/user/guest_cli");
     let client = Client::builder()
