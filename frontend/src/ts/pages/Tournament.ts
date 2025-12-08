@@ -1,15 +1,19 @@
 import { GameClient } from './GameClient';
+import { User } from '../User.js';
 
 export class Tournament
 {
 	private button: HTMLButtonElement | null = null;
 	private playerInput: HTMLInputElement | null = null;
-	private players: Set<string> = new Set();
+	private inputs: Set<string> = new Set();
+	private players: Array<string> = [];
 	private matches: Array<[string, string]> = [];
+	private interval: any = null;
+	private game: GameClient | null = null;
 
 	private static readonly MAX_PLAYERS: number = 32;
 
-	constructor(mode: string)
+	constructor(mode: string, private user: User)
 	{
 		if (mode === 'local')
 		{
@@ -45,11 +49,11 @@ export class Tournament
 		const target = event.target as HTMLInputElement;
 		if (target && target.value.trim() !== '')
 		{
-			this.players.add(target.value);
-			console.log(`Player added: ${target.value}, new total: ${this.players.size}`);
+			this.inputs.add(target.value);
+			console.log(`Player added: ${target.value}, new total: ${this.inputs.size}`);
 			target.value = '';
 
-			if (this.players.size === Tournament.MAX_PLAYERS)
+			if (this.inputs.size === Tournament.MAX_PLAYERS)
 			{
 				this.startTournament();
 			}
@@ -67,19 +71,20 @@ export class Tournament
 			this.playerInput.classList.add('hidden');
 		}
 
-		const nbBot = (this.players.size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(this.players.size))) - this.players.size;
+		const nbBot = (this.inputs.size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(this.inputs.size))) - this.inputs.size;
 		console.log(`Adding ${nbBot} bot(s) to complete the tournament bracket.`);
 		for (let i = 0; i < nbBot; i++)
 		{
-			this.players.add(`Bot_${i + 1}`);
+			this.inputs.add(`Bot_${i + 1}`);
 		}
 
-		for (const player of this.players)
+		for (const player of this.inputs)
 		{
 			console.log(`Participant: ${player}`);
 		}
 
-		while (this.players.size > 1)
+		this.players = this.shuffleArray(Array.from(this.inputs));
+		while (this.players.length > 1)
 		{
 			this.generateMatches();
 			this.playMatches();
@@ -116,10 +121,14 @@ export class Tournament
 		{
 			console.log(`Match: ${player1} vs ${player2}`);
 
-			// new GameClient(null, 'local', null, null);
+			if (player1.startsWith('Bot') || player2.startsWith('Bot'))
+			{
+				const bot = player1.startsWith('Bot') ? player1 : player2;
+				const player = (bot === player1) ? player2 : player1;
+			}
 
 			console.log(`Winner: ${player1}`);
-			this.players.delete(player2);
+			this.players.splice(this.players.indexOf(player2), 1);
 		}
 	}
 
@@ -135,6 +144,11 @@ export class Tournament
 		if (this.playerInput)
 		{
 			this.playerInput.removeEventListener('change', this.playerInputHandler);
+		}
+
+		if (this.interval)
+		{
+			clearInterval(this.interval);
 		}
 	}
 }

@@ -94,7 +94,7 @@ export class Bot
 			this.calculateOutput();
 			this.socket.send(Array.from(this.keysPressed).join(''));
 			this.keysPressed = new Set(Array.from(this.keysPressed).map(key => '1' + key));
-			this.gameInstance.handleKeyPress(this.keysPressed);
+			this.gameInstance.keysPressed = new Set([...this.gameInstance.keysPressed, ...this.keysPressed]);
 		}
 	}
 

@@ -186,7 +186,7 @@ export class GameServer
 							throw new Error('Invalid game mode');
 					}
 
-					game.handleKeyPress(keysPressed);
+					game.keysPressed = new Set([...game.keysPressed, ...keysPressed]);
 				});
 
 				const closeConnection = (): void =>

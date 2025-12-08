@@ -133,7 +133,7 @@ export class Router
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
 			case 'tournament':
-				return (new Tournament(mode!));
+				return (new Tournament(mode!, this.m_user));
 			default:
 				return (null);
 		}

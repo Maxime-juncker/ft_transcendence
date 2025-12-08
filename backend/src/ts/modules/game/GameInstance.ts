@@ -4,15 +4,15 @@ import * as core from 'core/core.js';
 
 enum Keys
 {
-	PLAYER1_UP = 'a',
-	PLAYER1_DOWN = 'b',
-	PLAYER2_UP = 'c',
-	PLAYER2_DOWN = 'd',
+	PLAYER1_UP = '1U',
+	PLAYER1_DOWN = '1D',
+	PLAYER2_UP = '2U',
+	PLAYER2_DOWN = '2D',
 }
 
 enum Parameters
 {
-	PADDLE_SPEED = 1.2,
+	PADDLE_SPEED = 1.5,
 	PADDLE_HEIGHT = 15,
 	PADDLE_WIDTH = 2,
 	PADDLE_PADDING = 2,
@@ -23,10 +23,10 @@ enum Parameters
 	MAX_Y_BALL = 100 - MIN_Y_BALL,
 	MIN_X_BALL = PADDLE_PADDING + PADDLE_WIDTH + MIN_Y_BALL,
 	MAX_X_BALL = 100 - MIN_X_BALL,
-	MAX_ANGLE = 0.5,
+	MAX_ANGLE = 1.5,
 	SPEED = 1.0,
-	SPEED_INCREMENT = 0.05,
-	POINTS_TO_WIN = 2,
+	SPEED_INCREMENT = 0.1,
+	POINTS_TO_WIN = 11,
 	FPS = 60,
 	FRAME_TIME = 1000 / FPS,
 }
@@ -148,7 +148,7 @@ export class GameInstance
 	private resetBall(): void
 	{
 		this._speed = Parameters.SPEED;
-		this._gameState.speedY = (Math.random() - 0.5) * 2;
+		this._gameState.speedY = (Math.random() - 0.5);
 		this.normalizeSpeed();
 		this._gameState.ballX = 50;
 		this._gameState.ballY = 50;
@@ -208,107 +208,25 @@ export class GameInstance
 		this._keysPressed.clear();
 	}
 
-	get state(): Buffer
-	{
-		return (this._gameState ? Buffer.from(this._gameState.stateBuffer) : null);
-	}
-
-	get reversedState(): Buffer
-	{
-		return (this._gameState ? Buffer.from(this._gameState.reversedStateBuffer) : null);
-	}
-
-	get reversedBuffer(): ArrayBuffer
-	{
-		return (this._gameState ? this._gameState.reversedStateBuffer : null);
-	}
-
-	set state(value: GameState)
-	{
-		this._gameState = value;
-	}
-
-	get mode(): string | null
-	{
-		return (this._gameMode);
-	}
-
-	get ballY(): number
-	{
-		return (this._gameState.ballY);
-	}
-
-	get leftPaddleY(): number
-	{
-		return (this._gameState.leftPaddleY);
-	}
-
-	get ballSpeedX(): number
-	{
-		return (this._gameState.speedX);
-	}
-
-	public handleKeyPress(keysPressed: Set<string>): void
-	{
-		keysPressed.forEach(key => { this._keysPressed.add(this.getKey(key)); });
-	}
-
-	private getKey(key: string): string
-	{
-		switch (key)
-		{
-			case '1U':
-				return (Keys.PLAYER1_UP);
-			case '1D':
-				return (Keys.PLAYER1_DOWN);
-			case '2U':
-				return (Keys.PLAYER2_UP);
-			case '2D':
-				return (Keys.PLAYER2_DOWN);
-			default:
-				return ('');
-		}
-	}
-
-	set running(isRunning: boolean)
-	{
-		this._isRunning = isRunning;
-	}
-
-	get winnerName(): number | null
-	{
-		return (this._winner);
-	}
-
-	set winnerName(name: number | null)
-	{
-		this._winner = name;
-	}
-
-	get scoreUpdated(): boolean
-	{
-		return (this._scoreUpdated);
-	}
-
-	set scoreUpdated(value: boolean)
-	{
-		this._scoreUpdated = value;
-	}
-
-	set winner(value: number | null)
-	{
-		this._winner = value;
-	}
-
-	get player1Name(): number | null
-	{
-		return (this._Player1Id);
-	}
-
-	get player2Name(): number | null
-	{
-		return (this._Player2Id);
-	}
+	get state(): Buffer					{ return (this._gameState ? Buffer.from(this._gameState.stateBuffer) : null); }
+	get reversedState(): Buffer			{ return (this._gameState ? Buffer.from(this._gameState.reversedStateBuffer) : null); }
+	get reversedBuffer(): ArrayBuffer	{ return (this._gameState ? this._gameState.reversedStateBuffer : null); }
+	get mode(): string | null			{ return (this._gameMode); }
+	get ballY(): number					{ return (this._gameState.ballY); }
+	get leftPaddleY(): number			{ return (this._gameState.leftPaddleY); }
+	get ballSpeedX(): number			{ return (this._gameState.speedX); }
+	get keysPressed(): Set<string>		{ return (this._keysPressed); }
+	get winnerName(): number | null		{ return (this._winner); }
+	get scoreUpdated(): boolean			{ return (this._scoreUpdated); }
+	get player1Name(): number | null	{ return (this._Player1Id); }
+	get player2Name(): number | null	{ return (this._Player2Id); }
+	
+	set keysPressed(keys: Set<string>)	{ this._keysPressed = keys; }
+	set running(isRunning: boolean)		{ this._isRunning = isRunning; }
+	set state(value: GameState)			{ this._gameState = value; }
+	set winnerName(name: number | null)	{ this._winner = name; }
+	set scoreUpdated(value: boolean)	{ this._scoreUpdated = value; }
+	set winner(value: number | null)	{ this._winner = value; }
 
 	public destroy(): void
 	{
