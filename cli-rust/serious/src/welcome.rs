@@ -1,18 +1,14 @@
 use std::{
-    io::{Write, stdout, Stdout},
-    time::Duration,
+    io::{Write, stdout},
 };
-
-use std::io::{Result};
 
 use crossterm::{
     cursor,
-    event::{PushKeyboardEnhancementFlags, KeyboardEnhancementFlags, self, poll, Event, KeyCode, KeyModifiers},
+    event::{PushKeyboardEnhancementFlags, KeyboardEnhancementFlags},
     style::*,
     terminal,
     ExecutableCommand,
     QueueableCommand,
-    queue,
 };
 
 pub const NUM_ROWS: u16 = 90;

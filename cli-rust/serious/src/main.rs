@@ -1,21 +1,9 @@
 use std::{
-  io::{Write, stdout, Stdout},
-  time::Duration,
-  thread,
-  future::Future
+  io::{Write, stdout},
 };
 
-use std::pin::Pin;    
-use std::boxed::Box;
-
-use futures_util::sink::drain;
-use tokio_tungstenite::MaybeTlsStream;
-use tokio_tungstenite::WebSocketStream;
-use tokio::net::TcpStream;
-
 use anyhow::{Result, anyhow};
-use std::thread::sleep;
-use serde_json::{Value, Number};
+use serde_json;
 
 use reqwest::{Client};
 
@@ -26,11 +14,11 @@ use crate::game::{create_game};
 
 mod login;
 use crate::login::{create_guest_session};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{mpsc};
 
 use crossterm::{
   cursor,
-  event::{self, PopKeyboardEnhancementFlags, poll, Event, KeyCode, KeyModifiers},
+  event::{self, PopKeyboardEnhancementFlags, Event, KeyCode, KeyModifiers},
   style::*,
   terminal,
   ExecutableCommand,
@@ -49,23 +37,23 @@ pub struct Infos {
 #[tokio::main]
 async fn main() -> Result<()> {
   if let Err(e) = setup_terminal() {
-    return Err(anyhow::anyhow!("{}", e));
+    return Err(anyhow!("{}", e));
   };
   let (original_size, location) = match get_infos_elements() {
     Ok(result) => result,
-    Err(e) => {return Err(anyhow::anyhow!("{}", e));},
+    Err(e) => {return Err(anyhow!("{}", e));},
   };
   let (num, client, receiver) = match create_guest_session(&location).await {
     Ok(res) => res,
     Err(e) => {
       clean_terminal(&original_size)?;
-      return Err(anyhow::anyhow!("{}", e));
+      return Err(anyhow!("{}", e));
     },
   };
   let game_main = Infos {original_size, location, id: num, client};
   if let Err(e) = welcome_screen(&game_main, receiver).await {
     clean_terminal(&game_main.original_size)?;
-    return Err(anyhow::anyhow!("{}", e));
+    return Err(anyhow!("{}", e));
   };
   cleanup_and_quit(&original_size)?;
   Ok(())
@@ -103,7 +91,7 @@ fn get_location() -> Result<String> {
     let first = match args.next() {
         Some(addr) => addr,
         _ => {
-            return Err(anyhow::anyhow!("no argument provided"));
+            return Err(anyhow!("no argument provided"));
         }
     };
     Ok(first)
@@ -116,23 +104,23 @@ pub async fn game_loop(game_main: &Infos, mut receiver: mpsc::Receiver<serde_jso
     let event: Event = event::read()?;
 
     if should_exit(&event)? == true {
-      cleanup_and_quit(&game_main.original_size)?; //should quit
+      cleanup_and_quit(&game_main.original_size)?;
     } else if let Event::Key(key_event) = event {
         match key_event.code {
           KeyCode::Char('1') => {},
-          KeyCode::Char('2') => {receiver = create_game(&game_main, "online", receiver).await?;},
+          KeyCode::Char('2') => {
+            receiver = match create_game(&game_main, "online", receiver).await {
+              Ok(receiver) => receiver,
+              Err((error, receiver)) => {
+                display_error(&error)?;
+                receiver
+              }
+            };
+          },
           KeyCode::Char('3') => {},
           KeyCode::Char('4') => {break Ok(receiver);},
           _ => {}
         }
-//         if key_event.code == KeyCode::Char('1') {
-//           // local game;
-//         } else if key_event.code == KeyCode::Char('2') {
-//           receiver = create_game(&game_main, "online", receiver).await?;
-// //          online game;
-//         } else if key_event.code == KeyCode::Char('3') {
-// //          bot;
-//         }
       }
   }
 }
@@ -164,6 +152,24 @@ pub fn clean_terminal(original_size: &(u16, u16)) -> Result<()> {
   stdout().execute(PopKeyboardEnhancementFlags)?;
   terminal::disable_raw_mode()?;
   Ok(())
+}
+
+fn display_error(message: &str) -> Result<()> {
+	stdout().execute(terminal::Clear(terminal::ClearType::All))?;
+	stdout()
+		.queue(cursor::MoveTo(NUM_ROWS / 2, NUM_COLS / 2))?
+		.queue(Print(message))?
+		.queue(cursor::MoveTo(NUM_ROWS/2, NUM_COLS / 2 + 3))?
+		.queue(Print("Press Esc to continue"))?;
+	stdout().flush()?;
+	loop {
+		let event = event::read()?;
+	
+		if should_exit(&event)? == true {
+			break ;
+		}
+	}
+	Ok(())
 }
 
 // use std::env;

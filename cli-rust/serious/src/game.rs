@@ -10,7 +10,6 @@ use crossterm::{
     terminal,
     ExecutableCommand,
     QueueableCommand,
-    queue,
 };
 
 use futures_util::{StreamExt, SinkExt};
@@ -18,15 +17,14 @@ use futures_util::stream::SplitSink;
 use std::time::Duration;
 use std::{
 	collections::HashMap,
-	error::Error,
-	io::{Write, Stdout, stdout},
+	io::{Write, stdout},
 };
 
 use crate::welcome::{NUM_COLS, NUM_ROWS};
 
 
 
-use crate::{game_loop, should_exit, cleanup_and_quit};
+use crate::{should_exit, cleanup_and_quit};
 use bytes::Bytes;
 
 use tokio_tungstenite::{connect_async_tls_with_config, tungstenite::Utf8Bytes};
@@ -35,7 +33,7 @@ use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::Connector;
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use std::thread::{sleep};
+// use std::thread::{sleep};
 
 use anyhow::{Result, anyhow};
 
@@ -96,7 +94,7 @@ struct Game {
 // 	PLAY_AGAIN = "Press ${Keys.PLAY_AGAIN} to play again",
 // }
 
-pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<mpsc::Receiver<serde_json::Value>> {
+async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
 	let mut map = HashMap::new();
 	let mut headers = HeaderMap::new();
 	headers.insert("Content-Type", "application/json".parse()?);
@@ -109,23 +107,68 @@ pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Rece
         .headers(headers)
         .json(&map)
         .send()
-        .await
-		.unwrap();
-	waiting_screen()?;
+        .await?;
+	Ok(())
+}
+
+async fn send_remove_from_queue_request(game_main: &Infos) -> Result<()> {
+	let mut map = HashMap::new();
+	let mut headers = HeaderMap::new();
+	headers.insert("Content-Type", "application/json".parse()?);
+	let id: &str = &game_main.id.to_string();
+	map.insert("id", id);
+	let mut url = game_main.location.clone();
+	url = format!("https://{url}/api/chat/removeQueue");
+	game_main.client.delete(url)
+        .headers(headers)
+        .json(&map)
+        .send()
+        .await?;
+
+	Ok(())
+}
+
+pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) 
+										-> Result<mpsc::Receiver<serde_json::Value>, (String, mpsc::Receiver<serde_json::Value>)> {
+	if let Err(_) = send_post_game_request(game_main, mode).await {
+		return Err(("error, no data received from server".to_string(), receiver));
+	};
+	if let Err(_) = waiting_screen() {
+		return Err(("error, no data received from server".to_string(), receiver));
+	};
 	loop {
 		if !receiver.is_empty() {
 			break ;
 		}
-		if poll(Duration::from_millis(16))? {
-			let event = event::read()?;
-			if should_exit(&event)? == true {
-				return Ok(receiver);
+		if let Err(_) = poll(Duration::from_millis(16)) {
+			return Err(("error in poll".to_string(), receiver));
+		} else {
+			let event = match event::read() {
+				Ok(event) => event,
+				_ => return Err(("error in read".to_string(), receiver))
+			};
+			match should_exit(&event) {
+				Ok(true) => {
+					if let Err(_) = send_remove_from_queue_request(game_main).await {
+						return Err(("error: could not send requets to remove from list".to_string(), receiver));
+					};
+					return Ok(receiver);},
+				Ok(false) => {},
+				_ => return Err(("event error".to_string(), receiver))
 			}
 		}
 	}
-	let response = receiver.recv().await.unwrap();
-	let game = Game::new(game_main, response)?;
-	game.start_game().await?;
+	let response = match receiver.recv().await {
+		Some(value) => value,
+		_ => return Err(("error, no data received from server".to_string(), receiver)),
+	};
+	let game = match Game::new(game_main, response) {
+		Ok(game) => game,
+		_ => return Err(("error creating game".to_string(), receiver)),
+	};
+	if let Err(e) = game.start_game().await {
+		return Err((e.to_string(), receiver));
+	};
 	Ok(receiver)
 }
 
@@ -133,15 +176,15 @@ impl Game {
 	fn new(info: &Infos, value: serde_json::Value) -> Result<Game> {
 		let game_id: String = match value["gameId"].as_str() {
 			Some(id) => id.to_string(),
-			_ => return Err(anyhow::anyhow!("No game Id in response")),
+			_ => return Err(anyhow!("No game Id in response")),
 		};
 		let opponent_id = match value["opponentId"].as_u64() {
 			Some(id) => id,
-			_ => return Err(anyhow::anyhow!("No opponent id in response")),
+			_ => return Err(anyhow!("No opponent id in response")),
 		};
 		let player_side: u64 = match value["playerSide"].as_u64() {
 			Some(nbr) => nbr,
-			_ => return Err(anyhow::anyhow!("No player Id in response")),
+			_ => return Err(anyhow!("No player Id in response")),
 		};
 		Ok(Game{location: info.location.clone(), original_size: info.original_size, id: info.id, client: info.client.clone(), game_id, opponent_id, player_side})
 	}
@@ -159,8 +202,7 @@ impl Game {
 		let connector = Connector::NativeTls(
 			native_tls::TlsConnector::builder()
 				.danger_accept_invalid_certs(true)
-				.build()
-				.unwrap()
+				.build()?
 		);
 
 		// eprintln!("We are here {:?}", request);
@@ -170,27 +212,24 @@ impl Game {
 			None,
 			false,
 			Some(connector),
-			).await
-			.unwrap();
+			).await?;
 		let (mut ws_write, mut ws_read) = ws_stream.split();
 		// eprintln!("Coucou les copains");
 		let (sender, receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
 		let cloned_size = self.original_size.clone();
 		tokio::spawn(async move {
-			Self::send_game(&mut ws_write, receiver, cloned_size).await;
+			Self::send_game(&mut ws_write, receiver, cloned_size).await.unwrap();
 		}); 
 		while let Some(msg) = ws_read.next().await {
 			match msg? {
 				Message::Binary(text) => {self.decode_and_display(text)},
 				Message::Text(text) => {
 					self.end_game(text, sender).await?;
-					// eprintln!("OK {:?}", text);
-					// sleep(Duration::from_secs(10));
 					break;
 				},
 				Message::Close(_) => {
 					let u: u8 = 1;
-					sender.send(u).await.unwrap();
+					sender.send(u).await?;
 					break;
 				},
 				_ => {continue;},
@@ -209,22 +248,23 @@ impl Game {
 		sender.send(u).await?;
 		Ok(())
 	}
-	fn decode_and_display(&self, msg: Bytes) {
+	fn decode_and_display(&self, msg: Bytes) -> Result<()> {
 		if msg.len() == 26 {
-			let decoded = Self::decode(msg);
-			display(decoded).unwrap();
+			let decoded = Self::decode(msg)?;
+			display(decoded)?;
 		}
+		Ok(())
 	}
-	fn decode(msg: Bytes) -> (f32, f32, f32, f32, f32, f32, u8, u8) {
-		let left_y: f32 = f32::from_le_bytes(msg[0..4].try_into().unwrap());
-		let right_y: f32 = f32::from_le_bytes(msg[4..8].try_into().unwrap());
-		let ball_x: f32 = f32::from_le_bytes(msg[8..12].try_into().unwrap());
-		let ball_y: f32 = f32::from_le_bytes(msg[12..16].try_into().unwrap());
-		let speed_x: f32 = f32::from_le_bytes(msg[16..20].try_into().unwrap());
-		let speed_y: f32 = f32::from_le_bytes(msg[20..24].try_into().unwrap());
+	fn decode(msg: Bytes) -> Result<(f32, f32, f32, f32, f32, f32, u8, u8)> {
+		let left_y: f32 = f32::from_le_bytes(msg[0..4].try_into()?);
+		let right_y: f32 = f32::from_le_bytes(msg[4..8].try_into()?);
+		let ball_x: f32 = f32::from_le_bytes(msg[8..12].try_into()?);
+		let ball_y: f32 = f32::from_le_bytes(msg[12..16].try_into()?);
+		let _speed_x: f32 = f32::from_le_bytes(msg[16..20].try_into()?);
+		let _speed_y: f32 = f32::from_le_bytes(msg[20..24].try_into()?);
 		let player1_score: u8 =  msg[24];
 		let player2_score: u8 =  msg[25];
-		(left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score)
+		Ok((left_y, right_y, ball_x, ball_y, _speed_x, _speed_y, player1_score, player2_score))
 	}
 	async fn send_game(ws_write: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>, mut receiver: mpsc::Receiver<u8>, original_size: (u16, u16)) -> Result<()> {
 		let mut up:bool = false;
@@ -281,12 +321,12 @@ impl Game {
 }
 
 fn normalize(message: (f32, f32, f32, f32, f32, f32, u8, u8)) -> (u16, u16, u16, u16, f32, f32, u8, u8) {
-    let (left_y, right_y, ball_x, ball_y, speed_x, speed_y, player1_score, player2_score) = message;
+    let (left_y, right_y, ball_x, ball_y, _speed_x, _speed_y, player1_score, player2_score) = message;
     let my_left_y = (left_y * NUM_COLS as f32 / 100.0) as u16;
     let my_right_y = (right_y * NUM_COLS as f32 / 100.0) as u16;
     let my_ball_y = (ball_y * NUM_COLS as f32 / 100.0) as u16;
     let my_ball_x = (ball_x * NUM_ROWS as f32 / 100.0) as u16;
-    (my_left_y, my_right_y, my_ball_x, my_ball_y, speed_x, speed_y, player1_score, player2_score)
+    (my_left_y, my_right_y, my_ball_x, my_ball_y, _speed_x, _speed_y, player1_score, player2_score)
 }
 
 fn display(message: (f32, f32, f32, f32, f32, f32, u8, u8)) -> Result<()> {
@@ -320,7 +360,7 @@ fn display_end_game(message: &str) -> Result<()> {
 		.queue(cursor::MoveTo(NUM_ROWS / 2, NUM_COLS / 2))?
 		.queue(Print(message))?
 		.queue(cursor::MoveTo(NUM_ROWS/2, NUM_COLS / 2 + 3))?
-		.queue(Print("Press Esc to continue"));
+		.queue(Print("Press Esc to continue"))?;
 	stdout().flush()?;
 	loop {
 		let event = event::read()?;
