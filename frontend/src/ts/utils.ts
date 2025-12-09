@@ -23,3 +23,10 @@ export function setCookie(name: string, value: any, exdays: any)
 	let expire = "expire=" + d.toUTCString();
 	document.cookie = name + "=" + value + ";" + expire + ";path=/";
 }
+
+export function setPlaceHolderText(msg: string)
+{
+	const placeholder = document.getElementById("placeholder-text") as HTMLElement;
+	placeholder.classList.remove("hide");
+	placeholder.innerText = msg;
+}

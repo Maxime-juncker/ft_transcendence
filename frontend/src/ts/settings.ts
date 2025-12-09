@@ -1,5 +1,6 @@
 import { AuthSource, MainUser } from "User.js"
 import { hashString } from "sha256.js";
+import { setPlaceHolderText } from "utils.js";
 
 var user: MainUser = new MainUser(document.getElementById("user-container"));
 await user.loginSession();
@@ -59,7 +60,6 @@ function showConfirmPanel(fn: () => any)
 
 	holder.innerHTML = "";
 	const clone = template.content.cloneNode(true) as HTMLElement;
-	
 	clone.querySelector("#cancel-btn").addEventListener("click", () => { holder.innerHTML = "" });
 	clone.querySelector("#confirm-input").addEventListener("keypress", (e: KeyboardEvent) => {
 		const target = e.target as HTMLInputElement;
@@ -69,19 +69,10 @@ function showConfirmPanel(fn: () => any)
 			{
 				console.log("haaaa")
 				fn();
-
 			}
 		}
 	})
-
 	holder.append(clone);
-}
-
-function setPlaceHolderText(msg: string)
-{
-	const placeholder = document.getElementById("placeholder-text") as HTMLElement;
-	placeholder.classList.remove("hide");
-	placeholder.innerText = msg;
 }
 
 function hideForbiddenElement()
@@ -101,7 +92,7 @@ async function confirmChange()
 	var error: boolean = false;
 
 	if (confirm2faInput.value !== "")
-		user.validateTotp(confirm2faInput.value);
+		validate_totp();
 
 	if (avatarInput.files && avatarInput.files[0])
 	{
@@ -222,7 +213,7 @@ async function del_totp()
 
 async function validate_totp()
 {
-	var totp = document.getElementById("totp_check") as HTMLInputElement;
+	var totp = document.getElementById("confirm-2fa-input") as HTMLInputElement;
 
 	const status = await user.validateTotp(totp.value);
 
@@ -233,12 +224,6 @@ async function validate_totp()
 			const img = document.getElementById("qrcode_img");
 			if (img)
 				img.remove();
-			break;
-		case 500:
-			console.log("Database error");
-			break;
-		case 404:
-			console.log("you need to login first");
 			break;
 		default:
 			console.log("Unknow error");
