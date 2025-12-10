@@ -1,0 +1,19 @@
+{
+  "play": "JOUER",
+  "user": "utilisateur",
+  "signup": "INSCRIPTION",
+  "login": "CONNEXION",
+  "confirm": "confirmer",
+  "guest": {
+	"button": "continuer en tant qu'invité",
+	"warning": "*toutes les données seront perdues à la déconnexion"
+  },
+  "placeholder": {
+	"email": "email...",
+	"username": "nom d'utilisateur...",
+	"password": "mot de passe...",
+	"confirm_password": "confirmation du mot de passe...",
+	"2fa": "code totp"
+  },
+  "back": "retour"
+}

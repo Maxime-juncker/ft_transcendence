@@ -1,9 +1,0 @@
-{
-  "signup": "INSCRIPTION",
-  "login": "CONNEXION",
-  "confirm": "confirmer",
-  "guest": {
-	"button": "continuer en tant qu'invité",
-	"warning": "*toutes les données seront perdues à la déconnexion"
-  }
-}

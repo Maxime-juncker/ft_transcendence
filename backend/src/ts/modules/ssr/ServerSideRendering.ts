@@ -19,7 +19,6 @@ export class ServerSideRendering
 	<link href="/public/dist/profile.css" rel="stylesheet">
 	<link href="/public/dist/start.css" rel="stylesheet">
 	<script src="https://cdn.tailwindcss.com"></script>
-	<script type="module" src="assets/translation.js"></script>
 	<link href="/public/dist/output.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
@@ -35,18 +34,19 @@ export class ServerSideRendering
 			<div class="scanline">
 				<div class="scan"></div>
 			</div>
+			<div id="app" class="h-full">
+
+			</div>
 			<div>
 			<select id="language-selector" onchange="changeLanguage(this.value)">
     					<option value="en">English</option>
     					<option value="fr">Français</option>
   			</select>
 			</div>
-			<div id="app" class="h-full">
-
-			</div>
 		</div>
 		<script>var exports = {};</script>
 		<script type="module" src="dist/app.js"></script>
+		<script type="module" src="assets/translation.js"></script>
 	</body>
 </html>
 `

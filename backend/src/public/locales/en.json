@@ -1,0 +1,19 @@
+{
+  "play": "PLAY",
+  "user": "user",
+  "signup": "SIGNUP",
+  "login": "LOGIN",
+  "confirm": "confirm",
+  "guest": {
+	"button": "continue as guest",
+	"warning": "*all data will be lost on logout"
+  },
+  "placeholder": {
+	"email": "email...",
+	"username": "username...",
+	"password": "password...",
+	"confirm_password": "confirm password...",
+	"2fa": "totp code"
+  },
+  "back": "back"
+}

@@ -74,6 +74,7 @@ function loadPage(componentName: string, templateId: string)
 
 	app.prepend(view);
 	view.enable();
+	window.dispatchEvent(new Event('pageChanged'));
 }
 
 type Route = {
