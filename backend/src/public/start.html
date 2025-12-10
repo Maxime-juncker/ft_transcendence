@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>FT_TRANSCENDENCE</title>
-		<link href="/public/dist/start.css" rel="stylesheet">
-		<link href="/public/dist/global.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-
-		<script src="https://cdn.tailwindcss.com"></script>
-	</head>
-
-	<body>
+	<template id="start-template">
 		<template id="user-profile-template">
 				<div id="user-profile"
 					class="user-profile">
@@ -63,16 +50,11 @@
 					<div class="line bg-(--green)" id="line4"></div>
 				</div>
 				<div id="user" class="user">
-					<h1 id="profile-header">user</h1>
+					<h1 id="profile-header" data-i18n="user">user</h1>
 					<div id="profile-container" class="profile-container"></div>
 				</div>
 				<div class="play-menu">
-					<button class="btn" id="play_btn" data-i18n="play"></button>
-					<button class="btn" id="play_btn" data-i18n="settings"></button>
-					<select id="language-selector" onchange="changeLanguage(this.value)">
-    					<option value="en">English</option>
-    					<option value="fr">Français</option>
-  					</select>
+					<button class="btn" id="play_btn" data-i18n="play">PLAY</button>
 				</div>
 				<div id="leaderboard">
 					tmp
@@ -80,42 +62,6 @@
 			</section>
 		</div>
 
-	</body>
-
-<script type="module">
-  import i18n from 'https://cdn.skypack.dev/i18next';
-  import Backend from 'https://cdn.skypack.dev/i18next-http-backend';
-  import LanguageDetector from 'https://cdn.skypack.dev/i18next-browser-languagedetector';
-
-  const selectElement = document.getElementById('language-selector');
-
-  i18n.use(Backend).use(LanguageDetector).init({
-    fallbackLng: 'en',
-    backend: {
-      loadPath: '/public/locales/{{lng}}/start.json',
-    },
-  });
-  function translatePage() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      const options = JSON.parse(el.getAttribute('data-i18n-options') || '{}');
-      el.textContent = i18n.t(key, options);
-    });
-  }
-  function updateLanguageSelector() {
-	selectElement.value = i18n.language;
-  }
-  i18n.on('initialized', () => {
-	translatePage();
-	updateLanguageSelector();
-  });
-  i18n.on('languageChanged', () => {
-	translatePage();
-	updateLanguageSelector();
-  });
-  window.changeLanguage = (lng) => i18n.changeLanguage(lng);
-</script>
-</html>
 <!-- <script>var exports = {};</script> -->
 <!-- <script type="module" src="./dist/start.js"></script> -->
 	</template>
