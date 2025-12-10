@@ -1,16 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title></title>
-		<link href="/public/dist/global.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-		<link href="/public/dist/output.css" rel="stylesheet">
+	<template id="lobby-template">
 
-		<script src="https://cdn.tailwindcss.com"></script>
-	</head>
-	<body>
+		<template id="user-template">
+			<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-[500px] p-2 hover:bg-[--darker] active:bg-[--darkest]">
+				<div class="flex flex-row items-center gap-2">
+					<div class="relative">
+						<img
+							id="avatar-img"
+							src="" 
+							alt="Profile" 
+							class="avatar-img"/>
+						<div id="user-status" class="user-status right-0 top-[70%]"></div>
+					</div>
+					<div id="avatar-name" class="text-[100%] font-bold select-none">
+						user
+					</div>
+				</div>
+			</div>
+		</template>
 
 		<template id="chat-item-template">
 			<div class="w-full flex gap-3 px-2 my-1">
@@ -47,7 +53,7 @@
 					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
 				</div>
 				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
-					<div id="avatar-name" class="text-xl font-bold select-none">
+					<div id="avatar-name" class="text-[100%] font-bold select-none">
 						user
 					</div>
 					<img
@@ -60,10 +66,7 @@
 			</div>
 		</template>
 
-		<div class="crt h-full">
-			<div class="scanline z-99">
-				<div class="scan"></div>
-			</div>
+		<div class="h-full">
 
 			<header class="header-small">
 				<div id="banner" class="banner-small">
@@ -79,9 +82,17 @@
 				</div>
 			</header>
 
-			<div class="h-[90%] w-full flex flex-col gap-10 py-15 sm:flex-row md:px-5 lg:px-20">
+			<div class="h-[90%] w-full flex flex-col gap-5 py-15 sm:flex-row md:px-5 lg:px-20">
+				<div class="">
+					<button id="user-list-btn" class="button-empty border-[--purple] text-[--purple]">users</button>
+					<button id="friend-list-btn" class="button-empty mt-3 border-[--purple] text-[--purple]">friends</button>
+				</div>
 
-				<div class="w-[35%] h-full border-4 border-[--blue] flex flex-col">
+				<div class="relative w-[35%] h-full border-4 border-[--blue] flex flex-col">
+					<div id="user-list-parent" class="hide absolute top-0 left-0 w-full z-2 h-full bg-[--dark]">
+						<div id="user-list-container" class="flex-1 flex flex-col items-center py-4 gap-2">
+						</div>
+					</div>
 					<div id="chat-out" class="flex h-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-[--darker]">
 					</div>	
 					<input id="chat-in" wrap="soft" placeholder="enter message..."
@@ -151,7 +162,6 @@
 					</div>
 				</div>
 
-	</body>
-	<script>var exports = {};</script>
-	<script type="module" src="./dist/lobby.js"></script>
-</html>
+	<!-- <script>var exports = {};</script> -->
+	<!-- <script type="module" src="./dist/lobby.js"></script> -->
+	</template>

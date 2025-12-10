@@ -41,7 +41,7 @@ export function githubOAuth2Routes (
 			const res = await loginOAuth2(id, AuthSource.GITHUB, core.db);
 			if (res.code == 200)
 				request.session.user = res.data.id;
-			const url = `https://${process.env.HOST}:8081/login.html`;
+			const url = `https://${process.env.HOST}:8081/login`;
 			return reply.redirect(url);
 		})
 	})

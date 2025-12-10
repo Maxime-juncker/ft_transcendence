@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title></title>
-		<link href="/public/dist/global.css" rel="stylesheet">
-		<link href="/public/dist/profile.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-
-		<script src="https://cdn.tailwindcss.com"></script>
-	</head>
-
-	<body>
+	<template id="profile-template">
 		<template id="match-template">
 			<div class="w-full flex flex-row justify-around align-middle px-2">
 				<p id="matchup" class="text-[--blue] w-[50%]">user - test-user</p>
@@ -30,7 +17,7 @@
 					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
 				</div>
 				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
-					<div id="avatar-name" class="text-xl font-bold select-none">
+					<div id="avatar-name" class="text-[100%] font-bold select-none">
 						user
 					</div>
 					<img
@@ -45,7 +32,7 @@
 
 		<template id="user-friend-template">
 			<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-90 border-2 border-[--white] p-2">
-				<div class="flex flex-row items-center gap-2">
+				<div id="profile" class="flex flex-row w-full items-center gap-2 hover:brightness-[1.2]">
 					<div class="relative">
 						<img
 							id="avatar-img"
@@ -54,22 +41,17 @@
 							class="avatar-img"/>
 						<div id="user-status" class="user-status right-0 top-[70%]"></div>
 					</div>
-					<div id="avatar-name" class="text-xl font-bold select-none">
-						user
-					</div>
+					<h1 id="avatar-name" class="text-[100%] font-bold select-none break-all">user</h1>
 				</div>
 				<div class="flex items-center gap-2 mr-[5%]">
-					<button id="green-btn" class="button-empty border-[--green] text-[--green]">accept</button>
-					<button id="red-btn" class="button-empty border-[--red] text-[--red]">decline</button>
+					<button id="green-btn" class="button-empty border-[--green] text-[--green]">Y</button>
+					<button id="red-btn" class="button-empty border-[--red] text-[--red]">N</button>
 				</div>
 			</div>
 
 		</template>
 
-		<div class="crt h-full">
-			<div class="scanline z-99">
-				<div class="scan"></div>
-			</div>
+		<div class="h-full">
 
 			<header class="header-small">
 				<div id="banner" class="banner-small">
@@ -101,6 +83,8 @@
 						<div class="flex flex-col align-middle justify-center ml-4">
 							<h1 id="name" class="text-3xl bg-[--darker] px-3 py-1">super username</h1>
 							<p id="created_at" class="px-3 text-sm">created 11-7-2025</p>
+							<button id="main-btn-friend" class="button-empty text-[--blue] border-[--blue] mt-3">tmp</button>
+							<button id="main-btn-block" class="button-empty text-[--red] border-[--red] mt-3">tmp</button>
 						</div>
 
 						<div class="self-center ml-4 h-[80%] w-2 bg-[--darker]"></div>
@@ -168,7 +152,6 @@
 
 			</div>
 
-	</body>
-	<script>var exports = {};</script>
-	<script type="module" src="./dist/profile.js"></script>
-</html>
+	<!-- <script>var exports = {};</script> -->
+	<!-- <script type="module" src="./dist/profile.js"></script> -->
+	</template>

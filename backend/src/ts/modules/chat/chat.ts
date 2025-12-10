@@ -12,7 +12,8 @@ var matchQueue = [];
 
 function serverMsg(str: string): string
 {
-	return JSON.stringify({ username: "<SERVER>", message: str });
+	const val = Array.from(connections.values());
+	return JSON.stringify({ username: "<SERVER>", message: str, connections: val });
 }
 
 // TODO: use flag in chat (e.g: if flag == DM them msg is underlined)
@@ -168,8 +169,6 @@ async function isBlocked(blockedUsr: any, key: WebSocket, sender: WebSocket): Pr
 
 async function broadcast(message: any, sender: WebSocket = null)
 {
-
-	// console.log("broadcasting: ", message);
 	const blockedUsrSender = await getBlockUsr(connections.get(sender));
 	connections.forEach(async (id: number, conn: WebSocket) => {
 

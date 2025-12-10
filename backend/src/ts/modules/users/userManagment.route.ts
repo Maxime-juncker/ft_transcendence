@@ -11,12 +11,11 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		if (request.session.user)
 		{
 			const res = await mgmt.loginSession(request.session.user, core.db);
-			console.log("user is already auth as:", res.data.name);
+			console.log("user is login has:", res.data.name);
 			return reply.code(res.code).send(res.data);
 		}
 		else
 		{
-			console.log("user not login");
 			return reply.code(404).send({ message: "user need to login" });
 		}
 	})
@@ -68,8 +67,19 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		return reply.code(res.code).send(res.data);
 	})
 
+	fastify.delete('/reset', async (request: FastifyRequest, reply: FastifyReply) => {
+		const user_id = request.session.user;
+		if (!user_id)
+			return reply.code(400).send({ message: "missing user_id in session" });
+
+		const res = await mgmt.resetUser(user_id);
+		return reply.code(res.code).send(res.data);
+	})
+
 	fastify.delete('/delete', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { user_id } = request.body as { user_id: number }
+		const user_id = request.session.user;
+		if (!user_id)
+			return reply.code(400).send({ message: "missing user_id in session" });
 
 		const res = await mgmt.deleteUser(user_id, core.db);
 		return reply.code(res.code).send(res.data);
@@ -86,8 +96,56 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		return mgmt.uploadAvatar(request, reply, core.db);
 	})
 
-	fastify.post('/update', async (request: FastifyRequest, reply: FastifyReply) => {
-		return await mgmt.updateUserReq(request, reply, core.db);
+	fastify.post('/update/passw', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['oldPass', 'newPass'],
+				properties: {
+					oldPass: { type: 'string' },
+					newPass: { type: 'string' },
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const { oldPass, newPass } = request.body as { oldPass: string, newPass: string };
+		const id = request.session.user;
+		console.log("hello", id, request.session.user);
+		if (!id)
+			return reply.code(400).send({ message: "user session not found" });
+
+		const res = await mgmt.updatePassw(id, oldPass, newPass);
+		return reply.code(res.code).send(res.data);
+	})
+
+	fastify.post('/update/name', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['name'],
+				properties: {
+					name: { type: 'string' }
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const { name } = request.body as { name: string };
+		const id = request.session.user;
+		if (!id)
+			return reply.code(400).send({ message: "user session not found" });
+
+		const res = await mgmt.updateName(id, name);
+		return reply.code(res.code).send(res.data);
+	})
+
+	fastify.post('/update/email', async (request: FastifyRequest, reply: FastifyReply) => {
+		const { email } = request.body as { email: string };
+		const id = request.session.user;
+		if (!id)
+			return reply.code(400).send({ message: "user session not found" });
+
+		const res = await mgmt.updateEmail(id, email);
+		return reply.code(res.code).send(res.data);
 	})
 
 	fastify.post('/block/:id/:username', async (request: FastifyRequest, reply: FastifyReply) => {

@@ -1,15 +1,15 @@
-import { Router } from '../router';
+import { GameRouter } from '../router';
 
 export class Home
 {
 	private static readonly BUTTON_1: string = 'game';
 	private static readonly BUTTON_2: string = 'tournament';
 
-	private router: Router;
+	private router: GameRouter;
 	private button1Element = document.getElementById('game') as HTMLButtonElement;
 	private button2Element = document.getElementById('tournament') as HTMLButtonElement;
 
-	constructor(router: Router)
+	constructor(router: GameRouter)
 	{
 		this.router = router;
 		this.hydrateButtons();

@@ -40,12 +40,7 @@
 				</div>
 		</template>
 
-			<!-- must be here for crt effect -->
-		<div class="bootup-mask"></div>
-		<div class="bootup-lines"></div>
-		<h1 class="bootup-text">HDMI-1</h1>
-
-		<div class="crt">
+		<div class="h-full flex relative">
 			<header class="absolute top-[7%]">
 				<div class="banner">
 					<div class="line bg-(--red)"></div>
@@ -59,11 +54,6 @@
 					</h1>
 				</div>
 			</header>
-
-			<div class="crt-mask"></div> 
-			<div class="scanline">
-				<div class="scan"></div>
-			</div>
 			
 			<section id="main" class="main">
 
@@ -92,8 +82,6 @@
 
 	</body>
 
-<script>var exports = {};</script>
-<script type="module" src="./dist/start.js"></script>
 <script type="module">
   import i18n from 'https://cdn.skypack.dev/i18next';
   import Backend from 'https://cdn.skypack.dev/i18next-http-backend';
@@ -116,3 +104,6 @@
   window.changeLanguage = (lng) => i18n.changeLanguage(lng);
 </script>
 </html>
+<!-- <script>var exports = {};</script> -->
+<!-- <script type="module" src="./dist/start.js"></script> -->
+	</template>

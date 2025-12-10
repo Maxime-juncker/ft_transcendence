@@ -1,5 +1,5 @@
 import { strToCol, hashString } from 'sha256.js';
-import { User, UserStatus, MainUser } from 'User.js'
+import { User, UserStatus, MainUser, getUserFromId } from 'User.js'
 import * as usr from './chat_user.js';
 import * as utils from './chat_utils.js'
 
@@ -64,13 +64,13 @@ export class Message
 		switch (args[0])
 		{
 			case "/block":
-				chat.displayMessage(await usr.block(chat.getUser().getId(), args[1]));
+				chat.displayMessage(await usr.block(chat.getUser().id, args[1]));
 				return true;
 			case "/unblock":
-				chat.displayMessage(await usr.unblock(chat.getUser().getId(), args[1]));
+				chat.displayMessage(await usr.unblock(chat.getUser().id, args[1]));
 				return true;
 			case "/getblock":
-				chat.displayMessage(await usr.getBlocked(chat.getUser().getId()));
+				chat.displayMessage(await usr.getBlocked(chat.getUser().id));
 				return true;
 			case "/clear":
 				chat.getChatbox().innerHTML = "";
@@ -93,7 +93,7 @@ export class Message
 				if (code == 200) chat.displayMessage(utils.serverReply(JSON.stringify(data, null, 2)));
 				return true;
 			case "/getfriends":
-				var res = await fetch(`/api/friends/get?user_id=${chat.getUser().getId()}`);
+				var res = await fetch(`/api/friends/get?user_id=${chat.getUser().id}`);
 				var data = await res.json();
 				chat.displayMessage(utils.serverReply(JSON.stringify(data)));
 				return true;
@@ -127,18 +127,18 @@ export class Message
 				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
 				return true;
 			case "/deleteMe":
-				if (chat.getUser().getId() == -1) return true; // not login
+				if (chat.getUser().id == -1) return true; // not login
 				var response = await fetch ('api/user/delete', {
 					method: "DELETE",
 					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({ user_id: chat.getUser().getId() })
+					body: JSON.stringify({ user_id: chat.getUser().id })
 				});
 				var data = await response.json();
 				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
 				chat.getUser().logout();
 				return true;
 			case "/UpdateMe":
-				if (chat.getUser().getId() == -1) return true; // not login
+				if (chat.getUser().id == -1) return true; // not login
 				var response = await fetch(`/api/user/update`, {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
@@ -168,8 +168,10 @@ export class Chat
 	private m_chatInput:	HTMLInputElement;
 	private m_user:			MainUser;
 	private	m_ws:			WebSocket;
+	private m_connections:	User[];
 
-	private m_onStartGame:	Array<(json: any) => void>;
+	private m_onStartGame:		Array<(json: any) => void>;
+	private m_onConnRefresh:	Array<(conns: User[]) => void>;
 
 	constructor(user: MainUser, chatbox: HTMLElement, chatInput: HTMLInputElement)
 	{
@@ -183,31 +185,40 @@ export class Chat
 		this.m_user = user;
 		this.m_chatlog = [];
 		this.m_onStartGame = [];
+		this.m_onConnRefresh = [];
+
 		user.onLogin((user: MainUser) => this.resetChat(user));
-		user.onLogout((user: MainUser) => this.resetChat(user));
+		// user.onLogout((user: MainUser) => this.resetChat(user));
 
 		// TODO: merge with resetChat
 		console.log(`connecting to chat websocket: ${window.location.host}`)
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${user.getId()}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${user.id}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
 	}
 
 	public onGameCreated(cb: ((json: any) => void)) { this.m_onStartGame.push(cb); }
+	public onConnRefresh(cb: ((conns: User[]) => void)) { this.m_onConnRefresh.push(cb); }
 
 	public getChatlog(): Message[]		{ return this.m_chatlog; }
 	public getChatbox(): HTMLElement	{ return this.m_chatbox; }
 	public getUser(): MainUser			{ return this.m_user; }
 	public getWs(): WebSocket			{ return this.m_ws; }
+	public get conns(): User[]			{ return this.m_connections; }
 
 	public resetChat(user: MainUser) : void
 	{
 		console.log(`connecting to chat websocket: ${window.location.host}`)
 		this.m_ws.close();
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.getId()}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.id}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
+	}
+
+	public disconnect()
+	{
+		this.m_ws.close();
 	}
 
 	private sendMsgFromInput(event: any)
@@ -219,11 +230,33 @@ export class Chat
 		}
 	}
 
+	private async populateConnections(connectionsId: number[])
+	{
+		this.m_connections = [];
+
+		for (let i = 0; i < connectionsId.length; i++)
+		{
+			const id = connectionsId[i];
+			if (id == this.m_user.id || id == -1)
+				continue;
+
+			const tmp: User = await getUserFromId(id);
+			this.m_connections.push(tmp);
+		}
+		this.m_onConnRefresh.forEach(cb => { cb(this.m_connections) });
+	}
+
 	private receiveMessage(event: any)
 	{
 		const json = JSON.parse(event.data);
 		const username = json.username;
 		const message = json.message;
+
+		if ("connections" in json)
+		{
+			const connectionsId = json.connections;
+			this.populateConnections(connectionsId);
+		}
 
 		if (message == "START")
 		{

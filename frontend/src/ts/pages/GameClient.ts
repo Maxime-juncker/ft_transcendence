@@ -3,7 +3,7 @@ import { GameState } from './GameState.js';
 import { User, getUserFromId } from 'User.js';
 import { Chat } from 'modules/chat.js';
 import { UserElement, UserElementType } from 'UserElement.js';
-import { Router } from 'router.js';
+import { GameRouter } from 'router.js';
 
 enum Params
 {
@@ -75,9 +75,9 @@ export class GameClient extends Utils
 	private m_playerContainer:	HTMLElement;
 	private	m_prevP1Score:		number;
 	private	m_prevP2Score:		number;
-	private m_router:			Router;
+	private m_router:			GameRouter;
 
-	constructor(router: Router, private mode: string, user: User = null, chat: Chat = null)
+	constructor(router: GameRouter, private mode: string, user: User = null, chat: Chat = null)
 	{
 		super();
 
@@ -170,7 +170,7 @@ export class GameClient extends Utils
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, playerName: this.m_user.getId() }),
+				body: JSON.stringify({ mode: this.mode, playerName: this.m_user.id }),
 			});
 
 			if (response.status == 202)

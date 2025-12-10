@@ -18,11 +18,11 @@ export var fastify:	FastifyInstance = null;
 export var sessionKey: string;
  
 declare module '@fastify/session' {
-  interface SessionData {
-    auth?: boolean;
-    user?: any;
-  }
+	interface FastifySessionObject {
+		user?: number;
+	}
 }
+
 
 export async function createServer()
 {

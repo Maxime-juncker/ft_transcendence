@@ -1,4 +1,4 @@
-import { Router } from "../router";
+import { GameRouter } from "../router";
 
 export class TournamentMenu
 {
@@ -8,14 +8,14 @@ export class TournamentMenu
 	private static readonly BUTTON_3: string = '16';
 	private static readonly BUTTON_4: string = '32';
 
-	private router: Router;
+	private router: GameRouter;
 	private titleElement = document.getElementById('title') as HTMLHeadingElement;
 	private button1Element = document.getElementById('four') as HTMLButtonElement;
 	private button2Element = document.getElementById('eight') as HTMLButtonElement;
 	private button3Element = document.getElementById('sixteen') as HTMLButtonElement;
 	private button4Element = document.getElementById('thirty-two') as HTMLButtonElement;
 
-	constructor(router: Router)
+	constructor(router: GameRouter)
 	{
 		this.router = router;
 		this.hydrate();
