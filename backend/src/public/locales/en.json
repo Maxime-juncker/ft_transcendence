@@ -2,13 +2,15 @@
 	"capital": {
 		"play": "PLAY",
 		"signup": "SIGNUP",
-  		"login": "LOGIN"
+  		"login": "LOGIN",
+		"settings": "SETTINGS"
 	},
 	"text": {
 		"guest": "*all data will be lost on logout",
 		"tournament": {
 			"players_num": "Select the number of players"
-		}
+		},
+		"delete_warn": "*these are destructive actions, be carreful"
 	},
   	"placeholder": {
 		"email": "email...",
@@ -31,5 +33,28 @@
 	"tournament": "tournament",
 	"local": "local",
 	"online": "online",
-	"bot": "bot"
+	"bot": "bot",
+	"created_at": "created at",
+	"games_played": "games played",
+	"games_won": "games won",
+	"winrate": "winrate",
+	"max_elo": "max elo",
+	"current_elo": "current elo",
+	"History": "History",
+	"Friends": "Friends",
+	"Requests": "Requests",
+	"match": "match",
+	"result": "result",
+	"score": "score",
+	"played_at": "played at",
+	"avatar": "avatar",
+	"2fa": "2fa",
+	"request_2fa": "request 2fa",
+	"confirm_2fa": "confirm 2fa",
+	"save": "save",
+	"danger_zone": "danger zone",
+	"delete_2fa": "delete 2fa",
+	"reset_account": "reset account",
+	"delete_account": "delete account",
+	"username": "username"
 }

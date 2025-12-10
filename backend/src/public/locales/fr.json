@@ -2,13 +2,15 @@
 	"capital": {
 		"play": "JOUER",
 		"signup": "INSCRIPTION",
-  		"login": "CONNEXION"
+  		"login": "CONNEXION",
+		"settings": "PARAMÈTRES"
 	},
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
 		"tournament": {
 			"players_num": "Choisissez le nombre de participants"
-		}
+		},
+		"delete_warn": "*pas de retour en arrière possible, réfléchissez bien"
 	},
   	"placeholder": {
 		"email": "email...",
@@ -31,5 +33,28 @@
 	"tournament": "tournoi",
 	"local": "locale",
 	"online": "en ligne",
-	"bot": "contre l'ia"
+	"bot": "contre l'ia",
+	"created_at": "crée le",
+	"games_played": "parties jouées",
+	"games_won": "parties gagnées",
+	"winrate": "taux de victoire",
+	"max_elo": "elo max",
+	"current_elo": "elo actuel",
+	"History": "Historique",
+	"Friends": "Amis",
+	"Requests": "Demandes",
+	"match": "partie",
+	"result": "resultat",
+	"score": "score",
+	"played_at": "jouée le",
+	"avatar": "avatar",
+	"2fa": "2fa",
+	"request_2fa": "demander 2fa",
+	"confirm_2fa": "confirmer 2fa",
+	"save": "sauvegarder",
+	"danger_zone": "zone de danger",
+	"delete_2fa": "supprimer 2fa",
+	"reset_account": "réinitialiser mon compte",
+	"delete_account": "supprimer mon compte",
+	"username": "nom d'utilisateur"
 }

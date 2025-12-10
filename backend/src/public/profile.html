@@ -12,9 +12,9 @@
 			<div class="user-menu relative">
 				<select id="status"></select>
 				<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
-					<p id="profile_btn" class="btn text-left cursor-default">profile</p>
-					<p id="settings_btn" class="btn text-left cursor-default">settings</p>
-					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
+					<p id="profile_btn" data-i18n="profile" class="btn text-left cursor-default">profile</p>
+					<p id="settings_btn" data-i18n="settings" class="btn text-left cursor-default">settings</p>
+					<p id="logout_btn" data-i18n="logout" class="btn text-left cursor-default">logout</p>
 				</div>
 				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
 					<div id="avatar-name" class="text-[100%] font-bold select-none">
@@ -82,7 +82,7 @@
 						</div>
 						<div class="flex flex-col align-middle justify-center ml-4">
 							<h1 id="name" class="text-3xl bg-[--darker] px-3 py-1">super username</h1>
-							<p id="created_at" class="px-3 text-sm">created 11-7-2025</p>
+							<p id="created_at" data-i18n="created_at" class="px-3 text-sm">created 11-7-2025</p>
 							<button id="main-btn-friend" class="button-empty text-[--blue] border-[--blue] mt-3">tmp</button>
 							<button id="main-btn-block" class="button-empty text-[--red] border-[--red] mt-3">tmp</button>
 						</div>
@@ -92,17 +92,17 @@
 
 					<div class="stat-container">
 						<div class="stat-item">
-							<p>game played</p>
+							<p data-i18n="games_played">game played</p>
 							<h1 id="game-played">n/a</h1>
 						</div>
 
 						<div class="stat-item">
-							<p>game won</p>
+							<p data-i18n="games_won">game won</p>
 							<h1 id="game-won">n/a</h1>
 						</div>
 
 						<div class="stat-item">
-							<p>winrate</p>
+							<p data-i18n="winrate">winrate</p>
 							<h1 id="winrate">n/a</h1>
 						</div>
 					</div>
@@ -114,12 +114,12 @@
 					<div class="h-full w-1/2 bg-[--dark]">
 						<div class="stat-container">
 							<div class="stat-item">
-								<p>max elo</p>
+								<p data-i18n="max_elo">max elo</p>
 								<h1 id="max-elo">n/a</h1>
 							</div>
 
 							<div class="stat-item">
-								<p>current elo</p>
+								<p data-i18n="current_elo">current elo</p>
 								<h1 id="curr-elo">n/a</h1>
 							</div>
 						</div>
@@ -128,18 +128,18 @@
 
 				<!-- history / friends -->
 				<div class="w-[80%] flex flex-row justify-center mt-5 align-middle gap-5">
-					<h1 class="w-[50%] font-bold text-xl">History</h1>
-					<h1 class="w-[30%] font-bold text-xl">Friends</h1>
-					<h1 id="request-title" class="w-[30%] font-bold text-xl">Request</h1>
+					<h1 class="w-[50%] font-bold text-xl" data-i18n="History">History</h1>
+					<h1 class="w-[30%] font-bold text-xl" data-i18n="Friends">Friends</h1>
+					<h1 id="request-title" class="w-[30%] font-bold text-xl" data-i18n="Requests">Request</h1>
 				</div>
 				<div class="h-80 w-[80%] flex flex-row justify-center my-5 align-middle gap-5">
 				
 					<div id="history-container" class="h-full w-[50%] bg-[--dark] overflow-y-scroll py-5">
 						<div class="w-full flex flex-row justify-around align-middle px-2">
-							<p class="underline w-[50%]">match</p>
-							<p class="underline w-[10%]">result</p>
-							<p class="underline w-[10%]">score</p>
-							<p class="underline w-[25%]">played at</p>
+							<p class="underline w-[50%]" data-i18n="match">match</p>
+							<p class="underline w-[10%]" data-i18n="result">result</p>
+							<p class="underline w-[10%]" data-i18n="score">score</p>
+							<p class="underline w-[25%]" data-i18n="played_at">played at</p>
 						</div>
 					</div>
 
