@@ -31,7 +31,6 @@ export async function createGuest(): Promise<DbResponse>
 
 		const date = getSqlDate();
 		const highest = await core.db.get("SELECT MAX(id) FROM users;");
-		console.log(highest["MAX(id)"]);
 		const rBytes = randomBytes(8).toString('hex');
 		const name = `guest${highest["MAX(id)"]}${rBytes}`;
 		const data = await core.db.get(sql, [name, AuthSource.GUEST, date]);
@@ -50,7 +49,6 @@ export async function loginSession(id: string, db: Database) : Promise<DbRespons
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE id = ? RETURNING *';
 
-	console.log("id:", id);
 	try {
 		const row = await core.db.get(sql, [id]);
 		if (!row)
@@ -91,7 +89,6 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 		const row = await db.get(sql, [id, source]);
 		if (!row)
 			return { code: 404, data: { message: "user not found" }};
-		console.log(row);
 		return { code: 200, data: row}
 	}
 	catch (err) {
@@ -204,8 +201,7 @@ export async function logoutUser(user_id: number, db: Database) : Promise<DbResp
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
 
 	try {
-		const result = await db.run(sql, [user_id]);
-		console.log(`Inserted row with id ${result.changes}`);
+		await db.run(sql, [user_id]);
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
@@ -219,7 +215,6 @@ export async function setUserStatus(user_id: number, newStatus: string, db: Data
 	const sql = "UPDATE users SET status = ? WHERE id = ?;";
 	try {
 		const result = await db.run(sql, [newStatus, user_id]);
-		console.log(`Inserted row with id ${result.changes}`);
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {

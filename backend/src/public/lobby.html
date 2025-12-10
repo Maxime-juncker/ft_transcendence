@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title></title>
-		<link href="/public/dist/global.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-		<link href="/public/dist/output.css" rel="stylesheet">
-
-		<!-- <script src="https://cdn.tailwindcss.com"></script> -->
-	</head>
-	<body>
+	<template id="lobby-template">
 
 		<template id="user-template">
 			<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-[500px] p-2 hover:bg-[--darker] active:bg-[--darkest]">
@@ -78,10 +66,7 @@
 			</div>
 		</template>
 
-		<div class="crt h-full">
-			<div class="scanline z-99">
-				<div class="scan"></div>
-			</div>
+		<div class="h-full">
 
 			<header class="header-small">
 				<div id="banner" class="banner-small">
@@ -177,7 +162,6 @@
 					</div>
 				</div>
 
-	</body>
-	<script>var exports = {};</script>
-	<script type="module" src="./dist/lobby.js"></script>
-</html>
+	<!-- <script>var exports = {};</script> -->
+	<!-- <script type="module" src="./dist/lobby.js"></script> -->
+	</template>

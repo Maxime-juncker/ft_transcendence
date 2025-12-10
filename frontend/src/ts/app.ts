@@ -1,67 +1,103 @@
-function loadPage(templateId)
+import { ViewComponent } from "ViewComponent.js";
+import { StartView } from "start.js";
+import { LoginView } from "login.js";
+import { LobbyView } from "lobby.js";
+import { SettingsView } from "settings.js";
+import { ProfileView } from "profile.js"
+
+export class Router
 {
-	const app = document.getElementById("app");
-	const template = document.getElementById(templateId) as HTMLTemplateElement;
+	private routes: Route[];
+	private static m_instance: Router = null;
+	
+	public static get Instance(): Router { return Router.m_instance; }
 
-	if (!template)
+	constructor(routes: Route[])
 	{
-		console.error("template page not found for", templateId);
-		return ;
-	}
-	app.innerHTML = "";
-	const clone = template.content.cloneNode(true);
-	app.prepend(clone);
+		if (Router.m_instance == null)
+			Router.m_instance = this;
 
-}
+		console.log(Router.Instance)
 
-const routes = [
-	{ path: "/", callback: () => loadPage("home-template")},
-	{ path: '/about', callback: () => loadPage("about-template")},
-]
-
-class Router
-{
-	private routes;
-	constructor(routes)
-	{
 		this.routes = routes;
-		this._loadInitialRoute();
+		this.loadInitialRoute();
 	}
 
-	_getCurrentURL() {
+	public getCurrentURL()
+	{
 		const path = window.location.pathname;
 		return path;
 	}
 
-	_matchUrlToRoute(urlSegs) {
+	public matchUrlToRoute(urlSegs: string)
+	{
 		const matchedRoute = this.routes.find(route => route.path === urlSegs);
 		return matchedRoute;
 	}
 
-	_loadInitialRoute() {
+	public loadInitialRoute()
+	{
 		this.loadRoute(window.location.pathname);
 	}
 
-	loadRoute(url)
+	loadRoute(url: string)
 	{
-		const matchRoute = this._matchUrlToRoute(url);
+		const matchRoute = this.matchUrlToRoute(url);
 		if (!matchRoute)
 			throw new Error(`route not found: ${url}`);
 	
 		matchRoute.callback();
 	}
 
-	navigateTo(path)
+	public navigateTo(path: string)
 	{
+		console.log(path);
 		window.history.pushState({}, '', path);
 		this.loadRoute(path);
 	}
 }
 
+function loadPage(componentName: string, templateId: string)
+{
+	const app = document.getElementById("app");
+	
+	if (app.children.length > 0)
+	{
+		const oldView = app.children[0] as ViewComponent;
+		oldView.disable();
+		oldView.remove();
+	}
+	app.innerHTML = "";
+
+	const view = document.createElement(componentName) as ViewComponent;
+	view.setAttribute("templateId", templateId);
+
+	app.prepend(view);
+	view.enable();
+}
+
+type Route = {
+	path: string,
+	callback: () => void;
+}
+
+const routes: Route[] = [
+	{ path: "/", callback: () => loadPage("start-view", "start-template")},
+	{ path: "/login", callback: () => loadPage("login-view", "login-template")},
+	{ path: "/lobby", callback: () => loadPage("lobby-view", "lobby-template")},
+	{ path: "/profile", callback: () => loadPage("profile-view", "profile-template")},
+	{ path: "/settings", callback: () => loadPage("settings-view", "settings-template")},
+]
+
+customElements.define('view-component', ViewComponent);
+customElements.define('start-view', StartView);
+customElements.define('login-view', LoginView);
+customElements.define('lobby-view', LobbyView);
+customElements.define('settings-view', SettingsView);
+customElements.define('profile-view', ProfileView);
+
 const router = new Router(routes);
 
-document.getElementById("about-btn")?.addEventListener('click', () => router.navigateTo('/about'))
-
 window.addEventListener('popstate', () => {
-  router._loadInitialRoute();
+  router.loadInitialRoute();
 });

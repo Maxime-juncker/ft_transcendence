@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title></title>
-		<link href="/public/dist/global.css" rel="stylesheet">
-		<link href="/public/dist/profile.css" rel="stylesheet">
-		<link href="/public/test.css" rel="stylesheet">
-
-		<script src="https://cdn.tailwindcss.com"></script>
-	</head>
-
-	<body>
+	<template id="profile-template">
 		<template id="match-template">
 			<div class="w-full flex flex-row justify-around align-middle px-2">
 				<p id="matchup" class="text-[--blue] w-[50%]">user - test-user</p>
@@ -64,10 +51,7 @@
 
 		</template>
 
-		<div class="crt h-full">
-			<div class="scanline z-99">
-				<div class="scan"></div>
-			</div>
+		<div class="h-full">
 
 			<header class="header-small">
 				<div id="banner" class="banner-small">
@@ -168,7 +152,6 @@
 
 			</div>
 
-	</body>
-	<script>var exports = {};</script>
-	<script type="module" src="./dist/profile.js"></script>
-</html>
+	<!-- <script>var exports = {};</script> -->
+	<!-- <script type="module" src="./dist/profile.js"></script> -->
+	</template>

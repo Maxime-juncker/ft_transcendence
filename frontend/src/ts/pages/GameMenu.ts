@@ -1,4 +1,4 @@
-import { Router } from '../router';
+import { GameRouter } from '../router';
 
 export class GameMenu
 {
@@ -6,12 +6,12 @@ export class GameMenu
 	private static readonly BUTTON_2: string = 'online';
 	private static readonly BUTTON_3: string = 'bot';
 
-	private router: Router;
+	private router: GameRouter;
 	private button1Element = document.getElementById('local-game') as HTMLButtonElement;
 	private button2Element = document.getElementById('online-game') as HTMLButtonElement;
 	private button3Element = document.getElementById('bot-game') as HTMLButtonElement;
 
-	constructor(router: Router)
+	constructor(router: GameRouter)
 	{
 		this.router = router;
 		this.hydrateButtons();

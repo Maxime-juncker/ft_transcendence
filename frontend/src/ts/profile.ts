@@ -2,28 +2,117 @@ import { getUserFromId, getUserFromName, MainUser, Stats, User } from "User.js";
 import { UserElement } from "UserElement.js";
 import { FriendManager } from "friends.js";
 import * as utils from 'utils.js'
+import { ViewComponent } from "ViewComponent.js";
+import { Router } from "app.js";
 
-var main: MainUser = new MainUser(document.getElementById("user-container"));
-await main.loginSession();
-main.onLogout((user) => { window.location.href = window.location.origin })
-if (main.id == -1) // user not login
-	window.location.href = window.location.origin;
-
-var user: User = main;
-if (utils.getUrlVar().has("username"))
+export class ProfileView extends ViewComponent
 {
-	const vars = utils.getUrlVar();
-	user = await getUserFromName(vars.get("username"));
-}
+	private m_main: MainUser;
+	private m_user: User;
 
-const stats: Stats = user.stats;
-new FriendManager(user, "pndg-container", "friend-container", main);
-setBtn();
-addMatch();
+	constructor()
+	{
+		super();
+	}
+
+	public async enable()
+	{
+		this.m_main = new MainUser(document.getElementById("user-container"));
+		await this.m_main.loginSession();
+		this.m_main.onLogout((user) => { Router.Instance.navigateTo("/") })
+		if (this.m_main.id == -1) // user not login
+			Router.Instance.navigateTo("/");
+
+		this.m_user = this.m_main;
+		if (utils.getUrlVar().has("username"))
+		{
+			const vars = utils.getUrlVar();
+			this.m_user = await getUserFromName(vars.get("username"));
+		}
+
+		const stats: Stats = this.m_user.stats;
+		new FriendManager(this.m_user, "pndg-container", "friend-container", this.m_main);
+		this.setBtn();
+		addMatch(this.m_user);
+
+		const profile_extended = document.getElementById("profile-extended");
+		UserElement.setStatusColor(this.m_user, profile_extended.querySelector("#user-status"));
+		(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = this.m_user.getAvatarPath();
+		(<HTMLElement>profile_extended.querySelector("#name")).textContent = this.m_user.name;
+		(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
+		(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
+
+		document.getElementById("game-played").innerText	= `${stats.gamePlayed}`;
+		document.getElementById("game-won").innerText		= `${stats.gameWon}`;
+		var winrate = 0;
+		if (stats.gamePlayed > 0)
+			winrate = stats.gameWon > 0 ? (stats.gameWon / stats.gamePlayed) * 100 : 0;
+		document.getElementById("winrate").innerText		= `${stats.gamePlayed > 0 ? winrate + "%" : "n/a" }`;
+		document.getElementById("curr-elo").innerText		= `${stats.currElo}p`;
+		document.getElementById("max-elo").innerText		= `${stats.maxElo}p`;
+
+		const userMenuContainer = document.getElementById("user-menu-container");
+		document.getElementById("banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
+		document.getElementById("logout_btn")?.addEventListener("click", () => this.m_main.logout());
+		document.getElementById("profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
+		document.getElementById("settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
+		document.getElementById("user-menu-btn").addEventListener('click', () => {
+			userMenuContainer.classList.toggle("hide");
+		});
+
+	}
+
+	private async setBtn()
+	{
+		replaceBtn();
+
+		const addBtn = document.getElementById("main-btn-friend");
+		const blockBtn = document.getElementById("main-btn-block");
+
+		if (this.m_user.id == this.m_main.id)
+		{
+			addBtn.style.display = "none";
+			blockBtn.style.display = "none";
+			return ;
+		}
+
+		for (var [pndg, sender] of this.m_main.pndgFriends)
+		{
+			if (pndg.id == this.m_user.id) // set button for friends
+			{
+				if (sender == this.m_main.id)
+				{
+					// TODO: set color to orange
+					addBtn.innerText = "cancel request";
+					addBtn.addEventListener("click", async () => { await this.m_main.removeFriend(pndg), this.setBtn(); });
+				}
+				else
+				{
+					addBtn.innerText = "accept friend";
+					addBtn.addEventListener("click", async () => { await this.m_main.acceptFriend(pndg); this.setBtn(); });
+				}
+				return ;
+			}
+		}
+		for (var i = 0; i < this.m_main.friends.length; i++)
+		{
+			if (this.m_main.friends[i].id == this.m_user.id) // set button for friends
+			{
+				addBtn.innerText = "remove friend";
+				addBtn.addEventListener("click", async () => { await this.m_main.removeFriend(this.m_main.friends[i]); this.setBtn(); });
+				break;
+			}
+		}
+		if (i == this.m_main.friends.length)
+		{
+			addBtn.innerText = "add friend";
+			addBtn.addEventListener("click", async () => { await this.m_main.addFriend(this.m_user.name); this.setBtn(); });
+		}
+	}
+}
 
 function replaceBtn()
 {
-
 	const addBtn = document.getElementById("main-btn-friend");
 	const blockBtn = document.getElementById("main-btn-block");
 
@@ -32,56 +121,7 @@ function replaceBtn()
 	addBtn.parentNode.replaceChild(clone, addBtn);
 }
 
-function setBtn()
-{
-	replaceBtn();
-
-	const addBtn = document.getElementById("main-btn-friend");
-	const blockBtn = document.getElementById("main-btn-block");
-
-	if (user.id == main.id)
-	{
-		addBtn.style.display = "none";
-		blockBtn.style.display = "none";
-		return ;
-	}
-
-	for (var [pndg, sender] of main.pndgFriends)
-	{
-		if (pndg.id == user.id) // set button for friends
-		{
-			if (sender == main.id)
-			{
-				// TODO: set color to orange
-				addBtn.innerText = "cancel request";
-				addBtn.addEventListener("click", async () => { await main.removeFriend(pndg), setBtn(); });
-			}
-			else
-			{
-				addBtn.innerText = "accept friend";
-				addBtn.addEventListener("click", async () => { await main.acceptFriend(pndg); setBtn(); });
-			}
-			return ;
-		}
-	}
-	for (var i = 0; i < main.friends.length; i++)
-	{
-		if (main.friends[i].id == user.id) // set button for friends
-		{
-			addBtn.innerText = "remove friend";
-			addBtn.addEventListener("click", async () => { await main.removeFriend(main.friends[i]); setBtn(); });
-			break;
-		}
-	}
-	if (i == main.friends.length)
-	{
-		addBtn.innerText = "add friend";
-		addBtn.addEventListener("click", async () => { await main.addFriend(user.name); setBtn(); });
-	}
-
-}
-
-async function addMatch()
+async function addMatch(user: User)
 {
 	const histContainer = document.getElementById("history-container");
 
@@ -103,12 +143,12 @@ async function addMatch()
 	var data = await response.json();
 	for (let i = 0; i  < data.length; i ++) {
 		const elt = data[i];
-		const clone = await addMatchItem(elt);
+		const clone = await addMatchItem(user, elt);
 		histContainer.append(clone);
 	}
 }
 
-async function addMatchItem(json: any): Promise<HTMLElement>
+async function addMatchItem(user: User, json: any): Promise<HTMLElement>
 {
 	const template = document.getElementById("match-template") as HTMLTemplateElement;
 	const clone: HTMLElement = template.content.cloneNode(true) as HTMLElement;
@@ -132,28 +172,3 @@ async function addMatchItem(json: any): Promise<HTMLElement>
 	return clone;
 }
 
-const profile_extended = document.getElementById("profile-extended");
-UserElement.setStatusColor(user, profile_extended.querySelector("#user-status"));
-(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src	= user.getAvatarPath();
-(<HTMLElement>profile_extended.querySelector("#name")).textContent = user.name;
-(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${user.created_at.split(' ')[0]}`;
-(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${user.created_at.split(' ')[0]}`;
-
-document.getElementById("game-played").innerText	= `${stats.gamePlayed}`;
-document.getElementById("game-won").innerText		= `${stats.gameWon}`;
-var winrate = 0;
-if (stats.gamePlayed > 0)
-	winrate = stats.gameWon > 0 ? (stats.gameWon / stats.gamePlayed) * 100 : 0;
-document.getElementById("winrate").innerText		= `${stats.gamePlayed > 0 ? winrate + "%" : "n/a" }`;
-document.getElementById("curr-elo").innerText		= `${stats.currElo}p`;
-document.getElementById("max-elo").innerText		= `${stats.maxElo}p`;
-
-
-const userMenuContainer = document.getElementById("user-menu-container");
-document.getElementById("banner")?.addEventListener("click", () => window.location.href = window.location.origin);
-document.getElementById("logout_btn")?.addEventListener("click", () => main.logout());
-document.getElementById("profile_btn")?.addEventListener("click", () => window.location.href = window.location.origin + "/profile");
-document.getElementById("settings_btn")?.addEventListener("click", () => window.location.href = window.location.origin + "/settings");
-document.getElementById("user-menu-btn").addEventListener('click', () => {
-	userMenuContainer.classList.toggle("hide");
-});

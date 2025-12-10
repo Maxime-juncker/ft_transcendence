@@ -7,7 +7,7 @@ import { User } from "User.js";
 import { Chat } from '@modules/chat';
 import { UserElement } from 'UserElement.js';
 
-export class Router
+export class GameRouter
 {
 	private static readonly EXIT_KEY: string = 'Escape';
 	private static readonly HOME_KEY: string = 'h';
@@ -61,7 +61,7 @@ export class Router
 		{
 			switch (e.key)
 			{
-				case Router.EXIT_KEY:
+				case GameRouter.EXIT_KEY:
 					await fetch("/api/chat/removeQueue", { 
 							method: "DELETE",
 							headers: { 'content-type': 'application/json' },
@@ -69,7 +69,7 @@ export class Router
 								id: this.m_user.id
 							})
 						});
-					history.back();
+					// history.back();
 					break ;
 				// case Router.HOME_KEY:
 				// 	this.navigateTo('home', '');

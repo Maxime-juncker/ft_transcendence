@@ -282,7 +282,6 @@ export class MainUser extends User
 	{
 		const response = await fetch("/api/user/get_session");
 		const data = await response.json();
-		console.log("get session: ", response.status, data);
 
 		if (response.status == 200) {
 			var status = data.status;

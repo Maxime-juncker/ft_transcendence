@@ -186,8 +186,9 @@ export class Chat
 		this.m_chatlog = [];
 		this.m_onStartGame = [];
 		this.m_onConnRefresh = [];
+
 		user.onLogin((user: MainUser) => this.resetChat(user));
-		user.onLogout((user: MainUser) => this.resetChat(user));
+		// user.onLogout((user: MainUser) => this.resetChat(user));
 
 		// TODO: merge with resetChat
 		console.log(`connecting to chat websocket: ${window.location.host}`)
@@ -213,6 +214,11 @@ export class Chat
 		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.id}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
+	}
+
+	public disconnect()
+	{
+		this.m_ws.close();
 	}
 
 	private sendMsgFromInput(event: any)
