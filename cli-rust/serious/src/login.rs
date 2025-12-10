@@ -76,3 +76,9 @@ async fn   chat(mut ws_stream: WebSocketStream<MaybeTlsStream<TcpStream>>, sende
     }
     Ok(())
 }
+
+/*
+Send message in 
+Send -> JSON contenanet user name, message, isCmd
+
+*/

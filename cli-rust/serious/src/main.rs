@@ -59,23 +59,23 @@ async fn main() -> Result<()> {
 pub async fn welcome_screen(game_main: &Infos, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
   loop {
     draw_welcome_screen()?;
-      let event = event::read()?;
+    let event = event::read()?;
 
-      if should_exit(&event)? == true {
-        cleanup_and_quit(&game_main.original_size)?;
-      }
-      else if let Event::Key(key_event) = event {
-        match key_event.code {
-          KeyCode::Char('1') => {receiver = game_loop(&game_main, receiver).await?;},
-          KeyCode::Char('2') => {
-            social_life(&game_main).await?;
-          },
-          KeyCode::Char('3') => {},
-          _ => {},
+    if should_exit(&event)? == true {
+      cleanup_and_quit(&game_main.original_size)?;
+    }
+    else if let Event::Key(key_event) = event {
+      match key_event.code {
+        KeyCode::Char('1') => {receiver = game_loop(&game_main, receiver).await?;},
+        KeyCode::Char('2') => {
+          social_life(&game_main).await?;
+        },
+        KeyCode::Char('3') => {},
+        _ => {},
 
-        }
       }
     }
+  }
 }
 
 fn get_infos_elements() -> Result<((u16, u16), String)> {

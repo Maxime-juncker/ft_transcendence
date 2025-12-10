@@ -137,26 +137,32 @@ pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Rece
 		return Err(("error, no data received from server".to_string(), receiver));
 	};
 	loop {
-		if !receiver.is_empty() {
-			break ;
-		}
-		if let Err(_) = poll(Duration::from_millis(16)) {
-			return Err(("error in poll".to_string(), receiver));
-		} else {
-			let event = match event::read() {
+		match poll(Duration::from_millis(16)) {
+			Ok(true) => {
+				if !receiver.is_empty() {
+					break ;
+				}
+				let event = match event::read() {
 				Ok(event) => event,
 				_ => return Err(("error in read".to_string(), receiver))
-			};
-			match should_exit(&event) {
-				Ok(true) => {
-					if let Err(_) = send_remove_from_queue_request(game_main).await {
-						return Err(("error: could not send requets to remove from list".to_string(), receiver));
-					};
-					return Ok(receiver);},
-				Ok(false) => {},
-				_ => return Err(("event error".to_string(), receiver))
-			}
-		}
+				};
+				match should_exit(&event) {
+					Ok(true) => {
+						if let Err(_) = send_remove_from_queue_request(game_main).await {
+							return Err(("error: could not send requets to remove from list".to_string(), receiver));
+						};
+						return Ok(receiver);},
+					Ok(false) => {},
+					_ => return Err(("event error".to_string(), receiver))
+				}
+			},
+			Ok(false) => {
+				if !receiver.is_empty() {
+					break ;
+				}
+			},
+			_ => return Err(("error in poll".to_string(), receiver))
+		};
 	}
 	let response = match receiver.recv().await {
 		Some(value) => value,
@@ -276,11 +282,9 @@ impl Game {
 			}
 			to_send.clear();
 			if up == true {
-				eprintln!("U");
 				to_send.insert_str(0, "U");
 			}
 			if down == true {
-				eprintln!("D");
 				to_send.insert_str(0, "D");
 			}
 			let send_it = to_send.clone();
@@ -288,7 +292,6 @@ impl Game {
 			if poll(Duration::from_millis(16))? {
 
 				let event = event::read()?;
-				eprintln!("Event read");
 				if should_exit(&event)? == true {
 						cleanup_and_quit(&original_size)?;
 				} else if let Event::Key(key_event) = event {

@@ -49,7 +49,6 @@ pub fn setup_terminal() -> std::io::Result<()> {
     terminal::enable_raw_mode()?;
     stdout().execute(terminal::EnterAlternateScreen)?;
     stdout().execute(cursor::Hide)?;
-    // stdout().execute(SetTitle("Transcendence"))?;
     stdout().execute(terminal::SetSize(NUM_ROWS, NUM_COLS))?;
     stdout().execute(terminal::Clear(terminal::ClearType::All))?;
     stdout().execute(PushKeyboardEnhancementFlags(
