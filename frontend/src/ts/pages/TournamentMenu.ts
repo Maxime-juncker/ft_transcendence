@@ -1,4 +1,5 @@
 import { GameRouter } from "../router";
+import { Router } from "app.js";
 
 export class TournamentMenu
 {
@@ -9,11 +10,11 @@ export class TournamentMenu
 	private static readonly BUTTON_4: string = '32';
 
 	private router: GameRouter;
-	private titleElement = document.getElementById('title') as HTMLHeadingElement;
-	private button1Element = document.getElementById('four') as HTMLButtonElement;
-	private button2Element = document.getElementById('eight') as HTMLButtonElement;
-	private button3Element = document.getElementById('sixteen') as HTMLButtonElement;
-	private button4Element = document.getElementById('thirty-two') as HTMLButtonElement;
+	private titleElement = Router.getElementById('title') as HTMLHeadingElement;
+	private button1Element = Router.getElementById('four') as HTMLButtonElement;
+	private button2Element = Router.getElementById('eight') as HTMLButtonElement;
+	private button3Element = Router.getElementById('sixteen') as HTMLButtonElement;
+	private button4Element = Router.getElementById('thirty-two') as HTMLButtonElement;
 
 	constructor(router: GameRouter)
 	{
@@ -58,17 +59,17 @@ export class TournamentMenu
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('four')?.addEventListener('click', this.fourPlayersClickHandler);
-		document.getElementById('eight')?.addEventListener('click', this.eightPlayersClickHandler);
-		document.getElementById('sixteen')?.addEventListener('click', this.sixteenPlayersClickHandler);
-		document.getElementById('thirty-two')?.addEventListener('click', this.thirtyTwoPlayersClickHandler);
+		Router.getElementById('four')?.addEventListener('click', this.fourPlayersClickHandler);
+		Router.getElementById('eight')?.addEventListener('click', this.eightPlayersClickHandler);
+		Router.getElementById('sixteen')?.addEventListener('click', this.sixteenPlayersClickHandler);
+		Router.getElementById('thirty-two')?.addEventListener('click', this.thirtyTwoPlayersClickHandler);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('four')?.removeEventListener('click', this.fourPlayersClickHandler);
-		document.getElementById('eight')?.removeEventListener('click', this.eightPlayersClickHandler);
-		document.getElementById('sixteen')?.removeEventListener('click', this.sixteenPlayersClickHandler);
-		document.getElementById('thirty-two')?.removeEventListener('click', this.thirtyTwoPlayersClickHandler);
+		Router.getElementById('four')?.removeEventListener('click', this.fourPlayersClickHandler);
+		Router.getElementById('eight')?.removeEventListener('click', this.eightPlayersClickHandler);
+		Router.getElementById('sixteen')?.removeEventListener('click', this.sixteenPlayersClickHandler);
+		Router.getElementById('thirty-two')?.removeEventListener('click', this.thirtyTwoPlayersClickHandler);
 	}
 }

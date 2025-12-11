@@ -15,7 +15,6 @@ export class ServerSideRendering
 	<link href="/public/dist/global.css" rel="stylesheet">
 	<link href="/public/test.css" rel="stylesheet">
 	<link href="/public/dist/login.css" rel="stylesheet">
-	<link href="/public/dist/game.css" rel="stylesheet">
 	<link href="/public/dist/profile.css" rel="stylesheet">
 	<link href="/public/dist/start.css" rel="stylesheet">
 	<script src="https://cdn.tailwindcss.com"></script>
@@ -31,11 +30,11 @@ export class ServerSideRendering
 		<h1 class="bootup-text">HDMI-1</h1>
 		<div class="crt h-full">
 			<div class="crt-mask"></div> 
-			<div class="scanline">
-				<div class="scan"></div>
-			</div>
 			<div id="app" class="h-full">
 
+			</div>
+			<div class="scanline">
+				<div class="scan"></div>
 			</div>
 		</div>
 		<script>var exports = {};</script>

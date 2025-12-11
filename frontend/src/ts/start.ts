@@ -12,14 +12,14 @@ export class StartView extends ViewComponent
 	public async enable()
 	{
 		console.log("enable")
-		document.getElementById("play_btn").addEventListener('click', () => {
+		this.querySelector("#play_btn").addEventListener('click', () => {
 			if (user.id == -1)
 				Router.Instance.navigateTo("/login");
 			else
 				Router.Instance.navigateTo("/lobby");
 		});
 
-		var user: MainUser = new MainUser(document.getElementById("profile-container"));
+		var user: MainUser = new MainUser(this.querySelector("#profile-container"));
 		await user.loginSession();
 	}
 }

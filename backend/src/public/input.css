@@ -3,8 +3,6 @@
 @layer base
 {
 	h1		{ @apply text-[10vh] my-[10vh]; }
-	p		{ @apply relative text-white font-bold rounded-lg text-center; font-family: 'Orbitron', 'Courier New', monospace; }
-	button	{ @apply text-[4vh] border-white w-fit self-center py-[1.5vh] my-[1vh] rounded-xl hover:bg-white hover:text-black active:scale-90 duration-200; }
 }
 
 @layer components

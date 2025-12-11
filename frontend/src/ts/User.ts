@@ -2,6 +2,7 @@ import { hashString } from './sha256.js'
 import { UserElement, UserElementType } from './UserElement.js';
 
 // *********************** TODO *********************** //
+// user with large name should be trucated
 // Add settings page									//
 // **************************************************** //
 
@@ -117,7 +118,6 @@ export class User {
 
 	public async setStatus(status: UserStatus): Promise<Response> {
 		this.m_status = status;
-		console.log(`settings status to: ${status}`);
 
 		var response = await fetch("/api/user/set_status", {
 			method: "POST",
@@ -466,6 +466,18 @@ export class MainUser extends User
 	public async resetUser(): Promise<number>
 	{
 		const res = await fetch('/api/user/reset', { method: "DELETE" });
+		return res.status;
+	}
+
+	public async removeFromQueue(): Promise<number>
+	{
+		const res = await fetch("/api/chat/removeQueue", { 
+			method: "DELETE",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				id: this.id
+			})
+		});
 		return res.status;
 	}
 }

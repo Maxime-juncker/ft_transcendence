@@ -4,6 +4,7 @@ import { User, getUserFromId } from 'User.js';
 import { Chat } from 'modules/chat.js';
 import { UserElement, UserElementType } from 'UserElement.js';
 import { GameRouter } from 'router.js';
+import { Router } from 'app.js';
 
 enum Params
 {
@@ -82,7 +83,7 @@ export class GameClient extends Utils
 		super();
 
 		this.m_router = router;
-		this.m_playerContainer = document.getElementById("player-container");
+		this.m_playerContainer = Router.getElementById("player-container");
 		if (!this.m_playerContainer)
 		{
 			console.error("no player-container found");
@@ -166,6 +167,7 @@ export class GameClient extends Utils
 		{
 			window.addEventListener('beforeunload', this.beforeUnloadHandler);
 
+			console.log("hello")
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',

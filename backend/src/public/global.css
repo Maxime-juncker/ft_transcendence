@@ -13,9 +13,11 @@
 	--purple:	#C678DD;
 }
 
-@layer base {
+/* @layer base { */
+/* } */
+
 	body {
-		@apply flex flex-col flex-wrap bg-(--darker) text-(--white) h-screen 
+		@apply flex flex-col flex-wrap bg-(--darker) text-(--white) rounded-none h-screen 
 		overflow-hidden;
 	}
 	
@@ -28,13 +30,11 @@
 		@apply flex-1 flex justify-center flex-col items-center gap-6;
 	}
 	
-}
-
-input {
-	@apply	bg-(--dark) border-b-2 border-(--blue) px-7 py-3
-	focus:outline-none focus:brightness-[1.4]
-	hover:brightness-[1.2];
-}
+	input {
+		@apply	bg-(--dark) border-b-2 border-(--blue) px-7 py-3
+		focus:outline-none focus:brightness-[1.4]
+		hover:brightness-[1.2];
+	}
 
 @layer components
 {
@@ -104,7 +104,7 @@ input {
 }
 
 .button-full {
-	@apply	bg-(--green) text-(--dark) border-2 border-(--dark) py-1
+	@apply	bg-(--green) text-(--dark) border-2 rounded-none border-(--dark) py-1
 			hover:brightness-[1.1] active:brightness-[1.5];
 }
 

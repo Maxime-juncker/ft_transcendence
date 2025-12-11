@@ -1,5 +1,6 @@
 import { strToCol, hashString } from 'sha256.js';
 import { User, UserStatus, MainUser, getUserFromId } from 'User.js'
+import { Router } from 'app.js';
 import * as usr from './chat_user.js';
 import * as utils from './chat_utils.js'
 
@@ -32,7 +33,7 @@ export class Message
 	public toHtml() : HTMLElement
 	{
 
-		const template = document.getElementById("chat-item-template") as HTMLTemplateElement;
+		const template = Router.getElementById("chat-item-template") as HTMLTemplateElement;
 		if (!template)
 		{
 			console.error("no template found for user element");
@@ -50,7 +51,7 @@ export class Message
 		const msgTxt = clone.querySelector("#message") as HTMLElement;
 		if (!msgTxt)
 			console.warn("no senderTxt found");
-		msgTxt.textContent= this.getMsg();
+		msgTxt.textContent = this.getMsg();
 
 		return clone;
 	}
@@ -188,7 +189,7 @@ export class Chat
 		this.m_onConnRefresh = [];
 
 		user.onLogin((user: MainUser) => this.resetChat(user));
-		// user.onLogout((user: MainUser) => this.resetChat(user));
+		user.onLogout((user: MainUser) => this.resetChat(user));
 
 		// TODO: merge with resetChat
 		console.log(`connecting to chat websocket: ${window.location.host}`)
@@ -218,6 +219,7 @@ export class Chat
 
 	public disconnect()
 	{
+		this.m_user.removeFromQueue();
 		this.m_ws.close();
 	}
 

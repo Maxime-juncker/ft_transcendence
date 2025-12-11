@@ -23,9 +23,9 @@
 .guest-container .button-empty {
 	@apply	px-30;
 }
-
-input {
-	@apply	bg-(--dark) border-b-2 border-(--blue) px-3 py-2
-	focus:outline-none focus:border-(--yellow)
-	hover:brightness-[1.4];
-}
+/**/
+/* input { */
+/* 	@apply	bg-(--dark) border-b-2 border-(--blue) px-3 py-2 */
+/* 	focus:outline-none focus:border-(--yellow) */
+/* 	hover:brightness-[1.4]; */
+/* } */

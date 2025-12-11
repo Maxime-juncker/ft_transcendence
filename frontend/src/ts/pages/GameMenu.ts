@@ -7,13 +7,19 @@ export class GameMenu
 	private static readonly BUTTON_3: string = 'bot';
 
 	private router: GameRouter;
-	private button1Element = document.getElementById('local-game') as HTMLButtonElement;
-	private button2Element = document.getElementById('online-game') as HTMLButtonElement;
-	private button3Element = document.getElementById('bot-game') as HTMLButtonElement;
+	private button1Element;
+	private button2Element;
+	private button3Element;
 
 	constructor(router: GameRouter)
 	{
+		router.view.querySelector
 		this.router = router;
+
+		this.button1Element = this.router.view.querySelector('#local-game') as HTMLButtonElement;
+		this.button2Element = this.router.view.querySelector('#online-game') as HTMLButtonElement;
+		this.button3Element = this.router.view.querySelector('#bot-game') as HTMLButtonElement;
+
 		this.hydrateButtons();
 		this.setUpDocumentEventListeners();
 	}
@@ -32,6 +38,7 @@ export class GameMenu
 
 	private onlineGameClickHandler = () =>
 	{
+		console.log("navi to online");
 		this.router.navigateTo('game', 'online');
 	}
 
@@ -42,15 +49,15 @@ export class GameMenu
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('local-game')?.addEventListener('click', this.localGameClickHandler);
-		document.getElementById('online-game')?.addEventListener('click', this.onlineGameClickHandler);
-		document.getElementById('bot-game')?.addEventListener('click', this.botGameClickHandler);
+		this.router.view.querySelector('#local-game')?.addEventListener('click', this.localGameClickHandler);
+		this.router.view.querySelector('#online-game')?.addEventListener('click', this.onlineGameClickHandler);
+		this.router.view.querySelector('#bot-game')?.addEventListener('click', this.botGameClickHandler);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('local-game')?.removeEventListener('click', this.localGameClickHandler);
-		document.getElementById('online-game')?.removeEventListener('click', this.onlineGameClickHandler);
-		document.getElementById('bot-game')?.removeEventListener('click', this.botGameClickHandler);
+		this.router.view.querySelector('#local-game')?.removeEventListener('click', this.localGameClickHandler);
+		this.router.view.querySelector('#online-game')?.removeEventListener('click', this.onlineGameClickHandler);
+		this.router.view.querySelector('#bot-game')?.removeEventListener('click', this.botGameClickHandler);
 	}
 }

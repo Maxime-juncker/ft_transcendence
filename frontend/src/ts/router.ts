@@ -6,6 +6,7 @@ import { Tournament } from 'pages/Tournament.js';
 import { User } from "User.js";
 import { Chat } from '@modules/chat';
 import { UserElement } from 'UserElement.js';
+import { ViewComponent } from 'ViewComponent.js';
 
 export class GameRouter
 {
@@ -25,13 +26,20 @@ export class GameRouter
 	m_player1:		UserElement;
 	m_chat:			Chat;
 
-	constructor(user: User = null, chat: Chat = null)
+	m_view:		ViewComponent;
+
+	public get view(): ViewComponent { return this.m_view; }
+
+	constructor(user: User = null, chat: Chat = null, view: ViewComponent = null)
 	{
 		this.m_user = user;
 		this.m_chat = chat;
+		this.m_view = view;
 		this.loadPages();
 		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
+
+		// setInterval(() => console.log("hello"), 60);
 	}
 
 	private loadPages(): void
@@ -69,7 +77,7 @@ export class GameRouter
 								id: this.m_user.id
 							})
 						});
-					// history.back();
+					this.navigateTo('home', '');
 					break ;
 				// case Router.HOME_KEY:
 				// 	this.navigateTo('home', '');

@@ -1,3 +1,5 @@
+import { Router } from "app.js";
+
 export function getUrlVar(): Map<string, string>
 {
 	const	url = window.location.href;
@@ -26,7 +28,12 @@ export function setCookie(name: string, value: any, exdays: any)
 
 export function setPlaceHolderText(msg: string)
 {
-	const placeholder = document.getElementById("placeholder-text") as HTMLElement;
+	var placeholder: HTMLElement;
+
+	if (Router.Instance === null)
+		placeholder = document.getElementById("placeholder-text") as HTMLElement;
+	else
+		placeholder = Router.getElementById("placeholder-text") as HTMLElement;
 	placeholder.classList.remove("hide");
 	placeholder.innerText = msg;
 }

@@ -17,7 +17,7 @@ export class ProfileView extends ViewComponent
 
 	public async enable()
 	{
-		this.m_main = new MainUser(document.getElementById("user-container"));
+		this.m_main = new MainUser(this.querySelector("#user-container"));
 		await this.m_main.loginSession();
 		this.m_main.onLogout((user) => { Router.Instance.navigateTo("/") })
 		if (this.m_main.id == -1) // user not login
@@ -35,28 +35,28 @@ export class ProfileView extends ViewComponent
 		this.setBtn();
 		addMatch(this.m_user);
 
-		const profile_extended = document.getElementById("profile-extended");
+		const profile_extended = this.querySelector("#profile-extended");
 		UserElement.setStatusColor(this.m_user, profile_extended.querySelector("#user-status"));
 		(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = this.m_user.getAvatarPath();
 		(<HTMLElement>profile_extended.querySelector("#name")).textContent = this.m_user.name;
 		(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
 		(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
 
-		document.getElementById("game-played").innerText	= `${stats.gamePlayed}`;
-		document.getElementById("game-won").innerText		= `${stats.gameWon}`;
 		var winrate = 0;
 		if (stats.gamePlayed > 0)
 			winrate = stats.gameWon > 0 ? (stats.gameWon / stats.gamePlayed) * 100 : 0;
-		document.getElementById("winrate").innerText		= `${stats.gamePlayed > 0 ? winrate + "%" : "n/a" }`;
-		document.getElementById("curr-elo").innerText		= `${stats.currElo}p`;
-		document.getElementById("max-elo").innerText		= `${stats.maxElo}p`;
+		(<HTMLElement>this.querySelector("#game-played")).innerText		= `${stats.gamePlayed}`;
+		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
+		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? winrate + "%" : "n/a" }`;
+		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
+		(<HTMLElement>this.querySelector("#max-elo")).innerText			= `${stats.maxElo}p`;
 
-		const userMenuContainer = document.getElementById("user-menu-container");
-		document.getElementById("banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
-		document.getElementById("logout_btn")?.addEventListener("click", () => this.m_main.logout());
-		document.getElementById("profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
-		document.getElementById("settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
-		document.getElementById("user-menu-btn").addEventListener('click', () => {
+		const userMenuContainer = this.querySelector("#user-menu-container");
+		this.querySelector("#banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
+		this.querySelector("#logout_btn")?.addEventListener("click", () => this.m_main.logout());
+		this.querySelector("#profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
+		this.querySelector("#settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
+		this.querySelector("#user-menu-btn").addEventListener('click', () => {
 			userMenuContainer.classList.toggle("hide");
 		});
 
@@ -66,8 +66,8 @@ export class ProfileView extends ViewComponent
 	{
 		replaceBtn();
 
-		const addBtn = document.getElementById("main-btn-friend");
-		const blockBtn = document.getElementById("main-btn-block");
+		const addBtn = this.querySelector("#main-btn-friend") as HTMLElement;
+		const blockBtn = this.querySelector("#main-btn-block") as HTMLElement;
 
 		if (this.m_user.id == this.m_main.id)
 		{
@@ -113,8 +113,8 @@ export class ProfileView extends ViewComponent
 
 function replaceBtn()
 {
-	const addBtn = document.getElementById("main-btn-friend");
-	const blockBtn = document.getElementById("main-btn-block");
+	const addBtn = this.querySelector("#main-btn-friend");
+	const blockBtn = this.querySelector("#main-btn-block");
 
 	const clone = addBtn.cloneNode(true);
 
@@ -123,7 +123,7 @@ function replaceBtn()
 
 async function addMatch(user: User)
 {
-	const histContainer = document.getElementById("history-container");
+	const histContainer = this.querySelector("#history-container");
 
 	var response = await fetch(`/api/user/get_history_name/${user.name}`, { method : "GET" })
 	const code = response.status;
@@ -150,7 +150,7 @@ async function addMatch(user: User)
 
 async function addMatchItem(user: User, json: any): Promise<HTMLElement>
 {
-	const template = document.getElementById("match-template") as HTMLTemplateElement;
+	const template = this.querySelector("#match-template") as HTMLTemplateElement;
 	const clone: HTMLElement = template.content.cloneNode(true) as HTMLElement;
 
 	const matchup = clone.querySelector("#matchup") as HTMLElement;

@@ -16,6 +16,7 @@ npx tailwindcss -i public/global.css -o public/dist/global.css
 npx tailwindcss -i public/start.css -o public/dist/start.css
 npx tailwindcss -i public/login.css -o public/dist/login.css
 npx tailwindcss -i public/input.css -o public/dist/output.css
+npx tailwindcss -i public/profile.css -o public/dist/profile.css
 
 # tail -f
 exec npm run start

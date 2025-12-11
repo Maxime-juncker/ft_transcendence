@@ -1,4 +1,5 @@
 import { User, UserStatus } from "./User.js";
+import { Router } from "app.js";
 
 export enum UserElementType
 {
@@ -23,7 +24,7 @@ export class UserElement
 		this.m_user = null;
 		this.m_type = type;
 
-		const template = document.getElementById(templateName) as HTMLTemplateElement;
+		const template = Router.getElementById(templateName) as HTMLTemplateElement;
 		if (!template)
 		{
 			console.error("no template found for user element");

@@ -1,113 +1,110 @@
-	<template id="settings-template">
-		<template id="confirm-panel-template">
-			<div class="w-screen h-[15vh] bg-[--darkest] gap-5 flex flex-col justify-center items-center">
-				<h1 class="text-[--red] text-[150%] font-extrabold">THIS IS A DESTRUCTIVE ACTION ARE YOU 100% SURE OF WHAT YOUR DOING</h1>
-				<div class="flex flex-row justify-center items-center gap-4">
-					<input id="confirm-input" class="py-1 px-3 border-[--red]" placeholder="type confirm to continue">
-					<button id="cancel-btn" class="button-full bg-[--purple] py-1 px-4 w-full">cancel</button>
+<template id="settings-template">
+	<template id="confirm-panel-template">
+		<div class="w-screen h-[15vh] bg-[--darkest] gap-5 flex flex-col justify-center items-center">
+			<h1 class="text-[--red] text-[150%] font-extrabold">THIS IS A DESTRUCTIVE ACTION ARE YOU 100% SURE OF WHAT YOUR DOING</h1>
+			<div class="flex flex-row justify-center items-center gap-4">
+				<input id="confirm-input" class="py-1 px-3 border-[--red]" placeholder="type confirm to continue">
+				<button id="cancel-btn" class="button-full bg-[--purple] py-1 px-4 w-full">cancel</button>
+			</div>
+		</div>
+	</template>
+
+	<template id="user-profile-template">
+		<div class="user-menu relative">
+			<select id="status"></select>
+			<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
+				<p id="profile_btn" class="btn text-left cursor-default">profile</p>
+				<p id="settings_btn" class="btn text-left cursor-default">settings</p>
+				<p id="logout_btn" class="btn text-left cursor-default">logout</p>
+			</div>
+			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
+				<div id="avatar-name" class="text-[100%] font-bold select-none">
+					user
+				</div>
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar-img"/>
+				<div id="user-status" class="user-status right-0 top-[60%]"></div>
+			</div>
+		</div>
+	</template>
+	<div class="h-full">
+
+		<header class="header-small">
+			<div id="banner" class="banner-small">
+				<h1 class="select-none">FT_TRANSCENDENCE</h1>
+				<div class="small-lines">
+					<div class="line bg-(--red)"></div>
+					<div class="line bg-(--yellow)"></div>
+					<div class="line bg-(--blue)"></div>
+					<div class="line bg-(--green)"></div>
 				</div>
 			</div>
-		</template>
-
-		<template id="user-profile-template">
-			<div class="user-menu relative">
-				<select id="status"></select>
-				<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
-					<p id="profile_btn" class="btn text-left cursor-default">profile</p>
-					<p id="settings_btn" class="btn text-left cursor-default">settings</p>
-					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
-				</div>
-				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
-					<div id="avatar-name" class="text-[100%] font-bold select-none">
-						user
-					</div>
-					<img
-						id="avatar-img"
-						src="" 
-						alt="Profile" 
-						class="avatar-img"/>
-					<div id="user-status" class="user-status right-0 top-[60%]"></div>
-				</div>
+			<div id="user-container">
 			</div>
-		</template>
-		<div class="h-full">
+		</header>
 
-			<header class="header-small">
-				<div id="banner" class="banner-small">
-					<h1 class="select-none">FT_TRANSCENDENCE</h1>
-					<div class="small-lines">
-						<div class="line bg-(--red)"></div>
-						<div class="line bg-(--yellow)"></div>
-						<div class="line bg-(--blue)"></div>
-						<div class="line bg-(--green)"></div>
+		<div class="w-full h-full flex flex-col justify-center items-center gap-3 overflow-y-scroll">
+
+			<h1 class="mb-5 text-3xl font-bold underline">SETTINGS</h1>
+			<div class="flex flex-col gap-3 justify-around items-center">
+
+				<!-- settings -->
+				<div class="relative flex flex-col gap-5 w-full justify-center">
+					<div id="name-settings">
+						<h2 class="font-bold text-xl">username</h2>
+						<input id="username-input" class="px-3 py-2 w-full" placeholder="enter username...">
+					</div>
+					<div id="email-settings">
+						<h2 class="font-bold text-xl">email</h2>
+						<input id="email-input" class="px-3 py-2 w-full" placeholder="enter email...">
+					</div>
+					<div id="passw-settings" class="flex flex-col gap-2">
+						<h2 class="font-bold text-xl">password</h2>
+						<input id="curr-passw-input" class="px-3 py-2 w-full border-[--yellow]" placeholder="current pasword...">
+						<input id="new-passw-input" class="px-3 py-2 w-full border-[--yellow]" placeholder="new password...">
+					</div>
+					<div id="avatar-settings">
+						<h2 class="font-bold text-xl">avatar</h2>
+						<input id="avatar-input" type="file" class="px-3 py-2 w-full border-[--green]" placeholder="enter email...">
+					</div>
+					<div id="settings-2fa" class="flex flex-col gap-2">
+						<h2 class="font-bold text-xl">2fa</h2>
+						<button id="request-2fa-btn" class="button-empty border-[--purple] text-[--purple] w-full">request 2fa</button>
+						<input id="confirm-2fa-input" class="px-3 py-2 w-full border-[--purple]" placeholder="confirm 2fa...">
+					</div>
+					<div class="absolute top-0 -right-3/4 hide">
+						<div class="relative">
+							<p id="holder-close-btn" class="absolute top-0 left-0 text-[--red] font-extrabold bg-[--dark] px-2 py-1 select-none">[x]</p>
+						</div>
+						<div id="qrcode_holder">
+						</div>
 					</div>
 				</div>
-				<div id="user-container">
-				</div>
-			</header>
+				<button id="settings-logout-btn" class="button-empty border-[--red] text-[--red] w-full">logout</button>
 
-			<div class="w-full h-full flex flex-col justify-center items-center gap-3 overflow-y-scroll">
-
-				<h1 class="mb-5 text-3xl font-bold underline">SETTINGS</h1>
-				<div class="flex flex-col gap-3 justify-around items-center">
-
-					<!-- settings -->
-					<div class="relative flex flex-col gap-5 w-full justify-center">
-						<div id="name-settings">
-							<h2 class="font-bold text-xl">username</h2>
-							<input id="username-input" class="px-3 py-2 w-full" placeholder="enter username...">
-						</div>
-						<div id="email-settings">
-							<h2 class="font-bold text-xl">email</h2>
-							<input id="email-input" class="px-3 py-2 w-full" placeholder="enter email...">
-						</div>
-						<div id="passw-settings" class="flex flex-col gap-2">
-							<h2 class="font-bold text-xl">password</h2>
-							<input id="curr-passw-input" class="px-3 py-2 w-full border-[--yellow]" placeholder="current pasword...">
-							<input id="new-passw-input" class="px-3 py-2 w-full border-[--yellow]" placeholder="new password...">
-						</div>
-						<div id="avatar-settings">
-							<h2 class="font-bold text-xl">avatar</h2>
-							<input id="avatar-input" type="file" class="px-3 py-2 w-full border-[--green]" placeholder="enter email...">
-						</div>
-						<div id="2fa-settings" class="flex flex-col gap-2">
-							<h2 class="font-bold text-xl">2fa</h2>
-							<button id="request-2fa-btn" class="button-empty border-[--purple] text-[--purple] w-full">request 2fa</button>
-							<input id="confirm-2fa-input" class="px-3 py-2 w-full border-[--purple]" placeholder="confirm 2fa...">
-						</div>
-						<div class="absolute top-0 -right-3/4 hide">
-							<div class="relative">
-								<p id="holder-close-btn" class="absolute top-0 left-0 text-[--red] font-extrabold bg-[--dark] px-2 py-1 select-none">[x]</p>
-							</div>
-							<div id="qrcode_holder">
-							</div>
-						</div>
-					</div>
-					<button id="settings-logout-btn" class="button-empty border-[--red] text-[--red] w-full">logout</button>
-
-				</div>
-				<!-- save / discard buttons -->
-				<button id="save-btn" class="button-full absolute bottom-0 mb-5 max-w-80 w-full">save</button>
 			</div>
+			<!-- save / discard buttons -->
+			<button id="save-btn" class="button-full absolute bottom-0 mb-5 max-w-80 w-full">save</button>
+		</div>
 
-			<div class="absolute right-0 bottom-0 mb-2 mr-2 flex flex-col items-center justify-center gap-2">
-				<!-- lower settings -->
-				<div class="max-w-[50vw] flex flex-col items-center justify-center align-middle">
-					<div class="w-full flex flex-col items-center justify-center border-2 border-[--red] mt-5 py-5 px-14 gap-2">
-						<h1 class="text-xl font-bold text-[--red] self-start">danger zone</h1>
-						<button id="delete-2fa-btn" class="button-full bg-[--red] w-full">delete 2fa</button>
-						<button id="reset-btn" class="button-full bg-[--red] w-full">reset account</button>
-						<button id="delete-btn" class="button-full bg-[--red] w-full">delete account</button>
-					</div>
-					<p class="p-0 m-0">*these are destructive actions, be carreful</p>
+		<div class="absolute right-0 bottom-0 mb-2 mr-2 flex flex-col items-center justify-center gap-2">
+			<!-- lower settings -->
+			<div class="max-w-[50vw] flex flex-col items-center justify-center align-middle">
+				<div class="w-full flex flex-col items-center justify-center border-2 border-[--red] mt-5 py-5 px-14 gap-2">
+					<h1 class="text-xl font-bold text-[--red] self-start">danger zone</h1>
+					<button id="delete-2fa-btn" class="button-full bg-[--red] w-full">delete 2fa</button>
+					<button id="reset-btn" class="button-full bg-[--red] w-full">reset account</button>
+					<button id="delete-btn" class="button-full bg-[--red] w-full">delete account</button>
 				</div>
-			</div>
-
-			<p id="placeholder-text" class="mb-5 ml-5 py-1 px-4 text-[--white] bg-[--dark] w-fit absolute left-0 bottom-0 hide">placeholder</p>
-			<div id="panel-holder" class=" absolute top-1/2 left-0">
+				<p class="p-0 m-0">*these are destructive actions, be carreful</p>
 			</div>
 		</div>
 
-	<!-- <script>var exports = {};</script> -->
-	<!-- <script type="module" src="./dist/settings.js"></script> -->
-	</template>
+		<p id="placeholder-text" class="mb-5 ml-5 py-1 px-4 text-[--white] bg-[--dark] w-fit absolute left-0 bottom-0 hide">placeholder</p>
+		<div id="panel-holder" class=" absolute top-1/2 left-0">
+		</div>
+	</div>
+</template>

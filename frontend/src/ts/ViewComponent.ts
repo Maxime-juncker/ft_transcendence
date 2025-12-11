@@ -8,7 +8,6 @@ export class ViewComponent extends HTMLElement
 	connectedCallback()
 	{
 		const templateId = this.getAttribute('templateId') || '';
-		console.log(templateId);
 		const template = document.getElementById(templateId) as HTMLTemplateElement;
 		const clone = template.content.cloneNode(true);
 		this.innerHTML = "";

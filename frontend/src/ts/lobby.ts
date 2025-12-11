@@ -5,10 +5,19 @@ import { GameRouter } from "router.js";
 import { Router } from "app.js";
 import { ViewComponent } from "ViewComponent.js";
 
+	enum ListState
+	{
+		HIDDEN,
+		FRIEND,
+		USER,
+	}
+
 export class LobbyView extends ViewComponent
 {
-	private m_user:	MainUser;
-	private m_chat:	Chat;
+	private m_user:	MainUser = null;
+	private m_chat:	Chat = null;
+	private state:	ListState = ListState.HIDDEN;
+
 	constructor()
 	{
 		super();
@@ -16,8 +25,8 @@ export class LobbyView extends ViewComponent
 
 	public async enable()
 	{
-		console.warn("enabling lobby view");
-		this.m_user = new MainUser(document.getElementById("user-container"));
+		this.querySelector
+		this.m_user = new MainUser(this.querySelector("#user-container"));
 
 		await this.m_user.loginSession();
 
@@ -25,81 +34,74 @@ export class LobbyView extends ViewComponent
 			Router.Instance.navigateTo("/");
 		this.m_user.onLogout((user) => { Router.Instance.navigateTo("/"); })
 
-		const chatInput: HTMLInputElement = document.getElementById("chat-in") as HTMLInputElement;
-		this.m_chat = new Chat(this.m_user, document.getElementById("chat-out"), chatInput);
-		this.m_chat.onConnRefresh(fillUserList);
-		new GameRouter(this.m_user, this.m_chat);
+		const chatInput: HTMLInputElement = this.querySelector("#chat-in") as HTMLInputElement;
+		this.m_chat = new Chat(this.m_user, this.querySelector("#chat-out"), chatInput);
+		this.m_chat.onConnRefresh((conns: User[]) => this.fillUserList(conns));
+		new GameRouter(this.m_user, this.m_chat, this);
 
-		const userMenuContainer = document.getElementById("user-menu-container");
+		const userMenuContainer = this.querySelector("#user-menu-container");
 
-		document.getElementById("user-list-btn").addEventListener('click', () => {
-			showListContainer(ListState.USER, this.m_chat, this.m_user);
+		this.querySelector("#user-list-btn").addEventListener('click', () => {
+			this.showListContainer(ListState.USER, this.m_chat, this.m_user);
 		});
-		document.getElementById("friend-list-btn").addEventListener('click', () => {
-			showListContainer(ListState.FRIEND, this.m_chat, this.m_user);
+		this.querySelector("#friend-list-btn").addEventListener('click', () => {
+			this.showListContainer(ListState.FRIEND, this.m_chat, this.m_user);
 		});
-		document.getElementById("user-menu-btn").addEventListener('click', () => {
+		this.querySelector("#user-menu-btn").addEventListener('click', () => {
 			userMenuContainer.classList.toggle("hide");
 		});
 
-		document.getElementById("banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
-		document.getElementById("logout_btn")?.addEventListener("click", () => this.m_user.logout());
-		document.getElementById("profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
-		document.getElementById("settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
+		this.querySelector("#banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
+		this.querySelector("#logout_btn")?.addEventListener("click", () => this.m_user.logout());
+		this.querySelector("#profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
+		this.querySelector("#settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
 	}
 
 	public async disable()
 	{
 		// TODO: keep chat socket online when going to settings / profile
+		this.m_user.removeFromQueue();
 		this.m_chat.disconnect();
 	}
-}
 
-enum ListState
-{
-	HIDDEN,
-	FRIEND,
-	USER,
-}
+	private showListContainer(newState: ListState, chat: Chat, user: User)
+	{
+		const userListParent = this.querySelector("#user-list-parent");
+		
+		if (this.state != ListState.HIDDEN && this.state == newState)
+		{
+			userListParent.classList.add("hide");
+			this.state = ListState.HIDDEN;
+		}
+		else
+		{
+			this.state = newState;
+			userListParent.classList.remove("hide");
+		}
 
-var state = ListState.HIDDEN;
-function showListContainer(newState: ListState, chat: Chat, user: User)
-{
-	const userListParent = document.getElementById("user-list-parent");
-	
-	if (state != ListState.HIDDEN && state == newState)
-	{
-		userListParent.classList.add("hide");
-		state = ListState.HIDDEN;
-	}
-	else
-	{
-		state = newState;
-		userListParent.classList.remove("hide");
+		if (this.state == ListState.USER)
+			this.fillUserList(chat.conns);
+		if (this.state == ListState.FRIEND)
+			this.fillUserList(user.friends);
 	}
 
-	if (state == ListState.USER)
-		fillUserList(chat.conns);
-	if (state == ListState.FRIEND)
-		fillUserList(user.friends);
+	private fillUserList(users: User[])
+	{
+		const container = this.querySelector("#user-list-container") as HTMLElement;
+		container.innerHTML = "";
+
+		const text = document.createElement("p");
+		text.innerText = this.state == ListState.USER ? "user list" : "friends list";
+		text.style.color = "var(--white)";
+
+		users.forEach((conn: User) => {
+			const elt = new UserElement(conn, container, UserElementType.STANDARD, "user-template");
+			elt.clone.addEventListener("click", () => {
+				Router.Instance.navigateTo(`/profile?username=${conn.name}`)
+			});
+			elt.updateHtml(conn);
+		})
+		container.prepend(text);
+	}
 }
 
-function fillUserList(users: User[])
-{
-	const container = document.getElementById("user-list-container");
-	container.innerHTML = "";
-
-	const text = document.createElement("p");
-	text.innerText = state == ListState.USER ? "user list" : "friends list";
-	text.style.color = "var(--white)";
-
-	users.forEach((conn: User) => {
-		const elt = new UserElement(conn, container, UserElementType.STANDARD, "user-template");
-		elt.clone.addEventListener("click", () => {
-			console.log(`${window.location.origin}/profile?username=${conn.name}`);
-			Router.Instance.navigateTo(`/profile?username=${conn.name}`)
-		});
-		elt.updateHtml(conn);
-	})
-	container.prepend(text);
-}

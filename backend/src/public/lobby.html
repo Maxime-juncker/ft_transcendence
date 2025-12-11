@@ -1,167 +1,166 @@
-	<template id="lobby-template">
+<template id="lobby-template">
 
-		<template id="user-template">
-			<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-[500px] p-2 hover:bg-[--darker] active:bg-[--darkest]">
-				<div class="flex flex-row items-center gap-2">
-					<div class="relative">
-						<img
-							id="avatar-img"
-							src="" 
-							alt="Profile" 
-							class="avatar-img"/>
-						<div id="user-status" class="user-status right-0 top-[70%]"></div>
-					</div>
-					<div id="avatar-name" class="text-[100%] font-bold select-none">
-						user
-					</div>
-				</div>
-			</div>
-		</template>
-
-		<template id="chat-item-template">
-			<div class="w-full flex gap-3 px-2 my-1">
-				<h1 class="font-bold text-left" id="sender"></h1>	
-				<pre class="font-medium text-left whitespace-pre-wrap break-all" id="message"></pre>
-			</div>
-		</template>
-
-		<template id="user-game-template">
-			<div id="user-profile"
-				class="user-profile">
-				<div id="avatar-container">
-					<img
-						id="avatar-img"
-						src="" 
-						alt="Profile" 
-						class="avatar border-[--white] border-2"/>
-
-					<div id="avatar-name">
-						user
-					</div>
-					<div id="user-status" class="user-status"> </div>
-				</div>
-			</div>
-		</template>
-
-
-		<template id="user-profile-template">
-			<div class="user-menu relative">
-				<select id="status"></select>
-				<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
-					<p id="profile_btn" class="btn text-left cursor-default">profile</p>
-					<p id="settings_btn" class="btn text-left cursor-default">settings</p>
-					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
-				</div>
-				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
-					<div id="avatar-name" class="text-[100%] font-bold select-none">
-						user
-					</div>
+	<template id="user-template">
+		<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-[500px] p-2 hover:bg-[--darker] active:bg-[--darkest]">
+			<div class="flex flex-row items-center gap-2">
+				<div class="relative">
 					<img
 						id="avatar-img"
 						src="" 
 						alt="Profile" 
 						class="avatar-img"/>
-					<div id="user-status" class="user-status right-0 top-[60%]"></div>
+					<div id="user-status" class="user-status right-0 top-[70%]"></div>
+				</div>
+				<div id="avatar-name" class="text-[100%] font-bold select-none">
+					user
 				</div>
 			</div>
-		</template>
-
-		<div class="h-full">
-
-			<header class="header-small">
-				<div id="banner" class="banner-small">
-					<h1 class="select-none">FT_TRANSCENDENCE</h1>
-					<div class="small-lines">
-						<div class="line bg-(--red)"></div>
-						<div class="line bg-(--yellow)"></div>
-						<div class="line bg-(--blue)"></div>
-						<div class="line bg-(--green)"></div>
-					</div>
-				</div>
-				<div id="user-container">
-				</div>
-			</header>
-
-			<div class="h-[90%] w-full flex flex-col gap-5 py-15 sm:flex-row md:px-5 lg:px-20">
-				<div class="">
-					<button id="user-list-btn" class="button-empty border-[--purple] text-[--purple]">users</button>
-					<button id="friend-list-btn" class="button-empty mt-3 border-[--purple] text-[--purple]">friends</button>
-				</div>
-
-				<div class="relative w-[35%] h-full border-4 border-[--blue] flex flex-col">
-					<div id="user-list-parent" class="hide absolute top-0 left-0 w-full z-2 h-full bg-[--dark]">
-						<div id="user-list-container" class="flex-1 flex flex-col items-center py-4 gap-2">
-						</div>
-					</div>
-					<div id="chat-out" class="flex h-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-[--darker]">
-					</div>	
-					<input id="chat-in" wrap="soft" placeholder="enter message..."
-						class="h-15 py-2 px-3 bg-[--dark] focus:outline-none
-						border-t-4 border-t-[--blue] border-b-0 hover:brightness-1">
-				</div>
-
-				<div class="border-4 flex flex-col border-[--red] w-[65%]">
-					<div class="w-full h-[85%]">
-						<section id="home" class="page px-[30%] bg-[--darkest] ">
-							<button class="btn w-full text-6xl font-bold" id="game"></button>
-							<button class="btn w-full text-6xl font-bold" id="tournament"></button>
-						</section>
-
-						<section id="game-menu" class="page px-[30%] bg-[--darkest]">
-							<button class="btn w-full text-6xl font-bold" id="local-game"></button>
-							<button class="btn w-full text-6xl font-bold" id="online-game"></button>
-							<button class="btn w-full text-6xl font-bold" id="bot-game"></button>
-						</section>
-
-						<section id="game" class="relative game page bg-[--darkest] w-full box-sizing: content-box overflow-hidden flex justify-center align-middle items-center">
-							<div id="paddle-left" class="absolute h-[15%]">
-								<div class="relative h-full -top-[50%]">
-									<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
-									<div class="relative bg-[--blue] w-2 h-full">
-									</div>
-								</div>
-							</div>
-							<div id="paddle-right" class="absolute h-[15%]">
-								<div class="relative h-full -top-[50%]">
-									<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
-									<div class="relative bg-[--blue] w-2 h-full">
-									</div>
-								</div>
-							</div>
-
-							<div id="net" class="absolute left-1/2 top-0 -translate-x-1/2 h-full border-l-[0.35vw] border-dashed border-[--yellow]"></div>
-							<div id="ball" class="absolute">
-								<div class="relative">
-									<div class="absolute inset-0 aspect-square bg-[--red] w-[30px] h-[30px] opacity-40 -left-[50%] -top-[50%] blur-md rounded-xl"></div>
-									<div class="relative bg-[--red] aspect-square w-[15px] h-[15px]">
-									</div>
-								</div>
-							</div>
-							<p id="score-left" class="absolute text-[15vw] left-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
-							<p id="score-right" class="absolute text-[15vw] right-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
-							<p id="countdown" class="text-[3vw] text-[--darker] bg-[--white] rounded-none p-1 px-5"></p>
-							<p id="winner-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
-							<p id="play-again-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
-							<p id="searching-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
-						</section>
-
-						<section id="tournament-menu">
-							<h2 id="title"></h2>
-							<button id="four"></button>
-							<button id="eight"></button>
-							<button id="sixteen"></button>
-							<button id="thirty-two"></button>
-						</section>
-
-						<section id="tournament">
-							<h2>Oups.. Working on it, comeback later</h2>
-						</section>
-					</div>
-					<div id="player-container" class="h-[15%] w-full bg-[--dark] border-t-4 border-t-[--red]
-						flex flex-row-reverse justify-around items-center align-middle">
-					</div>
-				</div>
-
-	<!-- <script>var exports = {};</script> -->
-	<!-- <script type="module" src="./dist/lobby.js"></script> -->
+		</div>
 	</template>
+
+	<template id="chat-item-template">
+		<div class="w-full flex gap-3 px-2 my-1">
+			<h1 class="font-bold text-left" id="sender"></h1>	
+			<pre class="font-medium text-left whitespace-pre-wrap break-all" id="message"></pre>
+		</div>
+	</template>
+
+	<template id="user-game-template">
+		<div id="user-profile"
+			class="user-profile">
+			<div id="avatar-container">
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar border-[--white] border-2"/>
+
+				<div id="avatar-name">
+					user
+				</div>
+				<div id="user-status" class="user-status"> </div>
+			</div>
+		</div>
+	</template>
+
+
+	<template id="user-profile-template">
+		<div class="user-menu relative">
+			<select id="status"></select>
+			<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
+				<p id="profile_btn" class="btn text-left cursor-default">profile</p>
+				<p id="settings_btn" class="btn text-left cursor-default">settings</p>
+				<p id="logout_btn" class="btn text-left cursor-default">logout</p>
+			</div>
+			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
+				<div id="avatar-name" class="text-[100%] font-bold select-none">
+					user
+				</div>
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar-img"/>
+				<div id="user-status" class="user-status right-0 top-[60%]"></div>
+			</div>
+		</div>
+	</template>
+
+	<div class="h-full">
+
+		<header class="header-small">
+			<div id="banner" class="banner-small">
+				<h1 class="select-none">FT_TRANSCENDENCE</h1>
+				<div class="small-lines">
+					<div class="line bg-(--red)"></div>
+					<div class="line bg-(--yellow)"></div>
+					<div class="line bg-(--blue)"></div>
+					<div class="line bg-(--green)"></div>
+				</div>
+			</div>
+			<div id="user-container">
+			</div>
+		</header>
+
+		<div class="h-[90%] w-full flex flex-col gap-5 py-15 sm:flex-row md:px-5 lg:px-20">
+			<div class="">
+				<button id="user-list-btn" class="button-empty border-[--purple] text-[--purple]">users</button>
+				<button id="friend-list-btn" class="button-empty mt-3 border-[--purple] text-[--purple]">friends</button>
+			</div>
+
+			<div class="relative w-[35%] h-full border-4 border-[--blue] flex flex-col">
+				<div id="user-list-parent" class="hide absolute top-0 left-0 w-full z-2 h-full bg-[--dark]">
+					<div id="user-list-container" class="flex-1 flex flex-col items-center py-4 gap-2">
+					</div>
+				</div>
+				<div id="chat-out" class="flex h-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-[--darker]">
+				</div>	
+				<input id="chat-in" wrap="soft" placeholder="enter message..."
+					class="h-15 py-2 px-3 bg-[--dark] focus:outline-none
+					border-t-4 border-t-[--blue] border-b-0 hover:brightness-1">
+			</div>
+
+			<div class="border-4 flex flex-col border-[--red] w-[65%]">
+				<div class="w-full h-[85%]">
+					<section id="home" class="page px-[30%] bg-[--darkest] ">
+						<button class="btn w-full text-6xl font-bold" id="game"></button>
+						<button class="btn w-full text-6xl font-bold" id="tournament"></button>
+					</section>
+
+					<section id="game-menu" class="page px-[30%] bg-[--darkest]">
+						<button class="btn w-full text-6xl font-bold" id="local-game"></button>
+						<button class="btn w-full text-6xl font-bold" id="online-game"></button>
+						<button class="btn w-full text-6xl font-bold" id="bot-game"></button>
+					</section>
+
+					<section id="game" class="relative game page bg-[--darkest] w-full box-sizing: content-box overflow-hidden flex justify-center align-middle items-center">
+						<div id="paddle-left" class="absolute h-[15%]">
+							<div class="relative h-full -top-[50%]">
+								<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+								<div class="relative bg-[--blue] w-2 h-full">
+								</div>
+							</div>
+						</div>
+						<div id="paddle-right" class="absolute h-[15%]">
+							<div class="relative h-full -top-[50%]">
+								<div class="absolute inset-0 bg-[--blue] w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+								<div class="relative bg-[--blue] w-2 h-full">
+								</div>
+							</div>
+						</div>
+
+						<div id="net" class="absolute left-1/2 top-0 -translate-x-1/2 h-full border-l-[0.35vw] border-dashed border-[--yellow]"></div>
+						<div id="ball" class="absolute">
+							<div class="relative">
+								<div class="absolute inset-0 aspect-square bg-[--red] w-[30px] h-[30px] opacity-40 -left-[50%] -top-[50%] blur-md rounded-xl"></div>
+								<div class="relative bg-[--red] aspect-square w-[15px] h-[15px]">
+								</div>
+							</div>
+						</div>
+						<p id="score-left" class="absolute text-[15vw] left-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
+						<p id="score-right" class="absolute text-[15vw] right-0 opacity-[0.25] text-[--red] w-[50%] justify-center"></p>
+						<p id="countdown" class="text-[3vw] text-[--darker] bg-[--white] rounded-none p-1 px-5"></p>
+						<p id="winner-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
+						<p id="play-again-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
+						<p id="searching-msg" class="text-[3vw] text-[--white] bg-[--darker] rounded-none p-1 px-5"></p>
+					</section>
+
+					<section id="tournament-menu">
+						<h2 id="title"></h2>
+						<button id="four"></button>
+						<button id="eight"></button>
+						<button id="sixteen"></button>
+						<button id="thirty-two"></button>
+					</section>
+
+					<section id="tournament">
+						<h2>Oups.. Working on it, comeback later</h2>
+					</section>
+				</div>
+				<div id="player-container" class="h-[15%] w-full bg-[--dark] border-t-4 border-t-[--red]
+					flex flex-row-reverse justify-around items-center align-middle">
+				</div>
+				<script>var exports = {};</script>
+				<script type="module" src="dist/lobby.js"></script>
+			</div>
+</template>

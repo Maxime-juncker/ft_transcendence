@@ -9,18 +9,41 @@ export class Router
 {
 	private routes: Route[];
 	private static m_instance: Router = null;
+	private m_view: ViewComponent = null;
 	
 	public static get Instance(): Router { return Router.m_instance; }
+	public get view(): ViewComponent { return this.m_view; }
+	public set view(view: ViewComponent)
+	{
+		const app = document.getElementById("app");
+
+		// clearing childrens
+		for (let i = 0; i < app.children.length; i++)
+		{
+			const view = app.children[i] as ViewComponent;
+			view.disable();
+			view.remove();
+		}
+		app.innerHTML = "";
+		app.prepend(view);
+		this.m_view = view;
+		view.enable();
+	}
 
 	constructor(routes: Route[])
 	{
 		if (Router.m_instance == null)
 			Router.m_instance = this;
 
-		console.log(Router.Instance)
-
 		this.routes = routes;
 		this.loadInitialRoute();
+	}
+
+	public static getElementById(id: string): HTMLElement
+	{
+		if (Router.Instance === null)
+			return null;
+		return Router.Instance.view.querySelector(`#${id}`);
 	}
 
 	public getCurrentURL()
@@ -31,7 +54,8 @@ export class Router
 
 	public matchUrlToRoute(urlSegs: string)
 	{
-		const matchedRoute = this.routes.find(route => route.path === urlSegs);
+		const urlNoQuery = urlSegs.split('?');
+		const matchedRoute = this.routes.find(route => route.path === urlNoQuery[0]);
 		return matchedRoute;
 	}
 
@@ -51,7 +75,6 @@ export class Router
 
 	public navigateTo(path: string)
 	{
-		console.log(path);
 		window.history.pushState({}, '', path);
 		this.loadRoute(path);
 	}
@@ -59,21 +82,9 @@ export class Router
 
 function loadPage(componentName: string, templateId: string)
 {
-	const app = document.getElementById("app");
-	
-	if (app.children.length > 0)
-	{
-		const oldView = app.children[0] as ViewComponent;
-		oldView.disable();
-		oldView.remove();
-	}
-	app.innerHTML = "";
-
 	const view = document.createElement(componentName) as ViewComponent;
 	view.setAttribute("templateId", templateId);
-
-	app.prepend(view);
-	view.enable();
+	Router.Instance.view = view;
 }
 
 type Route = {

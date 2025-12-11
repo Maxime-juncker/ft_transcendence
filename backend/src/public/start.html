@@ -1,67 +1,64 @@
-	<template id="start-template">
-		<template id="user-profile-template">
-				<div id="user-profile"
-					class="user-profile">
-					<div id="avatar-container">
-						<img
-						id="avatar-img"
-						src="" 
-						alt="Profile" 
-						class="avatar"/>
-						
-						<div id="avatar-name">
-							user
-						</div>
-						<div id="user-status" class="user-status"> </div>
-					</div>
+<template id="start-template">
+	<template id="user-profile-template">
+		<div id="user-profile"
+			class="user-profile">
+			<div id="avatar-container">
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar"/>
 
-					<div id="user-stats">
-						<h1>elo: 500p</h1>
-						<h1>W/L: 42%</h1>
-					</div>
-				<select id="status"></select>
+				<div id="avatar-name">
+					user
 				</div>
-		</template>
+				<div id="user-status" class="user-status"> </div>
+			</div>
 
-		<div class="h-full flex relative">
-			<header class="absolute top-[7%]">
-				<div class="banner">
-					<div class="line bg-(--red)"></div>
-					<div class="line bg-(--yellow)"></div>
-					<div class="line bg-(--blue)"></div>
-					<div class="line bg-(--green)"></div>
-				</div>
-				<div class="banner-text">
-					<h1>
-						FT_TRANSCENDENCE
-					</h1>
-				</div>
-			</header>
-			
-			<section id="main" class="main">
-
-
-				<div class="banner" style="
-						position: absolute; rotate: -45deg;
-						transform: translateY(40vw)">
-					<div class="line bg-(--red)" id="line1"></div>
-					<div class="line bg-(--yellow)" id="line2"></div>
-					<div class="line bg-(--blue)" id="line3"></div>
-					<div class="line bg-(--green)" id="line4"></div>
-				</div>
-				<div id="user" class="user">
-					<h1 id="profile-header">user</h1>
-					<div id="profile-container" class="profile-container"></div>
-				</div>
-				<div class="play-menu">
-					<button class="btn" id="play_btn">PLAY</button>
-				</div>
-				<div id="leaderboard">
-					tmp
-				</div>
-			</section>
+			<div id="user-stats">
+				<h1>elo: 500p</h1>
+				<h1>W/L: 42%</h1>
+			</div>
+			<select id="status"></select>
 		</div>
-
-<!-- <script>var exports = {};</script> -->
-<!-- <script type="module" src="./dist/start.js"></script> -->
 	</template>
+
+	<div class="h-full flex relative">
+		<header class="absolute top-[7%]">
+			<div class="banner">
+				<div class="line bg-(--red)"></div>
+				<div class="line bg-(--yellow)"></div>
+				<div class="line bg-(--blue)"></div>
+				<div class="line bg-(--green)"></div>
+			</div>
+			<div class="banner-text">
+				<h1>
+					FT_TRANSCENDENCE
+				</h1>
+			</div>
+		</header>
+
+		<section id="main" class="main">
+
+
+			<div class="banner" style="
+				position: absolute; rotate: -45deg;
+				transform: translateY(40vw)">
+				<div class="line bg-(--red)" id="line1"></div>
+				<div class="line bg-(--yellow)" id="line2"></div>
+				<div class="line bg-(--blue)" id="line3"></div>
+				<div class="line bg-(--green)" id="line4"></div>
+			</div>
+			<div id="user" class="user">
+				<h1 id="profile-header">user</h1>
+				<div id="profile-container" class="profile-container"></div>
+			</div>
+			<div class="play-menu">
+				<button class="btn" id="play_btn">PLAY</button>
+			</div>
+			<div id="leaderboard">
+				tmp
+			</div>
+		</section>
+	</div>
+</template>

@@ -1,4 +1,5 @@
 import { GameRouter } from '../router';
+import { Router } from 'app.js';
 
 export class Home
 {
@@ -6,8 +7,8 @@ export class Home
 	private static readonly BUTTON_2: string = 'tournament';
 
 	private router: GameRouter;
-	private button1Element = document.getElementById('game') as HTMLButtonElement;
-	private button2Element = document.getElementById('tournament') as HTMLButtonElement;
+	private button1Element = Router.getElementById('game') as HTMLButtonElement;
+	private button2Element = Router.getElementById('tournament') as HTMLButtonElement;
 
 	constructor(router: GameRouter)
 	{
@@ -34,13 +35,13 @@ export class Home
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('game')?.addEventListener('click', this.menuGameClickHandler);
-		document.getElementById('tournament')?.addEventListener('click', this.menuTournamentClickHandler);
+		Router.getElementById('game')?.addEventListener('click', this.menuGameClickHandler);
+		Router.getElementById('tournament')?.addEventListener('click', this.menuTournamentClickHandler);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('game')?.removeEventListener('click', this.menuGameClickHandler);
-		document.getElementById('tournament')?.removeEventListener('click', this.menuTournamentClickHandler);
+		Router.getElementById('game')?.removeEventListener('click', this.menuGameClickHandler);
+		Router.getElementById('tournament')?.removeEventListener('click', this.menuTournamentClickHandler);
 	}
 }
