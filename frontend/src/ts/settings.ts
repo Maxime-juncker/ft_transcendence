@@ -82,6 +82,11 @@ export class SettingsView extends ViewComponent
 		this.hideForbiddenElement();
 	}
 
+	public async disable()
+	{
+		this.querySelector("#user-container").innerHTML = "";
+	}
+
 	private hideForbiddenElement()
 	{
 		if (this.m_user.source !== AuthSource.INTERNAL)

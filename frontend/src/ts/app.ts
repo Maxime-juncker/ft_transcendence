@@ -7,27 +7,29 @@ import { ProfileView } from "profile.js"
 
 export class Router
 {
-	private routes: Route[];
 	private static m_instance: Router = null;
-	private m_view: ViewComponent = null;
+
+	private m_routes:		Route[];
+	private m_activeView:	ViewComponent = null;
+	private m_views:		Map<string, ViewComponent>;
+	private m_app:			HTMLElement = null;
 	
 	public static get Instance(): Router { return Router.m_instance; }
-	public get view(): ViewComponent { return this.m_view; }
-	public set view(view: ViewComponent)
-	{
-		const app = document.getElementById("app");
+	public get activeView(): ViewComponent { return this.m_activeView; }
 
-		// clearing childrens
-		for (let i = 0; i < app.children.length; i++)
+	public async setView(viewName: string)
+	{
+		// disable previous view
+		if (this.m_activeView !== null)
 		{
-			const view = app.children[i] as ViewComponent;
-			view.disable();
-			view.remove();
+			await this.m_activeView.disable();
+			this.m_activeView.style.display = "none";
 		}
-		app.innerHTML = "";
-		app.prepend(view);
-		this.m_view = view;
-		view.enable();
+
+		this.m_activeView = this.m_views.get(viewName);
+		this.m_activeView.enable();
+		this.m_activeView.style.display = "block";
+		this.m_activeView.style.height = "100%";
 	}
 
 	constructor(routes: Route[])
@@ -35,7 +37,13 @@ export class Router
 		if (Router.m_instance == null)
 			Router.m_instance = this;
 
-		this.routes = routes;
+		this.m_app = document.getElementById("app");
+		if (this.m_app === null)
+			throw new Error("no app container found. Abording");
+
+		this.m_views = new Map<string, ViewComponent>();
+		this.m_routes = routes;
+		this.createRoutes();
 		this.loadInitialRoute();
 	}
 
@@ -43,7 +51,9 @@ export class Router
 	{
 		if (Router.Instance === null)
 			return null;
-		return Router.Instance.view.querySelector(`#${id}`);
+		if (Router.Instance.activeView === null)
+			return Router.Instance.m_app.querySelector(`#${id}`);
+		return Router.Instance.activeView.querySelector(`#${id}`);
 	}
 
 	public getCurrentURL()
@@ -52,10 +62,10 @@ export class Router
 		return path;
 	}
 
-	public matchUrlToRoute(urlSegs: string)
+	public matchUrlToRoute(urlSegs: string): Route
 	{
 		const urlNoQuery = urlSegs.split('?');
-		const matchedRoute = this.routes.find(route => route.path === urlNoQuery[0]);
+		const matchedRoute = this.m_routes.find(route => route.path === urlNoQuery[0]);
 		return matchedRoute;
 	}
 
@@ -68,9 +78,9 @@ export class Router
 	{
 		const matchRoute = this.matchUrlToRoute(url);
 		if (!matchRoute)
-			throw new Error(`route not found: ${url}`);
+			throw new Error(`route not found: ${url}`); // TODO: add 404 page
 	
-		matchRoute.callback();
+		this.setView(matchRoute.path);
 	}
 
 	public navigateTo(path: string)
@@ -78,26 +88,35 @@ export class Router
 		window.history.pushState({}, '', path);
 		this.loadRoute(path);
 	}
+
+	// function to create all route in app container
+	public createRoutes()
+	{
+		this.m_routes.forEach((route: Route) => {
+			const view = document.createElement(route.viewName) as ViewComponent;
+			view.setAttribute("templateId", route.templateId);
+
+			this.m_app.append(view);
+
+			view.style.display = "none"; // hide all route
+			this.m_views.set(route.path, view);
+		});
+	}
 }
 
-function loadPage(componentName: string, templateId: string)
-{
-	const view = document.createElement(componentName) as ViewComponent;
-	view.setAttribute("templateId", templateId);
-	Router.Instance.view = view;
-}
 
 type Route = {
-	path: string,
-	callback: () => void;
+	path:		string,
+	viewName:	string,
+	templateId: string,
 }
 
 const routes: Route[] = [
-	{ path: "/", callback: () => loadPage("start-view", "start-template")},
-	{ path: "/login", callback: () => loadPage("login-view", "login-template")},
-	{ path: "/lobby", callback: () => loadPage("lobby-view", "lobby-template")},
-	{ path: "/profile", callback: () => loadPage("profile-view", "profile-template")},
-	{ path: "/settings", callback: () => loadPage("settings-view", "settings-template")},
+	{ path: "/",			viewName: "start-view",		templateId: "start-template" },
+	{ path: "/login",		viewName: "login-view",		templateId: "login-template" },
+	{ path: "/lobby",		viewName: "lobby-view",		templateId: "lobby-template" },
+	{ path: "/profile",		viewName: "profile-view",	templateId: "profile-template" },
+	{ path: "/settings",	viewName: "settings-view",	templateId: "settings-template" },
 ]
 
 customElements.define('view-component', ViewComponent);

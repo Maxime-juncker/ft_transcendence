@@ -33,7 +33,7 @@ export class ProfileView extends ViewComponent
 		const stats: Stats = this.m_user.stats;
 		new FriendManager(this.m_user, "pndg-container", "friend-container", this.m_main);
 		this.setBtn();
-		addMatch(this.m_user);
+		this.addMatch(this.m_user);
 
 		const profile_extended = this.querySelector("#profile-extended");
 		UserElement.setStatusColor(this.m_user, profile_extended.querySelector("#user-status"));
@@ -59,12 +59,16 @@ export class ProfileView extends ViewComponent
 		this.querySelector("#user-menu-btn").addEventListener('click', () => {
 			userMenuContainer.classList.toggle("hide");
 		});
+	}
 
+	public async disable()
+	{
+		this.querySelector("#user-container").innerHTML = "";
 	}
 
 	private async setBtn()
 	{
-		replaceBtn();
+		this.replaceBtn();
 
 		const addBtn = this.querySelector("#main-btn-friend") as HTMLElement;
 		const blockBtn = this.querySelector("#main-btn-block") as HTMLElement;
@@ -109,66 +113,67 @@ export class ProfileView extends ViewComponent
 			addBtn.addEventListener("click", async () => { await this.m_main.addFriend(this.m_user.name); this.setBtn(); });
 		}
 	}
-}
 
-function replaceBtn()
-{
-	const addBtn = this.querySelector("#main-btn-friend");
-	const blockBtn = this.querySelector("#main-btn-block");
-
-	const clone = addBtn.cloneNode(true);
-
-	addBtn.parentNode.replaceChild(clone, addBtn);
-}
-
-async function addMatch(user: User)
-{
-	const histContainer = this.querySelector("#history-container");
-
-	var response = await fetch(`/api/user/get_history_name/${user.name}`, { method : "GET" })
-	const code = response.status;
-
-	if (code == 404)
+	private replaceBtn()
 	{
-		const text = document.createElement("p");
+		const addBtn = this.querySelector("#main-btn-friend");
+		const blockBtn = this.querySelector("#main-btn-block");
 
-		text.innerText = "no recorded history";
-		histContainer.append(text);
-		return ;
+		const clone = addBtn.cloneNode(true);
+
+		addBtn.parentNode.replaceChild(clone, addBtn);
 	}
 
-	if (code != 200)
-		return ;
+	private async addMatch(user: User)
+	{
+		const histContainer = this.querySelector("#history-container");
 
-	var data = await response.json();
-	for (let i = 0; i  < data.length; i ++) {
-		const elt = data[i];
-		const clone = await addMatchItem(user, elt);
-		histContainer.append(clone);
+		var response = await fetch(`/api/user/get_history_name/${user.name}`, { method : "GET" })
+		const code = response.status;
+
+		if (code == 404)
+		{
+			const text = document.createElement("p");
+
+			text.innerText = "no recorded history";
+			histContainer.append(text);
+			return ;
+		}
+
+		if (code != 200)
+			return ;
+
+		var data = await response.json();
+		for (let i = 0; i  < data.length; i ++) {
+			const elt = data[i];
+			const clone = await this.addMatchItem(user, elt);
+			histContainer.append(clone);
+		}
 	}
-}
 
-async function addMatchItem(user: User, json: any): Promise<HTMLElement>
-{
-	const template = this.querySelector("#match-template") as HTMLTemplateElement;
-	const clone: HTMLElement = template.content.cloneNode(true) as HTMLElement;
+	private async addMatchItem(user: User, json: any): Promise<HTMLElement>
+	{
+		const template = this.querySelector("#match-template") as HTMLTemplateElement;
+		const clone: HTMLElement = template.content.cloneNode(true) as HTMLElement;
 
-	const matchup = clone.querySelector("#matchup") as HTMLElement;
-	const status = clone.querySelector("#status") as HTMLElement;
-	const score = clone.querySelector("#score") as HTMLElement;
-	const date = clone.querySelector("#date") as HTMLElement;
+		const matchup = clone.querySelector("#matchup") as HTMLElement;
+		const status = clone.querySelector("#status") as HTMLElement;
+		const score = clone.querySelector("#score") as HTMLElement;
+		const date = clone.querySelector("#date") as HTMLElement;
 
-	const player2Id = json.user1_id === user.id ? json.user2_id : json.user1_id;
-	const player2Score = json.user1_id === user.id ? json.user2_score: json.user1_score;
-	const player1Score = json.user1_id === user.id ? json.user1_score: json.user2_score;
+		const player2Id = json.user1_id === user.id ? json.user2_id : json.user1_id;
+		const player2Score = json.user1_id === user.id ? json.user2_score: json.user1_score;
+		const player1Score = json.user1_id === user.id ? json.user1_score: json.user2_score;
 
-	const player2: User = await getUserFromId(player2Id);
-	matchup.innerText = `${user.name} - ${player2.name}`;
-	status.innerText = `${player1Score > player2Score ? "won" : "lost" }`;
-	status.style.color = `${player1Score > player2Score ? "var(--green)" : "var(--red)" }`;
-	score.innerText = `${player1Score} - ${player2Score}`;
-	date.innerText = json.created_at;
+		const player2: User = await getUserFromId(player2Id);
+		matchup.innerText = `${user.name} - ${player2.name}`;
+		status.innerText = `${player1Score > player2Score ? "won" : "lost" }`;
+		status.style.color = `${player1Score > player2Score ? "var(--green)" : "var(--red)" }`;
+		score.innerText = `${player1Score} - ${player2Score}`;
+		date.innerText = json.created_at;
 
-	return clone;
+		return clone;
+	}
+
 }
 
