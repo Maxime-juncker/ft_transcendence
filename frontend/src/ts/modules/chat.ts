@@ -192,11 +192,11 @@ export class Chat
 		user.onLogout((user: MainUser) => this.resetChat(user));
 
 		// TODO: merge with resetChat
-		console.log(`connecting to chat websocket: ${window.location.host}`)
+		// console.log(`connecting to chat websocket: ${window.location.host}`)
 		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${user.id}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
-		chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
+		Router.addEventListener(chatInput, "keypress", (e) => this.sendMsgFromInput(e));
 	}
 
 	public onGameCreated(cb: ((json: any) => void)) { this.m_onStartGame.push(cb); }
@@ -210,7 +210,6 @@ export class Chat
 
 	public resetChat(user: MainUser) : void
 	{
-		console.log(`connecting to chat websocket: ${window.location.host}`)
 		this.m_ws.close();
 		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.id}`);
 

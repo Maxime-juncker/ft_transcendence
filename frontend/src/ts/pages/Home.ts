@@ -23,25 +23,14 @@ export class Home
 		this.button2Element.textContent = Home.BUTTON_2;
 	}
 
-	private menuGameClickHandler = () =>
-	{
-		this.router.navigateTo('game-menu', '');
-	}
-
-	private menuTournamentClickHandler = () =>
-	{
-		this.router.navigateTo('tournament-menu', '');
-	}
 
 	private setUpDocumentEventListeners(): void
 	{
-		Router.getElementById('game')?.addEventListener('click', this.menuGameClickHandler);
-		Router.getElementById('tournament')?.addEventListener('click', this.menuTournamentClickHandler);
 	}
 
 	public destroy(): void
 	{
-		Router.getElementById('game')?.removeEventListener('click', this.menuGameClickHandler);
-		Router.getElementById('tournament')?.removeEventListener('click', this.menuTournamentClickHandler);
+		// Router.removeEventListener(Router.getElementById('game'), "click", this.menuGameClickHandler);
+		// Router.removeEventListener(Router.getElementById('tournament'), "click", this.menuTournamentClickHandler);
 	}
 }

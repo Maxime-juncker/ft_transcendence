@@ -5,12 +5,12 @@ export class ServerSideRendering
 {
 	private server: FastifyInstance;
 
-	private readonly pagePath: string = "/var/www/server/public";
 	private readonly htmlhead = `
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>
 	<meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
 	<link href="/public/dist/global.css" rel="stylesheet">
 	<link href="/public/test.css" rel="stylesheet">
@@ -28,7 +28,7 @@ export class ServerSideRendering
 		<div class="bootup-mask"></div>
 		<div class="bootup-lines"></div>
 		<h1 class="bootup-text">HDMI-1</h1>
-		<div class="crt h-full">
+		<div class="crt h-screen">
 			<div class="crt-mask"></div> 
 			<div id="app" class="h-full">
 
@@ -43,7 +43,8 @@ export class ServerSideRendering
 </html>
 `
 
-	private m_spaPage: string = "";
+	private readonly pagePath: string = "/var/www/server/public";
+	private m_spaPage: string = ""; // final spa to be sent to clients
 	
 	constructor(server: FastifyInstance, routes: string[])
 	{
@@ -52,6 +53,10 @@ export class ServerSideRendering
 		this.constructSPA(routes);
 	}
 
+	/**
+	 * build a spa based html file in routes
+	 * @param {string[]} routes all files to load
+	 */
 	private constructSPA(routes: string[])
 	{
 		this.m_spaPage = this.htmlhead;

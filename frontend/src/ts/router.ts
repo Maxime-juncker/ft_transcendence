@@ -7,6 +7,7 @@ import { User } from "User.js";
 import { Chat } from '@modules/chat';
 import { UserElement } from 'UserElement.js';
 import { ViewComponent } from 'ViewComponent.js';
+import { Router } from 'app.js';
 
 export class GameRouter
 {
@@ -25,6 +26,7 @@ export class GameRouter
 	m_user:			User;
 	m_player1:		UserElement;
 	m_chat:			Chat;
+	m_gameMenu:		GameMenu = null;
 
 	m_view:		ViewComponent;
 
@@ -39,7 +41,37 @@ export class GameRouter
 		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
 
-		// setInterval(() => console.log("hello"), 60);
+		view.addTrackListener(view.querySelector('#local-game'), "click", this.localGameClickHandler);
+		view.addTrackListener(view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		view.addTrackListener(view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		view.addTrackListener(view.querySelector('#game'), "click", this.menuGameClickHandler);
+		view.addTrackListener(view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
+	}
+
+	private menuGameClickHandler = () =>
+	{
+		this.navigateTo('game-menu', '');
+	}
+
+	private menuTournamentClickHandler = () =>
+	{
+		this.navigateTo('tournament-menu', '');
+	}
+
+	private localGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'local');
+	}
+
+	private onlineGameClickHandler = () =>
+	{
+		console.log("navi to online");
+		this.navigateTo('game', 'online');
+	}
+
+	private botGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'bot');
 	}
 
 	private loadPages(): void
@@ -59,11 +91,11 @@ export class GameRouter
 
 	private setUpWindowEventListeners(): void
 	{
-		window.addEventListener('popstate', (e) =>
-		{
-			const page = e.state?.page || 'home';
-			this.showPage(page, null);
-		});
+ 
+		// Router.Instance.onPopestate((e) => {
+		// 		const page = e.state?.page || 'home';
+		// 		this.showPage(page, null);
+		// 	});
 
 		window.addEventListener('keydown', async (e) =>
 		{
@@ -117,8 +149,10 @@ export class GameRouter
 		this.pages.get(this.currentPage)!.classList.add('hidden');
 		this.pages.get(page)!.classList.remove('hidden');
 		this.currentPage = page;
+		console.log(page);
 		this.currentClass = this.getClass(mode);
 	}
+
 
 	private getClass(mode: string)
 	{
@@ -127,7 +161,8 @@ export class GameRouter
 			case 'home':
 				return (new Home(this));
 			case 'game-menu':
-				return (new GameMenu(this));
+				this.m_gameMenu = new GameMenu(this)
+				return this.m_gameMenu;
 			case 'game':
 				return (new GameClient(this, mode!, this.m_user, this.m_chat));
 			case 'tournament-menu':

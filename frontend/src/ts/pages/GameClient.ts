@@ -167,7 +167,6 @@ export class GameClient extends Utils
 		{
 			window.addEventListener('beforeunload', this.beforeUnloadHandler);
 
-			console.log("hello")
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',

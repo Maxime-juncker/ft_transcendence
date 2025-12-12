@@ -40,6 +40,12 @@ export class FriendManager
 			this.m_pndgContainer.style.display = "none";
 			return ;
 		}
+		else
+		{
+			if (Router.getElementById("request-title"))
+				Router.getElementById("request-title").style.display = "flex";
+			this.m_pndgContainer.style.display = "flex";
+		}
 
 		pdng.forEach(elt => {
 			if (elt.type !== UserElementType.REQUEST)

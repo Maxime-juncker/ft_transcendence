@@ -52,11 +52,11 @@ export class ProfileView extends ViewComponent
 		(<HTMLElement>this.querySelector("#max-elo")).innerText			= `${stats.maxElo}p`;
 
 		const userMenuContainer = this.querySelector("#user-menu-container");
-		this.querySelector("#banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
-		this.querySelector("#logout_btn")?.addEventListener("click", () => this.m_main.logout());
-		this.querySelector("#profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
-		this.querySelector("#settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
-		this.querySelector("#user-menu-btn").addEventListener('click', () => {
+		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance.navigateTo("/"));
+		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_main.logout());
+		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance.navigateTo("/profile"));
+		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance.navigateTo("/settings"));
+		this.addTrackListener(this.querySelector("#user-menu-btn"), 'click', () => {
 			userMenuContainer.classList.toggle("hide");
 		});
 	}
@@ -88,12 +88,12 @@ export class ProfileView extends ViewComponent
 				{
 					// TODO: set color to orange
 					addBtn.innerText = "cancel request";
-					addBtn.addEventListener("click", async () => { await this.m_main.removeFriend(pndg), this.setBtn(); });
+					this.addTrackListener(addBtn, "click", async () => { await this.m_main.removeFriend(pndg), this.setBtn(); });
 				}
 				else
 				{
 					addBtn.innerText = "accept friend";
-					addBtn.addEventListener("click", async () => { await this.m_main.acceptFriend(pndg); this.setBtn(); });
+					this.addTrackListener(addBtn, "click", async () => { await this.m_main.acceptFriend(pndg); this.setBtn(); });
 				}
 				return ;
 			}
@@ -103,14 +103,14 @@ export class ProfileView extends ViewComponent
 			if (this.m_main.friends[i].id == this.m_user.id) // set button for friends
 			{
 				addBtn.innerText = "remove friend";
-				addBtn.addEventListener("click", async () => { await this.m_main.removeFriend(this.m_main.friends[i]); this.setBtn(); });
+				this.addTrackListener(addBtn, "click", async () => { await this.m_main.removeFriend(this.m_main.friends[i]); this.setBtn(); });
 				break;
 			}
 		}
 		if (i == this.m_main.friends.length)
 		{
 			addBtn.innerText = "add friend";
-			addBtn.addEventListener("click", async () => { await this.m_main.addFriend(this.m_user.name); this.setBtn(); });
+			this.addTrackListener(addBtn, "click", async () => { await this.m_main.addFriend(this.m_user.name); this.setBtn(); });
 		}
 	}
 

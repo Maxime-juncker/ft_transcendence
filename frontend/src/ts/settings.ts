@@ -37,11 +37,11 @@ export class SettingsView extends ViewComponent
 		if (this.m_user.id == -1) // user not login
 			Router.Instance.navigateTo("/");
 
-		this.querySelector("#banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
-		this.querySelector("#logout_btn")?.addEventListener("click", () => this.m_user.logout());
-		this.querySelector("#profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
-		this.querySelector("#settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
-		this.querySelector("#user-menu-btn").addEventListener('click', () => {
+		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance.navigateTo("/"));
+		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_user.logout());
+		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance.navigateTo("/profile"));
+		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance.navigateTo("/settings"));
+		this.addTrackListener(this.querySelector("#user-menu-btn"), 'click', () => {
 			this.querySelector("#user-menu-container").classList.toggle("hide");
 		});
 
@@ -65,13 +65,13 @@ export class SettingsView extends ViewComponent
 		this.usernameInput.placeholder = this.m_user.name;
 		this.emailInput.placeholder = this.m_user.getEmail();
 
-		this.request2faBtn.addEventListener("click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
-		this.delete2faBtn.addEventListener("click", () => { this.m_user.delTotp(); setPlaceHolderText("2fa has been removed") });
-		this.logoutBtn.addEventListener("click", () => this.m_user.logout());
-		this.saveBtn.addEventListener("click", () => this.confirmChange());
-		this.holderClose.addEventListener("click", () => this.holderParent.classList.add("hide"));
-		this.deleteBtn.addEventListener("click", () => this.showConfirmPanel(() => this.m_user.deleteUser()));
-		this.resetBtn.addEventListener("click", () => this.showConfirmPanel(() => {
+		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
+		this.addTrackListener(this.delete2faBtn, "click", () => { this.m_user.delTotp(); setPlaceHolderText("2fa has been removed") });
+		this.addTrackListener(this.logoutBtn, "click", () => this.m_user.logout());
+		this.addTrackListener(this.saveBtn, "click", () => this.confirmChange());
+		this.addTrackListener(this.holderClose, "click", () => this.holderParent.classList.add("hide"));
+		this.addTrackListener(this.deleteBtn, "click", () => this.showConfirmPanel(() => this.m_user.deleteUser()));
+		this.addTrackListener(this.resetBtn, "click", () => this.showConfirmPanel(() => {
 			if (this.m_user.resetUser())
 				setPlaceHolderText("all data has been reset");
 			else

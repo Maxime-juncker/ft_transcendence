@@ -6,7 +6,11 @@ type TrackListener = {
 
 export class ViewComponent extends HTMLElement
 {
-	private m_listeners: TrackListener[] = [];
+	protected m_listeners:	TrackListener[] = [];
+	protected m_routePath:	string = "";
+
+	public get routePath(): string { return this.m_routePath; }
+	public set routePath(path: string) { this.m_routePath = path; }
 
 	constructor()
 	{
@@ -28,12 +32,26 @@ export class ViewComponent extends HTMLElement
 		this.m_listeners.push({ element: element, event: event, handler: handler });
 	}
 
+	public removeTrackListener(element: HTMLElement, event: string, handler: EventListener)
+	{
+		for (let i = 0; i < this.m_listeners.length; i++)
+		{
+			const listener: TrackListener = this.m_listeners[i];
+			if (listener.element === element && listener.event === event && listener.handler === handler)
+			{
+				listener.element.removeEventListener(listener.event, listener.handler);
+				this.m_listeners.splice(i, 1);
+				return ;
+			}
+		}
+	}
+
 	public clearTrackListener()
 	{
 		this.m_listeners.forEach((listener: TrackListener) => {
 			listener.element.removeEventListener(listener.event, listener.handler);
 		});
-		this.m_listeners.length = 0;
+		this.m_listeners = [];
 	}
 
 	public async enable()

@@ -18,21 +18,25 @@ export class LoginView extends ViewComponent
 		this.m_user = new MainUser(null);
 		await this.m_user.loginSession();
 		if (this.m_user.id != -1)
-			Router.Instance.navigateTo("/lobby");
+		{
+			if (Router.Instance.prevView.routePath == "/lobby")
+				Router.Instance.navigateTo("/");
+			else
+				Router.Instance.navigateTo("/lobby");
+
+		}
 
 		this.m_user.onLogin((user) => { Router.Instance.navigateTo("/lobby") })
 
-		this.querySelector("#create_btn")?.addEventListener("click", () => this.submitNewUser());
-		this.querySelector("#login_btn")?.addEventListener('click', () => this.login());
-		this.querySelector("#forty_two_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-		this.querySelector("#github_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
-		this.querySelector("#guest_log_btn")?.addEventListener("click", () => this.logAsGuest());
+		this.addTrackListener(this.querySelector("#create_btn"), "click", () => this.submitNewUser());
+		this.addTrackListener(this.querySelector("#login_btn"), 'click', () => this.login());
+		this.addTrackListener(this.querySelector("#forty_two_log_btn"), "click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.addTrackListener(this.querySelector("#github_log_btn"), "click", () => oauthLogin("/api/oauth2/github"));
+		this.addTrackListener(this.querySelector("#guest_log_btn"), "click", () => this.logAsGuest());
 
-		this.querySelector("#home_btn")?.addEventListener("click", () => { 
+		this.addTrackListener(this.querySelector("#home_btn"), "click", () => { 
 			Router.Instance.navigateTo("/");
 		});
-
-		setInterval(() => this.m_user.refreshSelf(), 60000);
 	}
 
 	private async login()

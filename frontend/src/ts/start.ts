@@ -11,7 +11,6 @@ export class StartView extends ViewComponent
 
 	public async enable()
 	{
-		console.log(this.children.length)
 		this.addTrackListener(this.querySelector("#play_btn"), "click", () => {
 			if (user.id == -1)
 				Router.Instance.navigateTo("/login");

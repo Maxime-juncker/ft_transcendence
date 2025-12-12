@@ -1,4 +1,4 @@
-import { ViewComponent } from "ViewComponent.js";
+import { ViewComponent } from "./ViewComponent.js";
 import { StartView } from "start.js";
 import { LoginView } from "login.js";
 import { LobbyView } from "lobby.js";
@@ -10,27 +10,18 @@ export class Router
 	private static m_instance: Router = null;
 
 	private m_routes:		Route[];
-	private m_activeView:	ViewComponent = null;
 	private m_views:		Map<string, ViewComponent>;
 	private m_app:			HTMLElement = null;
+
+	private m_prevView:		ViewComponent = null;
+	private m_activeView:	ViewComponent = null;
 	
 	public static get Instance(): Router { return Router.m_instance; }
+
 	public get activeView(): ViewComponent { return this.m_activeView; }
+	public get prevView(): ViewComponent { return this.m_prevView; }
 
-	public async setView(viewName: string)
-	{
-		// disable previous view
-		if (this.m_activeView !== null)
-		{
-			await this.m_activeView.disable();
-			this.m_activeView.style.display = "none";
-		}
-
-		this.m_activeView = this.m_views.get(viewName);
-		this.m_activeView.enable();
-		this.m_activeView.style.display = "block";
-		this.m_activeView.style.height = "100%";
-	}
+	private m_onPopeState: Array<(e) => void>;
 
 	constructor(routes: Route[])
 	{
@@ -41,12 +32,52 @@ export class Router
 		if (this.m_app === null)
 			throw new Error("no app container found. Abording");
 
+		this.m_onPopeState = new Array<(e) => void>();
 		this.m_views = new Map<string, ViewComponent>();
 		this.m_routes = routes;
 		this.createRoutes();
 		this.loadInitialRoute();
+
+		window.addEventListener('popstate', () => {
+			this.loadInitialRoute();
+			this.m_onPopeState.forEach((cb: () => void) => { cb() });
+		});
 	}
 
+	public onPopestate(cb: (e) => void)
+	{
+		this.m_onPopeState.push(cb);
+	}
+
+	/**
+	 * set the current view
+	 * @param viewName the name of the view to load
+	 * @note disable() will be called on previous view
+	 * @note enable() will be called on new view
+	 */
+	public async setView(viewName: string)
+	{
+		// disable previous view
+		if (this.m_activeView !== null)
+		{
+			await this.m_activeView.disable();
+			this.m_activeView.style.display = "none";
+			this.m_prevView = this.m_activeView;
+		}
+
+		this.m_onPopeState = new Array<(e) => void>(); // reset callback
+		this.m_activeView = this.m_views.get(viewName);
+		this.m_activeView.enable();
+		this.m_activeView.style.display = "block";
+		this.m_activeView.style.height = "100%";
+
+		console.log(this.getCurrentURL())
+	}
+
+	/**
+	 * get an element by id in the active view (to user instead of document.getElementById)
+	 * @param {string} id the id to search for
+	*/
 	public static getElementById(id: string): HTMLElement
 	{
 		if (Router.Instance === null)
@@ -54,6 +85,34 @@ export class Router
 		if (Router.Instance.activeView === null)
 			return Router.Instance.m_app.querySelector(`#${id}`);
 		return Router.Instance.activeView.querySelector(`#${id}`);
+	}
+
+	/**
+	* add a track event listener to the current view
+	* @param element html element to add the listener to
+	* @param event event type
+	* @param handler handler function to call
+	*/
+	public static addEventListener(element: HTMLElement, event: string, handler: EventListener)
+	{
+		if (Router.Instance === null || Router.Instance.m_activeView === null)
+			return ;
+
+		Router.Instance.activeView.addTrackListener(element, event, handler);
+	}
+
+	/**
+	* remove a track event listener to the current view
+	* @param element html element to add the listener to
+	* @param event event type
+	* @param handler handler function to call
+	*/
+	public static removeEventListener(element: HTMLElement, event: string, handler: EventListener)
+	{
+		if (Router.Instance === null || Router.Instance.m_activeView === null)
+			return ;
+
+		Router.Instance.activeView.removeTrackListener(element, event, handler);
 	}
 
 	public getCurrentURL()
@@ -95,6 +154,7 @@ export class Router
 		this.m_routes.forEach((route: Route) => {
 			const view = document.createElement(route.viewName) as ViewComponent;
 			view.setAttribute("templateId", route.templateId);
+			view.routePath = route.path;
 
 			this.m_app.append(view);
 
@@ -128,6 +188,3 @@ customElements.define('profile-view', ProfileView);
 
 const router = new Router(routes);
 
-window.addEventListener('popstate', () => {
-  router.loadInitialRoute();
-});

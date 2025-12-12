@@ -26,7 +26,8 @@ export class LobbyView extends ViewComponent
 
 	public async enable()
 	{
-		console.warn("enabling lobbty")
+		if (Router.Instance.getCurrentURL() !== "/lobby")
+			return ;
 		this.m_user = new MainUser(this.querySelector("#user-container"));
 
 		await this.m_user.loginSession();
@@ -59,26 +60,25 @@ export class LobbyView extends ViewComponent
 		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_user.logout());
 		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance.navigateTo("/profile"));
 		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance.navigateTo("/settings"));
-		// this.querySelector("#banner")?.addEventListener("click", () => Router.Instance.navigateTo("/"));
-		// this.querySelector("#logout_btn")?.addEventListener("click", () => this.m_user.logout());
-		// this.querySelector("#profile_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/profile"));
-		// this.querySelector("#settings_btn")?.addEventListener("click", () => Router.Instance.navigateTo("/settings"));
 	}
 
 	public async disable()
 	{
+		this.clearTrackListener();
+
 		// TODO: keep chat socket online when going to settings / profile
 		this.m_user.removeFromQueue();
 		this.m_user = null;
+
 		if (this.m_chat)
-		{
-		// console.warn("chat is disconnecting", this.m_chat);
 			this.m_chat.disconnect();
 
-		}
+		if (this.m_gameRouter.m_gameMenu)
+			this.m_gameRouter.m_gameMenu.destroy();
+
 		this.m_gameRouter = null;
 		this.querySelector("#user-container").innerHTML = "";
-		this.clearTrackListener();
+
 	}
 
 	private showListContainer(newState: ListState, chat: Chat, user: User)
