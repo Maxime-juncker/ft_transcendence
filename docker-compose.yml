@@ -59,8 +59,32 @@ services:
           action: rebuild
           target: /etc/nginx/nginx.conf
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+    #   - monitoring/grafana-provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    ports:
+      - "3001:3001"
+    depends_on:
+      - prometheus
+
 networks:
   transcendence:
+    driver: bridge
+  monitoring:
     driver: bridge
   db:
   web:
