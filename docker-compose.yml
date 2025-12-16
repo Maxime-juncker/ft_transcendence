@@ -9,7 +9,7 @@ services:
       - sqlite:/var/lib/sqlite
       - ./backend/src/public:/var/www/server/public
     networks:
-      - db
+      - back
     develop:
       watch:
         - path: ./backend/src
@@ -24,8 +24,8 @@ services:
     depends_on:
       - backend
     networks:
-      - web
-      - db
+      - front
+      - back
     develop:
       watch:
         - path: ./frontend/src
@@ -42,9 +42,9 @@ services:
       - "8080:80"
       - "8081:443"
     networks:
+      - front
+      - back
       - web
-      - db
-      - transcendence
       - nginx_prom_export
     depends_on:
       - frontend
@@ -91,11 +91,11 @@ services:
     command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
 
 networks:
-  transcendence:
+  web:
     driver: bridge
   monitoring:
-  db:
-  web:
+  back:
+  front:
   nginx_prom_export:
 
 volumes:
