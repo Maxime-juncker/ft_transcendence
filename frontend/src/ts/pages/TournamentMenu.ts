@@ -1,13 +1,13 @@
-import { Router } from '../router';
+import { Router } from '../router.js';
 
 export class TournamentMenu
 {
-	private static readonly BUTTON_1: string = 'local';
-	private static readonly BUTTON_2: string = 'online';
+	private static readonly BUTTON_1: string = 'create a tournament';
+	private static readonly BUTTON_2: string = 'join a tournament';
 
 	private router: Router;
-	private button1Element = document.getElementById('tournament-local') as HTMLButtonElement;
-	private button2Element = document.getElementById('tournament-online') as HTMLButtonElement;
+	private button1Element = document.getElementById('tournament-create') as HTMLButtonElement;
+	private button2Element = document.getElementById('tournament-join') as HTMLButtonElement;
 
 	constructor(router: Router)
 	{
@@ -22,25 +22,25 @@ export class TournamentMenu
 		this.button2Element.textContent = TournamentMenu.BUTTON_2;
 	}
 
-	private localTournamentClickHandler = () =>
+	private createTournamentClickHandler = () =>
 	{
-		this.router.navigateTo('tournament', 'local');
+		this.router.navigateTo('tournament-create', '');
 	}
 
-	private onlineTournamentClickHandler = () =>
+	private joinTournamentClickHandler = () =>
 	{
-		this.router.navigateTo('tournament', 'online');
+		this.router.navigateTo('tournament-join', '');
 	}
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('tournament-local')?.addEventListener('click', this.localTournamentClickHandler);
-		document.getElementById('tournament-online')?.addEventListener('click', this.onlineTournamentClickHandler);
+		document.getElementById('tournament-create')?.addEventListener('click', this.createTournamentClickHandler);
+		document.getElementById('tournament-join')?.addEventListener('click', this.joinTournamentClickHandler);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('tournament-local')?.removeEventListener('click', this.localTournamentClickHandler);
-		document.getElementById('tournament-online')?.removeEventListener('click', this.onlineTournamentClickHandler);
+		document.getElementById('tournament-create')?.removeEventListener('click', this.createTournamentClickHandler);
+		document.getElementById('tournament-join')?.removeEventListener('click', this.joinTournamentClickHandler);
 	}
 }

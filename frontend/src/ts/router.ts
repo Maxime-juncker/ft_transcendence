@@ -2,7 +2,8 @@ import { Home } from 'pages/Home.js';
 import { GameMenu } from 'pages/GameMenu.js';
 import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
-import { Tournament } from 'pages/Tournament.js';
+import { TournamentCreate } from 'pages/TournamentCreate.js';
+import { TournamentJoin } from 'pages/TournamentJoin.js';
 import { User } from "User.js";
 import { Chat } from '@modules/chat';
 import { UserElement } from 'UserElement.js';
@@ -16,6 +17,8 @@ export class Router
 	private static readonly GAME_LOCAL_KEY: string = 'l';
 	private static readonly GAME_BOT_KEY: string = 'b';
 	private static readonly TOURNAMENT_MENU_KEY: string = 't';
+	private static readonly TOURNAMENT_CREATE_KEY: string = 'c';
+	private static readonly TOURNAMENT_JOIN_KEY: string = 'j';
 
 	currentPage: string = 'home';
 	currentClass: any = null;
@@ -98,6 +101,12 @@ export class Router
 			case Router.TOURNAMENT_MENU_KEY:
 				this.navigateTo('tournament-menu', '');
 				break ;
+			case Router.TOURNAMENT_CREATE_KEY:
+				this.navigateTo('tournament-create', '');
+				break ;
+			case Router.TOURNAMENT_JOIN_KEY:
+				this.navigateTo('tournament-join', '');
+				break ;
 		}
 	}
 
@@ -132,8 +141,10 @@ export class Router
 				return (new GameClient(this, mode!, this.m_user, this.m_chat));
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
-			case 'tournament':
-				return (new Tournament(mode!, this.m_user));
+			case 'tournament-create':
+				return (new TournamentCreate(this.m_user));
+			case 'tournament-join':
+				return (new TournamentJoin(this.m_user));
 			default:
 				return (null);
 		}

@@ -1,11 +1,10 @@
 import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
-import { FastifyReply } from 'fastify/types/reply';
 import { getUserByName } from '@modules/users/user.js';
 import * as core from 'core/core.js';
 import { addPlayerToQueue } from '@modules/chat/chat.js';
-import { clear } from 'console';
+import { Tournament } from './Tournament.js';
 
 export class GameServer
 {
@@ -16,8 +15,9 @@ export class GameServer
 
 	private server!: FastifyInstance;
 	public activeGames: Map<string, GameInstance> = new Map();
-	private playerPending: { reply: FastifyReply, name: number } | null = null;
 	private bots: Map<string, Bot> = new Map();
+	private pendingTournaments: Map<string, Set<[string, string]> > = new Map();
+	private activeTournaments: Map<string, Tournament> = new Map();
 
 	constructor(server: FastifyInstance)
 	{
@@ -31,6 +31,10 @@ export class GameServer
 			this.createGame();
 			this.startGame();
 			this.sendGameState();
+			this.createTournament();
+			this.joinTournament();
+			this.getTournamentInfo();
+			this.startTournament();
 		}
 		catch (error)
 		{
@@ -54,12 +58,12 @@ export class GameServer
 					const opponentId = 0;
 					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
-					return reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
+					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
 				}
 				else if (mode === 'online')
 				{
 					await addPlayerToQueue(Number(name), this);
-					return reply.code(202).send({ message: "added to queue" });
+					reply.status(202).send({ message: "added to queue" });
 				}
 				else if (mode === 'bot')
 				{
@@ -68,11 +72,11 @@ export class GameServer
 					const opponentId = data.data.id;
 					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
-					return reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
+					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
 				}
 				else
 				{
-					return reply.status(400).send({ error: 'Invalid game mode' });
+					reply.status(400).send({ error: 'Invalid game mode' });
 				}
 			}
 			catch (error)
@@ -223,6 +227,162 @@ export class GameServer
 			{
 				console.error('Error in websocket connection:', error);
 				connection.close();
+			}
+		});
+	}
+
+	private createTournament(): void
+	{
+		this.server.post('/api/create-tournament', async (request, reply) =>
+		{
+			try
+			{
+				const body = request.body as { playerName: string, type: string };
+				const type = body.type;
+
+				if (type !== 'public' && type !== 'private' && type !== 'invitation')
+				{
+					reply.status(400).send({ error: 'Invalid tournament type' });
+					return ;
+				}
+
+				const playerName = body.playerName;
+				const tournamentId = type + '-' + crypto.randomUUID();
+				const participants: Set<[string, string]> = new Set();
+				participants.add([playerName, "president"]);
+				this.pendingTournaments.set(tournamentId, participants);
+
+				console.log(`Tournament ${tournamentId} created by ${playerName}`);
+				reply.status(201).send({ tournamentId });
+			}
+			catch (error)
+			{
+				console.error('Error creating tournament:', error);
+				reply.status(500).send({ error });
+			}
+		});
+	}
+
+	private joinTournament(): void
+	{
+		this.server.post('/api/join-tournament', async (request, reply) =>
+		{
+			try
+			{
+				const body = request.body as { tournamentId: string; playerName: string };
+				const tournamentId = body.tournamentId;
+				const participants = this.pendingTournaments.get(tournamentId);
+				const playerName = body.playerName;
+
+				if (!participants)
+				{
+					reply.status(404).send({ error: 'Tournament not found' });
+					return ;
+				}
+
+				if (tournamentId.startsWith('public-'))
+				{
+					participants.add([playerName, "member"]);
+					reply.status(200).send({ message: 'Tournament joined successfully' });
+				}
+				else if (tournamentId.startsWith('invitation-'))
+				{
+					reply.status(501).send({ error: 'Sorry working on it, coming soon..' });
+				}
+				else if (tournamentId.startsWith('private-'))
+				{
+					reply.status(403).send({ error: 'You are not allowed to join this tournament. How did you even get the id?' });
+				}
+				else
+				{
+					throw new Error('wtf its impossible');
+				}
+			}
+			catch (error)
+			{
+				console.error('Error joining tournament:', error);
+				reply.status(500).send({ error });
+			}
+		});
+	}
+
+	private getTournamentInfo(): void
+	{
+		this.server.get('/api/info-tournament', async (request, reply) =>
+		{
+			try
+			{
+				const body = request.body as { tournamentId: string; playerName: string };
+				const tournamentId = body.tournamentId;
+				const participants = this.pendingTournaments.get(tournamentId);
+
+				if (!participants)
+				{
+					reply.status(404).send({ error: 'Tournament not found' });
+					return ;
+				}
+
+				if (tournamentId.startsWith('public-'))
+				{
+					reply.status(200).send({ participants: Array.from(participants) });
+				}
+				else if (tournamentId.startsWith('invitation-'))
+				{
+					reply.status(200).send({ participants: Array.from(participants) });
+				}
+				else if (tournamentId.startsWith('private-'))
+				{
+					reply.status(403).send({ error: 'You are not allowed to get info about this tournament. How did you even get the id?' });
+				}
+				else
+				{
+					throw new Error('wtf its impossible');
+				}
+			}
+			catch (error)
+			{
+				console.error('Error joining tournament:', error);
+				reply.status(500).send({ error });
+			}
+		});
+	}
+
+	private startTournament(): void
+	{
+		this.server.post('/api/start-tournament', async (request, reply) =>
+		{
+			try
+			{
+				const body = request.body as { tournamentId: string; playerName: string };
+				const tournamentId = body.tournamentId;
+				const participants = this.pendingTournaments.get(tournamentId);
+				const playerName = body.playerName;
+
+				if (!participants)
+				{
+					reply.status(404).send({ error: 'Tournament not found' });
+					return ;
+				}
+
+				if (!Array.from(participants).some(([name, role]) => name === playerName && role === "president"))
+				{
+					reply.status(403).send({ error: 'Only the tournament creator can start the tournament' });
+					return ;
+				}
+
+				const playerNamesSet: Set<string> = new Set();
+				participants.forEach(([name, _role]) => { playerNamesSet.add(name); });
+
+				const tournament = new Tournament(playerNamesSet);
+				this.activeTournaments.set(tournamentId, tournament);
+				this.pendingTournaments.delete(tournamentId);
+
+				reply.status(200).send({ message: 'Tournament started successfully' });
+			}
+			catch (error)
+			{
+				console.error('Error joining tournament:', error);
+				reply.status(500).send({ error });
 			}
 		});
 	}
