@@ -94,7 +94,6 @@ networks:
   transcendence:
     driver: bridge
   monitoring:
-    driver: bridge
   db:
   web:
   nginx_prom_export:
