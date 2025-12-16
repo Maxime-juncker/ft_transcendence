@@ -1,0 +1,28 @@
+{
+  "title": "Nginx Overview",
+  "panels": [
+    {
+      "title": "Requests per Second",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "sum(rate(nginx_http_requests_total[1m])) by (host)",
+          "legendFormat": "{{host}}"
+        }
+      ]
+    },
+    {
+      "title": "Active Connections",
+      "type": "singlestat",
+      "targets": [
+        {
+          "expr": "sum(nginx_connections_active)",
+          "format": "time_series"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}
