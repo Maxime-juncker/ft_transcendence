@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@theme {
+	--color-dark:		#282C34;
+	--color-darker:		#16181D;
+	--color-darkest:	#02040A;
+	--color-red:		#E06C75;
+	--color-yellow:		#E5C07B;
+	--color-blue:		#61AFEF;
+	--color-white:		#FBF1C7;
+	--color-green:		#98C379;
+	--color-purple:		#C678DD;
+
+	--color-bootup-line:	rgba(255, 255, 255, 0.432);
+	--color-scan:			rgba(171, 171, 171, 0.1);
+	--color-px-black:		rgba(70, 70, 70, 0.007);
+
+	--background-image-pixel-mask: linear-gradient(transparent 50%, rgba(0,0,0,0.01) 50%), linear-gradient(90deg, rgba(255,0,0,0.1), rgba(0,255,0,0.05), rgba(0,0,255,0.1));
+
+	@keyframes bootup-lines {
+		0% {
+			top: 30%;
+			transform: scaleY(1);
+		}
+
+		30% {
+			top: 150%;
+		}
+		30.0001% {
+			top: -50%;
+			transform: scaleY(1);
+		}
+
+		70% {
+			top: 90%;
+			transform: scaleY(1);
+		}
+		70.001% {
+			top: -30%;
+			transform: scaleY(1);
+		}
+		100% {
+			top: 100%;
+			transform: scaleY(0);
+		}
+	}
+
+	@keyframes bootup-screen {
+		0% {
+			background-color: black;
+		}
+
+		30% {
+			background-color: black;
+		}
+
+		50% {
+			background-color: rgba(255, 255, 255, 0.1);
+		}
+
+		100% {
+			background-color: transparent;
+		}
+	}
+
+	@keyframes scan
+	{
+		0% {
+			transform: translateY(-20%);
+		}
+
+		100% {
+			transform: translateY(130%);
+		}
+	}
+
+
+	@keyframes flicker {
+        0% {opacity: 0.27861;}
+        5% {opacity: 0.34769;}
+        10% {opacity: 0.23604;}
+        15% {opacity: 0.90626;}
+        20% {opacity: 0.18128;}
+        25% {opacity: 0.83891;}
+        30% {opacity: 0.65583;}
+        35% {opacity: 0.67807;}
+        40% {opacity: 0.26559;}
+        45% {opacity: 0.84693;}
+        50% {opacity: 0.96019;}
+        55% {opacity: 0.08594;}
+        60% {opacity: 0.20313;}
+        65% {opacity: 0.71988;}
+        70% {opacity: 0.53455;}
+        75% {opacity: 0.37288;}
+        80% {opacity: 0.71428;}
+        85% {opacity: 0.70419;}
+        90% {opacity: 0.7003;}
+        95% {opacity: 0.36108;}
+        100% {opacity: 0.24387;}
+	}
+}
+
+@layer components {
+	.crt {
+		@apply	relative
+				h-full
+				flex flex-col
+				pointer-events-auto
+				before:content-[''] before:block before:absolute
+				before:top-0 before:left-0 before:bottom-0 before:right-0
+				before:pointer-events-none
+				before:bg-size-[100%_2px,3px_100%]
+				before:bg-pixel-mask before:z-99
+				
+				after:content-[''] after:block after:absolute after:z-2
+				after:top-0 after:left-0 after:bottom-0 after:right-0
+				after:bg-px-black after:opacity-0
+				after:pointer-events-none
+				after:animate-[flicker_5s_infinite];
+	}
+
+	.bootup-line {
+		@apply	bg-bootup-line
+				absolute
+				w-screen h-[325px] scale-y-0 z-3
+				pointer-events-none
+				animate-[bootup-lines_0.75s_linear];
+	}
+
+	.crt-mask {
+		@apply absolute z-2
+				w-full h-[110%]
+				bg-radial from-transparent from-90% to-black
+				pointer-events-none;
+	}
+
+	.bootup-text {
+		@apply	absolute z-3
+				text-[62px] text-green-700 invisible
+				select-none
+				bg-black
+				px-2.5
+				animate-[bootup-text_4s_linear]
+				left-[3%] top-[1%];
+	}
+
+	.scanline {
+		@apply	absolute
+				w-full h-full
+				pointer-events-none
+				animate-[scan_6s_infinite];
+	}
+
+	.scan {
+		@apply	pointer-events-none
+				z-999999 h-15 w-full
+				bg-linear-to-b from-transparent to-scan;
+	}
+	
+}

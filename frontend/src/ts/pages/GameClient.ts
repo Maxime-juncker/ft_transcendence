@@ -124,7 +124,7 @@ export class GameClient extends Utils
 		{
 			const element = child as HTMLDivElement;
 			this.HTMLelements.set(element.id, element);
-			element.classList.add('hidden');
+			element.style.display = ('none');
 		});
 
 		this.setContent('searching-msg', Msgs.SEARCHING, true);

@@ -19,7 +19,7 @@ export class ProfileView extends ViewComponent
 	{
 		this.m_main = new MainUser(this.querySelector("#user-container"));
 		await this.m_main.loginSession();
-		this.m_main.onLogout((user) => { Router.Instance.navigateTo("/") })
+		this.m_main.onLogout(() => { Router.Instance.navigateTo("/") })
 		if (this.m_main.id == -1) // user not login
 			Router.Instance.navigateTo("/");
 
@@ -64,6 +64,7 @@ export class ProfileView extends ViewComponent
 	public async disable()
 	{
 		this.querySelector("#user-container").innerHTML = "";
+		this.querySelector("#history-container").innerHTML = "";
 	}
 
 	private async setBtn()

@@ -12,24 +12,19 @@ export class ServerSideRendering
 	<meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
-	<link href="/public/dist/global.css" rel="stylesheet">
-	<link href="/public/test.css" rel="stylesheet">
-	<link href="/public/dist/login.css" rel="stylesheet">
-	<link href="/public/dist/profile.css" rel="stylesheet">
-	<link href="/public/dist/start.css" rel="stylesheet">
-	<script src="https://cdn.tailwindcss.com"></script>
-	<link href="/public/dist/output.css" rel="stylesheet">
+	<link href="/public/output.css" rel="stylesheet">
+	<link href="/public/output_crt.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
 	`
 
+			// <div class="crt-mask"></div> 
 	private readonly htmlFooter = `
 		<!-- must be here for crt effect -->
 		<div class="bootup-mask"></div>
 		<div class="bootup-lines"></div>
 		<h1 class="bootup-text">HDMI-1</h1>
 		<div class="crt h-screen">
-			<div class="crt-mask"></div> 
 			<div id="app" class="h-full">
 
 			</div>
@@ -51,6 +46,7 @@ export class ServerSideRendering
 		this.server = server;
 		this.setupRoutes();
 		this.constructSPA(routes);
+		console.log("spa ready");
 	}
 
 	/**
@@ -68,7 +64,7 @@ export class ServerSideRendering
 		})
 		this.m_spaPage += this.htmlFooter;
 
-		console.log("assembled spa:\n", this.m_spaPage);
+		// console.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void

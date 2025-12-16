@@ -21,8 +21,6 @@ export class Router
 	public get activeView(): ViewComponent { return this.m_activeView; }
 	public get prevView(): ViewComponent { return this.m_prevView; }
 
-	private m_onPopeState: Array<(e) => void>;
-
 	constructor(routes: Route[])
 	{
 		if (Router.m_instance == null)
@@ -32,7 +30,6 @@ export class Router
 		if (this.m_app === null)
 			throw new Error("no app container found. Abording");
 
-		this.m_onPopeState = new Array<(e) => void>();
 		this.m_views = new Map<string, ViewComponent>();
 		this.m_routes = routes;
 		this.createRoutes();
@@ -40,13 +37,7 @@ export class Router
 
 		window.addEventListener('popstate', () => {
 			this.loadInitialRoute();
-			this.m_onPopeState.forEach((cb: () => void) => { cb() });
 		});
-	}
-
-	public onPopestate(cb: (e) => void)
-	{
-		this.m_onPopeState.push(cb);
 	}
 
 	/**
@@ -65,7 +56,6 @@ export class Router
 			this.m_prevView = this.m_activeView;
 		}
 
-		this.m_onPopeState = new Array<(e) => void>(); // reset callback
 		this.m_activeView = this.m_views.get(viewName);
 		this.m_activeView.enable();
 		this.m_activeView.style.display = "block";

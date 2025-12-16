@@ -1,8 +1,8 @@
 <template id="profile-template">
 	<template id="match-template">
 		<div class="w-full flex flex-row justify-around align-middle px-2">
-			<p id="matchup" class="text-[--blue] w-[50%]">user - test-user</p>
-			<p id="status" class="text-[--green] w-[10%]">win</p>
+			<p id="matchup" class="text-blue w-[50%]">user - test-user</p>
+			<p id="status" class="text-green w-[10%]">win</p>
 			<p id="score" class="w-[10%]">1 - 10</p>
 			<p id="date" class="w-[25%]">2025-12-02</p>
 		</div>
@@ -16,7 +16,7 @@
 				<p id="settings_btn" class="btn text-left cursor-default">settings</p>
 				<p id="logout_btn" class="btn text-left cursor-default">logout</p>
 			</div>
-			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-(--green)">
+			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-green">
 				<div id="avatar-name" class="text-[100%] font-bold select-none">
 					user
 				</div>
@@ -31,7 +31,7 @@
 	</template>
 
 	<template id="user-friend-template">
-		<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-90 border-2 border-[--white] p-2">
+		<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-90 border-2 border-white p-2">
 			<div id="profile" class="flex flex-row w-full items-center gap-2 hover:brightness-[1.2]">
 				<div class="relative">
 					<img
@@ -44,8 +44,8 @@
 				<h1 id="avatar-name" class="text-[100%] font-bold select-none break-all">user</h1>
 			</div>
 			<div class="flex items-center gap-2 mr-[5%]">
-				<button id="green-btn" class="button-empty border-[--green] text-[--green]">Y</button>
-				<button id="red-btn" class="button-empty border-[--red] text-[--red]">N</button>
+				<button id="green-btn" class="button-empty border-green text-green">Y</button>
+				<button id="red-btn" class="button-empty border-red text-red">N</button>
 			</div>
 		</div>
 
@@ -57,10 +57,10 @@
 			<div id="banner" class="banner-small">
 				<h1 class="select-none">FT_TRANSCENDENCE</h1>
 				<div class="small-lines">
-					<div class="line bg-(--red)"></div>
-					<div class="line bg-(--yellow)"></div>
-					<div class="line bg-(--blue)"></div>
-					<div class="line bg-(--green)"></div>
+					<div class="line bg-red"></div>
+					<div class="line bg-yellow"></div>
+					<div class="line bg-blue"></div>
+					<div class="line bg-green"></div>
 				</div>
 			</div>
 			<div id="user-container">
@@ -70,24 +70,24 @@
 		<div class="h-full w-full flex flex-col justify-start align-middle items-center">
 
 			<!-- profile expended -->
-			<div class="flex flex-row h-72 w-[95%] bg-[--dark] my-5 px-15 border-[--white] border-2">
+			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2">
 				<div id="profile-extended" class="flex flex-row justify-center align-middle h-full">
 					<div class="relative h-full flex justify-center items-center">
 						<img
 							id="avatar-img"
 							src="" 
 							alt="Profile" 
-							class="bg-white rounded-full aspect-square border-2 border-[--darker] object-cover h-[80%]"/>
+							class="bg-white rounded-full aspect-square border-2 border-darker object-cover h-[80%]"/>
 						<div id="user-status" class="user-status right-2 w-[30px] top-[70%]"></div>
 					</div>
 					<div class="flex flex-col align-middle justify-center ml-4">
-						<h1 id="name" class="text-3xl bg-[--darker] px-3 py-1">super username</h1>
+						<h1 id="name" class="text-3xl bg-darker px-3 py-1">super username</h1>
 						<p id="created_at" class="px-3 text-sm">created 11-7-2025</p>
-						<button id="main-btn-friend" class="button-empty text-[--blue] border-[--blue] mt-3">tmp</button>
-						<button id="main-btn-block" class="button-empty text-[--red] border-[--red] mt-3">tmp</button>
+						<button id="main-btn-friend" class="button-empty text-blue border-blue mt-3">tmp</button>
+						<button id="main-btn-block" class="button-empty text-red border-red mt-3">tmp</button>
 					</div>
 
-					<div class="self-center ml-4 h-[80%] w-2 bg-[--darker]"></div>
+					<div class="self-center ml-4 h-[80%] w-2 bg-darker"></div>
 				</div>
 
 				<div class="stat-container">
@@ -111,7 +111,7 @@
 			<!-- stats -->
 			<div class="flex justify-center align-middle my-5 w-1/2 h-32 gap-5">
 
-				<div class="h-full w-1/2 bg-[--dark]">
+				<div class="h-full w-1/2 bg-dark">
 					<div class="stat-container">
 						<div class="stat-item">
 							<p>max elo</p>
@@ -134,7 +134,7 @@
 			</div>
 			<div class="h-80 w-[80%] flex flex-row justify-center my-5 align-middle gap-5">
 
-				<div id="history-container" class="h-full w-[50%] bg-[--dark] overflow-y-scroll py-5">
+				<div id="history-container" class="h-full w-[50%] bg-dark overflow-y-scroll py-5">
 					<div class="w-full flex flex-row justify-around align-middle px-2">
 						<p class="underline w-[50%]">match</p>
 						<p class="underline w-[10%]">result</p>
@@ -143,11 +143,11 @@
 					</div>
 				</div>
 
-				<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-[30%] bg-[--dark] py-3">
+				<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-[30%] bg-dark py-3">
 
 				</div>
 
-				<div id="pndg-container" class="h-full flex flex-col justify-start items-center align-top w-[30%] bg-[--dark] py-3 gap-3"></div>
+				<div id="pndg-container" class="h-full flex flex-col justify-start items-center align-top w-[30%] bg-dark py-3 gap-3"></div>
 			</div>
 		</div>
 </template>

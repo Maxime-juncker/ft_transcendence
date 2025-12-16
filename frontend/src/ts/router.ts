@@ -65,7 +65,6 @@ export class GameRouter
 
 	private onlineGameClickHandler = () =>
 	{
-		console.log("navi to online");
 		this.navigateTo('game', 'online');
 	}
 
@@ -84,7 +83,7 @@ export class GameRouter
 			if (pageName)
 			{
 				this.pages.set(pageName, element);
-				element.classList.add('hidden');
+				element.style.display = "none";
 			}
 		});
 	}
@@ -146,10 +145,9 @@ export class GameRouter
 			this.currentClass.destroy();
 		}
 
-		this.pages.get(this.currentPage)!.classList.add('hidden');
-		this.pages.get(page)!.classList.remove('hidden');
+		this.pages.get(this.currentPage)!.style.display = 'none';
+		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
-		console.log(page);
 		this.currentClass = this.getClass(mode);
 	}
 

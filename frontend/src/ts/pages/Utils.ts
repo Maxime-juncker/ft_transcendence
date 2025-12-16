@@ -6,12 +6,12 @@ export class Utils
 
 	protected show(className: string): void
 	{
-		this.HTMLelements.get(className)!.classList.remove('hidden');
+		this.HTMLelements.get(className)!.style.display = ('flex'); // changed remove class hidden to display flex
 	}
 
 	protected hide(className: string): void
 	{
-		this.HTMLelements.get(className)!.classList.add('hidden');
+		this.HTMLelements.get(className)!.style.display = ('none');
 	}
 
 	protected setContent(className: string, content: string, show: boolean = false): void

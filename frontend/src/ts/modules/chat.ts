@@ -163,8 +163,6 @@ export class Message
 
 export class Chat
 {
-	private m_chatlog:		Message[];
-
 	private m_chatbox:		HTMLElement;
 	private m_chatInput:	HTMLInputElement;
 	private m_user:			MainUser;
@@ -184,7 +182,6 @@ export class Chat
 		this.m_chatbox = chatbox;
 		this.m_chatInput = chatInput;
 		this.m_user = user;
-		this.m_chatlog = [];
 		this.m_onStartGame = [];
 		this.m_onConnRefresh = [];
 
@@ -202,7 +199,6 @@ export class Chat
 	public onGameCreated(cb: ((json: any) => void)) { this.m_onStartGame.push(cb); }
 	public onConnRefresh(cb: ((conns: User[]) => void)) { this.m_onConnRefresh.push(cb); }
 
-	public getChatlog(): Message[]		{ return this.m_chatlog; }
 	public getChatbox(): HTMLElement	{ return this.m_chatbox; }
 	public getUser(): MainUser			{ return this.m_user; }
 	public getWs(): WebSocket			{ return this.m_ws; }
@@ -219,6 +215,7 @@ export class Chat
 	public disconnect()
 	{
 		this.m_user.removeFromQueue();
+		this.m_chatbox.innerHTML = "";
 		this.m_ws.close();
 	}
 
@@ -273,7 +270,6 @@ export class Chat
 	public displayMessage(newMsg: Message)
 	{
 		this.m_chatbox.prepend(newMsg.toHtml());
-		this.m_chatlog.push(newMsg);
 	}
 
 	public async sendMsg(sender: User, msg: string)
@@ -282,7 +278,6 @@ export class Chat
 
 		this.m_chatbox.prepend(newMsg.toHtml());
 		await newMsg.sendToAll(this);
-		this.m_chatlog.push(newMsg);
 	}
 }
 
