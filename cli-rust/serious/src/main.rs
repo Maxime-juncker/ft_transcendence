@@ -6,36 +6,70 @@ use anyhow::{Result, anyhow};
 use serde_json;
 
 use reqwest::{Client};
+use tokio_tungstenite::tungstenite::protocol::frame;
 
 mod welcome;
 mod game;
 mod friends;
+mod infos_events;
+mod screen_displays;
+
+use crate::infos_events::EventHandler;
+use crate::screen_displays::ScreenDisplayer;
 use crate::welcome::{draw_welcome_screen, game_setup, setup_terminal};
 use crate::game::{create_game};
-use crate::friends::social_life;
+// use crate::friends::social_life;
 
 mod login;
 use crate::login::{create_guest_session};
-use tokio::sync::{mpsc};
+use tokio::{net::unix::pipe::Receiver, sync::mpsc};
+
 
 use crossterm::{
-  ExecutableCommand, QueueableCommand, cursor::{self, SetCursorStyle}, event::{self, Event, KeyCode, KeyModifiers, PopKeyboardEnhancementFlags}, style::*, terminal
+  ExecutableCommand, QueueableCommand, cursor::{self, SetCursorStyle}, event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, PopKeyboardEnhancementFlags}, style::*, terminal
+};
+
+use welcome::LOGO;
+
+use ratatui::{
+    buffer::Buffer,
+    layout::Rect,
+    style::Stylize,
+    symbols::border,
+    text::{Line, Text},
+    widgets::{Block, Paragraph, Widget},
+    DefaultTerminal, Frame,
 };
 
 pub const WIDTH: u16 = 90;
 pub const HEIGHT: u16 = 30;
+
+// pub enum CurrentlyEditing {
+//   Friend,
+// }
+
+pub enum CurrentScreen {
+  Welcome,
+  GameChoice,
+  SocialLife,
+  Game,
+  FriendsDisplay,
+}
 pub struct Infos {
   original_size: (u16, u16),
   location: String,
   id: u64,
   client: Client,
+  exit: bool,
+  screen: CurrentScreen,
+  index: usize,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  if let Err(e) = setup_terminal() {
-    return Err(anyhow!("{}", e));
-  };
+  // if let Err(e) = setup_terminal() {
+  //   return Err(anyhow!("{}", e));
+  // };
   let (original_size, location) = match get_infos_elements() {
     Ok(result) => result,
     Err(e) => {return Err(anyhow!("{}", e));},
@@ -47,33 +81,53 @@ async fn main() -> Result<()> {
       return Err(anyhow!("{}", e));
     },
   };
-  let game_main = Infos {original_size, location, id: num, client};
-  if let Err(e) = welcome_screen(&game_main, receiver).await {
-    clean_terminal(&game_main.original_size)?;
-    return Err(anyhow!("{}", e));
-  };
-  cleanup_and_quit(&original_size)?;
-  Ok(())
+  let game_main = Infos {original_size, location, id: num, client, exit: false, screen: CurrentScreen::Welcome, index: 0};
+  let mut terminal = ratatui::init();
+  let app_result = game_main.run(&mut terminal, receiver).await;
+  ratatui::restore();
+  app_result
+
+  // if let Err(e) = welcome_screen(&game_main, receiver).await {
+  //   clean_terminal(&game_main.original_size)?;
+  //   return Err(anyhow!("{}", e));
+  // };
+  // cleanup_and_quit(&original_size)?;
+  // Ok(())
 }
 
-pub async fn welcome_screen(game_main: &Infos, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
-  loop {
-    draw_welcome_screen()?;
-    let event = event::read()?;
-
-    if should_exit(&event)? == true {
-      cleanup_and_quit(&game_main.original_size)?;
+impl Infos {
+  pub async fn run(mut self, terminal: &mut DefaultTerminal, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
+    while !self.exit {
+      terminal.draw(|frame| self.draw(frame))?;
+      (self, receiver) = self.handle_events(receiver).await?;
     }
-    else if let Event::Key(key_event) = event {
-      match key_event.code {
-        KeyCode::Char('1') => {receiver = game_loop(&game_main, receiver).await?;},
-        KeyCode::Char('2') => {
-          social_life(&game_main).await?;
-        },
-        KeyCode::Char('3') => {},
-        _ => {},
+    Ok(())
+  }
 
-      }
+  fn draw(&self, frame: &mut Frame) {
+    frame.render_widget(self, frame.area());
+  }
+
+  async fn handle_events(mut self, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<(Infos, mpsc::Receiver<serde_json::Value>)> {
+    match self.screen {
+      CurrentScreen::Welcome => {self = self.handle_welcome_events()?},
+      CurrentScreen::GameChoice => {self = self.handle_gamechoice_events()?},
+      CurrentScreen::SocialLife => {self = self.handle_social_events()?},
+      CurrentScreen::FriendsDisplay => {},
+      CurrentScreen::Game => {},
+    }
+  Ok((self, receiver))
+  }
+}
+
+impl Widget for &Infos {
+  fn render(self, area: Rect, buf: &mut Buffer) {
+    match self.screen {
+      CurrentScreen::Welcome => {self.display_welcome_screen(area, buf);}, 
+      CurrentScreen::GameChoice => {self.display_gamechoice_screen(area, buf);}, 
+      CurrentScreen::SocialLife => {self.display_social_screen(area, buf);}, 
+      CurrentScreen::FriendsDisplay => {self.display_friends_screen(area, buf);}, 
+      CurrentScreen::Game => {}, 
     }
   }
 }

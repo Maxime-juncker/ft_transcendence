@@ -1,98 +1,81 @@
-use reqwest::{
-	header::HeaderMap,
-	Client,
-};
-
-use crossterm::{
-    ExecutableCommand, QueueableCommand, cursor::{self, EnableBlinking, Hide, MoveLeft, MoveTo, SetCursorStyle, Show, position}, event::{self, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind, poll}, style::*, terminal
-};
-
-use futures_util::{StreamExt, SinkExt};
-use futures_util::stream::SplitSink;
-use serde_json::Number;
-use ::terminal::Terminal;
-use std::time::Duration;
 use std::{
-	collections::HashMap,
-	io::{Write, stdout},
+  io::{Write, stdout},
 };
-
-use crate::{HEIGHT, WIDTH, welcome::borders};
-
-
-
-use crate::{should_exit, cleanup_and_quit};
-use bytes::Bytes;
-
-use tokio_tungstenite::{connect_async_tls_with_config, tungstenite::{Utf8Bytes, http::response}};
-use tokio_tungstenite::MaybeTlsStream;
-use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::Connector;
-use tokio_tungstenite::tungstenite::protocol::Message;
-use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-use std::thread::{sleep};
 
 use anyhow::{Result, anyhow};
+use serde_json;
+use crossterm::event::poll;
+use reqwest::{Client};
+use tokio_tungstenite::tungstenite::protocol::frame;
 
-use crate::Infos;
+use crate::infos_events::EventHandler;
+use crate::screen_displays::ScreenDisplayer;
+use crate::welcome::{draw_welcome_screen, game_setup, setup_terminal};
+use crate::game::{create_game};
+// use crate::friends::social_life;
 
-use tokio::{runtime::TryCurrentError, sync::mpsc};
-use tokio::net::TcpStream;
+use crate::login::{create_guest_session};
+use tokio::{net::unix::pipe::Receiver, sync::mpsc};
 
-use crate::welcome::draw_friends_screen;
+use std::time::Duration;
+use crossterm::{
+  ExecutableCommand, QueueableCommand, cursor::{self, SetCursorStyle}, event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, PopKeyboardEnhancementFlags}, style::*, terminal
+};
 
-pub async fn social_life(game_main: &Infos) -> Result<()> {
-    loop {
-        draw_friends_screen()?;
-        let event = event::read()?;
+use crate::LOGO;
+use super::{should_exit, Infos};
 
-        if should_exit(&event)? == true {
-            cleanup_and_quit(&game_main.original_size)?;
-        }
-        else if let Event::Key(key_event) = event {
-            match key_event.code {
-            KeyCode::Char('1') => {
-                display_friends(game_main).await?;
-            },
-            KeyCode::Char('2') => {
-                //chat();
-            },
-            KeyCode::Char('3') => {break Ok(());},
-            _ => {},
-            }
-        }
-    }
+use ratatui::{
+    buffer::Buffer,
+    layout::Rect,
+    style::Stylize,
+    symbols::border,
+    text::{Line, Text},
+    widgets::{Block, Paragraph, Widget},
+    DefaultTerminal, Frame,
+};
+
+pub const WIDTH: u16 = 90;
+pub const HEIGHT: u16 = 30;
+
+pub trait FriendsDisplay {
+    async fn display_friends(&self, area: Rect, buf: &mut Buffer) -> Result<()>;
 }
 
-async fn display_friends(game_main: &Infos) -> Result<()> {
-    let mut index: usize = 0;
-    loop {
-        let friends_list = get_friends(game_main).await?;
-        print_friends(&friends_list, &index)?;
-        let event: Event = event::read()?;
-
-        if (should_exit(&event))? == true {
-            return Ok(());
-        }
-        else if let Event::Key(key_event) = event {
-            match key_event.code {
-                KeyCode::Char('1') => {add_friend(game_main).await?},
-                KeyCode::Char('2') => {delete_friend(game_main).await?},
-                KeyCode::Char('3') => {},
-                KeyCode::Right => {
-                    if index < usize::MAX {
-                        index += 1;
+impl FriendsDisplay for Infos  {
+    async fn display_friends(&self, area: Rect, buf: &mut Buffer) -> Result<()> {
+        let mut index: usize = 0;
+        loop {
+            let friends_list = get_friends(self).await?;
+            print_friends(&friends_list, &index)?;
+            if (poll(Duration::from_millis(16)))? {
+                let event: Event = event::read()?;
+        
+                if (should_exit(&event))? == true {
+                    return Ok(());
+                }
+                else if let Event::Key(key_event) = event {
+                    match key_event.code {
+                        KeyCode::Char('1') => {add_friend(self).await?},
+                        KeyCode::Char('2') => {delete_friend(self).await?},
+                        KeyCode::Char('3') => {},
+                        KeyCode::Right => {
+                            if index < usize::MAX {
+                                index += 1;
+                            }
+                        },
+                        KeyCode::Left => {if index > 0 {
+                            index -= 1;
+                        }
+                        },
+                        _ => {},
                     }
-                },
-                KeyCode::Left => {if index > 0 {
-                    index -= 1;
-                   }
-                },
-                _ => {},
+                }
             }
         }
-    }
+    }        
 }
+
 
 async fn delete_friend(game_main: &Infos) -> Result<()> {
     set_display_friend_adding()?;

@@ -33,7 +33,6 @@ use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::Connector;
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
-// use std::thread::{sleep};
 
 use anyhow::{Result, anyhow};
 
@@ -155,18 +154,6 @@ pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Rece
 					Ok(false) => {},
 					_ => return Err(("event error".to_string(), receiver))
 				}
-				// match wrong_resize_waiting_screen(&event) {
-				// 	Ok(true) => {
-				// 		if let Err(_) = stdout().execute(terminal::Clear(terminal::ClearType::All)) {
-				// 			return  Err(("Cleaning terminal".to_string(), receiver));
-				// 		};
-    			//   		if let Err(_) = stdout().execute(cursor::MoveTo(0,0)).and_then(|s| s.execute(Print("Wrong terminal size, please resize"))) {
-				// 			return  Err(("Writing to terminal".to_string(), receiver));
-				// 		};
-				// 		continue ;
-				// 	}
-					// _ => {},
-				// }
 			},
 			Ok(false) => {
 				if !receiver.is_empty() {
@@ -190,14 +177,14 @@ pub async fn create_game(game_main: &Infos, mode: &str, mut receiver: mpsc::Rece
 	Ok(receiver)
 }
 
-fn wrong_resize_waiting_screen(event: &Event) -> Result<bool> {
-  if let Event::Resize(x,y ) = event {
-    if *x < WIDTH || *y < HEIGHT {
-      return Ok(true);
-    }
-  }
-  Ok(false)
-}
+// fn wrong_resize_waiting_screen(event: &Event) -> Result<bool> {
+//   if let Event::Resize(x,y ) = event {
+//     if *x < WIDTH || *y < HEIGHT {
+//       return Ok(true);
+//     }
+//   }
+//   Ok(false)
+// }
 
 
 impl Game {
@@ -232,9 +219,6 @@ impl Game {
 				.danger_accept_invalid_certs(true)
 				.build()?
 		);
-
-		// eprintln!("We are here {:?}", request);
-
 		let (ws_stream, _) = connect_async_tls_with_config(
 			request,
 			None,
@@ -242,7 +226,6 @@ impl Game {
 			Some(connector),
 			).await?;
 		let (mut ws_write, mut ws_read) = ws_stream.split();
-		// eprintln!("Coucou les copains");
 		let (sender, receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
 		let cloned_size = self.original_size.clone();
 		tokio::spawn(async move {

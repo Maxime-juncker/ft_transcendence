@@ -8,7 +8,7 @@ use crossterm::{
 
 use crate::{HEIGHT, WIDTH};
 
-const LOGO: &str = r#"
+pub const LOGO: &str = r#"
   ██████╗  ██████╗ ███╗   ██╗ ██████╗ 
   ██╔══██╗██╔═══██╗████╗  ██║██╔════╝ 
   ██████╔╝██║   ██║██╔██╗ ██║██║  ███╗
