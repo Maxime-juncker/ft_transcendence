@@ -13,11 +13,13 @@ export function fortyTwoOAuth2Routes (
 	fastify.get('/forty_two/callback', function(request: any, reply) {
 
 		fastify.FortyTwoOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
-			if (err) {
+			if (err)
+			{
 				console.log('OAuth Error:', err);
 				reply.send(err);
 				return;
 			}
+
 			const fetchResult = await fetch('https://api.intra.42.fr/v2/me', {
 				headers: {
 					Authorization: 'Bearer ' + result.token.access_token

@@ -1,4 +1,4 @@
-import { setCookie } from 'utils.js';
+import { setCookie, getCookie} from 'utils.js';
 import { hashString } from './sha256.js'
 import { UserElement, UserElementType } from './UserElement.js';
 
@@ -70,6 +70,7 @@ export class User {
 
 	/* private vars */
 	protected m_id: number = -1;
+	protected m_token:		string = "";
 
 	private m_email:		string	= "";
 	private m_avatarPath:	string = "";
@@ -82,7 +83,7 @@ export class User {
 	private m_friends:		User[] = []; // accepted request
 	private m_pndgFriends = new Map<User, number>(); // pending requests (number == sender)
 
-	constructor() {
+	constructor(token?: string) {
 		this.setUser(
 			-1,
 			"Guest",
@@ -91,6 +92,8 @@ export class User {
 			UserStatus.UNKNOW
 		);
 
+		if (token) // token will be used for request needing permission
+			this.m_token = token;
 		this.m_blockUsr = [];
 		this.m_stats = { gamePlayed: 0, gameWon: 0, currElo: 0, maxElo: 0, avrTime: "", shortTime: "" };
 		this.m_source = AuthSource.GUEST;
@@ -117,6 +120,7 @@ export class User {
 	get	created_at(): string				{ return this.m_created_at; }
 	get	stats(): Stats						{ return this.m_stats; }
 	get	source(): AuthSource				{ return this.m_source; }
+	set token(token: string)				{ this.m_token = token; }
 
 	public async setStatus(status: UserStatus): Promise<Response> {
 		this.m_status = status;
@@ -177,8 +181,15 @@ export class User {
 
 	public async updateBlockList(): Promise<number>
 	{
+		if (!this.m_token)
+			return 0;
+
 		this.m_blockUsr = [];
-		const response = await fetch('/api/user/blocked_users');
+		const response = await fetch('/api/user/blocked_users', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ token: this.m_token })
+		});
 		if (response.status != 200)
 			return response.status;
 
@@ -269,7 +280,8 @@ export class MainUser extends User
 
 	constructor(parent: HTMLElement | null)
 	{
-		super()
+		const token = getCookie("jwt_session");
+		super(token);
 		
 		if (parent)
 		{
@@ -534,15 +546,29 @@ export class MainUser extends User
 
 	public async blockUser(id: number): Promise<number>
 	{
+		const res = await fetch('/api/user/block', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ 
+				token: this.m_token,
+				id: id
+			})
+		});
 		console.log("blocking");
-		const res = await fetch(`/api/user/block/${id}`, { method: "POST" });
 		return res.status;
 	}
 
 	public async unblockUser(id: number): Promise<number>
 	{
 		console.log("unblocking");
-		const res = await fetch(`/api/user/unblock/${id}`, { method: "POST" });
+		const res = await fetch('/api/user/unblock', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ 
+				token: this.m_token,
+				id: id
+			})
+		});
 		return res.status;
 	}
 }

@@ -26,6 +26,16 @@ export function setCookie(name: string, value: any, exdays: any)
 	document.cookie = name + "=" + value + ";" + expire + ";path=/";
 }
 
+export function getCookie(name: string) 
+{
+	const regex = new RegExp(`(^| )${name}=([^;]+)`)
+	const match = document.cookie.match(regex)
+	if (match)
+	{
+		return match[2]
+	}
+}
+
 export function setPlaceHolderText(msg: string)
 {
 	var placeholder: HTMLElement;

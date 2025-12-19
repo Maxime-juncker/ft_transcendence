@@ -143,7 +143,7 @@ export async function createUser(email: string, passw: string, username: string,
 		return { code: 403, data: { message: "error: email not valid" }};
 	const res = await getUserByName(username, core.db);	
 	if (res.code != 404)
-		return { code: 409, data: { message: "alias already taken" }};
+		return { code: 409, data: { message: "user is already in database" }};
 
 	try {
 		const result = await db.run(sql, [username, email, passw, source, getSqlDate()]);
@@ -246,16 +246,13 @@ export async function updateAvatarPath(id: number, filename: string)
 	await core.db.run(sql, ["/public/avatars/" + filename , id]);
 }
 
-export async function uploadAvatar(request: FastifyRequest, reply: any, db: Database)
+export async function uploadAvatar(request: FastifyRequest, reply: any, id: number)
 {
 	const data = await request.file();
 	if (!data)
 		return reply.code(400).send({ message: "no file uploaded" });
 
-	const userId = request.session.user;
-	if (!userId)
-		return reply.code(400).send({ message: "no user in session" });
-	const res = await getUserById(userId, db);
+	const res = await getUserById(id, core.db);
 	if (res.code != 200)
 		return reply.code(res.code).send(res.data);
 

@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } f
 import * as core from '@core/core.js';
 import * as user from '@modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
+import { jwtVerif } from '@modules/jwt/jwt.js';
 
 export async function userRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
@@ -9,14 +10,25 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 		return await user.getUserHistByName(request, reply, core.db);
 	})
 
-	fastify.get('/blocked_users', async (request: FastifyRequest, reply: FastifyReply) => {
-		const userid = request.session.user;
-		if (!userid)
-			return reply.code(400).send({ message: "missing user session" });
+	fastify.post('/blocked_users', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['token'],
+				properties: {
+					token:		{ type: 'string' },
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string };
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
 
-		const res = await user.getBlockedUsrById(userid, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			const res = await user.getBlockedUsrById(data.id, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.post('/add_game_history', async (request: FastifyRequest, reply: FastifyReply) => {
 		const { user1_name, user2_name, user1_score, user2_score } = request.body as {

@@ -35,6 +35,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		return reply.code(res.code).send(res.data);
 	})
 
+	/**
+	 * @deprecated
+	 */
 	fastify.post('/guest_cli', async (request: any, reply: FastifyReply) => {
 		const res = await mgmt.createGuest();
 		return reply.code(res.code).send(res);
@@ -48,7 +51,8 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 			username: string
 		};
 		const res = await mgmt.createUser(email, passw, username, 0, core.db);
-		return reply.code(res.code).send(res.data);
+		const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
+		return reply.code(res.code).send({ token: token });
 	})
 
 	fastify.post('/login', async (request: any, reply: FastifyReply) => {
@@ -56,7 +60,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		const res = await mgmt.login(email, passw, totp, core.db);
 		if (res.code == 200)
 		{
-			// request.session.user = res.data.id;
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
 			console.log("creating new token:", token);
 			return reply.code(200).send({ token: token });
@@ -68,28 +71,49 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		const { user_id } = request.body;
 
 		const res = await mgmt.logoutUser(user_id, core.db);
-		if (res.code == 200)
-			request.session.destroy(); // destroy session or user will be reconnected
 		return reply.code(res.code).send(res.data);
 	})
 
-	fastify.delete('/reset', async (request: FastifyRequest, reply: FastifyReply) => {
-		const user_id = request.session.user;
-		if (!user_id)
-			return reply.code(400).send({ message: "missing user_id in session" });
+	fastify.delete('/reset', {
+		schema: { 
+			body: {
+				type: 'object',
+				properties: {
+					token: { type: 'string' }
+				},
+				required: ["token"],
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string };
 
-		const res = await mgmt.resetUser(user_id);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.resetUser(data.id);
+			return reply.code(res.code).send(res.data);
+		})
 
-	fastify.delete('/delete', async (request: FastifyRequest, reply: FastifyReply) => {
-		const user_id = request.session.user;
-		if (!user_id)
-			return reply.code(400).send({ message: "missing user_id in session" });
+	fastify.delete('/delete', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ["token"],
+				properties: {
+					token: { type: 'string' }
+				}
+			}
+		}
+	},
+		async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string };
 
-		const res = await mgmt.deleteUser(user_id, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.deleteUser(data.id, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.post('/set_status', async (request:any, reply:any) => {
 		const { user_id, newStatus } = request.body;
@@ -98,78 +122,128 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		return reply.code(res.code).send(res.data);
 	})
 
-	fastify.post('/upload/avatar', async (request, reply) => {
-		return mgmt.uploadAvatar(request, reply, core.db);
-	})
+	fastify.post('/upload/avatar', {
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					token: { type: 'string' }
+				},
+				required: ['token']
+			}
+		}
+	}, async (request, reply) => {
+			const { token } = request.body as { token: string };
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+
+			return mgmt.uploadAvatar(request, reply, data.id);
+		})
 
 	fastify.post('/update/passw', {
 		schema: {
 			body: {
 				type: 'object',
-				required: ['oldPass', 'newPass'],
+				required: ['oldPass', 'newPass', 'token'],
 				properties: {
-					oldPass: { type: 'string' },
-					newPass: { type: 'string' },
+					token:		{ type: 'string' },
+					oldPass:	{ type: 'string' },
+					newPass:	{ type: 'string' },
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { oldPass, newPass } = request.body as { oldPass: string, newPass: string };
-		const id = request.session.user;
-		if (!id)
-			return reply.code(400).send({ message: "user session not found" });
+			const { token, oldPass, newPass } = request.body as { token: string, oldPass: string, newPass: string };
 
-		const res = await mgmt.updatePassw(id, oldPass, newPass);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.updatePassw(data.id, oldPass, newPass);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.post('/update/name', {
 		schema: {
 			body: {
 				type: 'object',
-				required: ['name'],
+				required: ['name', 'token'],
 				properties: {
-					name: { type: 'string' }
+					name: { type: 'string' },
+					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { name } = request.body as { name: string };
-		const id = request.session.user;
-		if (!id)
-			return reply.code(400).send({ message: "user session not found" });
+			const { name, token } = request.body as { name: string, token: string };
 
-		const res = await mgmt.updateName(id, name);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.updateName(data.id, name);
+			return reply.code(res.code).send(res.data);
+		})
 
-	fastify.post('/update/email', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { email } = request.body as { email: string };
-		const id = request.session.user;
-		if (!id)
-			return reply.code(400).send({ message: "user session not found" });
+	fastify.post('/update/email', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['email', 'token'],
+				properties: {
+					email: { type: 'string' },
+					token: { type: 'string' }
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { email, token } = request.body as { email: string, token: string };
 
-		const res = await mgmt.updateEmail(id, email);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.updateEmail(data.id, email);
+			return reply.code(res.code).send(res.data);
+		})
 
-	fastify.post('/block/:id', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { id } = request.params as { id: number };
-		const userId = request.session.user;
-		if (!userId)
-			return reply.code(400).send({ message: "missing user session" });
+	fastify.post('/block', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['id', 'token'],
+				properties: {
+					id: { type: 'number' },
+					token: { type: 'string' }
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { id, token } = request.body as { id: number, token: string };
 
-		const res = await mgmt.blockUser(userId, id, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
+			const res = await mgmt.blockUser(data.id, id, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 
-	fastify.post('/unblock/:id', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { id } = request.params as { id: number };
-		const userId = request.session.user;
-		if (!userId)
-			return reply.code(400).send({ message: "missing user session" });
+	fastify.post('/unblock', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['id', 'token'],
+				properties: {
+					id: { type: 'number' },
+					token: { type: 'string' }
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { id, token } = request.body as { id: number, token: string };
+			const data: any = await jwt.jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" })
 
-		const res = await mgmt.unBlockUser(userId, id, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			const res = await mgmt.unBlockUser(data.id, id, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 }
