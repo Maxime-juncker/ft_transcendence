@@ -63,6 +63,7 @@ services:
     container_name: prometheus
     volumes:
       - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - modsecurity_logs:/var/log/nginx/access.log
     networks:
       - monitoring
       - nginx_prom_export
@@ -95,10 +96,11 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
+    env_file:
+    - .env
     volumes:
       - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
       - elk
 
@@ -107,8 +109,12 @@ services:
     container_name: logstash
     volumes:
       - ./elk/logstash/config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - modsecurity_logs:/var/log/nginx/access.log:ro
     depends_on:
       - elasticsearch
+      - modsecurity
+    env_file:
+      - .env
     networks:
       - elk
 
@@ -141,3 +147,4 @@ volumes:
   avatars:
     name: avatars
   es_data:
+  modsecurity_logs:
