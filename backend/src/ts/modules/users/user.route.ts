@@ -98,4 +98,14 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				}
 			}
 		)
+
+	fastify.get('/get_all', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getAllUsers();
+		return reply.code(res.code).send(res.data);
+	});
+
+	fastify.get('/get_all_id', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getAllUsers();
+		return reply.code(res.code).send(res.data);
+	});
 }

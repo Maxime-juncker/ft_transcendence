@@ -137,7 +137,7 @@ export class GameInstance
 			this._winner = player;
 			this._isRunning = false;
 			console.log(`${this._winner} won the game (mode: ${this.mode})`);
-			if (this.mode == 'online')
+			if (this.mode == 'online' || this.mode == 'bot')
 			{
 				if (!this._Player1Id || !this._Player2Id)
 					return ;

@@ -1,11 +1,13 @@
 import { MainUser } from './User.js';
 import { Router } from 'app.js';
+import { Leaderboard } from 'Leaderboard.js';
 import { ViewComponent } from 'ViewComponent.js';
 
 export class StartView extends ViewComponent
 {
 	private m_profileContainer: HTMLElement | null = null;
 	private m_user: MainUser | null = null;
+	private m_leaderboard: Leaderboard | null = null;
 
 	constructor()
 	{
@@ -29,6 +31,10 @@ export class StartView extends ViewComponent
 
 		this.m_user = new MainUser(this.m_profileContainer);
 		await this.m_user.loginSession();
+
+		this.m_leaderboard = new Leaderboard();
+		await this.m_leaderboard.Init();
+		this.m_leaderboard.RefreshContainer();
 	}
 
 	public async disable()

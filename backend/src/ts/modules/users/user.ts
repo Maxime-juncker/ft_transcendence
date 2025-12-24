@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite'
 import { DbResponse } from '@core/core.js';
+import * as core from '@core/core.js';
 
 export interface GameRes {
 	user1_id:		number;
@@ -50,10 +51,25 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 		[id1, id2] = [id2, id1];
 		[game.user1_score, game.user2_score] = [game.user2_score, game.user1_score];
 	}
-	const sql = "INSERT INTO games (user1_id, user2_id, user1_score, user2_score, created_at) VALUES(?, ?, ?, ?, ?);";
+	var sql = "INSERT INTO games (user1_id, user2_id, user1_score, user2_score, created_at, user1_elo, user2_elo) VALUES(?, ?, ?, ?, ?, ?, ?);";
+	var sql_elo = "UPDATE users SET elo = elo + ? WHERE id = ? RETURNING elo";
 	const date = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
 	try {
-		const response = await db.run(sql, [id1, id2, game.user1_score, game.user2_score, date]);
+		var user1Elo;
+		var user2Elo;
+		if (game.user1_score > game.user2_score) // user1 has won
+		{
+			user1Elo = await db.get(sql_elo, [10, id1]);
+			user2Elo = await db.get(sql_elo, [-10, id2]);
+		}
+		else
+		{
+			user1Elo = await db.get(sql_elo, [-10, id1]);
+			user2Elo = await db.get(sql_elo, [10, id2]);
+		}
+		console.log(user1Elo, user2Elo)
+
+		const response = await db.run(sql, [id1, id2, game.user1_score, game.user2_score, date, user1Elo.elo, user2Elo.elo]);
 		console.log(`added game to history. id: ${response.lastID}`);
 		await updateUserStats(id1, game.user1_score > game.user2_score, db);
 		await updateUserStats(id2, game.user2_score > game.user1_score, db);
@@ -141,4 +157,36 @@ export async function getBlockedUsrById(id: number, db: Database) : Promise<DbRe
 		return { code: 500, data: { message: "Database Error" }};
 	}
 
+}
+
+export async function getAllUsers(): Promise<DbResponse>
+{
+	const sql = 'SELECT id, name, elo, wins, games_played, created_at, avatar, status FROM users;';
+	try
+	{
+		const rows = await core.db.all(sql);
+		if (!rows || rows.length == 0)
+			return { code: 200, data: [] };
+		return { code: 200, data: rows };
+	}
+	catch (err) {
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
+export async function getAllUserIds(): Promise<DbResponse>
+{
+	const sql = 'SELECT id FROM users;';
+	try
+	{
+		const rows = await core.db.all(sql);
+		if (!rows || rows.length == 0)
+			return { code: 200, data: [] };
+		return { code: 200, data: rows };
+	}
+	catch (err) {
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
 }

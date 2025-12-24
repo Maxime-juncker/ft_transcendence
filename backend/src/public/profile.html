@@ -52,7 +52,6 @@
 				<button id="red-btn" class="button-empty border-red text-red">N</button>
 			</div>
 		</div>
-
 	</template>
 
 	<div class="h-full overflow-hidden overflow-y-hidden">
@@ -94,6 +93,7 @@
 					<div class="self-center ml-4 h-[80%] w-2 bg-darker"></div>
 				</div>
 
+
 				<div class="stat-container">
 					<div class="stat-item">
 						<p>game played</p>
@@ -112,9 +112,11 @@
 				</div>
 			</div>
 
-			<!-- stats -->
-			<div class="flex justify-center align-middle my-5 w-1/2 min-h-32 gap-5">
-				<div class="h-full w-1/2 bg-dark">
+				<!-- stats -->
+				<div class="flex w-2/3 bg-dark h-[30vh] py-2 flex-row justify-around items-center">
+					<div class="w-[40%]">
+						<canvas id="eloEvo"></canvas>
+					</div>
 					<div class="stat-container">
 						<div class="stat-item">
 							<p>max elo</p>
@@ -127,7 +129,6 @@
 						</div>
 					</div>
 				</div>
-			</div>
 
 			<!-- history / friends -->
 			<div class="flex w-[95%] gap-10 flex-col h-screen min-h-screen mb-10">

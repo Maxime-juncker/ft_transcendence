@@ -4,7 +4,6 @@ import { UserElement, UserElementType } from './UserElement.js';
 
 // *********************** TODO *********************** //
 // user with large name should be trucated
-// Add settings page									//
 // **************************************************** //
 
 export enum UserStatus {
@@ -78,6 +77,7 @@ export class User {
 	private m_created_at:	string = "";
 	private m_stats:		Stats;
 	private m_source:		AuthSource;
+	private m_elo:			number = 0;
 
 	private m_blockUsr:		User[];
 	private m_friends:		User[] = []; // accepted request
@@ -88,7 +88,7 @@ export class User {
 			-1,
 			"Guest",
 			"",
-			"", // TODO: add default avatar
+			"",
 			UserStatus.UNKNOW
 		);
 
@@ -99,7 +99,7 @@ export class User {
 		this.m_source = AuthSource.GUEST;
 	}
 
-	public setUser(id: number, name: string, email: string, avatar: string, status: UserStatus) {
+	public setUser(id: number, name: string, email: string, avatar: string, status: UserStatus, elo: number = 0) {
 		this.m_id = id;
 		this.name = name;
 		this.m_email = email;
@@ -108,11 +108,13 @@ export class User {
 		this.m_friends = [];
 		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
+		this.m_elo = elo;
 	}
 
 	public getStatus(): UserStatus			{ return this.m_status; }
 	public getEmail(): string				{ return this.m_email; }
 	public getAvatarPath(): string			{ return this.m_avatarPath; }
+	get	elo(): number						{ return this.m_elo; }
 	get blockUsr(): User[]					{ return this.m_blockUsr; }
 	get friends(): User[]					{ return this.m_friends; }
 	get pndgFriends(): Map<User, number>	{ return this.m_pndgFriends; }
@@ -416,7 +418,7 @@ export class MainUser extends User
 		userHtml.updateHtml(user);
 	}
 
-	public async setAvatar(file: FormData): Promise<number> // TODO: check si multipart upload ok
+	public async setAvatar(file: FormData): Promise<number>
 	{
 		if (this.id == -1)
 			return 1;
@@ -432,15 +434,13 @@ export class MainUser extends User
 
 	public async removeFriend(user: User): Promise<number> {
 		console.log("removing friend")
-		const url = `/api/friends/remove`;
-		const response = await fetch(url, {
+		const response = await fetch('/api/friends/remove', {
 			method: "DELETE",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				token: this.m_token,
 				friend_id: user.id
 			})
-
 		});
 
 		await this.updateSelf();
@@ -450,8 +450,7 @@ export class MainUser extends User
 
 	public async acceptFriend(user: User): Promise<number> {
 		console.log("accepting friend")
-		const url = `/api/friends/accept`;
-		const response = await fetch(url, {
+		const response = await fetch('/api/friends/accept', {
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
@@ -466,7 +465,6 @@ export class MainUser extends User
 	}
 
 
-	// TODO; funciton as changed, send id not name
 	public async addFriend(friend_name: string): Promise<number> {
 		console.log("adding friend")
 		if (!friend_name || friend_name == "")

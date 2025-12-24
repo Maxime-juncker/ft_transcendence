@@ -4,6 +4,9 @@ import { FriendManager } from "friends.js";
 import * as utils from 'utils.js'
 import { ViewComponent } from "ViewComponent.js";
 import { Router } from "app.js";
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 export class ProfileView extends ViewComponent
 {
@@ -53,9 +56,8 @@ export class ProfileView extends ViewComponent
 			winrate = stats.gameWon > 0 ? (stats.gameWon / stats.gamePlayed) * 100 : 0;
 		(<HTMLElement>this.querySelector("#game-played")).innerText		= `${stats.gamePlayed}`;
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
-		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? winrate + "%" : "n/a" }`;
+		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? Math.round(winrate) + "%" : "n/a" }`;
 		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
-		(<HTMLElement>this.querySelector("#max-elo")).innerText			= `${stats.maxElo}p`;
 
 		const userMenuContainer = this.querySelector("#user-menu-container");
 		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance?.navigateTo("/"));
@@ -78,6 +80,15 @@ export class ProfileView extends ViewComponent
 			this.m_main.resetCallbacks();
 			this.m_main = null;
 		}
+
+		var ctx = document.getElementById('eloEvo') as HTMLCanvasElement;
+		if (!ctx)
+		{
+			console.warn("no chart found")
+			return;
+		}
+		const clone = ctx.cloneNode(true) as HTMLCanvasElement;;
+		ctx.parentNode?.replaceChild(clone, ctx);
 
 		userContainer.innerHTML = "";
 		historyContainer.innerHTML = "";
@@ -202,6 +213,9 @@ export class ProfileView extends ViewComponent
 
 	private async addMatch(user: User)
 	{
+		const eloData = new Map<string, number>()
+		eloData.set(user.created_at, 1000);
+
 		const histContainer = this.querySelector("#history-container");
 		if (!histContainer)
 			return ;
@@ -221,16 +235,68 @@ export class ProfileView extends ViewComponent
 
 		if (code != 200)
 			return ;
+	
+		var ctx = document.getElementById('eloEvo') as HTMLCanvasElement;
+		if (!ctx)
+		{
+			console.warn("no chart found")
+			return;
+		}
 
 		var data = await response.json();
+		console.log(data)
 		for (let i = 0; i  < data.length; i ++) {
 			const elt = data[i];
-			const clone = await this.addMatchItem(user, elt);
-			histContainer.append(clone);
+			const clone = await this.addMatchItem(user, elt, eloData);
+			histContainer.prepend(clone);
 		}
+
+		const eloValues = Array.from(eloData.values());
+		const min = Math.min(...eloValues);
+		const max = Math.max(...eloValues);
+
+		new Chart(ctx, {
+			type: 'line',                                   // chart type
+			data: {
+				labels: Array.from(eloData.keys()),
+				datasets: [{
+					label: 'elo graph',
+					data: eloValues,
+					borderColor: 'rgba(75, 192, 192, 1)',
+					backgroundColor: 'rgba(75, 192, 192, 0.2)',
+					// stepped: true,
+					tension: 0.0
+				}]
+			},
+			options: {
+				responsive: true,
+				plugins: {
+					tooltip: {
+						mode: 'index',
+						intersect: false
+					},
+					title: {
+						display: true,
+						text: 'elo graph'
+					},
+				},
+				hover: {
+					mode: 'index',
+					intersect: false
+				},
+				scales: {
+					y: {
+						min: min
+					},
+					x: { display: false }
+				}
+			}
+		});
+
+		(<HTMLElement>this.querySelector("#max-elo")).innerText = `${max}p`;
 	}
 
-	private async addMatchItem(user: User, json: any): Promise<HTMLElement>
+	private async addMatchItem(user: User, json: any, eloData: Map<string, number>): Promise<HTMLElement>
 	{
 		const template = this.querySelector("#match-template") as HTMLTemplateElement;
 		const clone: HTMLElement = template.content.cloneNode(true) as HTMLElement;
@@ -256,14 +322,17 @@ export class ProfileView extends ViewComponent
 			console.warn("failed to get player2");
 			return clone;
 		}
-		player1.innerText = `${user.name}`;
-		player2.innerText = `${user2.name}`;
+		const elo = user.id < user2.id ? json.user1_elo : json.user2_elo;
+		const otherElo = user.id < user2.id ? json.user2_elo : json.user1_elo;
+		player1.innerText = `${user.name} (${elo})`;
+		player2.innerText = `${user2.name} (${otherElo})`;
 		player1.addEventListener("click", () => Router.Instance?.navigateTo(`/profile?username=${user.name}`))
 		player2.addEventListener("click", () => Router.Instance?.navigateTo(`/profile?username=${user2.name}`))
 		status.innerText = `${player1Score > player2Score ? "won" : "lost" }`;
-		status.style.color = `${player1Score > player2Score ? "var(--green)" : "var(--red)" }`;
+		status.style.color = `${player1Score > player2Score ? "var(--color-green)" : "var(--color-red)" }`;
 		score.innerText = `${player1Score} - ${player2Score}`;
 		date.innerText = json.created_at;
+		eloData.set(json.created_at, elo);
 
 		return clone;
 	}

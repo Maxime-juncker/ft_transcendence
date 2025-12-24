@@ -17,6 +17,29 @@
 
 	--background-image-pixel-mask: linear-gradient(transparent 50%, rgba(0,0,0,0.01) 50%), linear-gradient(90deg, rgba(255,0,0,0.1), rgba(0,255,0,0.05), rgba(0,0,255,0.1));
 
+@keyframes bootup-text {
+	9% {
+		opacity: 0;
+		visibility: hidden;
+	}
+
+	10% {
+		opacity: 1;
+		visibility: visible;
+	}
+	
+	99% {
+		opacity: 1;
+		visibility: visible;
+	}
+	
+	100% {
+		opacity: 0;
+		visibility: hidden;
+	}
+}
+
+
 	@keyframes bootup-lines {
 		0% {
 			top: 30%;
@@ -110,9 +133,9 @@
 				before:top-0 before:left-0 before:bottom-0 before:right-0
 				before:pointer-events-none
 				before:bg-size-[100%_2px,3px_100%]
-				before:bg-pixel-mask before:z-99
+				before:bg-pixel-mask before:z-9999999
 				
-				after:content-[''] after:block after:absolute after:z-98
+				after:content-[''] after:block after:absolute after:z-999998
 				after:top-0 after:left-0 after:bottom-0 after:right-0
 				after:bg-px-black after:opacity-0
 				after:pointer-events-none
@@ -128,15 +151,15 @@
 	}
 
 	.crt-mask {
-		@apply absolute z-2
+		@apply absolute z-999
 				w-full h-[110%]
 				bg-radial from-transparent from-90% to-black
 				pointer-events-none
-				animate-[bootup-screen_6s_linear]
+				animate-[bootup-screen_3s_linear]
 	}
 
 	.bootup-text {
-		@apply	absolute z-99
+		@apply	absolute z-9999
 				text-[62px] text-green-700 invisible
 				select-none
 				bg-black

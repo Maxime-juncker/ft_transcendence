@@ -16,10 +16,27 @@
 			</div>
 
 			<div id="user-stats">
-				<h1>elo: 500p</h1>
-				<h1>W/L: 42%</h1>
+				<!-- <h1>elo: 500p</h1> -->
+				<!-- <h1>W/L: 42%</h1> -->
 			</div>
 			<select id="status"></select>
+		</div>
+	</template>
+
+	<template id="user-leaderboard-template">
+		<div class="relative flex gap-2 items-center justify-between h-20 w-[90%] border-2 border-white p-2">
+			<h1 id="ranking">NaN</h1>
+			<div id="profile" class="flex flex-row w-full items-center gap-2 hover:brightness-[1.2]">
+				<div class="relative">
+					<img
+						id="avatar-img"
+						src="" 
+						alt="Profile" 
+						class="avatar-img"/>
+					<div id="user-status" class="user-status right-0 top-[70%]"></div>
+				</div>
+				<h1 id="avatar-name" class="text-[100%] font-bold select-none break-all">user</h1>
+			</div>
 		</div>
 	</template>
 
@@ -39,6 +56,7 @@
 		</header>
 
 		<div id="main" class="main">
+
 			<div class="banner" style="
 				position: absolute; rotate: -45deg;
 				transform: translateY(40vw)">
@@ -54,8 +72,8 @@
 			<div class="play-menu">
 				<button class="btn" id="play_btn">PLAY</button>
 			</div>
-			<div id="leaderboard">
-				tmp
+			<div id="leaderboard" class="flex flex-col h-full justify-center items-center z-3">
+				<div id="leaderboard-container" class="flex flex-col-reverse justify-center items-center w-full h-1/2 bg-dark"></div>
 			</div>
 		</div>
 	</div>

@@ -13,7 +13,7 @@ export class ServerSideRendering
     <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
 	<link href="/public/output.css" rel="stylesheet">
-	<link href="/public/test.css" rel="stylesheet">
+	<link href="/public/output_crt.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
 	`
@@ -32,6 +32,13 @@ export class ServerSideRendering
 				<div class="scan"></div>
 			</div>
 		</div>
+		<script type="importmap">
+		{
+			"imports": {
+				"chart.js": "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/+esm"
+			}
+		}
+		</script>
 		<script>var exports = {};</script>
 		<script type="module" src="dist/app.js"></script>
 	</body>
@@ -71,7 +78,7 @@ export class ServerSideRendering
 	{
 		this.server.get('*', (request, reply) => // WARNING: this need to be the last route registered (or after all api routes)
 		{
-			if (request.url.startsWith("/api/")) // to api route where found previously
+			if (request.url.startsWith("/api/")) // no api route where found previously
 			{
 				return reply.code(404).send({ message: 'route not found' });
 			}
