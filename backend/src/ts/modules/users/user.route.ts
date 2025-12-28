@@ -3,6 +3,7 @@ import * as core from '@core/core.js';
 import * as user from '@modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from '@modules/jwt/jwt.js';
+import * as mgmt from 'modules/users/userManagment.js';
 
 export async function userRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
@@ -77,6 +78,26 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				}
 			}
 		)
+
+		fastify.post('/get_profile_token', {
+			schema: {
+				body: {
+					type: 'object',
+					required: ['token'],
+					properties: {
+						token: { type: 'string' },
+					}
+				}
+			}
+		}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string};
+
+			const res = await mgmt.loginSession(token, core.db);
+			if (res.code != 200)
+				return reply.code(res.code).send(res.data);
+			console.log("user is login has:", res.data.name);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.get<{ Querystring: { profile_name: string } }>
 		(
