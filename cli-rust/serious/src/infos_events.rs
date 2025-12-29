@@ -9,7 +9,7 @@ use reqwest::{Client};
 use tokio_tungstenite::tungstenite::protocol::frame;
 
 use crate::welcome::{draw_welcome_screen, game_setup, setup_terminal};
-use crate::game::{create_game};
+// use crate::game::{create_game};
 // use crate::friends::social_life;
 
 use crate::login::{create_guest_session};
@@ -42,6 +42,7 @@ pub trait EventHandler {
     fn handle_welcome_events(self) -> Result<Infos>;
     fn handle_gamechoice_events(self) -> Result<Infos>;
     async fn handle_social_events(self) -> Result<Infos>;
+    fn handle_login_events(self) -> Result<Infos>;
 }
 
 impl EventHandler for Infos {
@@ -72,6 +73,23 @@ impl EventHandler for Infos {
                 // KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
                 KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
                 KeyCode::Char('4') => {self.screen = CurrentScreen::Welcome;},
+                _ => {},
+            }
+        }
+      }
+      Ok(self)
+    }
+    fn handle_login_events(mut self) -> Result<Infos> {
+      let event = event::read()?;
+      if should_exit(&event)? == true {
+        self.exit = true;
+      }
+      else if let Event::Key(key_event) = event {
+        if key_event.kind == KeyEventKind::Press {
+            match key_event.code {
+                KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
+                KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
+                KeyCode::Char('3') => {self.screen = CurrentScreen::Welcome;},
                 _ => {},
             }
         }

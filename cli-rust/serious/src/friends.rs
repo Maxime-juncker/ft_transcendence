@@ -11,7 +11,7 @@ use tokio_tungstenite::tungstenite::protocol::frame;
 use crate::infos_events::EventHandler;
 use crate::screen_displays::ScreenDisplayer;
 use crate::welcome::{draw_welcome_screen, game_setup, setup_terminal};
-use crate::game::{create_game};
+// use crate::game::{create_game};
 // use crate::friends::social_life;
 
 use crate::login::{create_guest_session};

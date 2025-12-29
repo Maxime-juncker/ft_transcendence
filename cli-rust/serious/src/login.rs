@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use reqwest::{Client};
 use anyhow::{Result, anyhow};
 
@@ -28,8 +30,8 @@ pub async fn create_guest_session(location: &String) ->
     let value: serde_json::Value = res.json().await?;
     eprintln!("{value}");
     let player_id = match value["data"]["id"].as_u64(){
-      Some(nbr) => nbr,
-      _ => return Err(anyhow!("Error from server, no data received")),
+        Some(nbr) => nbr,
+        _ => return Err(anyhow!("Error from server, no data received")),
     };
     let receiver = enter_chat_room(location, player_id).await?;
     Ok((player_id, client, receiver))
