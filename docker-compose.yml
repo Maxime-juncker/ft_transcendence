@@ -59,6 +59,16 @@ services:
           action: rebuild
           target: /etc/nginx/nginx.conf
 
+  vault:
+    restart: always
+    image: hashicorp/vault:1.21
+    container_name: vault
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault:/vault/file
+      - ./vault/conf/vault.hcl:/vault/config/vault.hcl
+
 networks:
   transcendence:
     driver: bridge
@@ -72,3 +82,4 @@ volumes:
     name: cert
   avatars:
     name: avatars
+  vault:
