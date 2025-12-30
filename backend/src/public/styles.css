@@ -10,6 +10,8 @@
 	--color-white:		#FBF1C7;
 	--color-green:		#98C379;
 	--color-purple:		#C678DD;
+
+	--font-family-saira: "Saira Semi Condensed", sans-serif;
 }
 
 @layer base {
@@ -19,7 +21,8 @@
 
 	body {
 		@apply flex flex-col flex-wrap bg-darker text-white rounded-none h-screen 
-		overflow-hidden pointer-events-auto;
+		overflow-hidden pointer-events-auto
+		/* font-saira; */
 	}
 	
 
@@ -30,13 +33,15 @@
 	main {
 		@apply flex-1 flex justify-center flex-col items-center gap-6;
 	}
+
 	
 }
-	input {
-		@apply	bg-dark border-b-2 border-blue px-7 py-3
-		focus:outline-none focus:brightness-[1.4]
-		hover:brightness-[1.2];
-	}
+
+input {
+	@apply	bg-dark border-b-2 border-blue px-7 py-3
+	focus:outline-none focus:brightness-[1.4]
+	hover:brightness-[1.2];
+}
 
 @layer components
 {
@@ -142,7 +147,7 @@
 	}
 
 	.btn {
-		@apply text-white select-none p-1 hover:bg-white hover:text-darker rounded-none transition-none
+		@apply text-white select-none p-1 hover:bg-white hover:text-darker hover:cursor-grab rounded-none transition-none
 		focus:bg-white focus:text-darker focus:outline-none;
 	}
 

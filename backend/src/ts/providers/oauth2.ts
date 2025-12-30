@@ -49,7 +49,7 @@ const fortyTwoOAuth2Options : any = {
 	credentials: {
 		client: {
 			id: "u-s4t2ud-83623a8ef9db816d5033a1574026445eaf9882a3adbed46ceaae2955c5a6b156",
-			secret: "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"
+			secret: "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"
 		},
 		auth: {
 			authorizeHost: 'https://api.intra.42.fr',

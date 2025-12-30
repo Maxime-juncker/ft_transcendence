@@ -20,7 +20,7 @@ export class StartView extends ViewComponent
 		this.m_profileContainer = this.querySelector("#profile-container") as HTMLElement;
 
 		if (!playBtn) throw new Error("play btn not found"); 
-		if (!this.m_profileContainer) throw new Error("profile container not found"); 
+		// if (!this.m_profileContainer) throw new Error("profile container not found"); 
 
 		this.addTrackListener(playBtn, "click", () => {
 			if (this.m_user && this.m_user.id == -1)
@@ -29,7 +29,7 @@ export class StartView extends ViewComponent
 				Router.Instance?.navigateTo("/lobby");
 		});
 
-		this.m_user = new MainUser(this.m_profileContainer);
+		this.m_user = new MainUser(null);
 		await this.m_user.loginSession();
 
 		this.m_leaderboard = new Leaderboard();

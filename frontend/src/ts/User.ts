@@ -99,7 +99,7 @@ export class User {
 		this.m_source = AuthSource.GUEST;
 	}
 
-	public setUser(id: number, name: string, email: string, avatar: string, status: UserStatus, elo: number = 0) {
+	public setUser(id: number, name: string, email: string, avatar: string, status: UserStatus) {
 		this.m_id = id;
 		this.name = name;
 		this.m_email = email;
@@ -108,21 +108,29 @@ export class User {
 		this.m_friends = [];
 		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
-		this.m_elo = elo;
 	}
 
 	public getStatus(): UserStatus			{ return this.m_status; }
 	public getEmail(): string				{ return this.m_email; }
 	public getAvatarPath(): string			{ return this.m_avatarPath; }
-	get	elo(): number						{ return this.m_elo; }
+	get	elo(): number						{ return this.m_stats.currElo; }
 	get blockUsr(): User[]					{ return this.m_blockUsr; }
 	get friends(): User[]					{ return this.m_friends; }
 	get pndgFriends(): Map<User, number>	{ return this.m_pndgFriends; }
 	get id(): number						{ return this.m_id; }
 	get	created_at(): string				{ return this.m_created_at; }
+	get gamePlayed(): number				{ return this.m_stats.gamePlayed; }
 	get	stats(): Stats						{ return this.m_stats; }
 	get	source(): AuthSource				{ return this.m_source; }
 	set token(token: string)				{ this.m_token = token; }
+
+	get winrate(): number
+	{
+		var winrate = 0;
+		if (this.m_stats.gamePlayed > 0)
+			winrate = this.m_stats.gameWon > 0 ? (this.m_stats.gameWon / this.m_stats.gamePlayed) * 100 : 0;
+		return Math.round(winrate);
+	}
 
 	public async setStatus(status: UserStatus): Promise<Response> {
 		this.m_status = status;

@@ -12,6 +12,9 @@ export class ServerSideRendering
 	<meta charset="UTF-8">
     <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 	<link href="/public/output.css" rel="stylesheet">
 	<link href="/public/output_crt.css" rel="stylesheet">
 	</head>

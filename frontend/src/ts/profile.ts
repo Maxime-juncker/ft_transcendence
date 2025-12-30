@@ -51,12 +51,9 @@ export class ProfileView extends ViewComponent
 			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
 		}
 
-		var winrate = 0;
-		if (stats.gamePlayed > 0)
-			winrate = stats.gameWon > 0 ? (stats.gameWon / stats.gamePlayed) * 100 : 0;
 		(<HTMLElement>this.querySelector("#game-played")).innerText		= `${stats.gamePlayed}`;
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
-		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? Math.round(winrate) + "%" : "n/a" }`;
+		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? this.m_user.winrate + "%" : "n/a" }`;
 		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
 
 		const userMenuContainer = this.querySelector("#user-menu-container");
