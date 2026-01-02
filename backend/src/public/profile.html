@@ -1,0 +1,164 @@
+<template id="profile-template">
+	<template id="match-template">
+		<div class="w-full flex flex-row justify-around align-middle px-2">
+			<div class="flex justify-start gap-3 w-[40%] text-center items-center">
+				<p id="player1" class="text-blue cursor-pointer hover:underline">tmp1</p>
+				<p> - </p>
+				<p id="player2" class="text-blue cursor-pointer hover:underline">tmp2</p>
+			</div>
+			<p id="status" class="text-green w-[10%]">win</p>
+			<p id="score" class="w-[10%]">1 - 10</p>
+			<p id="date" class="w-[20%]">2025-12-02</p>
+		</div>
+	</template>
+
+	<template id="user-profile-template">
+		<div class="user-menu relative">
+			<select id="status"></select>
+			<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
+				<p id="profile_btn" class="btn text-left cursor-default">profile</p>
+				<p id="settings_btn" class="btn text-left cursor-default">settings</p>
+				<p id="logout_btn" class="btn text-left cursor-default">logout</p>
+			</div>
+			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-green">
+				<div id="avatar-name" class="text-[100%] font-bold select-none">
+					user
+				</div>
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar-img"/>
+				<div id="user-status" class="user-status right-0 top-[60%]"></div>
+			</div>
+		</div>
+	</template>
+
+	<template id="user-friend-template">
+		<div class="relative flex gap-2 items-center justify-between h-20 w-[90%] border-2 border-white p-2">
+			<div id="profile" class="flex flex-row w-full items-center gap-2 hover:brightness-[1.2]">
+				<div class="relative">
+					<img
+						id="avatar-img"
+						src="" 
+						alt="Profile" 
+						class="avatar-img"/>
+					<div id="user-status" class="user-status right-0 top-[70%]"></div>
+				</div>
+				<h1 id="avatar-name" class="text-[100%] font-bold select-none break-all">user</h1>
+			</div>
+			<div class="flex items-center gap-2 mr-[5%]">
+				<button id="green-btn" class="button-empty border-green text-green">Y</button>
+				<button id="red-btn" class="button-empty border-red text-red">N</button>
+			</div>
+		</div>
+	</template>
+
+	<div class="h-full overflow-hidden overflow-y-hidden">
+
+		<header class="header-small">
+			<div id="banner" class="banner-small">
+				<h1 class="select-none">FT_TRANSCENDENCE</h1>
+				<div class="small-lines">
+					<div class="line bg-red"></div>
+					<div class="line bg-yellow"></div>
+					<div class="line bg-blue"></div>
+					<div class="line bg-green"></div>
+				</div>
+			</div>
+			<div id="user-container">
+			</div>
+		</header>
+
+		<div class="h-full w-full flex flex-col justify-start align-middle items-center pt-25 overflow-y-scroll">
+
+			<!-- profile expended -->
+			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2">
+				<div id="profile-extended" class="flex flex-row justify-center align-middle h-full">
+					<div class="relative h-full flex justify-center items-center">
+						<img
+							id="avatar-img"
+							src="" 
+							alt="Profile" 
+							class="bg-white rounded-full aspect-square border-2 border-darker object-cover h-[80%]"/>
+						<div id="user-status" class="user-status right-2 w-[30px] top-[70%]"></div>
+					</div>
+					<div class="flex flex-col align-middle justify-center ml-4">
+						<h1 id="name" class="text-3xl bg-darker px-3 py-1">super username</h1>
+						<p id="created_at" class="px-3 text-sm">created 11-7-2025</p>
+						<button id="main-btn-friend" class="button-empty text-blue border-blue mt-3">tmp</button>
+						<button id="main-btn-block" class="button-empty text-red border-red mt-3">tmp</button>
+					</div>
+
+					<div class="self-center ml-4 h-[80%] w-2 bg-darker"></div>
+				</div>
+
+
+				<div class="stat-container">
+					<div class="stat-item">
+						<p>game played</p>
+						<h1 id="game-played">n/a</h1>
+					</div>
+
+					<div class="stat-item">
+						<p>game won</p>
+						<h1 id="game-won">n/a</h1>
+					</div>
+
+					<div class="stat-item">
+						<p>winrate</p>
+						<h1 id="winrate">n/a</h1>
+					</div>
+				</div>
+			</div>
+
+				<!-- stats -->
+				<div class="flex w-2/3 bg-dark h-[30vh] py-2 flex-row justify-around items-center">
+					<div class="w-[40%]">
+						<canvas id="eloEvo"></canvas>
+					</div>
+					<div class="stat-container">
+						<div class="stat-item">
+							<p>max elo</p>
+							<h1 id="max-elo">n/a</h1>
+						</div>
+
+						<div class="stat-item">
+							<p>current elo</p>
+							<h1 id="curr-elo">n/a</h1>
+						</div>
+					</div>
+				</div>
+
+			<!-- history / friends -->
+			<div class="flex w-[95%] gap-10 flex-col h-screen min-h-screen mb-10">
+
+				<div id="history" class="h-[50%]">
+					<h1 class="w-full font-bold text-xl">History</h1>
+					<div id="history-container" class="h-full w-full bg-dark overflow-y-scroll py-5">
+						<div class="w-full flex flex-row justify-around align-middle px-2">
+							<p class="underline w-[50%]">match</p>
+							<p class="underline w-[10%]">result</p>
+							<p class="underline w-[10%]">score</p>
+							<p class="underline w-[25%]">played at</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="flex h-[45%] w-full justify-center items-center gap-5">
+					<div id="friends" class="h-full w-1/3">
+						<h1 class="w-full font-bold text-xl">Friends</h1>
+						<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+					</div>
+					<div id="pending" class="h-full w-1/3">
+						<h1 id="request-title" class="w-full font-bold text-xl">Request</h1>
+						<div id="pndg-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+					</div>
+					<div id="blocked" class="h-full w-1/3">
+						<h1 id="block-title" class="w-full font-bold text-xl">Blocked</h1>
+						<div id="blocked-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+</template>

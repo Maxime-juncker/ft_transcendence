@@ -1,6 +1,6 @@
 export function getUrlVar(url: string)
 {
-	var		vars = {};
+	var		vars: any = {};
 	var		hashes = url.split("?")[1];
 	var		hash = hashes.split("&");
 
@@ -18,4 +18,9 @@ export function setCookie(name: string, value: any, exdays: any)
 	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
 	let expire = "expire=" + d.toUTCString();
 	document.cookie = name + "=" + value + ";" + expire + ";path=/";
+}
+
+export function getSqlDate()
+{
+	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
 }

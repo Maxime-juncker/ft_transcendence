@@ -1,22 +1,81 @@
-import { GameClient } from './GameClient.js';
+import { Home } from 'pages/Home.js';
+import { GameMenu } from 'pages/GameMenu.js';
+import { GameClient } from 'pages/GameClient.js';
+import { TournamentMenu } from 'pages/TournamentMenu.js';
+import { TournamentCreate } from 'pages/TournamentCreate.js';
+import { TournamentJoin } from 'pages/TournamentJoin.js';
+import { User } from "User.js";
+import { Chat } from '@modules/chat';
+import { UserElement } from 'UserElement.js';
+import { ViewComponent } from 'ViewComponent.js';
+import { Router } from 'app.js';
 
-export class Router
+export class GameRouter
 {
 	private static readonly EXIT_KEY: string = 'Escape';
-	private static readonly homeButton1: string = 'one player';
-	private static readonly homeButton2: string = 'two player';
-	private button1Element = document.getElementById('1player') as HTMLButtonElement;
-	private button2Element = document.getElementById('2player') as HTMLButtonElement;
+	private static readonly HOME_KEY: string = 'h';
+	private static readonly GAME_MENU_KEY: string = 'g';
+	private static readonly GAME_ONLINE_KEY: string = 'o';
+	private static readonly GAME_LOCAL_KEY: string = 'l';
+	private static readonly GAME_BOT_KEY: string = 'b';
+	private static readonly TOURNAMENT_MENU_KEY: string = 't';
+	private static readonly TOURNAMENT_CREATE_KEY: string = 'c';
+	private static readonly TOURNAMENT_JOIN_KEY: string = 'j';
 
 	currentPage: string = 'home';
+	currentClass: any = null;
 	pages: Map<string, HTMLDivElement> = new Map();
 	gameInstance: GameClient | null = null;
+	m_user:			User | null = null;
+	m_player1:		UserElement | null = null;
+	m_chat:			Chat | null = null;
+	m_gameMenu:		GameMenu | null = null;
 
-	constructor()
+	m_view:		ViewComponent | null = null;
+
+	public get view(): ViewComponent | null { return this.m_view; }
+
+	constructor(user: User | null = null, chat: Chat | null = null, view: ViewComponent | null = null)
 	{
+		this.m_user = user;
+		this.m_chat = chat;
+		this.m_view = view;
 		this.loadPages();
-		this.setupEventListeners();
+		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
+
+		if (!view)
+			return ;
+		view.addTrackListener(view.querySelector('#local-game'), "click", this.localGameClickHandler);
+		view.addTrackListener(view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		view.addTrackListener(view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		view.addTrackListener(view.querySelector('#game'), "click", this.menuGameClickHandler);
+		view.addTrackListener(view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
+	}
+
+	private menuGameClickHandler = () =>
+	{
+		this.navigateTo('game-menu', '');
+	}
+
+	private menuTournamentClickHandler = () =>
+	{
+		this.navigateTo('tournament-menu', '');
+	}
+
+	private localGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'local');
+	}
+
+	private onlineGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'online');
+	}
+
+	private botGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'bot');
 	}
 
 	private loadPages(): void
@@ -25,82 +84,115 @@ export class Router
 
 		pageElements.forEach(element =>
 		{
-			const pageName = element.getAttribute('class');
+			const pageName = element.getAttribute('id');
 			if (pageName)
 			{
 				this.pages.set(pageName, element);
+				element.style.display = "none";
 			}
 		});
-	}
-
-	private setupEventListeners(): void
-	{
-		this.setUpWindowEventListeners();
-		this.setUpDocumentEventListeners();		
 	}
 
 	private setUpWindowEventListeners(): void
 	{
-		window.addEventListener('popstate', (e) =>
-		{
-			const page = e.state?.page || 'home';
-			this.showPage(page, null);
-		});
+ 
+		// Router.Instance.onPopestate((e) => {
+		// 		const page = e.state?.page || 'home';
+		// 		this.showPage(page, null);
+		// 	});
 
-		window.addEventListener('keydown', (e) =>
+		window.addEventListener('keydown', async (e) =>
 		{
-			if (e.key === Router.EXIT_KEY)
+			const targetElement = e.target as HTMLElement;
+			if (!targetElement)
 			{
+				return ;
+			}
+
+			const tagName = targetElement.tagName.toLowerCase();
+			if (tagName && tagName !== 'input' && tagName !== 'textarea')
+			{
+				this.handleEventKey(e.key);
+			}
+		});
+	}
+
+	private handleEventKey(key: string): void
+	{
+		switch (key)
+		{
+			case GameRouter.EXIT_KEY:
 				history.back();
-			}
-			else if (e.key === 'h')
-			{
-				history.pushState({page: 'home'}, '', `#home`);
-			}
-		});
+				break ;
+			case GameRouter.HOME_KEY:
+				this.navigateTo('home', '');
+				break ;
+			case GameRouter.GAME_MENU_KEY:
+				this.navigateTo('game-menu', '');
+				break ;
+			case GameRouter.GAME_ONLINE_KEY:
+				this.navigateTo('game', 'online');
+				break ;
+			case GameRouter.GAME_LOCAL_KEY:
+				this.navigateTo('game', 'local');
+				break ;
+			case GameRouter.GAME_BOT_KEY:
+				this.navigateTo('game', 'bot');
+				break ;
+			case GameRouter.TOURNAMENT_MENU_KEY:
+				this.navigateTo('tournament-menu', '');
+				break ;
+			case GameRouter.TOURNAMENT_CREATE_KEY:
+				this.navigateTo('tournament-create', '');
+				break ;
+			case GameRouter.TOURNAMENT_JOIN_KEY:
+				this.navigateTo('tournament-join', '');
+				break ;
+		}
 	}
 
-	private setUpDocumentEventListeners(): void
+	public navigateTo(page: string, mode: string): void
 	{
-		document.getElementById('1player')?.addEventListener('click', () =>
-		{
-			this.navigateTo('game', '1player');
-		});
-
-		document.getElementById('2player')?.addEventListener('click', () =>
-		{
-			this.navigateTo('game', '2player');
-		});
+		history.pushState({page: page}, '', `#${page}`);
+		this.showPage(page, mode);
 	}
 
-
-	private showPage(page: string, mode: string): void
+	private showPage(page: string, mode: string | null): void
 	{
-		if (this.gameInstance)
+		if (this.currentClass && this.currentClass.destroy)
 		{
-			this.gameInstance.destroy();
+			this.currentClass.destroy();
 		}
 
 		this.pages.get(this.currentPage)!.style.display = 'none';
 		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
-
-		if (page === 'home')
-		{
-			this.button1Element.textContent = Router.homeButton1;
-			this.button2Element.textContent = Router.homeButton2;
-		}
-		if (page === 'game')
-		{
-			this.gameInstance = new GameClient(mode);
-		}
+		this.currentClass = this.getClass(mode);
 	}
 
-	private navigateTo(page: string, mode: string): void
+
+	private getClass(mode: string | null)
 	{
-		history.pushState({page: page}, '', `#${page}`);
-		this.showPage(page, mode);
+		switch (this.currentPage)
+		{
+			case 'home':
+				return (new Home(this));
+			case 'game-menu':
+				this.m_gameMenu = new GameMenu(this)
+				return this.m_gameMenu;
+			case 'game':
+				if (this.m_chat && this.m_user)
+					return (new GameClient(this, mode!, this.m_user, this.m_chat));
+			case 'tournament-menu':
+				return (new TournamentMenu(this));
+			case 'tournament-create':
+				if (this.m_user)
+					return (new TournamentCreate(this.m_user));
+			case 'tournament-join':
+				if (this.m_user)
+					return (new TournamentJoin(this.m_user));
+			default:
+				return (null);
+		}
 	}
-};
-
-new Router();
+}

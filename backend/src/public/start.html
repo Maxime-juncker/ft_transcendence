@@ -1,0 +1,91 @@
+<template id="start-template">
+	<!-- <template id="user-profile-template"> -->
+	<!-- 	<div id="user-profile" -->
+	<!-- 		class="user-profile"> -->
+	<!-- 		<div id="avatar-container"> -->
+	<!-- 			<img -->
+	<!-- 				id="avatar-img" -->
+	<!-- 				src=""  -->
+	<!-- 				alt="Profile"  -->
+	<!-- 				class="avatar"/> -->
+	<!---->
+	<!-- 			<div id="avatar-name"> -->
+	<!-- 				user -->
+	<!-- 			</div> -->
+	<!-- 			<div id="user-status" class="user-status"> </div> -->
+	<!-- 		</div> -->
+	<!---->
+	<!-- 		<div id="user-stats"> -->
+	<!-- 			<!-- <h1>elo: 500p</h1> -->
+	<!-- 			<!-- <h1>W/L: 42%</h1> -->
+	<!-- 		</div> -->
+	<!-- 		<select id="status"></select> -->
+	<!-- 	</div> -->
+	<!-- </template> -->
+
+	<template id="user-leaderboard-template">
+		<div class="relative flex gap-4 items-center justify-between h-20 w-[90%]">
+			<div class="relative rounded-full border-2 border-(--white) bg-darker aspect-square h-[5vh]">
+				<h1 id="ranking" class="absolute w-full h-full top-[10%] text-center font-extrabold text-[2.5vh]">NaN</h1>
+			</div>
+			<div id="profile" class="flex flex-row w-full items-center gap-2 hover:bg-white hover:cursor-grab hover:text-darker
+				p-2 border-2 border-(--white) hover:border-white hover:border-2">
+				<div class="relative">
+					<img
+						id="avatar-img"
+						src="" 
+						alt="Profile" 
+						class="avatar-img"/>
+					<div id="user-status" class="user-status right-0 top-[70%]"></div>
+				</div>
+				<div class="w-full h-full flex justify-between">
+					<h1 id="avatar-name" class="text-[100%] w-1/3 truncate font-bold select-none break-all">user</h1>
+					<div class="flex h-full w-[60%] gap-3">
+						<h1 id="elo" class="text-[100%] w-1/2 select-none break-all">elo: NaN</h1>
+						<h1 id="winrate" class="text-[100%] w-1/2 select-none break-all">W/R: NaN</h1>
+					</div>
+				</div>
+			</div>
+		</div>
+	</template>
+
+	<div class="h-full flex relative">
+		<header class="absolute top-[7%]">
+			<div class="banner">
+				<div class="line bg-red"></div>
+				<div class="line bg-yellow"></div>
+				<div class="line bg-blue"></div>
+				<div class="line bg-green"></div>
+			</div>
+			<div class="banner-text">
+				<h1>
+					FT_TRANSCENDENCE
+				</h1>
+			</div>
+		</header>
+
+		<div id="main" class="main">
+
+			<div class="banner" style="
+				position: absolute; rotate: -45deg;
+				transform: translateY(40vw)">
+				<div class="line bg-red" id="line1"></div>
+				<div class="line bg-yellow" id="line2"></div>
+				<div class="line bg-blue" id="line3"></div>
+				<div class="line bg-green" id="line4"></div>
+			</div>
+			<div id="user" class="user">
+				<!-- <h1 id="profile-header">user</h1> -->
+				<div id="profile-container" class="profile-container"></div>
+			</div>
+			<div class="play-menu">
+				<button class="btn" id="play_btn">PLAY</button>
+			</div>
+			<div id="leaderboard" class="flex flex-col h-full justify-center items-center z-3 mr-5 mt-[10vh]">
+				<h1><strong>LEADERBOARD</strong></h1>
+				<div id="leaderboard-container" class="flex flex-col-reverse justify-end items-center w-full h-1/2 bg-dark
+					gap-3 py-5"></div>
+			</div>
+		</div>
+	</div>
+</template>

@@ -6,9 +6,7 @@ export function applyMsgStyle(msg: string) : string
 	return `[${msg}]`;
 }
 
-export function helpMsg() : string
-{
-	const msg: string = ` -- help --
+export const helpMsg: string = ` -- help --
 TERMINAL
 	/ping   test connection to server
 	/clear	clear chat
@@ -21,14 +19,11 @@ USER MANAGMENT
 	/stats		{username}						show stats of user
 	/inspect	{username}						show info of user
 	/addFriend	{username}						send friend request to user
-	/getHist	{username}						show matchs history of user
+	/hist		{username}						show matchs history of user
 	/block		{username}						block a user
 	/unblock	{username}						block a user
 	/getblock									list blocked users
 `;
-
-	return msg;
-}
 
 export function serverReply(msg: string) : Message
 {

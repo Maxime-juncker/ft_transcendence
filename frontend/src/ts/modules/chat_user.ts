@@ -21,8 +21,7 @@ export async function unblock(id: number, username: string) : Promise<Message>
 
 export async function getBlocked(id: number) : Promise<Message>
 {
-	const url = `/api/user/get_blocked_users/${id}`;
-	const response = await fetch(url);
+	const response = await fetch('/api/user/blocked_users');
 	const json = await response.json();
 
 	return utils.serverReply(JSON.stringify(json, null, 2));

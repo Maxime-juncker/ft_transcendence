@@ -1,3 +1,5 @@
 .env
 node_modules
 dist/
+backend/src/public/avatars/
+backend/src/public/dist/

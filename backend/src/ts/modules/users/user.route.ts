@@ -1,20 +1,35 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import * as core from '@core/core.js';
 import * as user from '@modules/users/user.js'
+import { GameRes } from 'modules/users/user.js';
+import { jwtVerif } from '@modules/jwt/jwt.js';
+import * as mgmt from 'modules/users/userManagment.js';
 
 export async function userRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
-
 	fastify.get('/get_history_name/:username', async (request: FastifyRequest, reply: FastifyReply) => {
 		return await user.getUserHistByName(request, reply, core.db);
 	})
 
-	fastify.get('/get_blocked_users/:userid', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { userid } = request.params as { userid: number };
+	fastify.post('/blocked_users', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['token'],
+				properties: {
+					token:		{ type: 'string' },
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string };
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "token is invalid" });
 
-		const res = await user.getBlockedUsrById(userid, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			const res = await user.getBlockedUsrById(data.id, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.post('/add_game_history', async (request: FastifyRequest, reply: FastifyReply) => {
 		const { user1_name, user2_name, user1_score, user2_score } = request.body as {
@@ -23,9 +38,23 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 			user1_score:	number,
 			user2_score:	number,
 		};
-		var game = { user1_name, user2_name, user1_score, user2_score };
+		var user1_id: number, user2_id: number = -1;
 
-		const res = await user.addGameToHist(game, core.db);
+		var res = await user.getUserByName(user1_name, core.db);
+		if (res.code == 200)
+			user1_id = res.data.id;
+		else
+			return reply.code(500).send({ message: "could not get user" });
+
+		var res = await user.getUserByName(user2_name, core.db);
+		if (res.code == 200)
+			user2_id = res.data.id;
+		else
+			return reply.code(500).send({ message: "could not get user" });
+
+		var game: GameRes = { user1_id, user2_id, user1_score, user2_score };
+
+		res = await user.addGameToHist(game, core.db);
 		return reply.code(res.code).send(res.data);
 	})
 
@@ -50,6 +79,26 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 			}
 		)
 
+		fastify.post('/get_profile_token', {
+			schema: {
+				body: {
+					type: 'object',
+					required: ['token'],
+					properties: {
+						token: { type: 'string' },
+					}
+				}
+			}
+		}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string};
+
+			const res = await mgmt.loginSession(token, core.db);
+			if (res.code != 200)
+				return reply.code(res.code).send(res.data);
+			console.log("user is login has:", res.data.name);
+			return reply.code(res.code).send(res.data);
+		})
+
 	fastify.get<{ Querystring: { profile_name: string } }>
 		(
 			'/get_profile_name',
@@ -70,4 +119,14 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				}
 			}
 		)
+
+	fastify.get('/get_all', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getAllUsers();
+		return reply.code(res.code).send(res.data);
+	});
+
+	fastify.get('/get_all_id', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getAllUsers();
+		return reply.code(res.code).send(res.data);
+	});
 }

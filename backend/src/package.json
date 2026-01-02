@@ -1,38 +1,60 @@
 {
-  "name": "backend",
-  "type": "module",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc && tsc-alias",
-    "start": "node dist/core/server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@fastify/cookie": "^11.0.2",
-    "@fastify/cors": "^11.1.0",
-    "@fastify/formbody": "^8.0.2",
-    "@fastify/multipart": "^9.2.1",
-    "@fastify/oauth2": "^8.1.2",
-    "@fastify/session": "^11.1.1",
-    "@fastify/static": "^8.3.0",
-    "@fastify/view": "^11.1.1",
-    "@fastify/websocket": "^11.2.0",
-    "axios": "^1.13.1",
-    "fastify": "^5.6.1",
-    "file-type": "^21.0.0",
-    "install": "^0.13.0",
-    "sharp": "^0.34.4",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-    "tsc-alias": "^1.8.16",
-    "typescript": "^5.9.3",
-    "undici": "^7.16.0"
-  },
-  "devDependencies": {
-    "@types/node": "^24.9.1"
-  }
+	"name": "backend",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "",
+	"main": "tailwind.config.js",
+	"scripts": {
+		"build": "tsc && tsc-alias",
+		"start": "node dist/core/server.js",
+		"build:css": "./node_modules/.bin/tailwindcss -i ./public/styles.css -o ./public/output.css",
+		"dev:css": "./node_modules/.bin/tailwindcss -i ./public/styles.css -o ./public/output.css --minify --watch"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@fastify/cookie": "^11.0.2",
+		"@fastify/cors": "^11.1.0",
+		"@fastify/formbody": "^8.0.2",
+		"@fastify/multipart": "^9.2.1",
+		"@fastify/oauth2": "^8.1.2",
+		"@fastify/session": "^11.1.1",
+		"@fastify/static": "^8.3.0",
+		"@fastify/view": "^11.1.1",
+		"@fastify/websocket": "^11.2.0",
+		"@tailwindcss/cli": "^4.1.17",
+		"@tailwindcss/postcss": "^4.1.18",
+		"axios": "^1.13.1",
+		"base32-decode": "^1.0.0",
+		"base32-encode": "^2.0.0",
+		"echarts": "^6.0.0",
+		"fastify": "^5.6.1",
+		"file-type": "^21.0.0",
+		"install": "^0.13.0",
+		"ngx-echarts": "^14.0.0",
+		"qrcode": "^1.5.4",
+		"sharp": "^0.34.4",
+		"sqlite": "^5.1.1",
+		"sqlite3": "^5.1.7",
+		"tailwindcss-cli": "^0.1.2",
+		"tsc-alias": "^1.8.16",
+		"typescript": "^5.9.3",
+		"undici": "^6.19.8"
+	},
+	"devDependencies": {
+		"@types/node": "^24.9.1",
+		"@types/qrcode": "^1.5.6",
+		"@types/ws": "^8.18.1",
+		"tailwindcss": "^4.1.18"
+	},
+	"overrides": {
+		"rimraf": "^5.0.0",
+		"inflight": "^1.0.6",
+		"gauge": "^5.0.0",
+		"npmlog": "^7.0.1",
+		"are-we-there-yet": "^5.0.0",
+		"@npmcli/move-file": "npm:@npmcli/fs@^3.0.0",
+		"glob": "^11.0.4"
+	}
 }

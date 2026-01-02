@@ -1,12 +1,9 @@
+import { setCookie, getCookie} from 'utils.js';
 import { hashString } from './sha256.js'
 import { UserElement, UserElementType } from './UserElement.js';
 
 // *********************** TODO *********************** //
-// Add settings page									//
-// view user profile									//
-// match history										//
-// stats (win loses, winrate, etc)						//
-// default avatar										//
+// user with large name should be trucated
 // **************************************************** //
 
 export enum UserStatus {
@@ -18,15 +15,34 @@ export enum UserStatus {
 	IN_GAME,			// show when user in game
 }
 
-async function getUserInfoFromId(id: string): Promise<Response> {
-	const params = { user_id: id };
-	const queryString = new URLSearchParams(params).toString();
-	var response = await fetch(`/api/user/get_profile_id?${queryString}`);
-	
+export enum AuthSource {
+	BOT = -2,	// for bot account
+	GUEST = -1, // guest profile are deleted on logout
+	INTERNAL = 0,
+	GOOGLE, // not used anymore
+	GITHUB,
+	FORTY_TWO
+}
+
+async function getUserInfoFromId(id: number): Promise<Response> {
+	var response = await fetch(`/api/user/get_profile_id?user_id=${id.toString()}`);
 	return response;
 }
 
-async function getUserFromId(id: string): Promise<User> {
+export async function getUserFromName(name: string): Promise<User | null> {
+	var response = await fetch(`/api/user/get_profile_name?profile_name=${name}`);
+	if (response.status != 200)
+		return null
+
+	const data = await response.json();
+	var user = new User();
+	var status = data.is_login ? data.status : UserStatus.UNAVAILABLE;
+	user.setUser(data.id, data.name, "", data.avatar, status);
+	await user.updateSelf();
+	return user;
+}
+
+export async function getUserFromId(id: number): Promise<User | null> {
 	const response = await getUserInfoFromId(id);
 	if (response.status != 200)
 		return null
@@ -38,28 +54,49 @@ async function getUserFromId(id: string): Promise<User> {
 	return user;
 }
 
+export interface Stats {
+	gamePlayed:	number;
+	gameWon:	number;
+	currElo:	number;
+	maxElo:		number;
+	avrTime:	string;
+	shortTime:	string;
+}
+
 export class User {
 	/* public vars */
-	public name: string;
+	public name: string = "";
 
 	/* private vars */
-	private m_id: number;
+	protected m_id: number = -1;
+	protected m_token:		string = "";
 
-	private m_email: string;
-	private m_avatarPath: string;
+	private m_email:		string	= "";
+	private m_avatarPath:	string = "";
+	private m_status:		UserStatus = UserStatus.UNKNOW;
+	private m_created_at:	string = "";
+	private m_stats:		Stats;
+	private m_source:		AuthSource;
+	private m_elo:			number = 0;
 
-	private m_friends: User[]; // accepted request
-	private m_pndgFriends: User[]; // pending requests
-	private m_status: UserStatus;
+	private m_blockUsr:		User[];
+	private m_friends:		User[] = []; // accepted request
+	private m_pndgFriends = new Map<User, number>(); // pending requests (number == sender)
 
-	constructor() {
+	constructor(token?: string) {
 		this.setUser(
 			-1,
 			"Guest",
 			"",
-			"", // TODO: add default avatar
+			"",
 			UserStatus.UNKNOW
 		);
+
+		if (token) // token will be used for request needing permission
+			this.m_token = token;
+		this.m_blockUsr = [];
+		this.m_stats = { gamePlayed: 0, gameWon: 0, currElo: 0, maxElo: 0, avrTime: "", shortTime: "" };
+		this.m_source = AuthSource.GUEST;
 	}
 
 	public setUser(id: number, name: string, email: string, avatar: string, status: UserStatus) {
@@ -69,19 +106,34 @@ export class User {
 		this.m_avatarPath = avatar;
 		this.m_status = status;
 		this.m_friends = [];
-		this.m_pndgFriends = [];
+		this.m_blockUsr = [];
+		this.m_pndgFriends = new Map<User, number>();
 	}
 
-	public getStatus(): UserStatus { return this.m_status; }
-	public getFriends(): User[] { return this.m_friends; }
-	public getPndgFriends(): User[] { return this.m_pndgFriends; }
-	public getId(): number { return this.m_id; }
-	// public getAvatarPath() : string { return this.m_avatarPath + "?" + new Date().getTime(); }
-	public getAvatarPath(): string { return this.m_avatarPath; }
+	public getStatus(): UserStatus			{ return this.m_status; }
+	public getEmail(): string				{ return this.m_email; }
+	public getAvatarPath(): string			{ return this.m_avatarPath; }
+	get	elo(): number						{ return this.m_stats.currElo; }
+	get blockUsr(): User[]					{ return this.m_blockUsr; }
+	get friends(): User[]					{ return this.m_friends; }
+	get pndgFriends(): Map<User, number>	{ return this.m_pndgFriends; }
+	get id(): number						{ return this.m_id; }
+	get	created_at(): string				{ return this.m_created_at; }
+	get gamePlayed(): number				{ return this.m_stats.gamePlayed; }
+	get	stats(): Stats						{ return this.m_stats; }
+	get	source(): AuthSource				{ return this.m_source; }
+	set token(token: string)				{ this.m_token = token; }
+
+	get winrate(): number
+	{
+		var winrate = 0;
+		if (this.m_stats.gamePlayed > 0)
+			winrate = this.m_stats.gameWon > 0 ? (this.m_stats.gameWon / this.m_stats.gamePlayed) * 100 : 0;
+		return Math.round(winrate);
+	}
 
 	public async setStatus(status: UserStatus): Promise<Response> {
 		this.m_status = status;
-		console.log(`settings status to: ${status}`);
 
 		var response = await fetch("/api/user/set_status", {
 			method: "POST",
@@ -89,7 +141,7 @@ export class User {
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({
-				user_id: this.getId().toString(),
+				user_id: this.id.toString(),
 				newStatus: this.m_status.toString()
 			})
 		});
@@ -102,39 +154,78 @@ export class User {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				user_id: this.getId().toString(),
+				user_id: this.id.toString(),
 			})
 		});
 		this.setUser(-1, "Guest", "", "", UserStatus.UNKNOW);
 		return response;
 	}
 
-	public async updateFriendList(): Promise<number> {
+	public async updateFriendList(): Promise<number>
+	{
 		this.m_friends = [];
-		this.m_pndgFriends = [];
+		this.m_pndgFriends = new Map<User, number>();
 
-		const params = { user_id: this.getId().toString() };
+		const params = { user_id: this.id.toString() };
 		const queryString = new URLSearchParams(params).toString();
 		var response = await fetch(`/api/friends/get?${queryString}`);
 		var data = await response.json();
 
 		for (let i = 0; i < data.length; i++) {
 			const element = data[i];
-
-			var id = element.user1_id == this.getId() ? element.user2_id : element.user1_id;
+			
+			var id = element.user1_id == this.id ? element.user2_id : element.user1_id;
+			const user = await getUserFromId(id);
+			if (user == null)
+			{
+				console.warn("failed to get user");
+				return -1;
+			}
 			if (data[i].pending)
-				this.m_pndgFriends.push(await getUserFromId(id));
+				this.m_pndgFriends.set(user, data[i].sender_id);
 			else
-				this.m_friends.push(await getUserFromId(id));
+				this.m_friends.push(user);
 		}
 		return 0;
 	}
 
-	public async updateSelf(): Promise<number> {
-		if (this.getId() == -1)
+	public async updateBlockList(): Promise<number>
+	{
+		if (!this.m_token)
+			return 0;
+
+		this.m_blockUsr = [];
+		const response = await fetch('/api/user/blocked_users', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ token: this.m_token })
+		});
+		if (response.status != 200)
+			return response.status;
+
+		const data = await response.json();
+
+		for (let i = 0; i < data.length; i++)
+		{
+			const id = data[i].user2_id;
+			const tmp = await getUserFromId(id);
+			if (!tmp)
+			{
+				console.error("failed to get user from following id:", id);
+				return -1;
+			}
+			this.m_blockUsr.push(tmp);
+		}
+
+		return 0;
+	}
+
+	public async updateSelf(): Promise<number>
+	{
+		if (this.id == -1)
 			return 1;
 
-		var response = await getUserInfoFromId(this.getId().toString());
+		var response = await getUserInfoFromId(this.id);
 		if (response.status != 200)
 			return response.status;
 
@@ -142,70 +233,84 @@ export class User {
 		this.name = data.name;
 		this.m_avatarPath = data.avatar;
 		this.m_status = data.status;
+		this.m_created_at = data.created_at;
+		this.m_source = data.source;
+
+		this.m_stats.gamePlayed = data.games_played;
+		this.m_stats.gameWon = data.wins;
+		this.m_stats.currElo = data.elo;
+
 		await this.updateFriendList();
+		await this.updateBlockList();
 
 		return response.status;
 	}
 
-	protected async addFriendToDB(friend_name: string): Promise<number> {
+	protected async addFriendToDB(friendId: number): Promise<number> {
 		var response = await fetch("/api/friends/send_request", {
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				user_id: this.getId().toString(),
-				friend_name: friend_name
+				token: this.m_token,
+				friend_id: friendId
 			})
 		});
 		return response.status;
 	}
 
-	public async uploadAvatar(file: File): Promise<any> {
-		const formData = new FormData();
-		if (!file)
-			return;
-
-		formData.append("file", file, file.name);
+	public async uploadAvatar(file: FormData): Promise<any> {
 
 		var response = await fetch("/api/user/upload/avatar", {
 			method: "POST",
-			headers: {
-				'id': this.m_id.toString(),
-				'email': this.m_email,
-				'prev_avatar': this.m_avatarPath,
-			},
-			body: formData,
-
+			body: file,
 		});
 		var data = await response.json();
-		this.m_avatarPath = "/api/images/" + data.filename;
+		this.m_avatarPath = "/public/avatars/" + data.filename;
 
 		return response;
 	}
 }
 
+function newOption(optionName: string) : HTMLOptionElement
+{
+	var option: HTMLOptionElement;
 
-export class MainUser extends User {
-	private m_htmlFriendContainer: HTMLElement;
-	private m_htmlPndgFriendContainer: HTMLElement;
+	option = document.createElement("option");
+	option.innerText = optionName;
+	option.value = optionName;
+	return option;
+}
 
-	private m_userElement: UserElement;
-	private m_friendsElements: UserElement[];
-	private m_pndgFriendsElements: UserElement[];
+export class MainUser extends User
+{
 
+	private m_userElement: UserElement | null = null;
 	private m_onLoginCb:	Array<(user: MainUser) => void>;
 	private m_onLogoutCb:	Array<(user: MainUser) => void>;
 
-	constructor(parent: HTMLElement, friendsContainer: HTMLElement, pndgFriendsContainer: HTMLElement) {
-		super()
-		this.m_htmlFriendContainer = friendsContainer;
-		this.m_htmlPndgFriendContainer = pndgFriendsContainer;
-		this.m_userElement = new UserElement(null, parent, UserElementType.MAIN);
-		this.m_friendsElements = [];
-		this.m_pndgFriendsElements = [];
+	constructor(parent: HTMLElement | null)
+	{
+		const token = getCookie("jwt_session");
+		super(token);
+		
+		if (parent)
+		{
+			this.m_userElement = new UserElement(this, parent, UserElementType.MAIN);
 
-		this.m_userElement.getBtn2().addEventListener("click", () => this.logout());
-		this.m_userElement.getStatusSelect().addEventListener("change", () => this.updateStatus(this.m_userElement.getStatusSelect().value, this, this.m_userElement));
+			const statusSelect = this.m_userElement.getElement("#status") as HTMLSelectElement;
+			statusSelect.prepend(newOption("available"));
+			statusSelect.prepend(newOption("unavailable"));
+			statusSelect.prepend(newOption("busy"));
+			statusSelect.prepend(newOption("in_game"));
+			statusSelect.addEventListener("change", () => this.updateStatus(statusSelect.value, this, this.m_userElement));
+		}
 
+		this.m_onLoginCb = [];
+		this.m_onLogoutCb = [];
+	}
+	
+	public resetCallbacks()
+	{
 		this.m_onLoginCb = [];
 		this.m_onLogoutCb = [];
 	}
@@ -240,7 +345,6 @@ export class MainUser extends User {
 	{
 		const response = await fetch("/api/user/get_session");
 		const data = await response.json();
-		console.log(response.status, data);
 
 		if (response.status == 200) {
 			var status = data.status;
@@ -250,10 +354,12 @@ export class MainUser extends User {
 
 			this.m_onLoginCb.forEach(cb => cb(this));
 		}
+		else
+			this.m_id = -1;
 	}
 
-	public async login(email: string, passw: string): Promise<{ status: number, data: any }> {
-		if (this.getId() != -1)
+	public async login(email: string, passw: string, totp: string): Promise<{ status: number, data: any }> {
+		if (this.id != -1)
 			return { status: -1, data: null };
 
 		const response = await fetch("/api/user/login", {
@@ -264,6 +370,7 @@ export class MainUser extends User {
 			body: JSON.stringify({
 				email: email,
 				passw: await hashString(passw),
+				totp: totp
 			})
 		});
 		const data = await response.json();
@@ -273,25 +380,29 @@ export class MainUser extends User {
 
 	public async logout()
 	{
+		// document.cookie = "jwt_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+		console.log("hello")
+		setCookie("jwt_session", "", 0);
 		await this.logoutDB();
-		this.m_userElement.updateHtml(null);
-		this.m_htmlFriendContainer.innerHTML = ""; // destroy all child
-		this.m_friendsElements = [];
+		if (this.m_userElement)
+			this.m_userElement.updateHtml(null);
 
 		this.m_onLogoutCb.forEach(cb => cb(this));
 	}
 
 	public async refreshSelf()
 	{
-		if (this.getId() == -1)
+		if (this.id == -1)
 			return;
 		await this.updateSelf();
-		await this.updateFriendContainer();
-		this.m_userElement.updateHtml(this);
+		if (this.m_userElement)
+			this.m_userElement.updateHtml(this);
 	}
 
-	private async updateStatus(newStatus: string, user: User, userHtml: UserElement)
+	private async updateStatus(newStatus: string, user: User, userHtml: UserElement | null)
 	{
+		if (!userHtml) return;
+
 		switch (newStatus) {
 			case "available":
 				await user.setStatus(UserStatus.AVAILABLE);
@@ -315,91 +426,176 @@ export class MainUser extends User {
 		userHtml.updateHtml(user);
 	}
 
-	public async setAvatar(file: File): Promise<number> // TODO: check si multipart upload ok
+	public async setAvatar(file: FormData): Promise<number>
 	{
-		if (this.getId() == -1)
+		if (this.id == -1)
 			return 1;
 		if (!file)
 			return 2;
 
 		await this.uploadAvatar(file);
-		this.m_userElement.updateHtml(this);
+		if (this.m_userElement)
+			this.m_userElement.updateHtml(this);
 
 		return 0;
 	}
 
-	public async removeFriend(user: User): Promise<Response> {
-		const url = `/api/friends/remove/${this.getId()}/${user.getId()}`;
-		const response = await fetch(url, { method: "DELETE" });
+	public async removeFriend(user: User): Promise<number> {
+		console.log("removing friend")
+		const response = await fetch('/api/friends/remove', {
+			method: "DELETE",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				token: this.m_token,
+				friend_id: user.id
+			})
+		});
 
 		await this.updateSelf();
-		await this.updateFriendContainer();
 
-		return response;
+		return response.status;
 	}
 
-	public async acceptFriend(user: User): Promise<Response> {
-		const url = `/api/friends/accept/${this.getId()}/${user.getId()}`;
-		const response = await fetch(url, { method: "POST" });
+	public async acceptFriend(user: User): Promise<number> {
+		console.log("accepting friend")
+		const response = await fetch('/api/friends/accept', {
+			method: "POST",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				token: this.m_token,
+				friend_id: user.id
+			})
+		});
 
 		await this.updateSelf();
-		await this.updateFriendContainer();
 
-		const data = await response.json();
-		return response;
+		return response.status;
 	}
 
-	private rebuildFriendContainer(friends: User[], container: HTMLElement, elements: UserElement[], pending: boolean) {
-		elements = [];
-		container.innerHTML = ""; // destroy all child
-		for (let i = 0; i < friends.length; i++) {
-			const elt: UserElement = new UserElement(friends[i], container, pending ? UserElementType.FRIEND_PNDG : UserElementType.FRIEND);
-			elements.push(elt);
-
-			if (pending) {
-				elt.getBtn1().addEventListener('click', () => { // to move in update
-					this.acceptFriend(friends[i]);
-				})
-				elt.getBtn2().addEventListener('click', () => { // to move in update
-					this.removeFriend(friends[i]);
-				})
-			}
-			else {
-				elt.getBtn1().addEventListener('click', () => { // to move in update
-					this.removeFriend(friends[i]);
-				})
-			}
-		}
-		return elements;
-	}
-
-	public async updateFriendContainer() {
-		await this.updateSelf();
-		var friends = this.getFriends();
-		var pndgFriends = this.getPndgFriends();
-
-		if (friends.length != this.m_friendsElements.length)
-			this.m_friendsElements = this.rebuildFriendContainer(friends, this.m_htmlFriendContainer, this.m_friendsElements, false);
-
-		if (pndgFriends.length != this.m_pndgFriendsElements.length)
-			this.m_pndgFriendsElements = this.rebuildFriendContainer(pndgFriends, this.m_htmlPndgFriendContainer, this.m_pndgFriendsElements, true);
-
-		for (let i = 0; i < friends.length; i++)
-			this.m_friendsElements[i].updateHtml(friends[i]);
-		for (let i = 0; i < pndgFriends.length; i++)
-			this.m_pndgFriendsElements[i].updateHtml(pndgFriends[i]);
-	}
 
 	public async addFriend(friend_name: string): Promise<number> {
+		console.log("adding friend")
 		if (!friend_name || friend_name == "")
 			return 1;
-		if (this.getId() == -1)
+		if (this.id == -1)
 			return 2;
 
-		const status = await this.addFriendToDB(friend_name);
+		const res = await fetch(`/api/user/get_profile_name?profile_name=${friend_name}`)
+		if (res.status != 200)
+			return res.status;
+
+		const json = await res.json();
+		const status = await this.addFriendToDB(json.id);
 		await this.updateSelf();
-		await this.updateFriendContainer();
 
 		return status;
+	}
+
+	public async newTotp() : Promise<{status: number, data: any} | null>
+	{
+		if (this.id == -1)
+			return null;
+
+		var response = await fetch("/api/totp/reset", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.id.toString(),
+				email: this.getEmail(),
+			})
+			
+		});
+		var data = await response.json();
+		return { status: response.status, data: data };
+	}
+
+	public async delTotp() : Promise<number>
+	{
+		if (this.id == -1)
+			return 404;
+
+		var response = await fetch("/api/totp/remove", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.id.toString(),
+			})
+			
+		});
+
+		return response.status;
+	}
+
+	public async validateTotp(totp: string) : Promise<number>
+	{
+		if (this.id == -1)
+			return 404;
+
+		var response = await fetch("/api/totp/validate", {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: this.id.toString(),
+				totp: totp,
+			})
+			
+		});
+
+		return response.status;
+	}
+
+	public async deleteUser(): Promise<number>
+	{
+		const res = await fetch ('api/user/delete', {
+			method: "DELETE",
+		});
+		this.logout();
+		return res.status;
+	}
+
+	public async resetUser(): Promise<number>
+	{
+		const res = await fetch('/api/user/reset', { method: "DELETE" });
+		return res.status;
+	}
+
+	public async removeFromQueue(): Promise<number>
+	{
+		const res = await fetch("/api/chat/removeQueue", { 
+			method: "DELETE",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				id: this.id
+			})
+		});
+		return res.status;
+	}
+
+	public async blockUser(id: number): Promise<number>
+	{
+		const res = await fetch('/api/user/block', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ 
+				token: this.m_token,
+				id: id
+			})
+		});
+		console.log("blocking");
+		return res.status;
+	}
+
+	public async unblockUser(id: number): Promise<number>
+	{
+		console.log("unblocking");
+		const res = await fetch('/api/user/unblock', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ 
+				token: this.m_token,
+				id: id
+			})
+		});
+		return res.status;
 	}
 }

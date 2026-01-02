@@ -1,161 +1,134 @@
 import { hashString } from 'sha256.js'
-import { Chat } from '@modules/chat.js'
 import { MainUser } from './User.js';
-import { getUrlVar } from './utils.js';
+import { setCookie, setPlaceHolderText, getUrlVar } from 'utils.js';
+import { ViewComponent } from 'ViewComponent.js';
+import { Router } from 'app.js';
 
-async function sendFriendInvite()
+export class LoginView extends ViewComponent
 {
-	var inviteInput = document.getElementById("add_friend_input") as HTMLInputElement;
-	var status = await user.addFriend(inviteInput.value);
-	if (status == 1)
-		addLog(500, "some field are empty");
-	else if (status == 2)
-		addLog(500, "please login to add friends")
-	else if (status == 200)
-		addLog(status, "friend request sent!");
-	else if (status == 404)
-		addLog(status, "user profile not found!");
-	else
-		addLog(status, "database error!");
-}
+	private m_user: MainUser;
 
-async function uploadAvatar()
-{
-	var fileInput = document.getElementById("avatar_input") as HTMLInputElement;
-	if (!fileInput)
+	constructor()
 	{
-		console.error("no avatar_upload elt found");
-		return ;
+		super();
+		this.m_user = new MainUser(null);
 	}
 
-	const retval: number = await user.setAvatar(fileInput.files[0]);
-	if (retval == 1)
+	public async enable()
 	{
-		setPlaceholderTxt("you need to login first");
-		return ;
+		const vars = getUrlVar();
+		if (vars.get("oauth_token"))
+		{
+			console.log("session:", vars.get("oauth_token"))
+			setCookie("jwt_session", vars.get("oauth_token"), 10);
+			window.history.replaceState({}, document.title, "/login");
+		}
+
+		await this.m_user.loginSession();
+		if (this.m_user.id != -1)
+		{
+			if (Router.Instance?.prevView && Router.Instance.prevView.routePath == "/lobby")
+				Router.Instance.navigateTo("/");
+			else
+				Router.Instance?.navigateTo("/lobby");
+		}
+
+		this.m_user.onLogin((user) => { Router.Instance?.navigateTo("/lobby") })
+
+		this.addTrackListener(this.querySelector("#create_btn"), "click", () => this.submitNewUser());
+		this.addTrackListener(this.querySelector("#login_btn"), 'click', () => this.login());
+		this.addTrackListener(this.querySelector("#forty_two_log_btn"), "click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.addTrackListener(this.querySelector("#github_log_btn"), "click", () => oauthLogin("/api/oauth2/github"));
+		this.addTrackListener(this.querySelector("#guest_log_btn"), "click", () => this.logAsGuest());
+
+		this.addTrackListener(this.querySelector("#home_btn"), "click", () => { 
+			Router.Instance?.navigateTo("/");
+		});
 	}
 
-	else if (retval == 2)
+	public async disable()
 	{
-		setPlaceholderTxt("no file selected");
-		return ;
-	}
-}
-
-
-function setPlaceholderTxt(msg: string)
-{
-	var txt = document.getElementById("placeholder");
-	if (!txt)
-	{
-		console.error("no placeholder text found");
-		return ;
+		if (this.m_user)
+		{
+			this.m_user.resetCallbacks();
+		}
 	}
 
-	txt.innerText = msg;
-}
-
-function addLog(code:number, msg:string)
-{
-	const parent = document.getElementById("debug-box");
-
-	if (!parent)
-		return;
-
-	const child = document.createElement("p");
-	child.textContent = `<${code}>: ${msg}`;
-	child.className = "debug-text";
-	
-	parent.prepend(child);
-}
-
-async function submitNewUser()
-{
-	var		email = (<HTMLInputElement>document.getElementById("create_email")).value;
-	var		passw = (<HTMLInputElement>document.getElementById("create_passw")).value;
-	var		username = (<HTMLInputElement>document.getElementById("create_username")).value;
-
-	if (email == "" || passw == "" || username == "")
+	private async login()
 	{
-		addLog(500, "some field are empty");
-		return ;
+		var	emailInput = this.querySelector("#login_email") as HTMLInputElement;
+		var	passwInput = this.querySelector("#login_passw") as HTMLInputElement;
+		var totpInput = this.querySelector("#login_totp") as HTMLInputElement;
+
+		const { status, data } = await this.m_user.login(emailInput.value, passwInput.value, totpInput.value);
+		if (status == 200)
+		{
+			console.log("session:", data.token)
+			setCookie("jwt_session", data.token, 10);
+		}
+		if (status == -1)
+		{
+			setPlaceHolderText("please logout first.");
+			return ;
+		}
+
+		if (status == 404)
+			setPlaceHolderText("passw or email or totp invalid");
+		else if (status == 500) 
+			setPlaceHolderText("database error");
 	}
 
-	const response = await fetch("/api/user/create", {
-		method: "POST",
-		headers: {
-			'content-type': 'application/json'
-		},
-		body: JSON.stringify({
-			email: email,
-			passw: await hashString(passw),
-			username: username,
+	private async logAsGuest()
+	{
+		const res = await fetch("/api/user/create_guest", {
+			method: "POST",
 		})
-	});
-	const data = await response.json();
 
-	const jsonString: string = JSON.stringify(data);
-	addLog(response.status, jsonString);
-	if (response.status == 200)
-		setPlaceholderTxt("user created");
-	else if (response.status == 403)
-		setPlaceholderTxt("email invalid");
-	else 
-		setPlaceholderTxt("database error");
-}
-
-async function login()
-{
-	var	emailInput = document.getElementById("login_email") as HTMLInputElement;
-	var	passwInput = document.getElementById("login_passw") as HTMLInputElement;
-
-	const { status, data } = await user.login(emailInput.value, passwInput.value);
-	if (status == -1)
-	{
-		setPlaceholderTxt("please logout first.");
-		return ;
+		const data = await res.json();
+		if (res.status == 200)
+		{
+			console.log("session:", data.token)
+			setCookie("jwt_session", data.token, 10);
+			this.m_user.loginSession();
+		}
 	}
 
-	const jsonString: string = JSON.stringify(data);
-	addLog(status, jsonString);
-	if (status == 404)
-		setPlaceholderTxt("passw or email invalid");
-	else if (status == 500) 
-		setPlaceholderTxt("database error");
-	else if (status == 200)
-		setPlaceholderTxt("connected !");
+	private async submitNewUser()
+	{
+		var		email = (<HTMLInputElement>this.querySelector("#create_email")).value;
+		var		passw = (<HTMLInputElement>this.querySelector("#create_passw")).value;
+		var		username = (<HTMLInputElement>this.querySelector("#create_username")).value;
+
+		if (email == "" || passw == "" || username == "")
+		{
+			setPlaceHolderText("some field are empty");
+			return ;
+		}
+
+		const response = await fetch("/api/user/create", {
+			method: "POST",
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				email: email,
+				passw: await hashString(passw),
+				username: username,
+			})
+		});
+		if (response.status == 200)
+			setPlaceHolderText("user created");
+		else if (response.status == 403)
+			setPlaceHolderText("email invalid");
+		else 
+			setPlaceHolderText("database error");
+	}
 }
 
 
-var user: MainUser = new MainUser(document.body, document.getElementById("friends_list"), document.getElementById("friends_pndg_list"));
-const chatInput: HTMLInputElement = document.getElementById("chat_input") as HTMLInputElement;
-const chat = new Chat(user, document.getElementById("chatbox"), chatInput);
-
-document.getElementById("create_btn")?.addEventListener("click", submitNewUser);
-document.getElementById("login_btn")?.addEventListener('click', login);
-document.getElementById("avatar_upload_btn")?.addEventListener("click", uploadAvatar);
-document.getElementById("add_friend_btn")?.addEventListener("click", sendFriendInvite);
-document.getElementById("refresh_btn")?.addEventListener("click", () => user.refreshSelf());
-document.getElementById("chat_send_btn")?.addEventListener("click", () => chat.sendMsg(user, chatInput.value));
-document.getElementById("forty_two_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-document.getElementById("github_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
-
-setInterval(() => user.refreshSelf(), 60000);
 
 function oauthLogin(path: string)
 {
-	const url = window.location.href.split("/")[0];
-	window.location.href = (`${url}${path}`);
+	window.location.href = (`${window.location.origin}${path}`);
 }
 
-// const vars = getUrlVar();
-// if (vars && vars["event"]) // 42api
-// {
-// 	const ev = vars["event"];
-// 	console.log(vars);
-// 	if (ev == "oauth_redir") {
-// 		user.oauth2Login(vars["id"], vars["source"]);
-// 	}
-// }
-
-user.loginSession();

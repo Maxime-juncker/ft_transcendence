@@ -1,0 +1,55 @@
+
+	<template id="login-template">
+
+		<div class="h-full flex flex-col relative">
+			<header class="absolute top-[7%]">
+				<div class="banner">
+					<div class="line bg-red"></div>
+					<div class="line bg-yellow"></div>
+					<div class="line bg-blue"></div>
+					<div class="line bg-green"></div>
+				</div>
+				<div class="banner-text">
+					<h1>FT_TRANSCENDENCE</h1>
+				</div>
+			</header>
+			<main>
+
+				<div class="login-container">
+					<div class="box">
+						<h1>SIGN UP</h1>
+						<input type="text" id="create_email" placeholder="email...">
+						<input type="text" id="create_username" placeholder="username...">
+						<input type="password" id="create_passw" placeholder="password...">
+						<!-- TODO confirm pass -->
+						<input type="password" placeholder="confirm password..."> 
+						<button id="create_btn" class="button-full">confirm</button>
+					</div>
+					<div class="box">
+						<h1>LOGIN</h1>
+						<input type="text" id="login_email" placeholder="email...">
+						<input type="password" id="login_passw" placeholder="password...">
+						<input type="text" id="login_totp" placeholder="2fa code...">
+						<button id="login_btn" class="button-full">confirm</button>
+						<div class="separator"></div>
+						<div class="oauth-container">
+							<img id="forty_two_log_btn" src="./assets/forty_two.svg" class="oauth-btn" alt="">
+							<img id="github_log_btn" src="./assets/github.svg" class="oauth-btn">
+						</div>
+					</div>
+				</div>
+
+				<div class="guest-container">
+					<button id="guest_log_btn" class="button-empty">continue as guest</button>
+					<p>*all data will be lost on logout</p>
+				</div>
+				<p id="placeholder-text" class="mb-5 ml-5 py-1 px-4 text-white bg-dark w-fit absolute left-0 bottom-0 hide">placeholder</p>
+			</main>
+
+			<footer class="flex justify-end mx-5 my-2">
+				<button id="home_btn" class="text-2xl underline hover:text-blue active:brightness-[1.2]">
+					back
+				</button>
+			</footer>
+		</div>
+	</template>

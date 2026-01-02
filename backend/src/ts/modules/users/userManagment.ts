@@ -3,50 +3,67 @@ import { pipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
 import path from 'path';
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { randomBytes } from "crypto";
 
 import * as core from '@core/core.js';
 import { DbResponse, uploadDir } from "@core/core.js";
 import { getUserById, getUserByName } from "./user.js";
-import { getFriends } from "./friends.js";
+import { hashString } from "@modules/sha256.js";
+import { check_totp } from "@modules/2fa/totp.js";
+import { AuthSource } from "@modules/oauth2/routes.js";
+import { getSqlDate } from "utils.js";
+import { jwtVerif } from "@modules/jwt/jwt.js";
+
 
 function validate_email(email:string)
 {
 	return String(email)
-    .toLowerCase()
-    .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
+	.toLowerCase()
+	.match(
+		/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+	);
 }
 
-export interface UserUpdate {
-	oldName:	string;
-	oldPassw:	string;
-	name:		string;
-	passw:		string;
-	email:		string;
-}
-
-function hash_string(name: string)
+export async function createGuest(): Promise<DbResponse>
 {
-	let hash = 0;
-
-	for	(let i = 0; i < name.length; i++)
+	const sql = "INSERT INTO users (name, source, created_at) VALUES (?, ?, ?) RETURNING id";
+	try
 	{
-		let c = name.charCodeAt(i);
-		hash = ((hash << 5) - hash) + c;
-		hash = hash & hash;
+
+		const date = getSqlDate();
+		const highest = await core.db.get("SELECT MAX(id) FROM users;");
+		const rBytes = randomBytes(8).toString('hex');
+		const name = `guest${highest["MAX(id)"]}${rBytes}`;
+		const data = await core.db.get(sql, [name, AuthSource.GUEST, date]);
+		await updateAvatarPath(data.id, 'default.png');
+		return { code: 200, data: data};
 	}
-	return hash;
+	catch (err)
+	{
+		console.error(`database err: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+
 }
 
-export async function loginSession(id: string, db: Database) : Promise<DbResponse>
+export async function loginSession(token: string, db: Database) : Promise<DbResponse>
 {
+	console.log("token", token);
+	const data: any = await jwtVerif(token, core.sessionKey);
+	if (!data)
+	{
+		console.log("invalid", data);
+		return { code: 400, data: { message: "jwt token invalid" }};
+	}
+
+	var id = data.id
+	console.log("res", data, id);
 	var sql = 'UPDATE users SET is_login = 1 WHERE id = ? RETURNING *';
 
 	try {
 		const row = await core.db.get(sql, [id]);
 		if (!row)
-			return { code: 404, data: { message: "email or password invalid"}};
+			return { code: 404, data: { message: "user not found"}};
 		return { code: 200, data: row};
 	}
 	catch (err) {
@@ -55,7 +72,7 @@ export async function loginSession(id: string, db: Database) : Promise<DbRespons
 	}
 }
 
-export async function login(email: string, passw: string, db: Database) : Promise<DbResponse>
+export async function login(email: string, passw: string, totp: string, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
 
@@ -63,6 +80,11 @@ export async function login(email: string, passw: string, db: Database) : Promis
 		const row = await core.db.get(sql, [email, passw]);
 		if (!row)
 			return { code: 404, data: { message: "email or password invalid"}};
+		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
+			return { code: 404, data: { message: "totp invalid"}};
+		if (row.source == AuthSource.GUEST)
+			return { code: 404, data: { message: "cannot login as guest profile"}};
+
 		return { code: 200, data: row};
 	}
 	catch (err) {
@@ -78,7 +100,6 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 		const row = await db.get(sql, [id, source]);
 		if (!row)
 			return { code: 404, data: { message: "user not found" }};
-		console.log(row);
 		return { code: 200, data: row}
 	}
 	catch (err) {
@@ -89,10 +110,10 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 
 export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
-	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar) VALUES (?, ?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
 	try {
-		const result = await db.run(sql, [name, email, id, source, avatar]);
+		const result = await db.run(sql, [name, email, id, source, avatar, getSqlDate()]);
 		console.log(`Inserted row with id ${result.lastID}`);
 		return { code: 200, data: { message: "Success" }};
 	}
@@ -104,6 +125,8 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 
 export async function updateUserRank(userId: number, newRank: number, login: string) : Promise<DbResponse>
 {
+	return { code: 200, data: { message: "route is deprecated"}}
+
 	const res = await getUserById(userId, core.db);
 	if (res.code != 200) return res;
 
@@ -111,17 +134,24 @@ export async function updateUserRank(userId: number, newRank: number, login: str
 		return { code: 403, data: { message: "permission denied" }}
 }
 
-export async function createUser(email: string, passw: string, username: string, source: number, db: Database) : Promise<DbResponse>
+export async function createUser(email: string, passw: string, username: string, source: AuthSource, db: Database) : Promise<DbResponse>
 {
-	const sql = 'INSERT INTO users (name, email, passw, source) VALUES (?, ?, ?, ?)';
+	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
+	console.log("creating", username);
 
-	if (!validate_email(email))
+	if (!validate_email(email) && source == AuthSource.INTERNAL)
 		return { code: 403, data: { message: "error: email not valid" }};
+	const res = await getUserByName(username, core.db);	
+	if (res.code != 404)
+		return { code: 409, data: { message: "user is already in database" }};
 
 	try {
-		const result = await db.run(sql, [username, email, passw, source]);
+		const result = await db.run(sql, [username, email, passw, source, getSqlDate()]);
+		if (!result.lastID)
+			throw new Error("failed to create user");
 		console.log(`Inserted row with id ${result.lastID}`);
-		return { code: 200, data: { message: "Success" }};
+		await updateAvatarPath(result.lastID, 'default.png');
+		return { code: 200, data: { message: "Success", id: result.lastID }};
 	}
 	catch (err) {
 		console.error(`database err: ${err}`);
@@ -129,40 +159,66 @@ export async function createUser(email: string, passw: string, username: string,
 	}
 }
 
-export async function updateUser(update: UserUpdate, db: Database) : Promise<DbResponse>
+export async function resetUser(user_id: number)
 {
-	console.log(update);
-
-	const sql = "UPDATE users SET name = ?, email = ?, passw = ? WHERE name = ? AND passw = ? RETURNING id";
-	try {
-		const row = await db.get(sql, [update.name, update.email, update.passw, update.oldName, update.oldPassw]);
-		if (!row)
-			return { code: 404, data: { message: "user not found" }};
+	var sql = "UPDATE users SET elo = 1000, wins = 0, games_played = 0 WHERE id = ?";
+	try
+	{
+		await core.db.run(sql, user_id);
+		sql = "DELETE FROM friends WHERE user1_id = ? OR user2_id = ?";
+		await core.db.run(sql, user_id);
+		sql = "DELETE FROM games WHERE user1_id = ? OR user2_id = ?";
+		await core.db.run(sql, user_id);
+		console.log(`user: ${user_id} has reseted his account`);
 		return { code: 200, data: { message: "Success" }};
 	}
-	catch (err) {
-		console.error(`database err: ${err}`);
-		return { code: 500, data: { message: "database error" }};
+	catch (err)
+	{
+		console.log(`Database Error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
 	}
 }
 
-// TODO: logout user => delete all user that where friends => delete from db
 export async function deleteUser(user_id: number, db: Database) : Promise<DbResponse>
 {
-	var res = await logoutUser(user_id, db);
+	var res = await getUserById(user_id, db);
 	if (res.code != 200)
-		return res;
+	{
+		console.error("login out none existing user in logoutUser? id:", user_id);
+		return res; // should not happen
+	}
 
-	return null;
+	const rBytes = randomBytes(64).toString('hex');
+	const name = `DELETED_USER${user_id}${randomBytes(2).toString('hex')}`
+	const sql = "UPDATE users SET name = ?, email = ?, passw = ?, oauth_id = ? WHERE id = ?";
+	try
+	{
+		await updateAvatarPath(user_id, 'default.png');
+		await db.run(sql, [name, rBytes, rBytes, rBytes, user_id]);
+		console.log(`user has been deleted`)
+		return { code: 200, data: { message: "Success" }};
+	}
+	catch (err)
+	{
+		console.log(`Database Error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
 }
 
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
+	console.log("login out");
+	const res = await getUserById(user_id, db);
+	if (res.code != 200)
+	{
+		console.error("login out none existing user in logoutUser? id:", user_id);
+		return res; // should not happen
+	}
+
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
 
 	try {
-		const result = await db.run(sql, [user_id]);
-		console.log(`Inserted row with id ${result.changes}`);
+		await db.run(sql, [user_id]);
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
@@ -176,7 +232,6 @@ export async function setUserStatus(user_id: number, newStatus: string, db: Data
 	const sql = "UPDATE users SET status = ? WHERE id = ?;";
 	try {
 		const result = await db.run(sql, [newStatus, user_id]);
-		console.log(`Inserted row with id ${result.changes}`);
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
@@ -185,40 +240,31 @@ export async function setUserStatus(user_id: number, newStatus: string, db: Data
 	}
 }
 
-export async function updateUserReq(request: FastifyRequest, reply: FastifyReply, db: Database)
+export async function updateAvatarPath(id: number, filename: string)
 {
-	const { oldName, oldPassw, name, email, passw } = request.body as {
-		oldName:	string,
-		oldPassw:	string,
-		name:		string,
-		email:		string,
-		passw:		string
-	};
-	const update: UserUpdate = { oldName, oldPassw, name, email, passw };
-	console.log(update);
-	const result = await updateUser(update, db);
-	return reply.code(result.code).send(result.data);
+	const sql = "UPDATE users SET avatar = ? WHERE id = ?";
+	await core.db.run(sql, ["/public/avatars/" + filename , id]);
 }
 
-export async function uploadAvatar(request: any, reply: any, db: Database)
+export async function uploadAvatar(request: FastifyRequest, reply: any, id: number)
 {
 	const data = await request.file();
 	if (!data)
-		return reply.code(400).send({ error: "no file uploaded" });
+		return reply.code(400).send({ message: "no file uploaded" });
 
-    const email = request.headers['email'] as string;
-	const filename = hash_string(email).toString();
-	const filepath = path.join(uploadDir, filename);
-    const id = request.headers['id'] as string;
+	const res = await getUserById(id, core.db);
+	if (res.code != 200)
+		return reply.code(res.code).send(res.data);
+
+	const filename = await hashString(res.data.email) + await hashString(data.filename);
+	const filepath = path.join("/var/www/server/public/avatars/", filename);
 
 	try
 	{
 		await pipeline(data.file, createWriteStream(filepath));
+		await updateAvatarPath(Number(res.data.id), filename);
 
-		const sql = "UPDATE users SET avatar = ? WHERE id = ?";
-		await db.run(sql, ["/api/images/" + filename , id]);
-
-		console.log(`${email} has changed is avatar. location=${filepath}`);
+		console.log(`${res.data.name} has changed is avatar. location=${filepath}`);
 
 		return {
 			Success:	true,
@@ -235,18 +281,16 @@ export async function uploadAvatar(request: any, reply: any, db: Database)
 	}
 }
 
-export async function blockUser(user_id: number, loginToBlock: string, db: Database) : Promise<DbResponse>
+export async function blockUser(userId: number, target: number, db: Database) : Promise<DbResponse>
 {
-	const res = await getUserByName(loginToBlock, db);
-	if (res.code != 200)
-		return res;
-
 	const sql = "INSERT INTO blocked_usr (user1_id, user2_id) VALUES(?, ?)";
-	try {
-		await db.run(sql, [user_id, res.data.id]);
+	try
+	{
+		await db.run(sql, [userId, target]);
 		return { code: 200, data: { message: "Success" }};
 	}
-	catch (err) {
+	catch (err: any)
+	{
 		console.log(`Database error: ${err}`);
 		if (err.code === "SQLITE_CONSTRAINT")
 			return { code: 500, data: { message: "user already blocked" }};
@@ -255,19 +299,68 @@ export async function blockUser(user_id: number, loginToBlock: string, db: Datab
 	}
 }
 
-export async function unBlockUser(user_id: number, loginToUnBlock: string, db: Database) : Promise<DbResponse>
+export async function unBlockUser(userId: number, target: number, db: Database) : Promise<DbResponse>
 {
-	const res = await getUserByName(loginToUnBlock, db);
-	if (res.code != 200)
-		return res;
-
 	const sql = "DELETE from blocked_usr WHERE user1_id = ? AND user2_id = ?";
-	try {
-		await db.run(sql, [user_id, res.data.id]);
+	try
+	{
+		await db.run(sql, [userId, target]);
 		return { code: 200, data: { message: "Success" }};
 	}
-	catch (err) {
+	catch (err: any)
+	{
 		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
+export async function updatePassw(user_id: number, oldPass: string, newPass: string): Promise<DbResponse>
+{
+	const sql = "UPDATE users SET passw = ? WHERE id = ? AND passw = ? RETURNING id";
+	try
+	{
+		const row = await core.db.get(sql, [newPass, user_id, oldPass]);
+		if (!row)
+			return { code: 404, data: { message: "password is incorect" }};
+		return { code: 200, data: { message: "password updated" }};
+	}
+	catch (err)
+	{
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
+export async function updateName(user_id: number, name: string): Promise<DbResponse>
+{
+	const sql = "UPDATE users SET name = ? WHERE id = ?";
+	try
+	{
+		await core.db.run(sql, [name, user_id]);
+		return { code: 200, data: { message: "name updated" }};
+	}
+	catch (err: any)
+	{
+		console.log(`Database error: ${err}`);
+		if (err.code === "SQLITE_CONSTRAINT")
+			return { code: 500, data: { message: "username already taken" }};
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
+export async function updateEmail(user_id: number, email: string): Promise<DbResponse>
+{
+	const sql = "UPDATE users SET email = ? WHERE id = ?";
+	try
+	{
+		await core.db.run(sql, [email, user_id]);
+		return { code: 200, data: { message: "name updated" }};
+	}
+	catch (err: any)
+	{
+		console.log(`Database error: ${err}`);
+		if (err.code === "SQLITE_CONSTRAINT")
+			return { code: 500, data: { message: "email already taken" }};
 		return { code: 500, data: { message: "Database Error" }};
 	}
 }

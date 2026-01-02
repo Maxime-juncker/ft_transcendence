@@ -6,12 +6,13 @@
 		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"outDir": "./dist",
+		"strict": true,
 		"baseUrl": "./ts",
 		"paths": {
 			"@core/*": ["core/*"],
 			"@modules/*": ["modules/*"]
 		}
 	},
-	"include": ["ts/*.ts"],
+	"include": ["ts/**/*.ts"],
 	"exclude": ["node_modules"]
 }

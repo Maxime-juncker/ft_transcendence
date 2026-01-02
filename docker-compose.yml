@@ -9,9 +9,14 @@ services:
       - "3000:3000"
     volumes:
       - sqlite:/var/lib/sqlite
-      - avatars:/var/www/avatars
+      # - ./backend/src/public:/var/www/server/public # remove comment for working on webpage
     networks:
       - db
+    develop:
+      watch:
+        - path: ./backend/src
+          action: rebuild
+          target: /var/www/server
 
   frontend:
     restart: always
@@ -23,22 +28,36 @@ services:
     networks:
       - web
       - db
+    develop:
+      watch:
+        - path: ./frontend/src
+          action: rebuild
+          target: /var/www/html
 
   modsecurity:
     restart: always
     build: ./modsecurity/
     container_name: modsecurity
-    depends_on:
-      - frontend
     volumes:
       - cert:/etc/nginx/conf/ssl
     ports:
       - "8080:80"
       - "8081:443"
     networks:
-      - transcendence
       - web
       - db
+      - transcendence
+    depends_on:
+      - frontend
+      - backend
+    develop:
+      watch:
+        - path: ./frontend/srcs
+          action: rebuild
+          target: /var/www/html
+        - path: ./frontend/conf/nginx.conf
+          action: rebuild
+          target: /etc/nginx/nginx.conf
 
 networks:
   transcendence:
