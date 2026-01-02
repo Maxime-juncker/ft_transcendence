@@ -1,9 +1,9 @@
-import { getUserFromId, getUserFromName, MainUser, Stats, User } from "User.js";
-import { UserElement } from "UserElement.js";
-import { FriendManager } from "friends.js";
-import * as utils from 'utils.js'
-import { ViewComponent } from "ViewComponent.js";
-import { Router } from "app.js";
+import { getUserFromId, getUserFromName, MainUser, Stats, User } from "modules/user/User.js";
+import { UserElement } from "modules/user/UserElement.js";
+import { FriendManager } from "modules/user/friends.js";
+import * as utils from 'modules/utils/utils.js'
+import { ViewComponent } from "modules/router/ViewComponent.js";
+import { Router } from "modules/router/Router.js";
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);

@@ -1,5 +1,5 @@
 import { GameRouter } from '../router.js';
-import { Router } from 'app.js';
+import { Router } from 'modules/router/Router.js';
 
 export class TournamentMenu
 {

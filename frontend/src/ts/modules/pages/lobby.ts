@@ -1,9 +1,9 @@
-import { MainUser, User } from "User.js";
-import { UserElement, UserElementType } from "UserElement.js";
-import { Chat } from "modules/chat.js";
+import { MainUser, User } from "modules/user/User.js";
+import { UserElement, UserElementType } from "modules/user/UserElement.js";
+import { Chat } from "modules/chat/chat.js";
 import { GameRouter } from "router.js";
-import { Router } from "app.js";
-import { ViewComponent } from "ViewComponent.js";
+import { Router } from "modules/router/Router.js";
+import { ViewComponent } from "modules/router/ViewComponent.js";
 
 	enum ListState
 	{

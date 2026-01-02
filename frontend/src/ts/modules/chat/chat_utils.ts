@@ -1,4 +1,4 @@
-import { User, UserStatus } from "User.js";
+import { User, UserStatus } from "modules/user/User.js";
 import { Message } from "./chat.js";
 
 export function applyMsgStyle(msg: string) : string

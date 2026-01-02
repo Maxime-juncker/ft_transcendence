@@ -1,8 +1,8 @@
-import { hashString } from 'sha256.js'
-import { MainUser } from './User.js';
-import { setCookie, setPlaceHolderText, getUrlVar } from 'utils.js';
-import { ViewComponent } from 'ViewComponent.js';
-import { Router } from 'app.js';
+import { hashString } from 'modules/utils/sha256.js'
+import { setCookie, setPlaceHolderText, getUrlVar } from 'modules/utils/utils.js';
+import { MainUser } from 'modules/user/User.js';
+import { ViewComponent } from 'modules/router/ViewComponent.js';
+import { Router } from 'modules/router/Router.js';
 
 export class LoginView extends ViewComponent
 {

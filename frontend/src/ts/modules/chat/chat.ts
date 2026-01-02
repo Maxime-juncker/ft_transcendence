@@ -1,6 +1,6 @@
-import { strToCol, hashString } from 'sha256.js';
-import { User, UserStatus, MainUser, getUserFromId } from 'User.js'
-import { Router } from 'app.js';
+import { strToCol, hashString } from 'modules/utils/sha256.js';
+import { User, UserStatus, MainUser, getUserFromId } from 'modules/user/User.js'
+import { Router } from 'modules/router/Router.js';
 import * as usr from './chat_user.js';
 import * as utils from './chat_utils.js'
 

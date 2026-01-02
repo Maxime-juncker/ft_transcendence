@@ -1,7 +1,7 @@
-import { MainUser } from './User.js';
-import { Router } from 'app.js';
-import { Leaderboard } from 'Leaderboard.js';
-import { ViewComponent } from 'ViewComponent.js';
+import { MainUser } from 'modules/user/User.js';
+import { Router } from 'modules/router/Router.js';
+import { Leaderboard } from 'modules/user/Leaderboard.js';
+import { ViewComponent } from 'modules/router/ViewComponent.js';
 
 export class StartView extends ViewComponent
 {
@@ -20,7 +20,6 @@ export class StartView extends ViewComponent
 		this.m_profileContainer = this.querySelector("#profile-container") as HTMLElement;
 
 		if (!playBtn) throw new Error("play btn not found"); 
-		// if (!this.m_profileContainer) throw new Error("profile container not found"); 
 
 		this.addTrackListener(playBtn, "click", () => {
 			if (this.m_user && this.m_user.id == -1)

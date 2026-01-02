@@ -1,5 +1,5 @@
 import { GameRouter } from '../router';
-import { Router } from 'app.js';
+import { Router } from 'modules/router/Router.js';
 
 export class Home
 {

@@ -1,6 +1,6 @@
-import { UserElement, UserElementType } from 'UserElement.js';
-import { User, MainUser } from 'User.js';
-import { Router } from 'app.js'
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
+import { User, MainUser } from 'modules/user/User.js';
+import { Router } from 'modules/router/Router.js'
 
 export class FriendManager
 {

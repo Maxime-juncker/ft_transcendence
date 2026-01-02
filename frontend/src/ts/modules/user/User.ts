@@ -1,6 +1,6 @@
-import { setCookie, getCookie} from 'utils.js';
-import { hashString } from './sha256.js'
-import { UserElement, UserElementType } from './UserElement.js';
+import { setCookie, getCookie} from 'modules/utils/utils.js';
+import { hashString } from 'modules/utils/sha256.js'
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 
 // *********************** TODO *********************** //
 // user with large name should be trucated

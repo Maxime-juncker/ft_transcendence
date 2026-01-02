@@ -1,10 +1,10 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from 'User.js';
-import { Chat } from 'modules/chat.js';
-import { UserElement, UserElementType } from 'UserElement.js';
+import { User, getUserFromId } from 'modules/user/User.js';
+import { Chat } from 'modules/chat/chat.js';
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'router.js';
-import { Router } from 'app.js';
+import { Router } from 'modules/router/Router.js';
 
 enum Params
 {
@@ -151,7 +151,7 @@ export class GameClient extends Utils
 			return ;
 		try
 		{
-			window.addEventListener('beforeunload', this.destroy);
+			// window.addEventListener('beforeunload', this.destroy);
 
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
@@ -411,7 +411,7 @@ export class GameClient extends Utils
 		this.setColor('play-again-msg', Params.COLOR, undefined, true);
 	}
 
-	private removeQueue = async (): Promise<void> =>
+	private async removeQueue(): Promise<void>
 	{
 		if (!this.m_user)
 			return ;
@@ -431,7 +431,7 @@ export class GameClient extends Utils
 			clearInterval(this.countdownInterval);
 		}
 
-		this.removeQueue();
+		await this.removeQueue();
 		this.socket?.close();
 		this.stopGameLoop();
 		window.removeEventListener('beforeunload', this.destroy);

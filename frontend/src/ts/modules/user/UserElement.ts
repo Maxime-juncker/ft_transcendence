@@ -1,5 +1,5 @@
-import { User, UserStatus } from "./User.js";
-import { Router } from "app.js";
+import { User, UserStatus } from "modules/user/User.js";
+import { Router } from "modules/router/Router.js";
 
 export enum UserElementType
 {

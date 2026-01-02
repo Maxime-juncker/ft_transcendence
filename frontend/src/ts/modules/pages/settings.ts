@@ -1,8 +1,8 @@
-import { AuthSource, MainUser } from "User.js"
-import { hashString } from "sha256.js";
-import { setPlaceHolderText } from "utils.js";
-import { ViewComponent } from "ViewComponent.js";
-import { Router } from "app.js"
+import { AuthSource, MainUser } from "modules/user/User.js"
+import { hashString } from "modules/utils/sha256.js";
+import { setPlaceHolderText } from "modules/utils/utils.js";
+import { ViewComponent } from "modules/router/ViewComponent.js";
+import { Router } from "modules/router/Router.js"
 
 export class SettingsView extends ViewComponent
 {

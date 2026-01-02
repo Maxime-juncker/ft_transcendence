@@ -1,4 +1,4 @@
-import { Router } from "app.js";
+import { Router } from "modules/router/Router.js";
 
 export function getUrlVar(): Map<string, string>
 {

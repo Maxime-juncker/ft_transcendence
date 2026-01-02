@@ -4,11 +4,10 @@ import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { TournamentCreate } from 'pages/TournamentCreate.js';
 import { TournamentJoin } from 'pages/TournamentJoin.js';
-import { User } from "User.js";
-import { Chat } from '@modules/chat';
-import { UserElement } from 'UserElement.js';
-import { ViewComponent } from 'ViewComponent.js';
-import { Router } from 'app.js';
+import { User } from "modules/user/User.js";
+import { Chat } from 'modules/chat/chat';
+import { UserElement } from 'modules/user/UserElement.js';
+import { ViewComponent } from 'modules/router/ViewComponent.js';
 
 export class GameRouter
 {

@@ -1,6 +1,6 @@
-import { User } from "User.js";
-import { UserElement, UserElementType } from "UserElement.js";
-import { Router } from "app.js";
+import { User } from "modules/user/User.js";
+import { UserElement, UserElementType } from "modules/user/UserElement.js";
+import { Router } from "modules/router/Router.js";
 
 export class Leaderboard
 {

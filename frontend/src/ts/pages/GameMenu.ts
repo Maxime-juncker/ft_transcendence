@@ -1,6 +1,4 @@
-import { ViewComponent } from 'ViewComponent.js';
-import { GameRouter } from '../router';
-import { Router } from 'app.js';
+import { GameRouter } from '../router.js';
 
 export class GameMenu
 {
