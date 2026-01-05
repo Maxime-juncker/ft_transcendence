@@ -11,7 +11,7 @@ export class LoginView extends ViewComponent
 	constructor()
 	{
 		super();
-		this.m_user = new MainUser(null);
+		this.m_user = new MainUser();
 	}
 
 	public async enable()

@@ -158,6 +158,24 @@ export async function getBlockedUsrById(id: number, db: Database) : Promise<DbRe
 	}
 }
 
+export async function getUserStatus(id: number): Promise<DbResponse>
+{
+	const sql = "SELECT status from users WHERE id = ?";
+	try
+	{
+		const row = await core.db.get(sql, [id]);
+		if (!row)
+			return { code: 404, data: { message: "profile not found" }};
+		return { code: 200, data: row };
+
+	}
+	catch (err)
+	{
+		console.log(`Database Error: ${err}`)
+		return { code: 500, data: { message: "Database Error" }};
+	}
+}
+
 export async function getBlockUser(user1: number, user2: number): Promise<DbResponse>
 {
 	if (Number(user1) > Number(user2))

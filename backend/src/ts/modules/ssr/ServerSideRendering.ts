@@ -19,6 +19,43 @@ export class ServerSideRendering
 	<link href="/public/output_crt.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
+		<template id="header-small-template">
+			<header class="header-small">
+				<div id="banner" class="banner-small">
+					<h1 class="select-none">FT_TRANSCENDENCE</h1>
+					<div class="small-lines">
+						<div class="line bg-red"></div>
+						<div class="line bg-yellow"></div>
+						<div class="line bg-blue"></div>
+						<div class="line bg-green"></div>
+					</div>
+				</div>
+				<input type="text" id="search-input" placeholder="search" class="bg-darker border-purple w-1/3">
+				<div id="user-container">
+				</div>
+			</header>
+		</template>
+		<template id="user-profile-template">
+			<div class="user-menu relative">
+				<select id="status"></select>
+				<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
+					<p id="profile_btn" class="btn text-left cursor-default">profile</p>
+					<p id="settings_btn" class="btn text-left cursor-default">settings</p>
+					<p id="logout_btn" class="btn text-left cursor-default">logout</p>
+				</div>
+				<div id="user-menu-btn" class="flex items-center gap-4 hover:text-green">
+					<div id="avatar-name" class="text-[100%] font-bold select-none">
+						user
+					</div>
+					<img
+						id="avatar-img"
+						src="" 
+						alt="Profile" 
+						class="avatar-img"/>
+					<div id="user-status" class="user-status right-0 top-[60%]"></div>
+				</div>
+			</div>
+		</template>
 	`
 
 	private readonly htmlFooter = `

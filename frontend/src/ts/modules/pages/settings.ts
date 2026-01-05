@@ -1,4 +1,5 @@
 import { AuthSource, MainUser } from "modules/user/User.js"
+import { HeaderSmall } from "./HeaderSmall.js";
 import { hashString } from "modules/utils/sha256.js";
 import { setPlaceHolderText } from "modules/utils/utils.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
@@ -31,24 +32,15 @@ export class SettingsView extends ViewComponent
 
 	public async enable()
 	{
-		this.m_user = new MainUser(this.querySelector("#user-container"));
+		this.m_user = new MainUser();
 		await this.m_user.loginSession();
-		this.m_user.onLogout((user) => { Router.Instance?.navigateTo("/") })
 		if (this.m_user.id == -1) // user not login
 		{
 			Router.Instance?.navigateTo("/");
 			return ;
 		}
 
-		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance?.navigateTo("/"));
-		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_user?.logout());
-		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance?.navigateTo("/profile"));
-		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance?.navigateTo("/settings"));
-		this.addTrackListener(this.querySelector("#user-menu-btn"), 'click', () => {
-			const container = this.querySelector("#user-menu-container");
-			if (container)
-				container.classList.toggle("hide");
-		});
+		new HeaderSmall(this.m_user, this, "header-container");
 
 		this.usernameInput = this.querySelector("#username-input") as HTMLInputElement;
 		this.emailInput = this.querySelector("#email-input") as HTMLInputElement;
@@ -68,7 +60,7 @@ export class SettingsView extends ViewComponent
 		this.saveBtn = this.querySelector("#save-btn") as HTMLButtonElement;
 
 		this.usernameInput.placeholder = this.m_user.name;
-		this.emailInput.placeholder = this.m_user.getEmail();
+		this.emailInput.placeholder = this.m_user.email;
 
 		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
 		this.addTrackListener(this.delete2faBtn, "click", () => { this.m_user?.delTotp(); setPlaceHolderText("2fa has been removed") });

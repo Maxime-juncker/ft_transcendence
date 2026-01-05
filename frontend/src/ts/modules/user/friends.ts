@@ -25,7 +25,6 @@ export class FriendManager
 
 	public refreshContainers()
 	{
-		console.log("hello")
 		if (!this.m_friendsContainer || !this.m_pndgContainer || !this.m_blockContainer || !this.m_user)
 			return ;
 

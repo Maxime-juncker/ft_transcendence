@@ -48,8 +48,7 @@ export class Leaderboard
 	{
 		if (!this.m_container)
 			return ;
-
-		this.m_container.innerHTML = "";
+		this.cleanContainer();
 		let max = this.m_users.length < this.m_LeaderboardSize ? this.m_users.length : this.m_LeaderboardSize;
 			console.log(this.m_users.length)
 		for (let i = 0; i < max; i++)

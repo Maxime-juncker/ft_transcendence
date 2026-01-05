@@ -3,7 +3,6 @@ import { ChatCommand } from './Command.js';
 import { User, UserStatus, MainUser, getUserFromId } from 'modules/user/User.js'
 import { Router } from 'modules/router/Router.js';
 import { registerCmds } from './chatCommands.js';
-import * as usr from './chat_user.js';
 import * as utils from './chat_utils.js'
 
 export class Message
@@ -83,6 +82,7 @@ export class Chat
 		this.m_chatbox = chatbox;
 		this.m_chatInput = chatInput;
 		this.m_user = user;
+		this.m_user.onStatusChanged((status: UserStatus) => this.onUserStatusChanged(status));
 
 		user.onLogin((user: MainUser) => this.resetChat(user));
 		user.onLogout((user: MainUser) => this.resetChat(user));
@@ -111,6 +111,12 @@ export class Chat
 			this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${this.m_user.id}`);
 			this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		}
+	}
+
+	public onUserStatusChanged(status: UserStatus)
+	{
+		if (status == UserStatus.BUSY || status == UserStatus.UNAVAILABLE)
+			this.displayMessage(utils.serverReply("no message will be display"));
 	}
 
 	public disconnect()
@@ -176,7 +182,9 @@ export class Chat
 		const user = new User();
 		user.setUser(-1, username, "", "", UserStatus.UNKNOW);
 		const newMsg = new Message(user, message);
-		this.displayMessage(newMsg);
+
+		if (this.user?.status != UserStatus.UNAVAILABLE && this.user?.status != UserStatus.BUSY)
+			this.displayMessage(newMsg);
 	}
 
 	public displayMessage(newMsg: Message)

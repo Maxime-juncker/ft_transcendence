@@ -11,7 +11,6 @@ export enum UserStatus {
 	UNAVAILABLE = -1,
 	AVAILABLE = 0,			// user online
 	BUSY,				// overide IN_GAME / AVAILABLE
-	INVISIBLE,			// overide IN_GAME / AVAILABLE same ui as unavailable
 	IN_GAME,			// show when user in game
 }
 
@@ -82,7 +81,11 @@ export class User {
 	private m_friends:		User[] = []; // accepted request
 	private m_pndgFriends = new Map<User, number>(); // pending requests (number == sender)
 
-	constructor(token?: string) {
+	private m_onStatusChanged: Array<(status: UserStatus) => void>;
+
+	constructor(token?: string)
+	{
+		this.m_onStatusChanged = new Array<(status: UserStatus) => void>;
 		this.setUser(
 			-1,
 			"Guest",
@@ -109,9 +112,9 @@ export class User {
 		this.m_pndgFriends = new Map<User, number>();
 	}
 
-	public getStatus(): UserStatus			{ return this.m_status; }
-	public getEmail(): string				{ return this.m_email; }
-	public getAvatarPath(): string			{ return this.m_avatarPath; }
+	get status(): UserStatus			{ return this.m_status; }
+	get email(): string				{ return this.m_email; }
+	get avatarPath(): string			{ return this.m_avatarPath; }
 	get	elo(): number						{ return this.m_stats.currElo; }
 	get blockUsr(): User[]					{ return this.m_blockUsr; }
 	get friends(): User[]					{ return this.m_friends; }
@@ -132,8 +135,15 @@ export class User {
 		return Math.round(winrate);
 	}
 
+	public onStatusChanged(cb: (status: UserStatus) => void)
+	{
+		this.m_onStatusChanged.push(cb);
+	}
+
 	public async setStatus(status: UserStatus): Promise<Response> {
 		this.m_status = status;
+
+		this.m_onStatusChanged.forEach(cb => cb(this.m_status));
 
 		var response = await fetch("/api/user/set_status", {
 			method: "POST",
@@ -195,7 +205,7 @@ export class User {
 			return 0;
 
 		this.m_blockUsr = [];
-		const response = await fetch('/api/user/blocked_users', {
+		const response = await fetch('/api/user/blocked_users', { // TODO renvoyer tous les user ou blocked_by === id
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ token: this.m_token })
@@ -207,7 +217,9 @@ export class User {
 
 		for (let i = 0; i < data.length; i++)
 		{
-			const id = data[i].user2_id;
+			if (data[i].blocked_by != this.id)
+				continue ;
+			const id = data[i].user1_id == this.id ? data[i].user2_id : data[i].user1_id;
 			const tmp = await getUserFromId(id);
 			if (!tmp)
 			{
@@ -288,11 +300,21 @@ export class MainUser extends User
 	private m_onLoginCb:	Array<(user: MainUser) => void>;
 	private m_onLogoutCb:	Array<(user: MainUser) => void>;
 
-	constructor(parent: HTMLElement | null)
+	constructor()
 	{
 		const token = getCookie("jwt_session");
 		super(token);
-		
+
+		this.m_onLoginCb = [];
+		this.m_onLogoutCb = [];
+	}
+
+	/**
+	 * use to create a userElement
+	 * @param parent html parent to append the child to
+	*/
+	public setHtml(parent: HTMLElement | null)
+	{
 		if (parent)
 		{
 			this.m_userElement = new UserElement(this, parent, UserElementType.MAIN);
@@ -304,9 +326,6 @@ export class MainUser extends User
 			statusSelect.prepend(newOption("in_game"));
 			statusSelect.addEventListener("change", () => this.updateStatus(statusSelect.value, this, this.m_userElement));
 		}
-
-		this.m_onLoginCb = [];
-		this.m_onLogoutCb = [];
 	}
 	
 	public resetCallbacks()
@@ -332,7 +351,7 @@ export class MainUser extends User
 		if (response.status == 200) {
 			var status = data.status;
 			this.setUser(data.id, data.name, data.email, data.avatar, status);
-			this.setStatus(this.getStatus());
+			this.setStatus(this.status);
 			await this.refreshSelf();
 
 			this.m_onLoginCb.forEach(cb => cb(this));
@@ -350,7 +369,7 @@ export class MainUser extends User
 		{
 			var status = data.status;
 			this.setUser(data.id, data.name, data.email, data.avatar, status);
-			this.setStatus(this.getStatus());
+			this.setStatus(this.status);
 			await this.refreshSelf();
 
 			this.m_onLoginCb.forEach(cb => cb(this));
@@ -502,7 +521,7 @@ export class MainUser extends User
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				user_id: this.id.toString(),
-				email: this.getEmail(),
+				email: this.email,
 			})
 			
 		});

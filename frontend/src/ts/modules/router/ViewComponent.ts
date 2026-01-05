@@ -29,7 +29,10 @@ export class ViewComponent extends HTMLElement
 	public addTrackListener(element: HTMLElement | null, event: string, handler: EventListener)
 	{
 		if (!element)
+		{
+			console.error("element is null");
 			return ;
+		}
 		element.addEventListener(event, handler);
 		this.m_listeners.push({ element: element, event: event, handler: handler });
 	}

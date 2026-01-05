@@ -1,5 +1,4 @@
 import { User, UserStatus } from "modules/user/User.js";
-import { Router } from "modules/router/Router.js";
 
 export enum UserElementType
 {
@@ -24,7 +23,7 @@ export class UserElement
 		this.m_user = user;
 		this.m_type = type;
 
-		const template = Router.getElementById(templateName) as HTMLTemplateElement;
+		const template = document.getElementById(templateName) as HTMLTemplateElement;
 		if (!template)
 		{
 			console.warn("no template found for user element");
@@ -73,7 +72,7 @@ export class UserElement
 			statusElt.style.background = "black:"
 			return ;
 		}
-		switch (user.getStatus())
+		switch (user.status)
 		{
 			case UserStatus.UNKNOW:
 				statusElt.style.background = "black";
@@ -86,9 +85,6 @@ export class UserElement
 				break;
 			case UserStatus.BUSY:
 				statusElt.style.background = "red";
-				break;
-			case UserStatus.INVISIBLE:
-				statusElt.style.background = "gray";
 				break;
 			case UserStatus.IN_GAME:
 				statusElt.style.background = "blue";
@@ -117,7 +113,7 @@ export class UserElement
 		}
 
 		UserElement.setStatusColor(user, this.m_htmlStatusImg);
-		this.m_htmlAvatar.src = user.getAvatarPath();
+		this.m_htmlAvatar.src = user.avatarPath;
 		this.m_htmlName.innerText = user.name;
 		this.m_user = user;
 	}

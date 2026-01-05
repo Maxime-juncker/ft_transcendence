@@ -12,28 +12,6 @@
 		</div>
 	</template>
 
-	<template id="user-profile-template">
-		<div class="user-menu relative">
-			<select id="status"></select>
-			<div id="user-menu-container" class="hide absolute top-[90%] size-fit z-2">
-				<p id="profile_btn" class="btn text-left cursor-default">profile</p>
-				<p id="settings_btn" class="btn text-left cursor-default">settings</p>
-				<p id="logout_btn" class="btn text-left cursor-default">logout</p>
-			</div>
-			<div id="user-menu-btn" class="flex items-center gap-4 hover:text-green">
-				<div id="avatar-name" class="text-[100%] font-bold select-none">
-					user
-				</div>
-				<img
-					id="avatar-img"
-					src="" 
-					alt="Profile" 
-					class="avatar-img"/>
-				<div id="user-status" class="user-status right-0 top-[60%]"></div>
-			</div>
-		</div>
-	</template>
-
 	<template id="user-friend-template">
 		<div class="relative flex gap-4 items-center justify-between h-20 w-[90%]">
 			<div id="profile" class="flex flex-1 flex-row w-full items-center gap-2 hover:bg-white hover:cursor-grab hover:text-darker
@@ -57,44 +35,11 @@
 		</div>
 	</template>
 
-	<!-- <template id="user-friend-template"> -->
-	<!-- 	<div class="relative flex gap-2 items-center justify-between h-20 w-[90%] border-2 border-white p-2"> -->
-	<!-- 		<div id="profile" class="flex flex-row w-full items-center gap-2 hover:brightness-[1.2]"> -->
-	<!-- 			<div class="relative"> -->
-	<!-- 				<img -->
-	<!-- 					id="avatar-img" -->
-	<!-- 					src=""  -->
-	<!-- 					alt="Profile"  -->
-	<!-- 					class="avatar-img"/> -->
-	<!-- 				<div id="user-status" class="user-status right-0 top-[70%]"></div> -->
-	<!-- 			</div> -->
-	<!-- 			<h1 id="avatar-name" class="text-[100%] font-bold select-none break-all">user</h1> -->
-	<!-- 		</div> -->
-	<!-- 		<div class="flex items-center gap-2 mr-[5%]"> -->
-	<!-- 			<button id="green-btn" class="button-empty border-green text-green">Y</button> -->
-	<!-- 			<button id="red-btn" class="button-empty border-red text-red">N</button> -->
-	<!-- 		</div> -->
-	<!-- 	</div> -->
-	<!-- </template> -->
-
 	<div class="h-full overflow-hidden overflow-y-hidden">
-
-		<header class="header-small">
-			<div id="banner" class="banner-small">
-				<h1 class="select-none">FT_TRANSCENDENCE</h1>
-				<div class="small-lines">
-					<div class="line bg-red"></div>
-					<div class="line bg-yellow"></div>
-					<div class="line bg-blue"></div>
-					<div class="line bg-green"></div>
-				</div>
-			</div>
-			<div id="user-container">
-			</div>
-		</header>
+		<div id="header-container">
+		</div>
 
 		<div class="h-full w-full flex flex-col justify-start align-middle items-center pt-25 overflow-y-scroll">
-
 			<!-- profile expended -->
 			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2">
 				<div id="profile-extended" class="flex flex-row justify-center align-middle h-full">

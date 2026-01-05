@@ -3,6 +3,7 @@ import { UserElement, UserElementType } from "modules/user/UserElement.js";
 import { Chat } from "modules/chat/chat.js";
 import { GameRouter } from "router.js";
 import { Router } from "modules/router/Router.js";
+import { HeaderSmall } from "./HeaderSmall.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
 
 	enum ListState
@@ -32,17 +33,16 @@ export class LobbyView extends ViewComponent
 			return ;
 
 		this.m_userContainer = this.querySelector("#user-container");
-		this.m_user = new MainUser(this.m_userContainer);
+		this.m_user = new MainUser();
 
 		await this.m_user.loginSession();
 
 		if (this.m_user.id == -1)
 		{
-			console.warn("user is not log");
 			Router.Instance.navigateTo("/");
 			return ;
 		}
-		this.m_user.onLogout((user) => { Router.Instance?.navigateTo("/"); })
+		new HeaderSmall(this.m_user, this, "header-container");
 
 		const chatInput: HTMLInputElement = this.querySelector("#chat-in") as HTMLInputElement;
 		const chatOutput: HTMLInputElement = this.querySelector("#chat-out") as HTMLInputElement;
@@ -65,15 +65,7 @@ export class LobbyView extends ViewComponent
 			if (!this.m_chat || !this.m_user) return;
 			this.showListContainer(ListState.FRIEND, this.m_chat, this.m_user);
 		});
-		this.addTrackListener(this.querySelector("#user-menu-btn"), "click", () => {
-			if (!userMenuContainer) return;
-			userMenuContainer.classList.toggle("hide");
-		});
 
-		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance?.navigateTo("/"));
-		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_user?.logout());
-		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance?.navigateTo("/profile"));
-		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance?.navigateTo("/settings"));
 	}
 
 	public async disable()

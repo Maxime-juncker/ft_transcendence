@@ -17,7 +17,7 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 				type: 'object',
 				required: ['token'],
 				properties: {
-					token:		{ type: 'string' },
+					token: { type: 'string' },
 				}
 			}
 		}

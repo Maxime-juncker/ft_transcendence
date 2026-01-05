@@ -1,5 +1,5 @@
 import * as core from '@core/core.js';
-import { getBlockedUsrById, getUserById, getBlockUser } from 'modules/users/user.js';
+import { getUserById, getBlockUser, getUserStatus } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import * as utils from 'utils.js';
 import { FastifyRequest } from 'fastify';
@@ -7,7 +7,6 @@ import { GameServer } from 'modules/game/GameServer.js';
 import { GameInstance } from 'modules/game/GameInstance.js'
 
 // TODO: use flag in chat (e.g: if flag == DM them msg is underlined)
-// TODO: if a user block someone everyone is blocked ?
 export const connections = new Map<WebSocket, number>(); // websocket => user login
 var matchQueue: number[] = [];
 
@@ -129,10 +128,12 @@ async function broadcast(message: any, sender: WebSocket)
 
 		if (conn === sender || conn.readyState !== conn.OPEN)
 			return ;
+		const status = await getUserStatus(id);
+		console.log(id, status);
 		try
 		{
 			const data = await getBlockUser(id, senderId);
-			console.log(`${senderId} <=> ${id}: `, data);
+			// console.log(`${senderId} <=> ${id}: `, data);
 			if (data.code == 200) // user is blocked
 			{
 				return;

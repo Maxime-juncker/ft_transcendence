@@ -4,6 +4,7 @@ import { FriendManager } from "modules/user/friends.js";
 import * as utils from 'modules/utils/utils.js'
 import { ViewComponent } from "modules/router/ViewComponent.js";
 import { Router } from "modules/router/Router.js";
+import { HeaderSmall } from "./HeaderSmall.js";
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -12,6 +13,7 @@ export class ProfileView extends ViewComponent
 {
 	private m_main: MainUser | null = null;
 	private m_user: User | null = null;
+	private m_searchInput: HTMLInputElement | null = null;
 
 	constructor()
 	{
@@ -20,7 +22,8 @@ export class ProfileView extends ViewComponent
 
 	public async enable()
 	{
-		this.m_main = new MainUser(this.querySelector("#user-container"));
+		this.m_main = new MainUser();
+		new HeaderSmall(this.m_main, this, "header-container");
 		await this.m_main.loginSession();
 		if (this.m_main.id == -1) // user not login
 		{
@@ -46,7 +49,7 @@ export class ProfileView extends ViewComponent
 			const status = profile_extended?.querySelector("#user-status") as HTMLElement;
 			if (status)
 				UserElement.setStatusColor(this.m_user, status);
-			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = this.m_user.getAvatarPath();
+			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = this.m_user.avatarPath;
 			(<HTMLElement>profile_extended.querySelector("#name")).textContent = this.m_user.name;
 			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
 		}
@@ -55,19 +58,11 @@ export class ProfileView extends ViewComponent
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
 		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? this.m_user.winrate + "%" : "n/a" }`;
 		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
-
-		const userMenuContainer = this.querySelector("#user-menu-container");
-		this.addTrackListener(this.querySelector("#banner"), "click", () => Router.Instance?.navigateTo("/"));
-		this.addTrackListener(this.querySelector("#logout_btn"), "click", () => this.m_main?.logout());
-		this.addTrackListener(this.querySelector("#profile_btn"), "click", () => Router.Instance?.navigateTo("/profile"));
-		this.addTrackListener(this.querySelector("#settings_btn"), "click", () => Router.Instance?.navigateTo("/settings"));
-		this.addTrackListener(this.querySelector("#user-menu-btn"), 'click', () => {
-			userMenuContainer?.classList.toggle("hide");
-		});
 	}
 
 	public async disable()
 	{
+		this.clearTrackListener();
 		const userContainer = this.querySelector("#user-container") as HTMLElement;
 		const historyContainer = this.querySelector("#history-container") as HTMLElement;
 		if (!userContainer || !historyContainer) return;
@@ -240,7 +235,6 @@ export class ProfileView extends ViewComponent
 		}
 
 		var data = await response.json();
-		console.log(data)
 		for (let i = 0; i  < data.length; i ++) {
 			const elt = data[i];
 			const clone = await this.addMatchItem(user, elt, eloData);

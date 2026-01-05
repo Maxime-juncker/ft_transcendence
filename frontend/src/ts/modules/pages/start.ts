@@ -30,11 +30,12 @@ export class StartView extends ViewComponent
 				Router.Instance?.navigateTo("/lobby");
 		});
 
-		this.m_user = new MainUser(null);
+		this.m_user = new MainUser();
 		await this.m_user.loginSession();
 
 		this.m_leaderboard = new Leaderboard();
 		await this.m_leaderboard.Init();
+		// console.error("enabling start.ts");
 		this.m_leaderboard.RefreshContainer();
 	}
 
@@ -51,6 +52,8 @@ export class StartView extends ViewComponent
 		this.m_profileContainer.innerHTML = "";
 		this.clearTrackListener();
 		this.m_leaderboard?.cleanContainer();
+		if (this.m_leaderboard)
+			this.m_leaderboard = null;
 	}
 }
 

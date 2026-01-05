@@ -12,6 +12,8 @@ const routes = [
 	"/lobby.html",
 	"/settings.html",
 	"/profile.html",
+	"/search.html",
+	"/about.html",
 ]
 
 new ServerSideRendering(core.fastify, routes);
