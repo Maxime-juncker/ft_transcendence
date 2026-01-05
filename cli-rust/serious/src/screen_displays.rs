@@ -106,7 +106,7 @@ impl ScreenDisplayer for Infos {
     }
     fn display_waiting_screen(&self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered().border_set(border::THICK);
-        let spanlist: Vec<Span> = vec!["Waiting\n".bold(), "For\n".bold(), "Opponents\n".bold()];
+        let spanlist: Vec<Span> = vec!["Searching \n".bold(), "For \n".bold(), "Opponent \n".bold()];
         Paragraph::new(Line::from(spanlist))
             .centered()
             .block(block)
@@ -166,7 +166,8 @@ impl ScreenDisplayer for Infos {
                     height: 10.0,
                     color: Color::Green,
                 });
-            });
+            })
+            .render(area, buf);
     }
 }
 

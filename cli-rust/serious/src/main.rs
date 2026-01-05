@@ -64,7 +64,6 @@ pub enum CurrentScreen {
 
 #[derive(Default)]
 pub struct Infos {
-  original_size: (u16, u16),
   location: String,
   id: u64,
   client: Client,
@@ -74,38 +73,20 @@ pub struct Infos {
   friends: Vec<String>,
   game: Game,
   token: String,
+  receiver: Option<mpsc::Receiver<serde_json::Value>>
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  // if let Err(e) = setup_terminal() {
-  //   return Err(anyhow!("{}", e));
-  // };
-  let (original_size, location) = match get_infos_elements() {
+  let location = match get_location() {
     Ok(result) => result,
     Err(e) => {return Err(anyhow!("{}", e));},
   };
-  let (num, client, receiver) = match create_guest_session(&location).await {
-    Ok(res) => res,
-    Err(e) => {
-      clean_terminal(&original_size)?;
-      return Err(anyhow!("{}", e));
-    },
-  };
   let mut terminal = ratatui::init();
-  let game_main = Infos::new(original_size, location, num, client);
-  // let mut game_main = Infos {original_size, location, id: num, client, exit: false, screen: CurrentScreen::Welcome, index: 0, friends: vec![]};
-  // std::thread::sleep(Duration::from_secs(5));
-  let app_result = game_main.run(&mut terminal, receiver).await;
+  let game_main = Infos::new(location);
+  let app_result = game_main.run(&mut terminal).await;
   ratatui::restore();
   app_result
-
-  // if let Err(e) = welcome_screen(&game_main, receiver).await {
-  //   clean_terminal(&game_main.original_size)?;
-  //   return Err(anyhow!("{}", e));
-  // };
-  // cleanup_and_quit(&original_size)?;
-  // Ok(())
 }
 
 impl Default for CurrentScreen {
@@ -115,22 +96,16 @@ impl Default for CurrentScreen {
 }
 
 impl Infos {
-  pub fn new(original_size: (u16, u16), location: String, id: u64, client: Client) -> Infos {
+  pub fn new(location: String) -> Infos {
     Infos {
-      original_size,
       location,
-      id,
-      client,
       ..Default::default()
     }
   }
-  pub async fn run(mut self, terminal: &mut DefaultTerminal, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<()> {
-    terminal.draw(|frame| self.draw(frame))?;
+  pub async fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
     while !self.exit {
-      if poll(Duration::from_millis(16))? == true {
-        (self, receiver) = self.handle_events(receiver).await?;
-      }
-      terminal.draw(|frame| self.draw(frame))?;
+        terminal.draw(|frame| self.draw(frame))?;
+        self.handle_events().await?;
     }
     Ok(())
   }
@@ -139,29 +114,19 @@ impl Infos {
     frame.render_widget(self, frame.area());
   }
 
-  async fn handle_events(mut self, mut receiver: mpsc::Receiver<serde_json::Value>) -> Result<(Infos, mpsc::Receiver<serde_json::Value>)> {
+  async fn handle_events(&mut self) -> Result<()> {
     match self.screen {
-      CurrentScreen::Login => {self = self.handle_login_events()?},
-      // CurrentScreen::Login => {},
-      CurrentScreen::Welcome => {self = self.handle_welcome_events()?},
-      CurrentScreen::GameChoice => {self = self.handle_gamechoice_events()?},
-      CurrentScreen::SocialLife => {self = self.handle_social_events().await?},
+      CurrentScreen::Login => {self.handle_login_events().await?},
+      CurrentScreen::Welcome => {self.handle_welcome_events()?},
+      CurrentScreen::GameChoice => {self.handle_gamechoice_events()?},
+      CurrentScreen::SocialLife => {self.handle_social_events().await?},
       CurrentScreen::FriendsDisplay => {},
       CurrentScreen::StartGame => {self.launch_game().await?},
       CurrentScreen::EndGame => {},
-      // CurrentScreen::CreateGame => {},
-      // CurrentScreen::PlayGame => {},
-      // CurrentScreen::FriendsDisplay => {self = self.handle_friends_display().await?},
-      CurrentScreen::CreateGame => {(self, receiver) = match self.create_game("online", receiver).await {
-        Ok((info, receiver)) => (info, receiver),
-        Err((error, info, receiver)) => {
-                display_error(&error)?;
-                (info, receiver)
-              }
-      }},
+      CurrentScreen::CreateGame => {self.create_game("online",).await?},
       CurrentScreen::PlayGame => {self.handle_game_events().await?},
     }
-  Ok((self, receiver))
+  Ok(())
   }
 }
 
@@ -169,25 +134,16 @@ impl Widget for &Infos {
   fn render(self, area: Rect, buf: &mut Buffer) {
     match self.screen {
       CurrentScreen::Login => {self.display_login_screen(area, buf);},
-      // CurrentScreen::Login => {},
       CurrentScreen::Welcome => {self.display_welcome_screen(area, buf);}, 
       CurrentScreen::GameChoice => {self.display_gamechoice_screen(area, buf);}, 
       CurrentScreen::SocialLife => {self.display_social_screen(area, buf);}, 
       CurrentScreen::FriendsDisplay => {self.display_friends_screen(area, buf);},
       CurrentScreen::StartGame => {},
       CurrentScreen::EndGame => {},
-      // CurrentScreen::CreateGame => {},    
-      CurrentScreen::CreateGame => {self.display_waiting_screen(area, buf);},    
-      CurrentScreen::PlayGame => {self.display_played_game(area, buf);}, 
-      // CurrentScreen::PlayGame => {self.display_game_screen(area, buf);},
+      CurrentScreen::CreateGame => {self.display_waiting_screen(area, buf);},
+      CurrentScreen::PlayGame => {self.display_played_game(area, buf);},
     }
   }
-}
-
-fn get_infos_elements() -> Result<((u16, u16), String)> {
-  let original_size = terminal::size()?;
-  let location = get_location()?;
-  Ok((original_size, location))
 }
 
 fn get_location() -> Result<String> {

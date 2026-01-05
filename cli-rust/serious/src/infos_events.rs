@@ -22,6 +22,7 @@ use crossterm::{
 use crate::LOGO;
 use crate::CurrentScreen;
 use crate::friends::FriendsDisplay;
+use crate::login;
 use ratatui::{
     text::Span,
     buffer::Buffer,
@@ -39,85 +40,96 @@ pub const HEIGHT: u16 = 30;
 use super::{Infos, should_exit};
 
 pub trait EventHandler {
-    fn handle_welcome_events(self) -> Result<Infos>;
-    fn handle_gamechoice_events(self) -> Result<Infos>;
-    async fn handle_social_events(self) -> Result<Infos>;
-    fn handle_login_events(self) -> Result<Infos>;
+    fn handle_welcome_events(&mut self) -> Result<()>;
+    fn handle_gamechoice_events(&mut self) -> Result<()>;
+    async fn handle_social_events(&mut self) -> Result<()>;
+    async fn handle_login_events(&mut self) -> Result<()>;
 }
 
 impl EventHandler for Infos {
-    fn handle_welcome_events(mut self) -> Result<Infos> {
-      let event = event::read()?;
-      if should_exit(&event)? == true {
-        self.exit = true;
-      }
-      else if let Event::Key(key_event) = event {
-        if key_event.kind == KeyEventKind::Press {
-            match key_event.code {
-                KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
-                KeyCode::Char('2') => {self.screen = CurrentScreen::SocialLife;},
-                _ => {},
-            }
-        }
-      }
-      Ok(self)
+  fn handle_welcome_events(&mut self) -> Result<()> {
+    let event = event::read()?;
+    if should_exit(&event)? == true {
+      self.exit = true;
     }
-    fn handle_gamechoice_events(mut self) -> Result<Infos> {
-      let event = event::read()?;
-      if should_exit(&event)? == true {
-        self.exit = true;
+    else if let Event::Key(key_event) = event {
+      if key_event.kind == KeyEventKind::Press {
+          match key_event.code {
+              KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
+              KeyCode::Char('2') => {self.screen = CurrentScreen::SocialLife;},
+              _ => {},
+          }
       }
-      else if let Event::Key(key_event) = event {
-        if key_event.kind == KeyEventKind::Press {
-            match key_event.code {
-                // KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
-                KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
-                KeyCode::Char('4') => {self.screen = CurrentScreen::Welcome;},
-                _ => {},
-            }
-        }
-      }
-      Ok(self)
     }
-    fn handle_login_events(mut self) -> Result<Infos> {
-      let event = event::read()?;
-      if should_exit(&event)? == true {
-        self.exit = true;
-      }
-      else if let Event::Key(key_event) = event {
-        if key_event.kind == KeyEventKind::Press {
-            match key_event.code {
-                KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
-                KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
-                KeyCode::Char('3') => {self.screen = CurrentScreen::Welcome;},
-                _ => {},
-            }
-        }
-      }
-      Ok(self)
+    Ok(())
+  }
+  fn handle_gamechoice_events(&mut self) -> Result<()> {
+    let event = event::read()?;
+    if should_exit(&event)? == true {
+      self.exit = true;
     }
-    async fn handle_social_events(mut self) -> Result<Infos> {
-        let event = event::read()?;
+    else if let Event::Key(key_event) = event {
+      if key_event.kind == KeyEventKind::Press {
+          match key_event.code {
+              // KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
+              KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
+              KeyCode::Char('4') => {self.screen = CurrentScreen::Welcome;},
+              _ => {},
+          }
+      }
+    }
+    Ok(())
+  }
+  async fn handle_login_events(&mut self) -> Result<()> {
+    let event = event::read()?;
+    if should_exit(&event)? == true {
+      self.exit = true;
+    }
+    else if let Event::Key(key_event) = event {
+      if key_event.kind == KeyEventKind::Press {
+          match key_event.code {
+              KeyCode::Char('1') => {self.screen = CurrentScreen::GameChoice;},
+              KeyCode::Char('2') => {self.screen = CurrentScreen::CreateGame;},
+              KeyCode::Char('3') => {
+                let (num, client, receiver) = match create_guest_session(&self.location).await {
+                  Ok(res) => res,
+                  Err(e) => {
+                    return Err(anyhow!("{}", e));
+                  },
+                };
+                self.id = num;
+                self.client = client;
+                self.receiver = Some(receiver);
+                self.screen = CurrentScreen::Welcome;
+              },
+              _ => {},
+          }
+      }
+    }
+    Ok(())
+  }
+  async fn handle_social_events(&mut self) -> Result<()> {
+    let event = event::read()?;
 
-        if should_exit(&event)? == true {
-            self.exit = true;
-        }
-        else if let Event::Key(key_event) = event {
-            match key_event.code {
-            // KeyCode::Char('1') => {display_friends(game_main).await?;},
-            KeyCode::Char('1') => {
-              let mut list: Vec<String> = self.get_indexed_friends().await?;
-              list.push("test".to_string());
-              self.friends = list;              
-              self.screen = CurrentScreen::FriendsDisplay
-            },
-            KeyCode::Char('2') => {
-                //chat();
-            },
-            KeyCode::Char('3') => {self.screen = CurrentScreen::Welcome},
-            _ => {},
-            }
-        }
-        Ok(self) 
+    if should_exit(&event)? == true {
+        self.exit = true;
     }
+    else if let Event::Key(key_event) = event {
+        match key_event.code {
+        // KeyCode::Char('1') => {display_friends(game_main).await?;},
+        KeyCode::Char('1') => {
+          let mut list: Vec<String> = self.get_indexed_friends().await?;
+          list.push("test".to_string());
+          self.friends = list;
+          self.screen = CurrentScreen::FriendsDisplay
+        },
+        KeyCode::Char('2') => {
+            //chat();
+        },
+        KeyCode::Char('3') => {self.screen = CurrentScreen::Welcome},
+        _ => {},
+        }
+    }
+    Ok(()) 
+  }
 }

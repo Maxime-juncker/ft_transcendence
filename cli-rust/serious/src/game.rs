@@ -15,7 +15,7 @@ use crossterm::{
 use futures::stream::{StreamExt, TryStreamExt};
 use futures_util::{SinkExt, stream::SplitStream};
 use futures_util::stream::SplitSink;
-use std::time::Duration;
+use std::{any, time::Duration};
 use std::{
 	collections::HashMap,
 	io::{Write, stdout},
@@ -106,58 +106,53 @@ pub struct GameStats {
 }
 
 pub trait Gameplay {
-	async fn create_game(self, mode: &str, receiver: mpsc::Receiver<serde_json::Value>) 
-										-> Result<(Infos, mpsc::Receiver<serde_json::Value>), (String, Infos, mpsc::Receiver<serde_json::Value>)>;
+	async fn create_game(&mut self, mode: &str) -> Result<()>;
 	async fn launch_game(&mut self) -> Result<()>;
 	async fn handle_game_events(&mut self) -> Result<()>;
 }
 
 impl Gameplay for Infos {
-	async fn create_game(mut self, mode: &str, mut receiver: mpsc::Receiver<serde_json::Value>) 
-										-> Result<(Infos, mpsc::Receiver<serde_json::Value>), (String, Infos, mpsc::Receiver<serde_json::Value>)> {
+	async fn create_game(&mut self, mode: &str) -> Result<()> {
 		if let Err(_) = send_post_game_request(&self, mode).await {
-			return Err(("error, no data received from server".to_string(), self, receiver));
+			return Err(anyhow::anyhow!("error, no data received from server"))
+		}
+		let receiver = match self.receiver.as_mut() {
+			Some(value) => value,
+			_ => return Err(anyhow::anyhow!("Empty receiver")),
 		};
+
 		loop {
 			match poll(Duration::from_millis(16)) {
 				Ok(true) => {
 					if !receiver.is_empty() {
 						break ;
 					}
-					let event = match event::read() {
-					Ok(event) => event,
-					_ => return Err(("error in read".to_string(), self, receiver))
-					};
+					let event = event::read()?;
 					match should_exit(&event) {
 						Ok(true) => {
-							if let Err(_) = send_remove_from_queue_request(&self).await {
-								return Err(("error: could not send request to remove from list".to_string(), self, receiver));
-							};
+							send_remove_from_queue_request(&self).await?;
 							self.screen = crate::CurrentScreen::GameChoice;
-							return Ok((self, receiver));},
-						Ok(false) => {},
-						_ => return Err(("event error".to_string(), self, receiver))
+							return Ok(());
+						}
+						_ => {},
 					}
 				},
 				Ok(false) => {
-					if !receiver.is_empty() {
-						break ;
+						if !receiver.is_empty() {
+							break ;
 					}
 				},
-				_ => return Err(("error in poll".to_string(), self, receiver))
+				_ => return Err(anyhow::anyhow!("error in poll".to_string()))
 			};
 		}
-		let response = match receiver.recv().await {
-			Some(value) => value,
-			_ => return Err(("error, no data received from server".to_string(), self, receiver)),
-		};
+		let response = receiver.try_recv()?;
 		let game = match Game::new(&self, response) {
 			Ok(game) => game,
-			_ => return Err(("error creating game".to_string(), self, receiver)),
+			_ => return Err(anyhow::anyhow!("error creating game")),
 		};
 		self.game = game;
 		self.screen = crate::CurrentScreen::StartGame;
-		Ok((self, receiver))
+		Ok(())
 	}
 	async fn launch_game(&mut self) -> Result<()> {
 		self.game.start_game().await?;
@@ -168,9 +163,9 @@ impl Gameplay for Infos {
 		let state = self.game.shared_state.clone();
 		if let Some(sender) = &self.game.game_sender {
 			let mut guard =  state.lock().await;
-			let b = guard.0.take();
-			let t = guard.1.take();
-			match (b, t) {
+			let bytes = guard.0.take();
+			let text = guard.1.take();
+			match (bytes, text) {
 				(Some(bytes), None) => {self.game.decode_and_update(bytes)?;},
 				(None, Some(text)) => {
 					self.game.end_game(text, sender.clone()).await?;
@@ -314,11 +309,12 @@ impl Game {
 		};
 		Ok(Game{
 			location: info.location.clone(), 
-			original_size: info.original_size, 
-			id: info.id, 
+			// original_size: info.original_size, 
+			id: info.id,
 			started: true, 
 			client: info.client.clone(), 
-			game_id, 
+			game_id,
+			player_side: player_side,
 			..Default::default()
 		})
 	}
@@ -343,7 +339,7 @@ impl Game {
 			false,
 			Some(connector),
 			).await?;
-		let (mut ws_write, mut ws_read) = ws_stream.split();
+		let (ws_write, ws_read) = ws_stream.split();
 		let (sender, receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
 		let cloned_size = self.original_size.clone();
 		tokio::spawn(async move {
@@ -454,7 +450,7 @@ impl Game {
 				Ok(Message::Text(s)) => {
 					*state.lock().await = (None, Some(s));
 				}
-				Ok(Message::Close(_)) => break,
+				Ok(Message::Close(_)) => {},
             	_ => {}
         }
     }

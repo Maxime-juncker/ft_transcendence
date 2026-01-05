@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use reqwest::{Client};
 use anyhow::{Result, anyhow};
@@ -15,11 +15,9 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use futures_util::{StreamExt};
 
-
-
 pub async fn create_guest_session(location: &String) -> 
                                         Result<(u64, Client, mpsc::Receiver<serde_json::Value>)> {
-    let apiloc = format!("https://{location}/api/user/guest_cli");
+    let apiloc = format!("https://{location}/api/user/create_guest");
     let client = Client::builder()
         .danger_accept_invalid_certs(true)
         .build()?;
@@ -28,8 +26,21 @@ pub async fn create_guest_session(location: &String) ->
         .await?;
 
     let value: serde_json::Value = res.json().await?;
-    eprintln!("{value}");
-    let player_id = match value["data"]["id"].as_u64(){
+    let value = match value["token"].as_str(){
+            Some(nbr) => nbr,
+            _ => return Err(anyhow!("Error creating guest session")),
+        };
+    
+    let apiloc = format!("https://{location}/api/user/get_profile_token");
+    let mut body = HashMap::new();
+    body.insert("token", value);
+    let res = client.post(apiloc)
+        .header("content-type", "application/json")
+        .json(&body)
+        .send()
+        .await?;
+    let value: serde_json::Value = res.json().await?;
+    let player_id = match value["id"].as_u64(){
         Some(nbr) => nbr,
         _ => return Err(anyhow!("Error from server, no data received")),
     };
