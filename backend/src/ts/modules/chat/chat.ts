@@ -1,5 +1,5 @@
 import * as core from '@core/core.js';
-import { getBlockedUsrById, getUserById, getUserByName, getUserStats } from '@modules/users/user.js';
+import { getBlockedUsrById, getUserById, getBlockUser } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import * as utils from 'utils.js';
 import { FastifyRequest } from 'fastify';
@@ -119,49 +119,23 @@ export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 	}
 }
 
-async function getBlockUsr(userid: number)
-{
-	var blockedUsr = [];
-	var res = await getBlockedUsrById(userid, core.db);
-	if (res.code == 200)
-		blockedUsr = res.data;
-	return blockedUsr;
-}
-
-async function isBlocked(blockedUsr: any, key: WebSocket, sender: WebSocket): Promise<number>
-{
-	for (let i = 0; i  < blockedUsr.length; i ++)
-	{
- 		if (connections.get(key) == blockedUsr[i].user2_id)
-		{
-			console.log(connections.get(key), "is blocked by", connections.get(sender));
-			return 1;
-		}
-	}
-	return 0;
-}
-
 async function broadcast(message: any, sender: WebSocket)
 {
-	const conn = connections.get(sender);
-	if (!conn)
+	const senderId = connections.get(sender);
+	if (!senderId)
 		return ;
 
-	const blockedUsrSender = await getBlockUsr(conn);
 	connections.forEach(async (id: number, conn: WebSocket) => {
 
 		if (conn === sender || conn.readyState !== conn.OPEN)
 			return ;
 		try
 		{
-			const blockedUsr = await getBlockUsr(id);
-			if (await isBlocked(blockedUsrSender, conn, sender) ||
-				await isBlocked(blockedUsr, sender, conn))
+			const data = await getBlockUser(id, senderId);
+			console.log(`${senderId} <=> ${id}: `, data);
+			if (data.code == 200) // user is blocked
 			{
-				console.log("msg will be blocked");
-				const val = await JSON.parse(message);
-				val.message = "[REDACTED]";
-				message = JSON.stringify(val);
+				return;
 			}
 			conn.send(message);
 		}

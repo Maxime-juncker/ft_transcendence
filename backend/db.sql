@@ -28,8 +28,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS blocked_usr (
 	user1_id		INTEGER NOT NULL,
 	user2_id		INTEGER NOT NULL,
+	blocked_by		INTERER NOT NULL,
 
 	PRIMARY KEY (user1_id, user2_id)
+	CHECK(user1_id < user2_id)
 );
 
 CREATE TABLE IF NOT EXISTS friends (

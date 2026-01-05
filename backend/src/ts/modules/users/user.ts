@@ -145,7 +145,7 @@ export async function getUserByNameReq(request: FastifyRequest, reply: FastifyRe
 
 export async function getBlockedUsrById(id: number, db: Database) : Promise<DbResponse>
 {
-	const sql = "SELECT user2_id FROM blocked_usr WHERE user1_id = ?";
+	const sql = "SELECT * FROM blocked_usr WHERE blocked_by = ?";
 	try {
 		const rows = await db.all(sql, [id]);
 		if (!rows || rows.length == 0)
@@ -156,7 +156,25 @@ export async function getBlockedUsrById(id: number, db: Database) : Promise<DbRe
 		console.log(`Database error: ${err}`);
 		return { code: 500, data: { message: "Database Error" }};
 	}
+}
 
+export async function getBlockUser(user1: number, user2: number): Promise<DbResponse>
+{
+	if (Number(user1) > Number(user2))
+		[user1, user2] = [user2, user1];
+	const sql = "SELECT * from blocked_usr WHERE user1_id = ? AND user2_id = ?";
+	try
+	{
+		const row = await core.db.get(sql, [user1, user2]);
+		if (!row)
+			return { code: 404, data: "user not blocked" };
+		return { code: 200, data: row };
+	}
+	catch (err)
+	{
+		console.log(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
 }
 
 export async function getAllUsers(): Promise<DbResponse>

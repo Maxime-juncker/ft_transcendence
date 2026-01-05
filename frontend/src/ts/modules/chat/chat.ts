@@ -10,25 +10,19 @@ export class Message
 {
 	private m_sender:	User;
 	private m_msg:		string;
-	private m_isCmd:	boolean;
 
 	constructor(sender: User, msg: string)
 	{
 		this.m_sender = sender;
 		this.m_msg = msg;
-
-		this.m_isCmd = msg.charAt(0) === '/' ? true : false; // TODO: handle cmd
 	}
 
 	public getSender() : User	{ return this.m_sender; }
 	public getMsg() : string	{ return this.m_msg; }
-	public isCmd() : boolean	{ return this.m_isCmd; }
 
 	public async sendToAll(chat: Chat)
 	{
-		if (this.m_isCmd && await this.execLocalCommand(chat) === true) return;
-
-		const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: this.m_isCmd };
+		const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: false };
 		chat.ws?.send(JSON.stringify(packet));
 	}
 
@@ -59,114 +53,6 @@ export class Message
 		msgTxt.textContent = this.getMsg();
 
 		return clone;
-	}
-
-	public async execLocalCommand(chat: Chat) : Promise<boolean | null>
-	{
-		if (!this.m_isCmd) return false;
-
-		const args: string[] = this.m_msg.split(/\s+/);
-		var code: number;
-		if (!chat.user)
-			return null;
-
-		switch (args[0])
-		{
-			case "/block":
-				chat.displayMessage(await usr.block(chat.user.id, args[1]));
-				return true;
-			case "/unblock":
-				chat.displayMessage(await usr.unblock(chat.user.id, args[1]));
-				return true;
-			case "/getblock":
-				chat.displayMessage(await usr.getBlocked(chat.user.id));
-				return true;
-			case "/clear":
-				if (chat.chatbox)
-					chat.chatbox.innerHTML = "";
-				return true;
-			case "/help":
-				chat.displayMessage(utils.serverReply(utils.helpMsg))
-				return true;
-			case "/addFriend":
-				if (args.length != 2) return null;
-				code = await chat.user?.addFriend(args[1]);
-				if (code == 404) chat.displayMessage(utils.serverReply("user not found"))
-				if (code == 200) chat.displayMessage(utils.serverReply("request sent"))
-				return true;
-			case "/hist":
-				if (args.length != 2) return null;
-				var response = await fetch(`/api/user/get_history_name/${args[1]}`, { method : "GET" })
-				var data = await response.json();
-				code = response.status;
-				if (code == 404) chat.displayMessage(utils.serverReply("no history"));
-				if (code == 200) chat.displayMessage(utils.serverReply(JSON.stringify(data, null, 2)));
-				return true;
-			case "/getfriends":
-				var res = await fetch(`/api/friends/get?user_id=${chat.user.id}`);
-				var data = await res.json();
-				chat.displayMessage(utils.serverReply(JSON.stringify(data)));
-				return true;
-			case "/dm":
-				const match = this.m_msg.match(/^\/dm\s+\S+\s+(.+)$/);
-				var response = await fetch(`/api/chat/dm`, {
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						login: chat.user.name,
-						username: args[1],
-						msg: match ? match[1] : "is whispering to you!!",
-					})
-				});
-				var data = await response.json();
-				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
-				return true;
-			case "/addGame":
-				if (args.length != 5) return null;
-				var response = await fetch(`/api/user/add_game_history`, {
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						user1_name: args[1],
-						user2_name: args[2],
-						user1_score: args[3],
-						user2_score: args[4]
-					})
-				});
-				var data = await response.json();
-				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
-				return true;
-			case "/deleteMe":
-				if (chat.user.id == -1) return true; // not login
-				var response = await fetch ('api/user/delete', {
-					method: "DELETE",
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({ user_id: chat.user.id })
-				});
-				var data = await response.json();
-				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
-				chat.user.logout();
-				return true;
-			case "/UpdateMe":
-				if (chat.user.id == -1) return true; // not login
-				var response = await fetch(`/api/user/update`, {
-					method: 'POST',
-					headers: { 'content-type': 'application/json' },
-					body: JSON.stringify({
-						oldName: chat.user.name,
-						oldPassw: await hashString(args[2]),
-						name: args[3],
-						email: args[4],
-						passw: await hashString(args[5])
-					})
-				});
-				var data = await response.json();
-				chat.displayMessage(utils.serverReply(JSON.stringify(data)))
-				if (chat.user.name == args[1])
-					chat.user.logout();
-				return true;
-		}
-		return false; // command is not local
 	}
 };
 
@@ -288,7 +174,7 @@ export class Chat
 			this.m_onStartGame.forEach(cb => cb(json));
 		}
 		const user = new User();
-		user.setUser(-1, username, "", "", UserStatus.UNKNOW); // TODO: ajouter un user.ToJSON() et envoyer toutes les infos au serv
+		user.setUser(-1, username, "", "", UserStatus.UNKNOW);
 		const newMsg = new Message(user, message);
 		this.displayMessage(newMsg);
 	}
@@ -310,7 +196,9 @@ export class Chat
 		
 		if (msg.charAt(0) == '/')
 		{
-			this.m_chatCmd.run(msg);
+			const retval = this.m_chatCmd.run(msg);
+			if (retval == 1) // command not found
+				this.displayMessage(utils.serverReply("Command not found"));
 			return ;
 		}
 
