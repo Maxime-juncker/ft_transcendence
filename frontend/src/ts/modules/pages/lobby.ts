@@ -51,7 +51,11 @@ export class LobbyView extends ViewComponent
 			return ;
 		this.m_chat = new Chat(this.m_user, chatOutput, chatInput);
 		this.m_chat.onConnRefresh((conns: User[]) => this.fillUserList(conns));
-		this.m_gameRouter = new GameRouter(this.m_user, this.m_chat, this);
+
+		if (this.m_gameRouter == null)
+			this.m_gameRouter = new GameRouter(this.m_user, this.m_chat, this);
+		this.m_gameRouter.assignListener();
+		this.m_gameRouter.navigateTo('home', '');
 
 		const userMenuContainer = this.querySelector("#user-menu-container");
 		const container = this.querySelector("#user-list-container") as HTMLElement;
@@ -87,7 +91,7 @@ export class LobbyView extends ViewComponent
 		if (this.m_gameRouter?.m_gameMenu)
 			this.m_gameRouter.m_gameMenu.destroy();
 
-		this.m_gameRouter = null;
+		// this.m_gameRouter = null;
 		if (this.m_userContainer)
 			this.m_userContainer.innerHTML = "";
 

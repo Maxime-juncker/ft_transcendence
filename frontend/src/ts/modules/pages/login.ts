@@ -65,6 +65,8 @@ export class LoginView extends ViewComponent
 		{
 			console.log("session:", data.token)
 			setCookie("jwt_session", data.token, 10);
+			Router.Instance?.navigateTo("/lobby");
+			return ;
 		}
 		if (status == -1)
 		{
@@ -97,12 +99,18 @@ export class LoginView extends ViewComponent
 	{
 		var		email = (<HTMLInputElement>this.querySelector("#create_email")).value;
 		var		passw = (<HTMLInputElement>this.querySelector("#create_passw")).value;
+		var		confirmPassw = (<HTMLInputElement>this.querySelector("#confirm_passw")).value;
 		var		username = (<HTMLInputElement>this.querySelector("#create_username")).value;
 
-		if (email == "" || passw == "" || username == "")
+		if (email == "" || confirmPassw == "" || passw == "" || username == "")
 		{
 			setPlaceHolderText("some field are empty");
 			return ;
+		}
+		if (confirmPassw != passw)
+		{
+			setPlaceHolderText("passwords don't match");
+			return;
 		}
 
 		const response = await fetch("/api/user/create", {
@@ -117,7 +125,18 @@ export class LoginView extends ViewComponent
 			})
 		});
 		if (response.status == 200)
+		{
+			const { status, data } = await this.m_user.login(email, passw, "");
+			if (status == 200)
+			{
+				console.log("session:", data.token)
+				setCookie("jwt_session", data.token, 10);
+				this.m_user.loginSession();
+				return ;
+			}
 			setPlaceHolderText("user created");
+			await this.login();
+		}
 		else if (response.status == 403)
 			setPlaceHolderText("email invalid");
 		else 

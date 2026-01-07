@@ -420,7 +420,7 @@ export class GameClient extends Utils
 		{
 			method: "DELETE",
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ id: this.m_user.id })
+			body: JSON.stringify({ token: this.m_user.token })
 		});
 	}
 

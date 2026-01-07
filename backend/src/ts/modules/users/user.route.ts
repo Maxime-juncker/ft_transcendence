@@ -31,32 +31,45 @@ export async function userRoutes(fastify: FastifyInstance, options: FastifyPlugi
 			return reply.code(res.code).send(res.data);
 		})
 
-	fastify.post('/add_game_history', async (request: FastifyRequest, reply: FastifyReply) => {
-		const { user1_name, user2_name, user1_score, user2_score } = request.body as {
-			user1_name:		string,
-			user2_name:		string,
-			user1_score:	number,
-			user2_score:	number,
-		};
-		var user1_id: number, user2_id: number = -1;
+	fastify.post('/add_game_history', {
+		schema: {
+			body: {
+				type: "object",
+				properties: {
+					user1_name: { type: "string" },
+					user2_name: { type: "string" },
+					user1_score: { type: "number" },
+					user2_score: { type: "number" },
+				},
+				required: ["user1_name", "user2_name", "user1_score", "user2_score"]
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+			const { user1_name, user2_name, user1_score, user2_score } = request.body as {
+				user1_name:		string,
+				user2_name:		string,
+				user1_score:	number,
+				user2_score:	number,
+			};
+			var user1_id: number, user2_id: number = -1;
 
-		var res = await user.getUserByName(user1_name, core.db);
-		if (res.code == 200)
-			user1_id = res.data.id;
-		else
-			return reply.code(500).send({ message: "could not get user" });
+			var res = await user.getUserByName(user1_name, core.db);
+			if (res.code == 200)
+				user1_id = res.data.id;
+				else
+				return reply.code(500).send({ message: "could not get user" });
 
-		var res = await user.getUserByName(user2_name, core.db);
-		if (res.code == 200)
-			user2_id = res.data.id;
-		else
-			return reply.code(500).send({ message: "could not get user" });
+			var res = await user.getUserByName(user2_name, core.db);
+			if (res.code == 200)
+				user2_id = res.data.id;
+				else
+				return reply.code(500).send({ message: "could not get user" });
 
-		var game: GameRes = { user1_id, user2_id, user1_score, user2_score };
+			var game: GameRes = { user1_id, user2_id, user1_score, user2_score };
 
-		res = await user.addGameToHist(game, core.db);
-		return reply.code(res.code).send(res.data);
-	})
+			res = await user.addGameToHist(game, core.db);
+			return reply.code(res.code).send(res.data);
+		})
 
 	fastify.get<{ Querystring: { user_id: number } }>
 		(

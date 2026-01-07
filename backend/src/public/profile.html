@@ -14,6 +14,7 @@
 
 	<template id="user-friend-template">
 		<div class="relative flex gap-4 items-center justify-between h-20 w-[90%]">
+
 			<div id="profile" class="flex flex-1 flex-row w-full items-center gap-2 hover:bg-white hover:cursor-grab hover:text-darker
 				p-2 border-2 border-white hover:border-white hover:border-2">
 				<div class="relative">
@@ -35,13 +36,20 @@
 		</div>
 	</template>
 
-	<div class="h-full overflow-hidden overflow-y-hidden">
+	<div class="h-full overflow-hidden overflow-y-hidden relative">
 		<div id="header-container">
 		</div>
 
-		<div class="h-full w-full flex flex-col justify-start align-middle items-center pt-25 overflow-y-scroll">
+		<div class="h-full w-full flex flex-col justify-start align-middle items-center pt-25 overflow-y-scroll overflow-x-hidden">
 			<!-- profile expended -->
-			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2">
+			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2 relative">
+
+	<div class="small-lines w-[200vw] h-[6vw] absolute top-[40%] right-[-5%] -z-1">
+		<div class="line bg-red"></div>
+		<div class="line bg-yellow"></div>
+		<div class="line bg-blue"></div>
+		<div class="line bg-green"></div>
+	</div>
 				<div id="profile-extended" class="flex flex-row justify-center align-middle h-full">
 					<div class="relative h-full flex justify-center items-center">
 						<img
@@ -129,4 +137,5 @@
 				</div>
 			</div>
 		</div>
+
 </template>

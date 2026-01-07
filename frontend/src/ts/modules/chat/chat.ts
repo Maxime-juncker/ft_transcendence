@@ -33,10 +33,7 @@ export class Message
 	{
 		const template = Router.getElementById("chat-item-template") as HTMLTemplateElement;
 		if (!template)
-		{
-			console.error("no template found for user element");
 			return null;
-		}
 
 		const clone = template.content.cloneNode(true) as HTMLElement;
 		const senderTxt = clone.querySelector("#sender") as HTMLElement;
@@ -87,7 +84,6 @@ export class Chat
 		user.onLogin((user: MainUser) => this.resetChat(user));
 		user.onLogout((user: MainUser) => this.resetChat(user));
 
-		// TODO: merge with resetChat
 		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${user.id}`);
 
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);

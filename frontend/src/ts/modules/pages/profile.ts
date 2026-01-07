@@ -23,7 +23,6 @@ export class ProfileView extends ViewComponent
 	public async enable()
 	{
 		this.m_main = new MainUser();
-		new HeaderSmall(this.m_main, this, "header-container");
 		await this.m_main.loginSession();
 		if (this.m_main.id == -1) // user not login
 		{
@@ -31,6 +30,7 @@ export class ProfileView extends ViewComponent
 			return ;
 		}
 		this.m_main.onLogout(() => { Router.Instance?.navigateTo("/") })
+		new HeaderSmall(this.m_main, this, "header-container");
 
 		this.m_user = this.m_main;
 		const usernameQuery = utils.getUrlVar().get("username");

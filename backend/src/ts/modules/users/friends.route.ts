@@ -69,7 +69,6 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 		return reply.code(res.code).send(res.data);
 	})
 
-	// TODO: use body instead of query
 	fastify.get<{ Querystring: { user_id: string } }>
 	(
 			'/get',

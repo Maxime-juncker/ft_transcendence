@@ -66,9 +66,11 @@ export class Router
 			this.m_prevView = this.m_activeView;
 		}
 
-		const view = this.m_views.get(viewName);
+		var view = this.m_views.get(viewName);
 		if (!view || view == undefined)
-			return ;
+		{
+			return
+		}
 		this.m_activeView = view;
 		this.m_activeView.enable();
 		this.m_activeView.style.display = "block";
@@ -137,9 +139,13 @@ export class Router
 
 	loadRoute(url: string)
 	{
-		const matchRoute = this.matchUrlToRoute(url);
+		var matchRoute = this.matchUrlToRoute(url);
 		if (!matchRoute)
-			throw new Error(`route not found: ${url}`); // TODO: add 404 page
+		{
+			console.error(`route not found: ${url}`);
+			this.setView("*")
+			return;
+		}
 	
 		this.setView(matchRoute.path);
 	}

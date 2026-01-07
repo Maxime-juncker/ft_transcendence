@@ -67,10 +67,16 @@ export class SettingsView extends ViewComponent
 		this.emailInput.placeholder = this.m_user.email;
 
 		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
-		this.addTrackListener(this.delete2faBtn, "click", () => { this.m_user?.delTotp(); setPlaceHolderText("2fa has been removed") });
 		this.addTrackListener(this.logoutBtn, "click", () => this.m_user?.logout());
 		this.addTrackListener(this.saveBtn, "click", () => this.confirmChange());
 		this.addTrackListener(this.holderClose, "click", () => this.holderParent?.classList.add("hide"));
+		this.addTrackListener(this.delete2faBtn, "click", () => this.showConfirmPanel(() => {
+			this.m_user?.delTotp();
+			setPlaceHolderText("2fa has been removed")
+			const panel = this.querySelector("#panel-holder");
+			if (panel)
+				panel.innerHTML = "";
+		}));
 		this.addTrackListener(this.deleteBtn, "click", () => this.showConfirmPanel(() => this.m_user?.deleteUser()));
 		this.addTrackListener(this.resetBtn, "click", () => this.showConfirmPanel(() => {
 			if (this.m_user?.resetUser())
@@ -123,6 +129,37 @@ export class SettingsView extends ViewComponent
 		}
 	}
 
+	private async updatePassw(newPassw: string, oldPass: string): Promise<number>
+	{
+		if (newPassw == "" && oldPass == "")
+			return 0;
+		if (newPassw == "" || oldPass == "" || !this.m_user)
+		{
+			setPlaceHolderText("error: password field empty");
+			return 1;
+		}
+		console.log("updating password");
+		const res = await fetch("/api/user/update/passw", {
+			method: "POST",
+			headers: {
+				'content-type': 'application/json'
+			},
+			body: JSON.stringify({
+				token: this.m_user.token,
+				oldPass: await hashString(oldPass),
+				newPass: await hashString(newPassw)
+			})
+		});
+		const data = await res.json();
+		if (res.status != 200)
+		{
+			setPlaceHolderText(`error: ${data.message}`);
+			return 1;
+		}
+		console.log(res.status, data);
+		return 0;
+	}
+
 	private async confirmChange()
 	{
 		if (!this.m_user)
@@ -142,27 +179,11 @@ export class SettingsView extends ViewComponent
 			this.m_user.setAvatar(formData);
 		}
 
-		if (this.newPassInput && this.currPassInput && 
-			this.newPassInput.value !== "" && this.currPassInput.value !== "")
+		if (this.newPassInput && this.currPassInput)
 		{
-			console.log("updating password");
-			const res = await fetch("/api/user/update/passw", {
-				method: "POST",
-				headers: {
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify({
-					oldPass: await hashString(this.currPassInput.value),
-					newPass: await hashString(this.newPassInput.value)
-				})
-			});
-			const data = await res.json();
-			if (res.status != 200)
-			{
+			const retval = await this.updatePassw(this.newPassInput.value, this.currPassInput.value);
+			if (retval != 0)
 				error = true;
-				setPlaceHolderText(`error: ${data.message}`);
-			}
-			console.log(res.status, data);
 		}
 
 		if (this.usernameInput && this.usernameInput.value !== "")
@@ -174,6 +195,7 @@ export class SettingsView extends ViewComponent
 					'content-type': 'application/json'
 				},
 				body: JSON.stringify({
+					token: this.m_user.token,
 					name: this.usernameInput.value
 				})
 			});
@@ -195,6 +217,7 @@ export class SettingsView extends ViewComponent
 					'content-type': 'application/json'
 				},
 				body: JSON.stringify({
+					token: this.m_user.token,
 					email: this.emailInput.value
 				})
 			});
@@ -257,7 +280,6 @@ export class SettingsView extends ViewComponent
 			{
 				if (target.value === "confirm")
 				{
-					console.log("haaaa")
 					fn();
 				}
 			}

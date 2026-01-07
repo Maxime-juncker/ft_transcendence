@@ -2,6 +2,12 @@ import { ChatCommand } from "./Command.js";
 import { Chat } from "./chat.js";
 import { serverReply } from "./chat_utils.js";
 
+async function displayResponse(chat: Chat, response: Response)
+{
+	const json = await response.json();
+	chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+}
+
 export function registerCmds(chat: Chat)
 {
 	const cmd: ChatCommand = chat.chatCmd;
@@ -17,8 +23,7 @@ export function registerCmds(chat: Chat)
 
 	cmd.register("ping", "\n\ttest server connection", async (chat: Chat) => {
 		const res = await fetch("/api/chat/ping");
-		const json = await res.json();
-		chat.displayMessage(serverReply(json.message));
+		displayResponse(chat, res);
 	});
 
 	cmd.register("inspect", "<username>\n\tshow user info", async (chat: Chat, argv: Array<string>) => {
@@ -28,9 +33,32 @@ export function registerCmds(chat: Chat)
 			return ;
 		}
 		const res = await fetch(`/api/user/get_profile_name?profile_name=${argv[1]}`)
-		const json = await res.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, res);
 	});
+
+	cmd.register("dm", "<username> [message]\n\tsend direct message to user", async (chat: Chat, argv: Array<string>) => {
+		if (!chat.user)
+			return;
+		var message = "is whispering to you.";
+		if (argv.length == 1 || argv.length > 3)
+		{
+			chat.displayMessage(serverReply("usage: /dm <username> [message]"));
+			return ;
+		}
+		if (argv.length == 3)
+			message = argv[2];
+		console.log(argv);
+		const res = await fetch("/api/chat/dm", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				token: chat.user?.token,
+				username: argv[1],
+				msg: message
+			})
+		});
+		displayResponse(chat, res);
+	})
 
 	cmd.register("getFriend", "\n\treturn friends", async (chat: Chat, argv: Array<string>) => {
 		if (argv.length != 1)
@@ -42,8 +70,7 @@ export function registerCmds(chat: Chat)
 			return ;
 
 		var res = await fetch(`/api/friends/get?user_id=${chat.user.id}`);
-		const json = await res.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, res);
 	});
 
 	cmd.register("sendFriendRequest", "<username>\n\tsend friend req to user", async (chat: Chat, argv: Array<string>) => {
@@ -70,9 +97,7 @@ export function registerCmds(chat: Chat)
 				friend_id: id
 			})
 		});
-		json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
-
+		displayResponse(chat, response);
 	});
 
 	cmd.register("removeFriend", "<username>\n\tdelete friend", async (chat: Chat, argv: Array<string>) => {
@@ -100,8 +125,7 @@ export function registerCmds(chat: Chat)
 				friend_id: id
 			})
 		});
-		json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, response);
 	});
 
 	cmd.register("acceptFriend", "<username>\n\taccept friend request", async (chat: Chat, argv: Array<string>) => {
@@ -129,8 +153,7 @@ export function registerCmds(chat: Chat)
 				friend_id: id
 			})
 		});
-		json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, response);
 	});
 
 	cmd.register("getBlock", "\n\tsee blocked users", async (chat: Chat, argv: Array<string>) => {
@@ -146,8 +169,7 @@ export function registerCmds(chat: Chat)
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ token: chat.user.token })
 		});
-		const json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, response);
 	});
 
 	cmd.register("block", "<username>\n\tblock username", async (chat: Chat, argv: Array<string>) => {
@@ -174,8 +196,7 @@ export function registerCmds(chat: Chat)
 			})
 		});
 
-		json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, response);
 	});
 
 	cmd.register("unblock", "<username>\n\tunblock username", async (chat: Chat, argv: Array<string>) => {
@@ -202,7 +223,6 @@ export function registerCmds(chat: Chat)
 			})
 		});
 
-		json = await response.json();
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, response);
 	});
 }

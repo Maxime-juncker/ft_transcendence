@@ -84,7 +84,7 @@ export class SearchView extends ViewComponent
 			await usr.updateSelf()
 			this.m_users.push(usr);
 		}
-		this.m_users.sort((a: User, b: User) => { return Number(utils.levenshteinDistance(a.name, query) > utils.levenshteinDistance(b.name, query)); })
+		this.m_users.sort((a: User, b: User) => { return Number(utils.levenshteinDistance(a.name.toLowerCase(), query) < utils.levenshteinDistance(b.name.toLowerCase(), query)); })
 	}
 
 	public async disable()

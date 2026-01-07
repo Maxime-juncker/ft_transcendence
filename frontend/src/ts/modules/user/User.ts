@@ -147,8 +147,8 @@ export class User {
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({
-				user_id: this.id.toString(),
-				newStatus: this.m_status.toString()
+				token: this.m_token,
+				new_status: this.m_status.toString()
 			})
 		});
 		return response;
@@ -160,7 +160,7 @@ export class User {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				user_id: this.id.toString(),
+				token: this.m_token,
 			})
 		});
 		this.setUser(-1, "Guest", "", "", UserStatus.UNKNOW);
@@ -324,6 +324,25 @@ export class MainUser extends User
 			statusSelect.prepend(newOption("busy"));
 			statusSelect.prepend(newOption("in_game"));
 			statusSelect.addEventListener("change", () => this.updateStatus(statusSelect.value, this, this.m_userElement));
+			switch (this.status)
+			{
+				case UserStatus.UNKNOW:
+					statusSelect.value = "available";
+					break;
+				case UserStatus.UNAVAILABLE:
+					statusSelect.value = "unavailable";
+					break;
+				case UserStatus.AVAILABLE:
+					statusSelect.value = "available";
+					break;
+				case UserStatus.BUSY:
+					statusSelect.value = "busy";
+					break;
+				case UserStatus.IN_GAME:
+					statusSelect.value = "in_game";
+					break;
+
+			}
 		}
 	}
 	
@@ -335,29 +354,6 @@ export class MainUser extends User
 
 	public onLogin(cb: ((user: MainUser) => void)) { this.m_onLoginCb.push(cb); }
 	public onLogout(cb: ((user: MainUser) => void)) { this.m_onLogoutCb.push(cb); }
-
-	public async oauth2Login(id: string, source: number) {
-		var response = await fetch(`/api/oauth2/login`, {
-			method: "POST",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				id: id,
-				source: source
-			})
-		});
-		const data = await response.json();
-
-		if (response.status == 200) {
-			var status = data.status;
-			this.setUser(data.id, data.name, data.email, data.avatar, status);
-			this.setStatus(this.status);
-			await this.refreshSelf();
-
-			this.m_onLoginCb.forEach(cb => cb(this));
-		}
-
-		return { status: response.status, data: data };
-	}
 
 	public async loginSession()
 	{
@@ -584,7 +580,7 @@ export class MainUser extends User
 			method: "DELETE",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				id: this.id
+				token: this.m_token
 			})
 		});
 		return res.status;
