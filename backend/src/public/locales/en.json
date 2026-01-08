@@ -66,5 +66,11 @@
 	"disable_crt": "disable crt effect",
 	"about": "about",
 	"user_list": "user list",
-	"friend_list": "friend list"
+	"friend_list": "friend list",
+	"no_history": "no recorded history",
+	"available": "available",
+	"unavailable": "unavailable",
+	"busy": "busy",
+	"in_game": "in_game",
+	"no_data": "no data"
 }

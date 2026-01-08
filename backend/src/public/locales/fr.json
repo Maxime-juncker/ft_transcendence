@@ -66,5 +66,11 @@
 	"disable_crt": "désactiver l'effet crt",
 	"about": "à propos",
 	"user_list": "liste d'utilisateurs",
-	"friend_list": "liste d'amis"
+	"friend_list": "liste d'amis",
+	"no_history": "pas d'historique enregistré",
+	"available": "disponible",
+	"unavailable": "indisponible",
+	"busy": "occupé",
+	"in_game": "en jeu",
+	"no_data": "pas de données"
 }
