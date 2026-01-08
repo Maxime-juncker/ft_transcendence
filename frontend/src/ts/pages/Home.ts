@@ -11,7 +11,6 @@ export class Home
 	constructor(router: GameRouter)
 	{
 		this.router = router;
-		this.hydrateButtons();
 		this.setUpDocumentEventListeners();
 	}
 
