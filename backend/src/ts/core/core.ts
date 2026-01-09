@@ -3,6 +3,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 import Fastify, { FastifyInstance } from "fastify";
 import '@fastify/session';
+import { getJwtSecret } from '@modules/vault/secrets.js';
 
 export interface DbResponse {
 	code:	number;
@@ -30,13 +31,8 @@ export async function createServer()
 	});
 
 	fastify = Fastify({ logger: false });
-	if (process.env.JWT_SECRET)
-		sessionKey = process.env.JWT_SECRET;
-	else
-	{
-		console.error("CRITICAL: no jwt secret in env, aborting now");
-		shutdown();	
-	}
+	sessionKey = await getJwtSecret();
+	console.log("jwt: ", sessionKey);
 	console.log("server created");
 }
 

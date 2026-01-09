@@ -2,7 +2,9 @@ import { initFastify } from '@core/init.js';
 import * as core from '@core/core.js';
 import { ServerSideRendering } from '@modules/ssr/ServerSideRendering.js';
 import { GameServer } from '@modules/game/GameServer.js';
+import { initVault } from '@modules/vault/vault.js';
 
+await initVault();
 await core.createServer();
 await initFastify();
 
@@ -32,5 +34,5 @@ signals.forEach(signal => {
 	});
 });
 
-await core.start()
+await core.start();
 
