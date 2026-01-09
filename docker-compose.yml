@@ -50,6 +50,7 @@ services:
       - frontend_net
       - backend_net
       - entrypoint_net
+      - export_net
     depends_on:
       - frontend
       - backend
@@ -78,12 +79,87 @@ services:
       VAULT_ADDR: "http://127.0.0.1:8200"
     command: vault server -config=/vault/conf/vault.hcl
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - modsecurity_logs:/var/log/nginx/access.log
+    networks:
+      - monitoring_net
+      - export_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring_net
+    ports:
+      - "3001:3001"
+    depends_on:
+      - prometheus
+
+  nginx_prom_export:
+    image: nginx/nginx-prometheus-exporter
+    container_name: nginx_prom_export
+    networks:
+      - export_net
+    depends_on:
+      - prometheus
+      - modsecurity
+    command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    env_file:
+    - .env
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - elk_net
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: logstash
+    volumes:
+      - ./elk/logstash/config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - modsecurity_logs:/var/log/nginx/access.log:ro
+    depends_on:
+      - elasticsearch
+      - modsecurity
+    env_file:
+      - .env
+    networks:
+      - elk_net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: kibana
+    volumes:
+      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk_net
+
 networks:
   entrypoint_net:
     driver: bridge
   backend_net:
   frontend_net:
   vault_net:
+  monitoring_net:
+  export_net:
+  elk_net:
 
 volumes:
   sqlite:
@@ -95,3 +171,5 @@ volumes:
   vault:
     name: vault
   vault_key:
+  es_data:
+  modsecurity_logs:

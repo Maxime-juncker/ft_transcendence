@@ -1,0 +1,12 @@
+apiVersion: 1
+providers:
+  - name: 'myprovider'
+    orgId: 1
+    folder: 'myfolder'
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true
