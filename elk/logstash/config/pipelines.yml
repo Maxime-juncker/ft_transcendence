@@ -1,0 +1,2 @@
+- pipeline.id: modsec
+  path.config: "/usr/share/logstash/pipeline/modsec.conf"
