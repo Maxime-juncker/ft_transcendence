@@ -1,10 +1,10 @@
 <template id="settings-template">
 	<template id="confirm-panel-template">
 		<div class="w-screen h-[15vh] bg-darkest gap-5 flex flex-col justify-center items-center">
-			<h1 class="text-red text-[150%] font-extrabold">THIS IS A DESTRUCTIVE ACTION ARE YOU 100% SURE OF WHAT YOUR DOING</h1>
+			<h1 class="text-red text-[150%] font-extrabold" data-i18n="text.confirm_warn">THIS IS A DESTRUCTIVE ACTION ARE YOU 100% SURE OF WHAT YOUR DOING</h1>
 			<div class="flex flex-row justify-center items-center gap-4">
-				<input id="confirm-input" class="py-1 px-3 border-red" placeholder="type confirm to continue">
-				<button id="cancel-btn" class="button-full bg-purple py-1 px-4 w-full">cancel</button>
+				<input id="confirm-input" class="py-1 px-3 border-red" data-i18n-placeholder="type_confirm" placeholder="type confirm to continue">
+				<button id="cancel-btn" class="button-full bg-purple py-1 px-4 w-full" data-i18n="cancel">cancel</button>
 			</div>
 		</div>
 	</template>
@@ -69,7 +69,7 @@
 					<h1 class="text-xl font-bold text-red self-start" data-i18n="danger_zone">danger zone</h1>
 					<button id="delete-2fa-btn" class="button-full bg-red w-full" data-i18n="delete_2fa">delete 2fa</button>
 					<button id="reset-btn" class="button-full bg-red w-full" data-i18n="reset_account">reset account</button>
-					<button id="delete-btn" class="button-full bg-red w-full">delete account</button>
+					<button id="delete-btn" class="button-full bg-red w-full" data-i18n="delete_account">delete account</button>
 				</div>
 				<p class="p-0 m-0" data-i18n="text.delete_warn">*these are destructive actions, be carreful</p>
 			</div>
@@ -87,7 +87,7 @@
 				before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
 				before:w-[75%] before:h-[75%] before:bg-white before:opacity-0 checked:before:opacity-100 focus:brightness-100"
 			/>
-			<span class="ml-2 font-bold select-none">disable crt effect</span>
+			<span class="ml-2 font-bold select-none" data-i18n="disable_crt">disable crt effect</span>
 		</label>
 
 	</div>

@@ -290,6 +290,7 @@ function newOption(optionName: string) : HTMLOptionElement
 	option = document.createElement("option");
 	option.innerText = optionName;
 	option.value = optionName;
+	option.setAttribute("data-i18n", optionName);
 	return option;
 }
 

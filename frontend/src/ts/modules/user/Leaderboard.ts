@@ -66,7 +66,23 @@ export class Leaderboard
 			if (elo)
 				elo.innerText = `elo: ${user.elo}p`;
 			if (winrate)
-				winrate.innerText = `W/R: ${user.gamePlayed > 0 ? user.winrate + "%" : "no data" }`;
+			{
+				winrate.innerHTML = "";
+  			const prefix = document.createElement("span");
+  			prefix.innerText= "W/R: ";
+  			winrate.appendChild(prefix);
+
+  			const valueSpan = document.createElement("span");
+  			valueSpan.textContent = user.gamePlayed > 0 ? `${user.winrate}%` : "";
+  			winrate.appendChild(valueSpan);
+
+  			if (user.gamePlayed === 0) {
+    			const noData = document.createElement("span");
+    			noData.setAttribute('data-i18n', "no_data");
+    			winrate.appendChild(noData);
+				}
+			window.dispatchEvent(new CustomEvent('pageChanged'));
+			}
 
 			const rank = elt.getElement("#ranking");
 			if (rank)

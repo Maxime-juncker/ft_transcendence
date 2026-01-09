@@ -2,15 +2,17 @@
 	"capital": {
 		"play": "JOUER",
 		"signup": "INSCRIPTION",
-  		"login": "CONNEXION",
-		"settings": "PARAMÈTRES"
+  	"login": "CONNEXION",
+		"settings": "PARAMÈTRES",
+		"leaderboard": "MEILLEURS SCORES"
 	},
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
 		"tournament": {
 			"players_num": "Choisissez le nombre de participants"
 		},
-		"delete_warn": "*pas de retour en arrière possible, réfléchissez bien"
+		"delete_warn": "*pas de retour en arrière possible, réfléchissez bien",
+		"confirm_warn": "C'EST UNE ACTION DESTRUCTIVE, SOYEZ SÛR DE CE QUE VOUS FAITES À 100%"
 	},
   	"placeholder": {
 		"email": "email...",
@@ -18,7 +20,9 @@
 		"password": "mot de passe...",
 		"confirm_password": "confirmation du mot de passe...",
 		"2fa": "code totp",
-		"chat": "entrez un message..."
+		"chat": "entrez un message...",
+		"search": "rechercher",
+		"type_confirm": "écrivez confirmer pour continuer"
   	},
 	"guest_button": "continuer en tant qu'invité",
 	"confirm": "confirmer",
@@ -43,6 +47,7 @@
 	"History": "Historique",
 	"Friends": "Amis",
 	"Requests": "Demandes",
+	"Blocked": "Bloqués",
 	"match": "partie",
 	"result": "resultat",
 	"score": "score",
@@ -56,5 +61,16 @@
 	"delete_2fa": "supprimer 2fa",
 	"reset_account": "réinitialiser mon compte",
 	"delete_account": "supprimer mon compte",
-	"username": "nom d'utilisateur"
+	"username": "nom d'utilisateur",
+	"cancel": "annuler",
+	"disable_crt": "désactiver l'effet crt",
+	"about": "à propos",
+	"user_list": "liste d'utilisateurs",
+	"friend_list": "liste d'amis",
+	"no_history": "pas d'historique enregistré",
+	"available": "disponible",
+	"unavailable": "indisponible",
+	"busy": "occupé",
+	"in_game": "en jeu",
+	"no_data": "pas de données"
 }

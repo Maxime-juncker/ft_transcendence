@@ -277,6 +277,7 @@ export class SettingsView extends ViewComponent
 		if (!cancelBtn || !confirmIn)
 			return ;
 
+
 		cancelBtn.addEventListener("click", () => { holder.innerHTML = "" });
 		confirmIn.addEventListener("keypress", (e: KeyboardEvent) => {
 			const target = e.target as HTMLInputElement;
@@ -289,6 +290,7 @@ export class SettingsView extends ViewComponent
 			}
 		})
 		holder.append(clone);
+		window.dispatchEvent(new CustomEvent('pageChanged'));
 	}
 
 	private async validate_totp(user: MainUser)

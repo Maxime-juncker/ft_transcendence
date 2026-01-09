@@ -65,10 +65,12 @@ export class LobbyView extends ViewComponent
 		this.addTrackListener(this.querySelector("#user-list-btn"), "click", () => {
 			if (!this.m_chat || !this.m_user) return;
 			this.showListContainer(ListState.USER, this.m_chat, this.m_user);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 		});
 		this.addTrackListener(this.querySelector("#friend-list-btn"), "click", () => {
 			if (!this.m_chat || !this.m_user) return;
 			this.showListContainer(ListState.FRIEND, this.m_chat, this.m_user);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 		});
 
 	}
@@ -126,6 +128,7 @@ export class LobbyView extends ViewComponent
 
 		const text = document.createElement("p");
 		text.innerText = this.state == ListState.USER ? "user list" : "friends list";
+		text.setAttribute('data-i18n', this.state == ListState.USER ? "user_list" : "friend_list");
 		text.style.color = "var(--white)";
 
 		users.forEach((conn: User) => {

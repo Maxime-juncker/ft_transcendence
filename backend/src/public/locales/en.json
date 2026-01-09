@@ -2,15 +2,17 @@
 	"capital": {
 		"play": "PLAY",
 		"signup": "SIGNUP",
-  		"login": "LOGIN",
-		"settings": "SETTINGS"
+  	"login": "LOGIN",
+		"settings": "SETTINGS",
+		"leaderboard": "LEADERBOARD"
 	},
 	"text": {
 		"guest": "*all data will be lost on logout",
 		"tournament": {
 			"players_num": "Select the number of players"
 		},
-		"delete_warn": "*these are destructive actions, be carreful"
+		"delete_warn": "*these are destructive actions, be carreful",
+		"confirm_warn": "THIS IS A DESTRUCTIVE ACTION ARE YOU 100% SURE OF WHAT YOUR DOING"
 	},
   	"placeholder": {
 		"email": "email...",
@@ -18,7 +20,9 @@
 		"password": "password...",
 		"confirm_password": "confirm password...",
 		"2fa": "totp code",
-		"chat": "enter message..."
+		"chat": "enter message...",
+		"search": "search",
+		"type_confirm": "type confirm to continue"
   	},
 	"guest_button": "continue as guest",
 	"confirm": "confirm",
@@ -43,6 +47,7 @@
 	"History": "History",
 	"Friends": "Friends",
 	"Requests": "Requests",
+	"Blocked": "Blocked",
 	"match": "match",
 	"result": "result",
 	"score": "score",
@@ -56,5 +61,16 @@
 	"delete_2fa": "delete 2fa",
 	"reset_account": "reset account",
 	"delete_account": "delete account",
-	"username": "username"
+	"username": "username",
+	"cancel": "cancel",
+	"disable_crt": "disable crt effect",
+	"about": "about",
+	"user_list": "user list",
+	"friend_list": "friend list",
+	"no_history": "no recorded history",
+	"available": "available",
+	"unavailable": "unavailable",
+	"busy": "busy",
+	"in_game": "in_game",
+	"no_data": "no data"
 }
