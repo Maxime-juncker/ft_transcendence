@@ -126,6 +126,8 @@ services:
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+      - elastic-logs:/usr/share/elasticsearch/logs:rw
     networks:
       - elk_net
 
@@ -138,6 +140,7 @@ services:
       - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro
       - modsecurity_logs:/var/log/nginx:ro
       - grafana-logs:/var/log/grafana:ro
+      - elastic-logs:/var/log/elasticsearch:ro
     depends_on:
       - elasticsearch
       - modsecurity
@@ -201,3 +204,4 @@ volumes:
   modsecurity_logs:
   grafana:
   grafana-logs:
+  elastic-logs:
