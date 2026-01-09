@@ -81,7 +81,7 @@ services:
     command: vault server -config=/vault/conf/vault.hcl
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.9.1
     container_name: prometheus
     volumes:
       - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
@@ -90,7 +90,7 @@ services:
       - export_net
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.4.0-20836657505
     container_name: grafana
     volumes:
       - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
@@ -103,7 +103,7 @@ services:
       - prometheus
 
   nginx_prom_export:
-    image: nginx/nginx-prometheus-exporter
+    image: nginx/nginx-prometheus-exporter:1.5.1
     container_name: nginx_prom_export
     networks:
       - export_net
@@ -153,7 +153,7 @@ services:
 
   kibana-init:
     container_name: kibana-init
-    image: curlimages/curl:latest
+    image: curlimages/curl:8.18.0
     depends_on:
       - kibana
     volumes:
