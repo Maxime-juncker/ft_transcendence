@@ -15,3 +15,6 @@
 
 - pipeline.id: prometheus
   path.config: "/usr/share/logstash/pipeline/prometheus.conf"
+
+- pipeline.id: vault
+  path.config: "/usr/share/logstash/pipeline/vault.conf"

@@ -73,6 +73,7 @@ services:
     volumes:
       - vault:/vault/file
       - ./vault/conf:/vault/conf:ro
+      - vault-logs:/vault/logs:rw
     networks:
       - vault_net
     environment:
@@ -145,6 +146,7 @@ services:
       - elastic-logs:/var/log/elasticsearch:ro
       - kibana-logs:/var/log/kibana:ro
       - prometheus-logs:/var/log/prometheus:ro
+      - vault-logs:/var/log/vault:ro
     depends_on:
       - elasticsearch
       - modsecurity
@@ -181,7 +183,7 @@ services:
              done;
              echo 'Kibana is ready! Importing dashboard and Data View...';
              curl -X POST http://kibana:5601/api/saved_objects/_import?overwrite=true -u elastic:${ELASTIC_PASSWORD} -H 'kbn-xsrf: true' --form file=@/export.ndjson;
-             echo 'Import completed successfully!'"
+             echo 'Import completed successfully!';"
     networks:
       - elk_net
 
@@ -212,3 +214,4 @@ volumes:
   elastic-logs:
   kibana-logs:
   prometheus-logs:
+  vault-logs:
