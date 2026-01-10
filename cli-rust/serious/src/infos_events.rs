@@ -67,7 +67,7 @@ impl EventHandler for Infos {
               KeyCode::Up => {self.screen = CurrentScreen::SignUp;},
               KeyCode::Down => {self.screen = CurrentScreen::Login;},
               KeyCode::Right => {
-                self.create_guest_session().await?;
+                self.auth.create_guest_session().await?;
                 self.screen = CurrentScreen::Welcome;
               },
               _ => {},
@@ -107,7 +107,7 @@ impl EventHandler for Infos {
             KeyCode::Backspace => {self.auth.pop()},
             KeyCode::Tab => {self.auth.down_field_signup()}
             KeyCode::Enter => {if *self.auth.get_field() == Field::Password {
-              self.signup().await?;
+              self.auth.signup().await?;
               self.screen = CurrentScreen::Welcome;
             } else {self.auth.down_field_signup()}} 
             _ => {},
@@ -131,7 +131,7 @@ impl EventHandler for Infos {
             KeyCode::Backspace => {self.auth.pop();},
             KeyCode::Tab => {self.auth.down_field_login()},
             KeyCode::Enter => {if *self.auth.get_field() == Field::Totp {
-              self.login().await?;
+              self.auth.login().await?;
               self.screen = CurrentScreen::Welcome;
               } else {
               self.auth.down_field_login()

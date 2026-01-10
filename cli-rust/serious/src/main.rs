@@ -1,30 +1,24 @@
-use std::{
-  io::{Write, stdout},
-};
-
-use anyhow::{Result, anyhow};
-use serde_json;
-use console_subscriber;
-use reqwest::{Client};
 mod welcome;
 mod game;
 mod friends;
 mod infos_events;
 mod screen_displays;
 mod game_demo;
+mod login;
+
 use crate::infos_events::EventHandler;
 use crate::screen_displays::ScreenDisplayer;
 use crate::friends::FriendsDisplay;
 use crate::game_demo::Demo;
-mod login;
 use crate::game::{Game, Gameplay};
-use tokio::{sync::mpsc, time::Duration};
 use crate::login::Auth;
-
+use anyhow::{Result, anyhow};
+use serde_json;
+// use console_subscriber;
+use reqwest::{Client};
+use tokio::{sync::mpsc, time::Duration};
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
-
 use welcome::LOGO;
-
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -50,28 +44,59 @@ pub enum CurrentScreen {
   ErrorScreen,
 }
 
+pub struct Context {
+  location: String,
+  // id: u64,
+  client: Client,
+}
+
+impl Context {
+  pub fn new(location: String) -> Self {
+    Context {
+      location: location,
+      client: Client::builder()
+                      .danger_accept_invalid_certs(true)
+                      .build()
+                      .expect("Impossible to build new client, try again"),
+    }
+  }
+}
+
+impl Default for Context {
+  fn default() -> Self {
+    Context {
+      location: String::new(),
+      client: Client::builder()
+                      .danger_accept_invalid_certs(true)
+                      .build()
+                      .expect("Impossible to build new client, try again"),
+    }
+  }
+}
+
 #[derive(Default)]
 pub struct Infos {
+  context: Context,
   location: String,
   id: u64,
   client: Client,
   exit: bool,
   screen: CurrentScreen,
   post_error_screen: CurrentScreen,
+  error: String,
   index: usize,
   index_max: usize,
   friends: Vec<String>,
   friend_tmp: String,
   game: Game,
   auth: Auth,
-  receiver: Option<mpsc::Receiver<serde_json::Value>>,
-  error: String,
   demo: Demo,
+  receiver: Option<mpsc::Receiver<serde_json::Value>>,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  console_subscriber::init();
+  // console_subscriber::init();
   let location = match get_location() {
     Ok(result) => result,
     Err(e) => {return Err(anyhow!("{}", e));},
@@ -92,8 +117,12 @@ impl Default for CurrentScreen {
 impl Infos {
   pub fn new(location: String) -> Infos {
     Infos {
+      context: Context::new(location.clone()),
       location,
-      client: Client::builder().danger_accept_invalid_certs(true).build().expect("Impossible to build new client, try again"),
+      client: Client::builder()
+                      .danger_accept_invalid_certs(true)
+                      .build()
+                      .expect("Impossible to build new client, try again"),
       ..Default::default()
     }
   }
@@ -155,7 +184,7 @@ impl Infos {
     self.screen = CurrentScreen::ErrorScreen;
   }
   async fn handle_errors(&mut self) {
-    tokio::time::sleep(Duration::from_secs(2)).await;
+    std::thread::sleep(Duration::from_secs(2));
     self.screen = self.post_error_screen;
   }
   async fn update_friends_index(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {

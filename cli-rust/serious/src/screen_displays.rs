@@ -299,6 +299,7 @@ impl ScreenDisplayer for Infos {
             .block(block)
             .render(area, buf);
     }
+    //a changer le auth.blink avec friends.blink
     fn display_addfriends_screen(&self, area: Rect, buf: &mut Buffer) {
         let friend = format!("{}{}", 
             self.friend_tmp, if self.auth.blink {"|"} else {""});
@@ -322,6 +323,7 @@ impl ScreenDisplayer for Infos {
             .alignment(Alignment::Left)
             .render(area, buf);        
     }
+    //a changer le auth.blink avec friends.blink
     fn display_delete_friends_screen(&self, area: Rect, buf: &mut Buffer) {
         let friend = format!("{}{}", 
             self.friend_tmp, if self.auth.blink {"|"} else {""});

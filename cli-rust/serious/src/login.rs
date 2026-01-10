@@ -1,11 +1,12 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap};
 
 use anyhow::{Result, anyhow};
 
 use tokio_tungstenite::{
-    Connector, MaybeTlsStream, WebSocketStream, connect_async_tls_with_config, tungstenite::{http::response, protocol::Message}
+    Connector, MaybeTlsStream, WebSocketStream, connect_async_tls_with_config, tungstenite::protocol::Message
 };
 use crate::Infos;
+use crate::Context;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use futures_util::{StreamExt};
@@ -21,13 +22,16 @@ pub enum Field {
 
 #[derive(Default)]
 pub struct Auth {
+    context: std::sync::Arc<Context>,
     token: String,
     email: String,
     password: String,
     username: String,
     totp: String,
     field: Field,
+    pub id: u64,
     pub blink: bool,
+    receiver: Option<mpsc::Receiver<serde_json::Value>>,
 }
 
 impl Auth {
@@ -122,26 +126,26 @@ pub trait Authentify {
     async fn login(&mut self) -> Result<()>;
 }
 
-impl Authentify for Infos {
-    async fn signup(&mut self) -> Result<()> {
-        let apiloc = format!("https://{}/api/user/create", self.location);
+impl Auth {
+    pub async fn signup(&mut self) -> Result<()> {
+        let apiloc = format!("https://{}/api/user/create", self.context.location);
         let mut body: HashMap<&str, &str> = HashMap::new();
-        body.insert("username", self.auth.get_username());
-        body.insert("passw", self.auth.get_password());
-        body.insert("email", self.auth.get_email());
-        let response = self.client.post(apiloc)
+        body.insert("username", self.get_username());
+        body.insert("passw", self.get_password());
+        body.insert("email", self.get_email());
+        let response = self.context.client.post(apiloc)
                                                 .header("content-type", "application/json")
                                                 .json(&body)
                                                 .send()
                                                 .await?;
         let body: serde_json::Value = response.json().await?;
         if let Some(token) = body["token"].as_str() {
-            self.auth.set_token(token);
+            self.set_token(token);
         } else if let Some(error) = body["message"].as_str() {
-            self.auth.clear();
+            self.clear();
             return Err(anyhow!(error.to_string()));
         } else {
-            self.auth.clear();
+            self.clear();
             return Err(anyhow!("Error signing up"));
         }
         if let Err(error) = self.login().await {
@@ -149,23 +153,23 @@ impl Authentify for Infos {
         }
         Ok(())
     }
-    async fn login(&mut self) -> Result<()> {
-        let apiloc = format!("https://{}/api/user/login", self.location);
+    pub async fn login(&mut self) -> Result<()> {
+        let apiloc = format!("https://{}/api/user/login", self.context.location);
         let mut body: HashMap<&str, &str> = HashMap::new();
-        body.insert("email", self.auth.get_email());
-        body.insert("passw", self.auth.get_password());
-        if !self.auth.get_totp().is_empty() {
-            body.insert("totp", self.auth.get_totp());
+        body.insert("email", self.get_email());
+        body.insert("passw", self.get_password());
+        if !self.get_totp().is_empty() {
+            body.insert("totp", self.get_totp());
         }
-        let response = self.client.post(apiloc)
+        let response = self.context.client.post(apiloc)
                                                 .header("content-type", "application/json")
                                                 .json(&body)
                                                 .send()
                                                 .await?;
         let body: serde_json::Value = response.json().await?;
-        self.auth.clear();
+        self.clear();
         if let Some(token) = body["token"].as_str() {
-            self.auth.set_token(token);
+            self.set_token(token);
         } else if let Some(error) = body["message"].as_str() {
             return Err(anyhow!(error.to_string()));
         } else {
@@ -174,14 +178,14 @@ impl Authentify for Infos {
         self.get_id_and_launch_chat().await?;
         Ok(())
     }
-    async fn create_guest_session(&mut self) -> Result<()> {
-        let apiloc = format!("https://{}/api/user/create_guest", &self.location);
-        let res = self.client.post(apiloc)
+    pub async fn create_guest_session(&mut self) -> Result<()> {
+        let apiloc = format!("https://{}/api/user/create_guest", self.context.location);
+        let res = self.context.client.post(apiloc)
             .send()
             .await?;
         let body: serde_json::Value = res.json().await?;
         if let Some(token) = body["token"].as_str() {
-            self.auth.set_token(token);
+            self.set_token(token);
         } else if let Some(error) = body["message"].as_str() {
             return Err(anyhow!(error.to_string()));
         } else {
@@ -190,11 +194,11 @@ impl Authentify for Infos {
         self.get_id_and_launch_chat().await?;
         Ok(())
     }
-    async fn get_id_and_launch_chat(&mut self) -> Result<()> {
-        let apiloc = format!("https://{}/api/user/get_profile_token", self.location);
+    pub async fn get_id_and_launch_chat(&mut self) -> Result<()> {
+        let apiloc = format!("https://{}/api/user/get_profile_token", self.context.location);
         let mut body = HashMap::new();
-        body.insert("token", self.auth.get_token());
-        let res = self.client.post(apiloc)
+        body.insert("token", self.get_token());
+        let res = self.context.client.post(apiloc)
             .header("content-type", "application/json")
             .json(&body)
             .send()
@@ -204,7 +208,7 @@ impl Authentify for Infos {
             Some(nbr) => nbr,
             _ => return Err(anyhow!("Error from server, no data received")),
         };
-        let receiver = enter_chat_room(&self.location, player_id).await?;
+        let receiver = enter_chat_room(&self.context.location, player_id).await?;
         self.id = player_id;
         self.receiver = Some(receiver);
         Ok(())
@@ -228,7 +232,9 @@ async fn enter_chat_room(location: &String, id: u64) -> Result<mpsc::Receiver<se
             .await?;
     let (sender, receiver): (mpsc::Sender<serde_json::Value>, mpsc::Receiver<serde_json::Value>)  = mpsc::channel(1024);
     tokio::spawn(async move {
-        chat(ws_stream, sender).await.unwrap();
+        if let Err(e) = chat(ws_stream, sender).await {
+            eprintln!("Error: {e}");
+        }
     });
     Ok(receiver)
 }
