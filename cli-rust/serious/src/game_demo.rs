@@ -11,10 +11,10 @@ impl Demo {
     pub fn update(&mut self) {
         self.ball_x += self.ball_dx;
         self.ball_y += self.ball_dy;
-        if self.ball_x <= 5.0 || self.ball_x >= 95 as f64 {
+        if self.ball_x <= 5.0 || self.ball_x >= 95.0 {
             self.ball_dx = -self.ball_dx;
         }
-        if self.ball_y <= 0.0 || self.ball_y >= 100 as f64 {
+        if self.ball_y <= 0.0 || self.ball_y >= 100.0 {
             self.ball_dy = -self.ball_dy;
         }
         if self.ball_x < 50.0 {
