@@ -20,7 +20,7 @@
 git clone https://github.com/Maxime-juncker/ft_transcendence.git
 cd ft_transcendence
 make  # Build and launch the project
-
+```
 Then go to https://localhost:8081 and play !
 Grafana is accessible at http://localhost:3001
 Kibana is accessible at http://localhost:5601
@@ -48,3 +48,4 @@ ft_transcendence/
 ├── docker-compose.yml					# Docker compose file for the whole project
 ├── Makefile
 └── README.md										# This file
+```
