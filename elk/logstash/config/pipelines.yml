@@ -1,0 +1,20 @@
+- pipeline.id: modsec
+  path.config: "/usr/share/logstash/pipeline/modsec.conf"
+
+- pipeline.id: grafana
+  path.config: "/usr/share/logstash/pipeline/grafana.conf"
+
+- pipeline.id: logstash
+  path.config: "/usr/share/logstash/pipeline/self.conf"
+
+- pipeline.id: elasticsearch
+  path.config: "/usr/share/logstash/pipeline/elasticsearch.conf"
+
+- pipeline.id: kibana
+  path.config: "/usr/share/logstash/pipeline/kibana.conf"
+
+- pipeline.id: prometheus
+  path.config: "/usr/share/logstash/pipeline/prometheus.conf"
+
+- pipeline.id: vault
+  path.config: "/usr/share/logstash/pipeline/vault.conf"

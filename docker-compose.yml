@@ -43,6 +43,7 @@ services:
     container_name: modsecurity
     volumes:
       - cert:/etc/nginx/conf/ssl
+      - modsecurity_logs:/var/log/nginx/:rw
     ports:
       - "8080:80"
       - "8081:443"
@@ -50,6 +51,7 @@ services:
       - frontend_net
       - backend_net
       - entrypoint_net
+      - export_net
     depends_on:
       - frontend
       - backend
@@ -71,6 +73,7 @@ services:
     volumes:
       - vault:/vault/file
       - ./vault/conf:/vault/conf:ro
+      - vault-logs:/vault/logs:rw
     networks:
       - vault_net
     environment:
@@ -78,12 +81,125 @@ services:
       VAULT_ADDR: "http://127.0.0.1:8200"
     command: vault server -config=/vault/conf/vault.hcl
 
+  prometheus:
+    image: prom/prometheus:v3.9.1
+    container_name: prometheus
+    volumes:
+      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-logs:/prometheus/logs:rw
+    networks:
+      - monitoring_net
+      - export_net
+    user: root
+
+  grafana:
+    image: grafana/grafana:12.4.0-20836657505
+    container_name: grafana
+    volumes:
+      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning
+      - grafana:/var/lib/grafana
+      - grafana-logs:/var/log/grafana:rw
+    networks:
+      - monitoring_net
+    ports:
+      - "3001:3001"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_LOG_MODE=file
+
+  nginx_prom_export:
+    image: nginx/nginx-prometheus-exporter:1.5.1
+    container_name: nginx_prom_export
+    networks:
+      export_net:
+        ipv4_address: 172.200.0.10
+    depends_on:
+      - prometheus
+      - modsecurity
+    command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    env_file:
+    - .env
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+      - elastic-logs:/usr/share/elasticsearch/logs:rw
+    networks:
+      - elk_net
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: logstash
+    volumes:
+      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro
+      - modsecurity_logs:/var/log/nginx:ro
+      - grafana-logs:/var/log/grafana:ro
+      - elastic-logs:/var/log/elasticsearch:ro
+      - kibana-logs:/var/log/kibana:ro
+      - prometheus-logs:/var/log/prometheus:ro
+      - vault-logs:/var/log/vault:ro
+    depends_on:
+      - elasticsearch
+      - modsecurity
+    env_file:
+      - .env
+    networks:
+      - elk_net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: kibana
+    volumes:
+      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - kibana-logs:/usr/share/kibana/logs:rw
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk_net
+
+  kibana-init:
+    container_name: kibana-init
+    image: curlimages/curl:8.18.0
+    depends_on:
+      - kibana
+    volumes:
+      - ./elk/kibana/config/export.ndjson:/export.ndjson
+    command: >
+      sh -c "echo 'Waiting for Kibana to be fully ready...';
+             until curl -s -u elastic:${ELASTIC_PASSWORD} http://kibana:5601/api/status | grep -q '\"level\":\"available\"'; do
+               echo 'Still waiting for Kibana...';
+               sleep 5;
+             done;
+             echo 'Kibana is ready! Importing dashboard and Data View...';
+             curl -X POST http://kibana:5601/api/saved_objects/_import?overwrite=true -u elastic:${ELASTIC_PASSWORD} -H 'kbn-xsrf: true' --form file=@/export.ndjson;
+             echo 'Import completed successfully!';"
+    networks:
+      - elk_net
+
 networks:
+  export_net:
+    ipam:
+      config:
+        - subnet: 172.200.0.0/24
   entrypoint_net:
     driver: bridge
   backend_net:
   frontend_net:
   vault_net:
+  monitoring_net:
+  elk_net:
 
 volumes:
   sqlite:
@@ -95,3 +211,11 @@ volumes:
   vault:
     name: vault
   vault_key:
+  es_data:
+  modsecurity_logs:
+  grafana:
+  grafana-logs:
+  elastic-logs:
+  kibana-logs:
+  prometheus-logs:
+  vault-logs:

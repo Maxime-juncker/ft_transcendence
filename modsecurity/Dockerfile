@@ -27,12 +27,12 @@ RUN	git clone --recursive https://github.com/Bluesmoothie/ModSecurity.git	&& \
 	make -j$(nproc)															&& \
 	make install
 
-RUN	git clone https://github.com/Bluesmoothie/ModSecurity-nginx.git													&& \
-	wget https://nginx.org/download/nginx-1.26.3.tar.gz																&& \
-	tar -xvzf nginx-1.26.3.tar.gz																					&& \
-	cd nginx-1.26.3																									&& \
-	./configure --add-dynamic-module=../ModSecurity-nginx --with-compat --prefix=/etc/nginx --with-http_ssl_module	&& \
-	make -j$(nproc)																									&& \
+RUN	git clone https://github.com/Bluesmoothie/ModSecurity-nginx.git																					&& \
+	wget https://nginx.org/download/nginx-1.26.3.tar.gz																								&& \
+	tar -xvzf nginx-1.26.3.tar.gz																													&& \
+	cd nginx-1.26.3																																	&& \
+	./configure --add-dynamic-module=../ModSecurity-nginx --with-compat --prefix=/etc/nginx --with-http_ssl_module --with-http_stub_status_module	&& \
+	make -j$(nproc)																																	&& \
 	make install
 
 RUN git clone https://github.com/Bluesmoothie/coreruleset.git
