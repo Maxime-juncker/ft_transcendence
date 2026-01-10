@@ -67,8 +67,6 @@ export async function registerOAuth2Providers(fastify: FastifyInstance) {
 		scope: 'public'
 	};
 
-	console.log("KEYS", secrets);
-
 	await fastify.register(OAuth2, fortyTwoOAuth2Options);
 	await fastify.register(OAuth2, googleOAuth2Options);
 	await fastify.register(OAuth2, githubOAuth2Options);

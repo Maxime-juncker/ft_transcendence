@@ -32,7 +32,6 @@ export async function createServer()
 
 	fastify = Fastify({ logger: false });
 	sessionKey = await getJwtSecret();
-	console.log("jwt: ", sessionKey);
 	console.log("server created");
 }
 

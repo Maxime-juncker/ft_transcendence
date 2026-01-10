@@ -30,7 +30,6 @@ async function configureVault() {
 
 	if (unsealKey === '' || rootToken === '') {
 		const init = await vc.init({ secret_shares: 1, secret_threshold: 1 });
-		console.log(init);
 
 		if (init && init.data) {
 			const { keys, root_token } = init.data;
@@ -49,7 +48,6 @@ async function configureVault() {
 async function unsealVault() {
 	vc.token = rootToken;
 	const unsealed = await vc.unseal({ key: unsealKey });
-	console.log(unsealed);
 };
 
 async function mountVault() {
