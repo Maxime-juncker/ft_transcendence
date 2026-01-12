@@ -22,8 +22,8 @@ cd ft_transcendence
 make  # Build and launch the project
 ```
 Then go to https://localhost:8081 and play !  
-Grafana is accessible at http://localhost:3001  
-Kibana is accessible at http://localhost:5601  
+Grafana is accessible at https://localhost:8081/admin/grafana  
+Kibana is accessible at https://localhost:8081/admin/kibana  
 
 
 ## 📂 Project Structure
