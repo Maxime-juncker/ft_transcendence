@@ -1,9 +1,11 @@
 use std::{collections::HashMap};
-
 use anyhow::{Result, anyhow};
-
 use tokio_tungstenite::{
-    Connector, MaybeTlsStream, WebSocketStream, connect_async_tls_with_config, tungstenite::protocol::Message
+    Connector,
+    MaybeTlsStream,
+    WebSocketStream,
+    connect_async_tls_with_config,
+    tungstenite::protocol::Message,
 };
 use crate::Context;
 use tokio::net::TcpStream;
