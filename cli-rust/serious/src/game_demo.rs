@@ -18,7 +18,7 @@ impl Demo {
             self.ball_dy = -self.ball_dy;
         }
         if self.ball_x < 50.0 {
-            self.paddle_left_y += (self.ball_y - self.paddle_left_y - 5.0) * 0.15;
+            self.paddle_left_y += (self.ball_y - self.paddle_left_y - 5.0) * 0.12;
             if self.paddle_left_y > 90.0 {
                 self.paddle_left_y = 90.0;
             } else if self.paddle_left_y < 1.0 {
