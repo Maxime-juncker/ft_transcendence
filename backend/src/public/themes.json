@@ -40,22 +40,50 @@
 			"white":	"#e5e5e5",
 			"green":	"#23d18b",
 			"purple":	"#569cd6"
-		},	
+		},
 
 		{
 			"name": "github",
 
 			"dark":		"#2b3137",
 			"darker":	"#24292e",
-			"darkest":	"#02040A",
+			"darkest":	"#02040a",
 			"red":		"#2dba4e",
 			"yellow":	"#569cd6",
 			"blue":		"#569cd6",
 			"white":	"#fafbfc",
 			"green":	"#2dba4e",
 			"purple":	"#2dba4e"
-		},	
+		},
 
+		{
+			"name": "Nord-dark",
+
+			"dark":		"#4c566a",
+			"darker":	"#2e3440",
+			"darkest":	"#02040a",
+			"red":		"#bf616a",
+			"yellow":	"#ebcb8b",
+			"blue":		"#8fbcbb",
+			"white":	"#f2d5cf",
+			"green":	"#a3be8c",
+			"purple":	"#b48ead"
+		},
+
+		{
+			"name": "Catppuccin-Macchiato",
+
+			"dark":		"#414559",
+			"darker":	"#303446",
+			"darkest":	"#232634",
+			"red":		"#e78284",
+			"yellow":	"#ef9f76",
+			"blue":		"#f4b8e4",
+			"white":	"#f2d5cf",
+			"green":	"#ca9ee6",
+			"purple":	"#ca9ee6"
+		},
+		
 		{
 			"name": "classic",
 
