@@ -1,7 +1,7 @@
 import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
-import { getUserByName } from 'modules/users/user.js';
+import { getUserByName, getUserName } from 'modules/users/user.js';
 import * as core from 'core/core.js';
 import { addPlayerToQueue } from 'modules/chat/chat.js';
 import { Tournament } from './Tournament.js';
@@ -59,7 +59,7 @@ export class GameServer
 	*/
 	public async startDuel(player1: number, player2: number): Promise<string>
 	{
-		console.log(`${player1} will play against ${player2}`);
+		console.log(`starting duel between: ${await getUserName(player1)} and ${await getUserName(player2)}`);
 		const gameId = crypto.randomUUID();
 		await notifyMatch(player1, player2, gameId, 1);
 		await notifyMatch(player2, player1, gameId, 2);
@@ -91,6 +91,8 @@ export class GameServer
 					await addPlayerToQueue(Number(name), this);
 					reply.status(202).send({ message: "added to queue" });
 				}
+				else if (mode === 'duel')
+						return reply.status(202).send({ message: "waiting for opponent" });
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();

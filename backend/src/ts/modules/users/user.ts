@@ -10,6 +10,23 @@ export interface GameRes {
 	user2_score:	number;
 }
 
+export async function getUserName(id: number): Promise<string>
+{
+	const sql = "SELECT name FROM users WHERE id = ?";
+	try
+	{
+		const row = await core.db.get(sql, id);
+		if (!row)
+			return "";
+		return row.name;
+	}
+	catch (err)
+	{
+		console.error(`database error: ${err}`);
+		return "";
+	}
+}
+
 export async function updateUserStats(id: number, win: boolean, db: Database)
 {
 	const sql = "UPDATE users SET games_played = games_played + 1 WHERE id = ?";

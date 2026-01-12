@@ -94,7 +94,10 @@ export class GameClient extends Utils
 			this.m_user = user;
 		this.createPlayerHtml();
 		if (chat) // TODO use this to start game
+		{
+			console.log("adding listener");
 			chat.onGameCreated((json) => this.createGameFeedback(json));
+		}
 
 		if (this.isModeValid())
 		{
@@ -116,7 +119,8 @@ export class GameClient extends Utils
 	{
 		return (this.mode === 'local'
 			|| this.mode === 'online'
-			|| this.mode === 'bot');
+			|| this.mode === 'bot'
+			|| this.mode === 'duel');
 	}
 
 	private init(): void
@@ -135,12 +139,10 @@ export class GameClient extends Utils
 
 	private async createGameFeedback(json: any)
 	{
-		console.log("hello")
-		// this.m_router.navigateTo("game", "online");
+		console.error("init", this);
 		this.gameId = json.gameId.toString();
 		this.m_user2 = await getUserFromId(json.opponentId.toString());
 		this.playerSide = json.playerSide;
-		console.log(this.playerSide);
 		this.createPlayerHtml();
 		this.m_player2?.updateHtml(this.m_user2);
 
@@ -153,7 +155,6 @@ export class GameClient extends Utils
 			return ;
 		try
 		{
-			console.log("hello");
 			// window.addEventListener('beforeunload', this.destroy);
 
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
@@ -298,7 +299,7 @@ export class GameClient extends Utils
 			return ;
 		this.keysToSend = '';
 
-		if (this.mode === 'online' || this.mode === 'bot')
+		if (this.mode === 'online' || this.mode === 'bot' || this.mode === 'duel')
 		{
 			this.keysPressed.forEach((key) => { this.getKeyToSend1Player(key); });
 		}

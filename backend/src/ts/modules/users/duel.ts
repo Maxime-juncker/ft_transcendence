@@ -75,8 +75,8 @@ export async function acceptDuel(senderId: number, id: number): Promise<DbRespon
 	if (!duel)
 		return { code: 404, data: { message: "invite not found" }};
 
-	// removeDuel(duel);
-	duels = [];
+	removeDuel(duel);
+	console.log("hello\n");
 	const gameId = await GameServer.Instance.startDuel(senderId, id);
 	console.log("id", gameId);
 	return { code: 200, data: { id: gameId, message: "starting game" }};

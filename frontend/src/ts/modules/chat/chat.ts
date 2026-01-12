@@ -217,6 +217,7 @@ export class Chat
 
 	public startGameCb(json: any)
 	{
+		console.log(this.m_onStartGame);
 		this.m_onStartGame.forEach(cb => cb(json));
 	}
 }

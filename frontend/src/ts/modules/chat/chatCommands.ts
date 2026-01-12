@@ -143,9 +143,7 @@ export function registerCmds(chat: Chat)
 				id: json.id
 			})
 		});
-		chat.user.gameRouter?.navigateTo("game", "online");
-		// chat.user.startDuel(null);
-		displayResponse(chat, res);
+		chat.user.gameRouter?.navigateTo("game", "duel");
 	});
 
 	cmd.register("accept", "<username>\n\taccept invite of <username>", async (chat: Chat, argv: Array<string>) => {
@@ -165,8 +163,8 @@ export function registerCmds(chat: Chat)
 			return ;
 		}
 		var json = await res.json();
+		chat.user.gameRouter?.navigateTo("game", "duel");
 
-		// chat.user.startDuel(null);
 		res = await fetch("/api/duel/accept", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
@@ -176,10 +174,7 @@ export function registerCmds(chat: Chat)
 			})
 		});
 		
-		json = await res.json();
-		chat.user.gameRouter?.navigateTo("game", "online");
-
-		chat.displayMessage(serverReply(JSON.stringify(json, null, 2)));
+		displayResponse(chat, res);
 	});
 
 	cmd.register("decline", "<username>\n\tdecline invite of <username>", async (chat: Chat, argv: Array<string>) => {
