@@ -110,6 +110,7 @@ services:
       - prometheus
     environment:
       - GF_LOG_MODE=file
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
 
   nginx_prom_export:
     image: nginx/nginx-prometheus-exporter:1.5.1
