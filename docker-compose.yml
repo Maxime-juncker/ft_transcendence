@@ -125,6 +125,8 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    mem_limit: 4g
     env_file:
     - .env
     volumes:
