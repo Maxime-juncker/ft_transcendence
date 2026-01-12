@@ -123,6 +123,23 @@ services:
       - modsecurity
     command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
 
+  elasticsearch_exporter:
+    image: prometheuscommunity/elasticsearch-exporter:v1.10.0
+    container_name: elasticsearch_exporter
+    restart: always
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    command:
+      - --es.uri=http://elastic:${ELASTIC_PASSWORD}@elasticsearch:9200
+      - --es.all
+      - --es.indices
+      - --es.shards
+    networks:
+      - elk_net
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     container_name: elasticsearch
