@@ -1,0 +1,26 @@
+<template id="about-template">
+	<div class="h-full overflow-hidden">
+		<div id="header-container"></div>
+
+		<div class="pt-25 font-extrabold flex flex-col justify-start items-start w-full h-full overflow-y-scroll">
+			<div class="flex">
+				<input type="checkbox">
+				<h1 data-i18n="disable_crt">disable crt effect</h1>
+
+			</div>
+
+			<label class="inline-flex items-center cursor-pointer">
+				<input 
+					type="checkbox" 
+					class="appearance-none aspect-square w-[30px] h-[30px] border-2 border-white bg-dark cursor-grab checked:bg-dark relative
+					before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
+					before:w-[75%] before:h-[75%] before:bg-white before:opacity-0 checked:before:opacity-100 focus:brightness-100"
+				/>
+				<span class="ml-2">Custom checkbox</span>
+			</label>
+
+
+		</div>
+	</div>
+
+</template>

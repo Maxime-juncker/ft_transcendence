@@ -1,50 +1,59 @@
-import { User } from '../User.js';
+import { User } from 'modules/user/User.js';
+import { GameRouter } from '../router.js';
+import { Router } from 'modules/router/Router.js';
 
 export class TournamentCreate
 {
-	private static readonly BUTTON_1: string = 'start a tournament';
+	private createBtn = document.getElementById('tournament-confirm-create') as HTMLButtonElement;
+	private cancelBtn = document.getElementById('tournament-cancel-create') as HTMLButtonElement;
 
-	private button1Element = document.getElementById('tournament-start') as HTMLButtonElement;
-
-	constructor(private user: User)
+	constructor(private router: GameRouter, private user: User)
 	{
-		this.init();
-		this.hydrateButtons();
 		this.setUpDocumentEventListeners();
 	}
 
-	private async init(): Promise<void>
+	private createTournament = async () =>
 	{
-		await fetch('/api/create-tournament',
+		const typeInput = document.querySelector('input[name="tournament-type"]:checked') as HTMLInputElement;
+		const type = typeInput ? typeInput.value : 'public';
+
+		try
 		{
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', },
-			body: JSON.stringify({ userId: this.user.id, type: 'public' }),
-		});
+			const res = await fetch('/api/create-tournament',
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', },
+				body: JSON.stringify({ userId: this.user.id, type: type }),
+			});
+			
+			if (res.ok) {
+				const data = await res.json();
+				this.router.navigateTo('tournament-lobby', data.tournamentId);
+			} else {
+				alert('Failed to create tournament');
+			}
+		}
+		catch (e)
+		{
+			console.error(e);
+			alert('Error creating tournament');
+		}
 	}
 
-	private hydrateButtons(): void
+	private cancel = () =>
 	{
-		this.button1Element.textContent = TournamentCreate.BUTTON_1;
-	}
-
-	private startTournamentClickHandler = async () =>
-	{
-		await fetch('/api/start-tournament',
-		{
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', },
-			body: JSON.stringify({ userId: this.user.id }),
-		});
+		this.router.navigateTo('tournament-menu', '');
 	}
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('tournament-start')?.addEventListener('click', this.startTournamentClickHandler);
+		Router.addEventListener(this.createBtn, 'click', this.createTournament);
+		Router.addEventListener(this.cancelBtn, 'click', this.cancel);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('tournament-start')?.removeEventListener('click', this.startTournamentClickHandler);
+		Router.removeEventListener(this.createBtn, 'click', this.createTournament);
+		Router.removeEventListener(this.cancelBtn, 'click', this.cancel);
 	}
 }

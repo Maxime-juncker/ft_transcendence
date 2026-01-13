@@ -4,11 +4,13 @@ import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { TournamentCreate } from 'pages/TournamentCreate.js';
 import { TournamentJoin } from 'pages/TournamentJoin.js';
-import { User } from "User.js";
-import { Chat } from '@modules/chat';
-import { UserElement } from 'UserElement.js';
+import { TournamentLobby } from 'pages/TournamentLobby.js';
+import { User } from "modules/user/User.js";
+import { Chat } from 'modules/chat/chat';
+import { UserElement } from 'modules/user/UserElement.js';
+import { ViewComponent } from 'modules/router/ViewComponent.js';
 
-export class Router
+export class GameRouter
 {
 	private static readonly EXIT_KEY: string = 'Escape';
 	private static readonly HOME_KEY: string = 'h';
@@ -24,17 +26,60 @@ export class Router
 	currentClass: any = null;
 	pages: Map<string, HTMLDivElement> = new Map();
 	gameInstance: GameClient | null = null;
-	m_user:			User;
-	m_player1:		UserElement;
-	m_chat:			Chat;
+	m_user:			User | null = null;
+	m_player1:		UserElement | null = null;
+	m_chat:			Chat | null = null;
+	m_gameMenu:		GameMenu | null = null;
 
-	constructor(user: User = null, chat: Chat = null)
+	m_view:		ViewComponent | null = null;
+
+	public get view(): ViewComponent | null { return this.m_view; }
+
+	constructor(user: User | null = null, chat: Chat | null = null, view: ViewComponent | null = null)
 	{
 		this.m_user = user;
 		this.m_chat = chat;
+		this.m_view = view;
 		this.loadPages();
 		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
+
+	}
+
+	public assignListener()
+	{
+		if (!this.m_view)
+			return ;
+		this.m_view.addTrackListener(this.m_view.querySelector('#local-game'), "click", this.localGameClickHandler);
+		this.m_view.addTrackListener(this.m_view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		this.m_view.addTrackListener(this.m_view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		this.m_view.addTrackListener(this.m_view.querySelector('#game'), "click", this.menuGameClickHandler);
+		this.m_view.addTrackListener(this.m_view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
+	}
+
+	private menuGameClickHandler = () =>
+	{
+		this.navigateTo('game-menu', '');
+	}
+
+	private menuTournamentClickHandler = () =>
+	{
+		this.navigateTo('tournament-menu', '');
+	}
+
+	private localGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'local');
+	}
+
+	private onlineGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'online');
+	}
+
+	private botGameClickHandler = () =>
+	{
+		this.navigateTo('game', 'bot');
 	}
 
 	private loadPages(): void
@@ -47,18 +92,18 @@ export class Router
 			if (pageName)
 			{
 				this.pages.set(pageName, element);
-				element.classList.add('hidden');
+				element.style.display = "none";
 			}
 		});
 	}
 
 	private setUpWindowEventListeners(): void
 	{
-		window.addEventListener('popstate', (e) =>
-		{
-			const page = e.state?.page || 'home';
-			this.showPage(page, null);
-		});
+ 
+		// Router.Instance.onPopestate((e) => {
+		// 		const page = e.state?.page || 'home';
+		// 		this.showPage(page, null);
+		// 	});
 
 		window.addEventListener('keydown', async (e) =>
 		{
@@ -80,31 +125,31 @@ export class Router
 	{
 		switch (key)
 		{
-			case Router.EXIT_KEY:
-				history.back();
-				break ;
-			case Router.HOME_KEY:
+			case GameRouter.EXIT_KEY:
 				this.navigateTo('home', '');
 				break ;
-			case Router.GAME_MENU_KEY:
+			case GameRouter.HOME_KEY:
+				this.navigateTo('home', '');
+				break ;
+			case GameRouter.GAME_MENU_KEY:
 				this.navigateTo('game-menu', '');
 				break ;
-			case Router.GAME_ONLINE_KEY:
+			case GameRouter.GAME_ONLINE_KEY:
 				this.navigateTo('game', 'online');
 				break ;
-			case Router.GAME_LOCAL_KEY:
+			case GameRouter.GAME_LOCAL_KEY:
 				this.navigateTo('game', 'local');
 				break ;
-			case Router.GAME_BOT_KEY:
+			case GameRouter.GAME_BOT_KEY:
 				this.navigateTo('game', 'bot');
 				break ;
-			case Router.TOURNAMENT_MENU_KEY:
+			case GameRouter.TOURNAMENT_MENU_KEY:
 				this.navigateTo('tournament-menu', '');
 				break ;
-			case Router.TOURNAMENT_CREATE_KEY:
+			case GameRouter.TOURNAMENT_CREATE_KEY:
 				this.navigateTo('tournament-create', '');
 				break ;
-			case Router.TOURNAMENT_JOIN_KEY:
+			case GameRouter.TOURNAMENT_JOIN_KEY:
 				this.navigateTo('tournament-join', '');
 				break ;
 		}
@@ -116,35 +161,43 @@ export class Router
 		this.showPage(page, mode);
 	}
 
-	private showPage(page: string, mode: string): void
+	private showPage(page: string, mode: string | null): void
 	{
 		if (this.currentClass && this.currentClass.destroy)
 		{
 			this.currentClass.destroy();
 		}
 
-		this.pages.get(this.currentPage)!.classList.add('hidden');
-		this.pages.get(page)!.classList.remove('hidden');
+		this.pages.get(this.currentPage)!.style.display = 'none';
+		this.pages.get(page)!.style.display = 'flex';
 		this.currentPage = page;
 		this.currentClass = this.getClass(mode);
 	}
 
-	private getClass(mode: string)
+
+	private getClass(mode: string | null)
 	{
 		switch (this.currentPage)
 		{
 			case 'home':
 				return (new Home(this));
 			case 'game-menu':
-				return (new GameMenu(this));
+				this.m_gameMenu = new GameMenu(this)
+				return this.m_gameMenu;
 			case 'game':
-				return (new GameClient(this, mode!, this.m_user, this.m_chat));
+				if (this.m_chat && this.m_user)
+					return (new GameClient(this, mode!, this.m_user, this.m_chat));
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
 			case 'tournament-create':
-				return (new TournamentCreate(this.m_user));
+				if (this.m_user)
+					return (new TournamentCreate(this, this.m_user));
+			case 'tournament-lobby':
+				if (this.m_user)
+					return (new TournamentLobby(this, this.m_user, mode));
 			case 'tournament-join':
-				return (new TournamentJoin(this.m_user));
+				if (this.m_user)
+					return (new TournamentJoin(this.m_user));
 			default:
 				return (null);
 		}

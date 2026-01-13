@@ -1,4 +1,4 @@
-import { User } from '../User.js';
+import { User } from 'modules/user/User.js';
 
 export class TournamentJoin
 {

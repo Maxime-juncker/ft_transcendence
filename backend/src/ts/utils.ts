@@ -1,6 +1,6 @@
 export function getUrlVar(url: string)
 {
-	var		vars = {};
+	var		vars: any = {};
 	var		hashes = url.split("?")[1];
 	var		hash = hashes.split("&");
 

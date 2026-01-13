@@ -1,9 +1,10 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from 'User.js';
-import { Chat } from 'modules/chat.js';
-import { UserElement, UserElementType } from 'UserElement.js';
-import { Router } from 'router.js';
+import { User, getUserFromId } from 'modules/user/User.js';
+import { Chat } from 'modules/chat/chat.js';
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
+import { GameRouter } from 'router.js';
+import { Router } from 'modules/router/Router.js';
 
 enum Params
 {
@@ -68,28 +69,29 @@ export class GameClient extends Utils
 	private playerSide:		string | null = null;
 	private keysToSend:		string = '';
 
-	private m_user:				User | null;
-	private m_user2:			User;
-	private m_player1:			UserElement;
-	private m_player2:			UserElement;
-	private m_playerContainer:	HTMLElement;
-	private	m_prevP1Score:		number;
-	private	m_prevP2Score:		number;
-	private m_router:			Router;
+	private m_user:				User | null = null;
+	private m_user2:			User | null = null;
+	private m_player1:			UserElement | null = null;
+	private m_player2:			UserElement | null = null;
+	private m_playerContainer:	HTMLElement | null = null;
+	private	m_prevP1Score:		number | null = null;
+	private	m_prevP2Score:		number | null = null;
+	private m_router:			GameRouter;
 
-	constructor(router: Router, private mode: string, user: User = null, chat: Chat = null)
+	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
 	{
 		super();
 
 		this.m_router = router;
-		this.m_playerContainer = document.getElementById("player-container");
+		this.m_playerContainer = Router.getElementById("player-container");
 		if (!this.m_playerContainer)
 		{
 			console.error("no player-container found");
 			return ;
 		}
 
-		this.m_user = user;
+		if (user)
+			this.m_user = user;
 		this.createPlayerHtml();
 		if (chat)
 			chat.onGameCreated((json) => this.createGameFeedback(json));
@@ -103,6 +105,8 @@ export class GameClient extends Utils
 
 	private createPlayerHtml()
 	{
+		if (!this.m_playerContainer)
+			return ;
 		this.m_playerContainer.innerHTML = "";
 		this.m_player1 = new UserElement(this.m_user, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
 		this.m_player2 = new UserElement(this.m_user2, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
@@ -123,7 +127,7 @@ export class GameClient extends Utils
 		{
 			const element = child as HTMLDivElement;
 			this.HTMLelements.set(element.id, element);
-			element.classList.add('hidden');
+			element.style.display = ('none');
 		});
 
 		this.setContent('searching-msg', Msgs.SEARCHING, true);
@@ -136,16 +140,18 @@ export class GameClient extends Utils
 		this.playerSide = json.playerSide;
 		console.log(this.playerSide);
 		this.createPlayerHtml();
-		this.m_player2.updateHtml(this.m_user2);
+		this.m_player2?.updateHtml(this.m_user2);
 
 		this.launchCountdown();
 	}
 
 	private async createGame(): Promise<void>
 	{
+		if (!this.m_user)
+			return ;
 		try
 		{
-			window.addEventListener('beforeunload', this.destroy);
+			// window.addEventListener('beforeunload', this.destroy);
 
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
@@ -164,7 +170,7 @@ export class GameClient extends Utils
 
 			this.m_user2 = await getUserFromId(data.opponentId);
 			this.createPlayerHtml();
-			this.m_player2.updateHtml(this.m_user2);
+			this.m_player2?.updateHtml(this.m_user2);
 
 			this.launchCountdown();
 		}
@@ -210,7 +216,8 @@ export class GameClient extends Utils
 		this.setContent('score-right', '0', true);
 		this.show('net');
 
-		this.m_player2.updateHtml(this.m_user2);
+		if (this.m_player2)
+			this.m_player2.updateHtml(this.m_user2);
 	}
 
 	private async startGame(): Promise<void>
@@ -267,7 +274,17 @@ export class GameClient extends Utils
 
 		if (event.key === Keys.PLAY_AGAIN && this.end)
 		{
-			this.m_router.navigateTo("game", this.mode);
+			const targetElement = event.target as HTMLElement;
+			if (!targetElement)
+			{
+				return ;
+			}
+
+			const tagName = targetElement.tagName.toLowerCase();
+			if (tagName && tagName !== 'input' && tagName !== 'textarea')
+			{
+				this.m_router.navigateTo("game", this.mode);
+			}
 		}
 	}
 
@@ -278,6 +295,8 @@ export class GameClient extends Utils
 
 	private send(): void
 	{
+		if (!this.socket)
+			return ;
 		this.keysToSend = '';
 
 		if (this.mode === 'online' || this.mode === 'bot')
@@ -362,13 +381,13 @@ export class GameClient extends Utils
 		if (gameState.player1Score != this.m_prevP1Score)
 		{
 			let score = document.querySelector("#score-left");
-			score!.animate(scoreAnimation, scoreAnimationParams);
+			score?.animate(scoreAnimation, scoreAnimationParams);
 		}
 
 		if (gameState.player2Score != this.m_prevP2Score)
 		{
 			let score = document.querySelector("#score-right");
-			score!.animate(scoreAnimation, scoreAnimationParams);
+			score?.animate(scoreAnimation, scoreAnimationParams);
 		}
 
 		this.m_prevP1Score = gameState.player1Score;
@@ -389,7 +408,8 @@ export class GameClient extends Utils
 		if (winner >= 1) // db id start at 1
 		{
 			const usr = await getUserFromId(winner);
-			winnerName = usr.name;
+			if (usr)
+				winnerName = usr.name;
 		}
 		this.hide('net');
 		this.hide('ball');
@@ -401,13 +421,16 @@ export class GameClient extends Utils
 		this.setColor('play-again-msg', Params.COLOR, undefined, true);
 	}
 
-	private removeQueue = async (): Promise<void> =>
+	private async removeQueue(): Promise<void>
 	{
+		if (!this.m_user)
+			return ;
+
 		await fetch("/api/chat/removeQueue",
 		{
 			method: "DELETE",
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ id: this.m_user.id })
+			body: JSON.stringify({ token: this.m_user.token })
 		});
 	}
 
@@ -418,7 +441,7 @@ export class GameClient extends Utils
 			clearInterval(this.countdownInterval);
 		}
 
-		this.removeQueue();
+		await this.removeQueue();
 		this.socket?.close();
 		this.stopGameLoop();
 		window.removeEventListener('beforeunload', this.destroy);

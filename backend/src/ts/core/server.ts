@@ -2,11 +2,24 @@ import { initFastify } from '@core/init.js';
 import * as core from '@core/core.js';
 import { ServerSideRendering } from '@modules/ssr/ServerSideRendering.js';
 import { GameServer } from '@modules/game/GameServer.js';
+import { initVault } from '@modules/vault/vault.js';
 
+await initVault();
 await core.createServer();
 await initFastify();
 
-new ServerSideRendering(core.fastify);
+const routes = [
+	"/start.html",
+	"/login.html",
+	"/lobby.html",
+	"/settings.html",
+	"/profile.html",
+	"/search.html",
+	"/about.html",
+	"/404.html",
+]
+
+new ServerSideRendering(core.fastify, routes);
 const gameServer = new GameServer(core.fastify);
 await gameServer.init();
 
@@ -21,5 +34,5 @@ signals.forEach(signal => {
 	});
 });
 
-await core.start()
+await core.start();
 

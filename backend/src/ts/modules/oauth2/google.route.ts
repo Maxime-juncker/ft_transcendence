@@ -10,6 +10,10 @@ export function googleOAuth2Routes (
 )
 {
 
+	/**
+	 * google forbide local ip (e.g: 10.13.6.2), function work but not usable
+	 * @deprecated
+	*/
 	fastify.get('/api/login/google/login', function(request: any, reply) {
 		fastify.GoogleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)

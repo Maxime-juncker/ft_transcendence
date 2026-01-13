@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+@theme {
+	--color-dark:		#282C34;
+	--color-darker:		#16181D;
+	--color-darkest:	#02040A;
+	--color-red:		#E06C75;
+	--color-yellow:		#E5C07B;
+	--color-blue:		#61AFEF;
+	--color-white:		#FBF1C7;
+	--color-green:		#98C379;
+	--color-purple:		#C678DD;
+
+	--font-family-saira: "Saira Semi Condensed", sans-serif;
+}
+
+@layer base {
+	html {
+		@apply pointer-events-auto;
+	}
+
+	body {
+		@apply flex flex-col flex-wrap bg-darker text-white rounded-none h-screen 
+		overflow-hidden pointer-events-auto
+		/* font-saira; */
+	}
+	
+
+	header {
+		@apply	flex items-center justify-center w-full h-[10vh];
+	}
+
+	main {
+		@apply flex-1 flex justify-center flex-col items-center gap-6;
+	}
+
+}
+
+@layer components
+{
+	input {
+		@apply	bg-dark border-b-2 border-blue px-3 py-2
+		focus:outline-none focus:brightness-[1.4]
+		hover:brightness-[1.2];
+	}
+
+	.avatar {
+		@apply w-full aspect-square object-cover bg-gray-100 rounded-full border-2 border-darker;
+	}
+
+	.banner {
+		@apply	w-full flex flex-wrap gap-5;
+	}
+
+	.line {
+		@apply	h-2 w-full bg-red m-0 p-0;
+	}
+
+
+	.avatar-img {
+		@apply bg-white rounded-full aspect-square object-cover h-14 min-w-14 border border-white;
+	}
+
+	.user-profile {
+		@apply	flex w-full max-w-60 h-25 bg-dark p-2 items-center
+		/* border-2 border-white; */
+	}
+
+	.user-profile #avatar-container {
+		@apply	flex h-full aspect-square relative;
+	}
+
+	.user-profile #avatar-name {
+		@apply	absolute bottom-0 left-0 right-0 text-center
+		rounded-full bg-dark border-2 border-darker text-sm;
+	}
+
+	.user-status {
+		@apply	absolute w-[15px] aspect-square rounded-full
+		bottom-[25%] bg-red;
+	}
+	.user-profile #user-stats {
+		@apply	flex-1 flex flex-col items-center justify-center;
+	}
+	.user-profile #user-stats h1 {
+		@apply	text-center;
+	}
+
+	.banner-text {
+		@apply	absolute flex items-center justify-center;
+	}
+
+	.banner-text h1 {
+		@apply	text-6xl bg-darker px-6 py-4 font-extrabold;
+	}
+
+	.box {
+		@apply	border-2 rounded-md border-red p-5 px-12 w-100
+		flex flex-col gap-2;
+	}
+
+	.box h1 {
+		@apply	text-5xl font-bold underline mb-10;
+	}
+
+	.button-empty {
+		@apply	border-green text-green rounded-none border-2 bg-dark py-1 px-5
+		hover:brightness-[1.1] active:brightness-[1.5];
+	}
+
+	.button-full {
+		@apply	bg-green text-dark border-2 rounded-none border-dark py-1
+		hover:brightness-[1.1] active:brightness-[1.5];
+	}
+
+	.header-small {
+		@apply w-full h-25 bg-dark flex align-middle justify-between items-center fixed z-3;
+	}
+
+	.banner-small {
+		@apply h-full flex align-middle justify-center items-center
+	}
+	.banner-small h1 {
+		@apply bg-dark z-1 text-2xl py-1 px-3 font-bold;
+	}
+
+	.small-lines {
+		@apply absolute w-[30%] flex flex-wrap gap-3;
+	}
+
+	.btn-container {
+		@apply flex h-full bg-green ml-5;
+	}
+
+	.user-menu {
+		@apply relative py-3 flex h-full justify-center items-center mr-5 gap-3;
+	}
+
+	.user-menu #user-menu-container {
+		@apply right-10 -bottom-20 px-3 py-2 w-35 bg-dark border-2 border-green absolute;
+	}
+
+	.hide {
+		@apply hidden;
+	}
+
+	.btn {
+		@apply text-white select-none p-1 hover:bg-white hover:text-darker hover:cursor-grab rounded-none transition-none
+		focus:bg-white focus:text-darker focus:outline-none;
+	}
+
+	.main {
+		@apply flex-1 flex justify-around items-center align-middle w-full overflow-clip;
+	}
+
+	.play-menu {
+		@apply flex flex-1 flex-col items-center gap-5;
+	}
+
+	.play-menu button {
+		@apply	text-5xl w-fit font-bold;
+	}
+
+	.user {
+		@apply ml-6 flex-1 h-full flex flex-col gap-2 justify-end items-start;
+	}
+
+	.user #profile-header {
+		@apply underline text-3xl;
+	}
+
+	#leaderboard {
+		@apply flex-1;
+	}
+
+	.login-container {
+		@apply flex flex-row w-full justify-center gap-20 text-center;
+	}
+
+	.oauth-btn {
+		@apply	w-[35px] h-[35px] hover:brightness-[1.1] active:brightness-[1.5];
+	}
+
+	.separator {
+		@apply	w-[80%] self-center h-0.5 my-2 px-5 bg-red;
+	}
+
+	.oauth-container {
+		@apply	w-full flex flex-row justify-center gap-5;
+	}
+
+	.guest-container {
+		@apply	flex flex-col justify-center items-center;
+	}
+
+	.guest-container .button-empty {
+		@apply	px-30;
+	}
+
+	.stat-container {
+		@apply h-full flex flex-1 flex-row justify-around align-middle;
+	}
+
+	.stat-item {
+		@apply w-30 h-full flex flex-col align-middle justify-center;
+	}
+
+	.stat-item h1 {
+		@apply text-center text-4xl font-bold w-full;
+	}
+
+	.stat-item p {
+		@apply text-center w-full;
+	}
+	/**/
+	/* @layer base */
+	/* { */
+	/* 	h1		{ @apply text-[10vh] my-[10vh]; } */
+	/* } */
+
+	/* .animation		{ @apply animate-pulse duration-500; } */
+	.centered		{ @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2; }
+	.page			{ @apply relative flex-col justify-center gap-4 h-full w-full }
+
+	.game-menu			{ @apply relative flex flex-col gap-[5vh]; }
+	.game				{ @apply flex flex-col relative; }
+	.tournament-menu	{ @apply relative flex flex-col gap-[5vh]; }
+	.tournament			{ @apply relative flex flex-col gap-[5vh] h-screen w-screen; }
+
+	.score-left		{ @apply absolute text-[3vw] top-[2%] text-right right-1/2 mr-[2vw]; }
+	.score-right	{ @apply absolute text-[3vw] top-[2%] text-left  left-1/2 ml-[2vw]; }
+	.countdown		{ @apply text-[3vw] }
+	.pause-msg		{ @apply text-[3vw] top-[40%] w-[80vw] }
+	.continue-msg	{ @apply text-[2vw] top-[70%] w-[80vw] }
+	.winner-msg		{ @apply text-[3vw] top-[40%] w-[80vw] }
+	.play-again-msg	{ @apply text-[2vw] top-[70%] w-[80vw] }
+	.player1		{ @apply absolute top-0 left-0 text-[2vw] m-[1vw]; }
+	.player2		{ @apply absolute top-0 right-0 text-[2vw] m-[1vw]; }
+	.searching-msg	{ @apply text-[2vw] }
+}

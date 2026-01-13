@@ -3,7 +3,7 @@ import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
 import qrcode from 'qrcode';
 import { Database } from 'sqlite';
-import { DbResponse } from '@core/core';
+import { DbResponse, db } from 'core/core.js';
 
 function generate_totp(seed: string, time: number): string
 {
@@ -29,10 +29,9 @@ export function check_totp(seed: string, totp: string): boolean
 	return totp === expected;
 }
 
-export async function new_totp(request: any, reply: any, db: Database): Promise<DbResponse>
+export async function new_totp(user_id: number, email: string): Promise<DbResponse>
 {
 	console.log("Received request for new totp");
-	const { user_id, email } = request.body;
 	const sql = "UPDATE users SET totp_seed = ? WHERE id = ?";
 
 	const seed = base32Encode(crypto.randomBytes(20), 'RFC4648');
@@ -43,31 +42,29 @@ export async function new_totp(request: any, reply: any, db: Database): Promise<
 		const url = await qrcode.toDataURL(otpauth)
 		return { code: 200, data: { qrcode: `${url}` }};
 	}
-	catch (err)
+	catch (err: any)
 	{
 		return { code: 500, data: { message: `error: ${err.message}` }};
 	}
 }
 
-export async function del_totp(request: any, reply: any, db: Database)
+export async function del_totp(user_id: number): Promise<DbResponse>
 {
-	const { user_id } = request.body;
 	const sql = "UPDATE users SET totp_seed = 0, totp_enable = 0 WHERE id = ?";
 
 	try
 	{
 		const row = await db.get(sql, user_id);
-		reply.code(200).send({ message: "ok"});
+		return { code: 200, data: { message: "ok"}};
 	}
-	catch (err)
+	catch (err: any)
 	{
-		reply.code(500).send({ message: `database error: ${err.message}` });
+		return { code: 500, data: { message: `database error: ${err.message}` }};
 	}
 }
 
-export async function validate_totp(request: any, reply: any, db: Database)
+export async function validate_totp(user_id: number, totp: string): Promise<DbResponse>
 {
-	const { user_id, totp } = request.body;
 	const sql = "SELECT totp_seed FROM users WHERE id = ?";
 
 	try
@@ -77,13 +74,14 @@ export async function validate_totp(request: any, reply: any, db: Database)
 		{
 			const sql = "UPDATE users SET totp_enable = 1 WHERE id = ?";
 			await db.get(sql, [user_id])
-			reply.code(200).send({ message: "ok, totp fully enabled"});
+
+			return { code: 200, data: { message: "ok, totp fully enabled" }};
 		}
 		else
-			reply.code(404).send({ message: "failed to validate totp" });
+			return { code: 404, data: { message: "failed to validate totp" }};
 	}
-	catch (err)
+	catch (err: any)
 	{
-		reply.code(500).send({ message: `database error: ${err.message}` });
+		return { code: 500, data: { message: `database error: ${err.message}` }};
 	}
 }

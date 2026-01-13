@@ -1,7 +1,8 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { createUserOAuth2, loginOAuth2 } from '@modules/users/userManagment.js';
 import * as core from '@core/core.js';
-import { AuthSource } from '@modules/oauth2/routes.js'
+import * as jwt from 'modules/jwt/jwt.js';
+import { AuthSource } from '@modules/oauth2/routes.js';
 
 export function githubOAuth2Routes (
 	fastify: FastifyInstance,
@@ -31,6 +32,7 @@ export function githubOAuth2Routes (
 				reply.send(new Error('Failed to fetch user info'));
 				return;
 			}
+
 			const data = await fetchResult.json();
 			const id = data.id;
 			const name = data.login;
@@ -39,9 +41,11 @@ export function githubOAuth2Routes (
 
 			await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
 			const res = await loginOAuth2(id, AuthSource.GITHUB, core.db);
-			if (res.code == 200)
-				request.session.user = res.data.id;
-			const url = `https://${process.env.HOST}:8081/login.html`;
+			if (res.code != 200)
+				return reply.redirect(`https://${process.env.HOST}:8081/login`);
+
+			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
+			const url = `https://${process.env.HOST}:8081/login?oauth_token=${token}`;
 			return reply.redirect(url);
 		})
 	})

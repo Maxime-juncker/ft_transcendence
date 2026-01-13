@@ -30,7 +30,13 @@ async function loadConfig(path: string, db: Database)
 export async function initFastify()
 {
 	// setup dependencies
-	await core.fastify.register(import('@fastify/multipart'));
+	await core.fastify.register(import('@fastify/multipart'), {
+		limits: {
+			fileSize: 10 * 1024 * 1024, // 10mb
+			files: 1
+		}
+	});
+
 	await core.fastify.register(import('@fastify/websocket'));
 	await core.fastify.register(import('@fastify/cookie'));
 
@@ -43,7 +49,7 @@ export async function initFastify()
 			maxAge: 24 * 60 * 60 * 1000 // 1 day
 		},
 		saveUninitialized: false
-	})
+	});
 
 	await registerOAuth2Providers(core.fastify); // oauth2 for google
 

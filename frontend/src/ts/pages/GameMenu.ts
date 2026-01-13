@@ -1,28 +1,36 @@
-import { Router } from '../router';
+import { GameRouter } from '../router.js';
 
 export class GameMenu
 {
-	private static readonly BUTTON_1: string = 'local';
-	private static readonly BUTTON_2: string = 'online';
-	private static readonly BUTTON_3: string = 'bot';
+	private router: GameRouter;
+	private button1Element;
+	private button2Element;
+	private button3Element;
 
-	private router: Router;
-	private button1Element = document.getElementById('local-game') as HTMLButtonElement;
-	private button2Element = document.getElementById('online-game') as HTMLButtonElement;
-	private button3Element = document.getElementById('bot-game') as HTMLButtonElement;
-
-	constructor(router: Router)
+	constructor(router: GameRouter)
 	{
 		this.router = router;
+
+		this.button1Element = this.router.view?.querySelector('#local-game') as HTMLButtonElement;
+		this.button2Element = this.router.view?.querySelector('#online-game') as HTMLButtonElement;
+		this.button3Element = this.router.view?.querySelector('#bot-game') as HTMLButtonElement;
+
 		this.hydrateButtons();
 		this.setUpDocumentEventListeners();
 	}
 
 	private hydrateButtons(): void
 	{
-		this.button1Element.textContent = GameMenu.BUTTON_1;
-		this.button2Element.textContent = GameMenu.BUTTON_2;
-		this.button3Element.textContent = GameMenu.BUTTON_3;
+	}
+
+	private menuGameClickHandler = () =>
+	{
+		this.router.navigateTo('game-menu', '');
+	}
+
+	private menuTournamentClickHandler = () =>
+	{
+		this.router.navigateTo('tournament-menu', '');
 	}
 
 	private localGameClickHandler = () =>
@@ -32,6 +40,7 @@ export class GameMenu
 
 	private onlineGameClickHandler = () =>
 	{
+		console.log("navi to online");
 		this.router.navigateTo('game', 'online');
 	}
 
@@ -42,15 +51,23 @@ export class GameMenu
 
 	private setUpDocumentEventListeners(): void
 	{
-		document.getElementById('local-game')?.addEventListener('click', this.localGameClickHandler);
-		document.getElementById('online-game')?.addEventListener('click', this.onlineGameClickHandler);
-		document.getElementById('bot-game')?.addEventListener('click', this.botGameClickHandler);
+		// console.log("hello");
+		// const view: ViewComponent = this.router.view;
+		// view.addTrackListener(view.querySelector('#local-game'), "click", this.localGameClickHandler);
+		// view.addTrackListener(view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		// view.addTrackListener(view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		// view.addTrackListener(view.querySelector('#game'), "click", this.menuGameClickHandler);
+		// view.addTrackListener(view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
 	}
 
 	public destroy(): void
 	{
-		document.getElementById('local-game')?.removeEventListener('click', this.localGameClickHandler);
-		document.getElementById('online-game')?.removeEventListener('click', this.onlineGameClickHandler);
-		document.getElementById('bot-game')?.removeEventListener('click', this.botGameClickHandler);
+		// const view: ViewComponent = this.router.view;
+		// view.removeTrackListener(view.querySelector('#local-game'), "click", this.localGameClickHandler);
+		// view.removeTrackListener(view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		// view.removeTrackListener(view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		// this.router.view.querySelector('#local-game')?.removeEventListener('click', this.localGameClickHandler);
+		// this.router.view.querySelector('#online-game')?.removeEventListener('click', this.onlineGameClickHandler);
+		// this.router.view.querySelector('#bot-game')?.removeEventListener('click', this.botGameClickHandler);
 	}
 }

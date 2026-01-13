@@ -152,3 +152,11 @@
 	@apply text-(--white) select-none p-1 hover:bg-(--white) hover:text-(--darker) rounded-none transition-none
 				focus:bg-(--white) focus:text-(--darker) focus:outline-none;
 }
+
+.language-selector {
+	@apply bg-(--dark) text-(--white) border-2 border-(--blue) px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-(--blue) hover:brightness-[1.1];
+}
+
+.language-selector-div {
+	@apply absolute bottom-0 right-0 m-4;
+}

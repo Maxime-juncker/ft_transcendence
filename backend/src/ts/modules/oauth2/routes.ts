@@ -6,26 +6,17 @@ import { fortyTwoOAuth2Routes } from "./fortyTwo.route.js";
 import { githubOAuth2Routes } from "./github.route.js";
 
 export enum AuthSource {
+	DELETED = -3, // cannot be log
 	BOT = -2,	// for bot account
 	GUEST = -1, // guest profile are deleted on logout
 	INTERNAL = 0,
 	GOOGLE, // not used anymore
 	GITHUB,
-	FORTY_TWO
+	FORTY_TWO,
 }
 
 export async function OAuthRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
-	fastify.post('/login', async (request: any, reply: any) => {
-		const { id, source } = request.body as {
-			id: string,
-			source: number,
-		}
-		console.log(request.body, id, source);
-		const res = await loginOAuth2(id, source, core.db);
-		return reply.code(res.code).send(res.data);
-	});
-
 	await fastify.register(fortyTwoOAuth2Routes);
 	await fastify.register(githubOAuth2Routes);
 }

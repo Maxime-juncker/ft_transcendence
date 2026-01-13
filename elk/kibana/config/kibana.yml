@@ -1,0 +1,13 @@
+server.name: kibana
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /usr/share/kibana/logs/kibana.log
+      layout:
+        type: json
+  root:
+    level: info
+    appenders: [file]

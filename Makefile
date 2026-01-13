@@ -13,9 +13,12 @@ build:
 start:
 	docker compose up
 
+.PHONY: vclean
+vclean:
+	docker compose down -v
 .PHONY: clean
 clean:
-	docker compose down
+	docker compose down -v
 	docker system prune -a -f
 
 .PHONY: fclean

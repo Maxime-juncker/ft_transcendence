@@ -1,19 +1,70 @@
-import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp } from '@modules/2fa/totp.js'
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import * as core from '@core/core.js'
+import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp } from 'modules/2fa/totp.js'
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
+import { jwtVerif } from 'modules/jwt/jwt.js';
+import * as core from 'core/core.js'
 
 export async function totpRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {
-	fastify.post('/api/totp/reset', async (request:any, reply:any) => {
-		const res = await newTotp(request, reply, core.db);
+	fastify.post('/api/totp/reset', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['email', 'token'],
+				properties: {
+					token: { type: 'string' },
+					email: { type: 'string' },
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+
+		const { email, token } = request.body as { email: string, token: string };
+
+		const data: any = await jwtVerif(token, core.sessionKey);
+		if (!data)
+			return reply.code(400).send({ message: "token is invalid" });
+		const res = await newTotp(data.id, email);
 		return reply.code(res.code).send(res.data);
 	})
 
-	fastify.post('/api/totp/remove', async (request:any, reply:any) => {
-		return delTotp(request, reply, core.db);
+	fastify.post('/api/totp/remove', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['token'],
+				properties: {
+					token: { type: 'string' },
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+
+		const { token } = request.body as { email: string, token: string };
+
+		const data: any = await jwtVerif(token, core.sessionKey);
+		if (!data)
+			return reply.code(400).send({ message: "token is invalid" });
+		const res = await delTotp(data.id);
+		return reply.code(res.code).send(res.data);
 	})
 
-	fastify.post('/api/totp/validate', async (request:any, reply:any) => {
-		return validateTotp(request, reply, core.db);
+	fastify.post('/api/totp/validate', {
+		schema: {
+			body: {
+				type: 'object',
+				required: ['token', 'totp'],
+				properties: {
+					token: { type: 'string' },
+					totp: { type: 'string' }
+				}
+			}
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const { totp, token } = request.body as { totp: string, token: string };
+
+		const data: any = await jwtVerif(token, core.sessionKey);
+		if (!data)
+			return reply.code(400).send({ message: "token is invalid" });
+		return validateTotp(data.id, totp);
 	})
 }

@@ -20,6 +20,8 @@
   "type": "commonjs",
   "dependencies": {
     "@tailwindcss/cli": "^4.1.17",
+    "chart.js": "^4.5.1",
+    "echarts": "^6.0.0",
     "tsc-alias": "^1.8.16"
   }
 }

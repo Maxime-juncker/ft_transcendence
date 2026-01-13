@@ -3,7 +3,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 import Fastify, { FastifyInstance } from "fastify";
 import '@fastify/session';
-import { randomBytes } from "crypto";
+import { getJwtSecret } from '@modules/vault/secrets.js';
 
 export interface DbResponse {
 	code:	number;
@@ -13,15 +13,14 @@ export interface DbResponse {
 // directory of avatars
 export const uploadDir : string = "/var/www/server/public/"
 
-export var db:		Database		= null;
-export var fastify:	FastifyInstance = null;
+export var db:		Database;
+export var fastify:	FastifyInstance;
 export var sessionKey: string;
  
 declare module '@fastify/session' {
-  interface SessionData {
-    auth?: boolean;
-    user?: any;
-  }
+	interface FastifySessionObject {
+		user?: number;
+	}
 }
 
 export async function createServer()
@@ -32,7 +31,7 @@ export async function createServer()
 	});
 
 	fastify = Fastify({ logger: false });
-	sessionKey = randomBytes(64).toString('hex');
+	sessionKey = await getJwtSecret();
 	console.log("server created");
 }
 

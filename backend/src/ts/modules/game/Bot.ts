@@ -16,7 +16,7 @@ export class Bot
 	private static readonly IPS: number = 100;
 	private static readonly INTERVAL_TIME: number = 1000 / Bot.IPS;
 
-	private socket: WebSocket;
+	private socket: WebSocket | null = null;
 	private interval: NodeJS.Timeout | null = null;
 	private gameInstance: GameInstance | null = null;
 	private keysPressed: Set<string> = new Set();
@@ -46,7 +46,7 @@ export class Bot
 			this.interval = setInterval(() => { this.send(); }, Bot.INTERVAL_TIME);
 		};
 
-		this.socket.onmessage = (event: WebSocket.MessageEvent) =>
+		this.socket.onmessage = (event: any) =>
 		{
 			this.updateGameState(event.data);
 		};
@@ -77,7 +77,8 @@ export class Bot
 		{
 			try
 			{
-				this.gameInstance.state = new GameState(data);
+				if (this.gameInstance)
+					this.gameInstance.state = new GameState(data);
 			}
 			catch (error)
 			{
@@ -92,7 +93,7 @@ export class Bot
 		{
 			this.keysPressed.clear();
 			this.calculateOutput();
-			this.socket.send(Array.from(this.keysPressed).join(''));
+			this.socket?.send(Array.from(this.keysPressed).join(''));
 			this.keysPressed = new Set(Array.from(this.keysPressed).map(key => '1' + key));
 			this.gameInstance.keysPressed = new Set([...this.gameInstance.keysPressed, ...this.keysPressed]);
 		}
@@ -100,6 +101,9 @@ export class Bot
 
 	private calculateOutput(): void
 	{
+		if (!this.gameInstance)
+			return ;
+
 		if (this.gameInstance.ballSpeedX > 0)
 		{
 			this.goToCenter();
@@ -112,6 +116,9 @@ export class Bot
 
 	private goToCenter(): void
 	{
+		if (!this.gameInstance)
+			return ;
+
 		const centerY = 50;
 		if (this.gameInstance.leftPaddleY > centerY)
 		{
@@ -125,6 +132,9 @@ export class Bot
 
 	private goToBall(): void
 	{
+		if (!this.gameInstance)
+			return ;
+
 		if (this.gameInstance.ballY < this.gameInstance.leftPaddleY)
 		{
 			this.keysPressed.add(Keys.UP);

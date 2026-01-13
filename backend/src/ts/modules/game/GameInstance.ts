@@ -26,7 +26,7 @@ enum Parameters
 	MAX_ANGLE = 1.5,
 	SPEED = 1.0,
 	SPEED_INCREMENT = 0.1,
-	POINTS_TO_WIN = 11,
+	POINTS_TO_WIN = 3,
 	FPS = 60,
 	FRAME_TIME = 1000 / FPS,
 }
@@ -137,9 +137,16 @@ export class GameInstance
 			this._winner = player;
 			this._isRunning = false;
 			console.log(`${this._winner} won the game (mode: ${this.mode})`);
-			if (this.mode == 'online')
+			if (this.mode == 'online' || this.mode == 'bot')
 			{
-				var res: GameRes = { user1_id: this._Player1Id, user2_id: this._Player2Id, user1_score: this._gameState.player1Score, user2_score: this._gameState.player2Score};
+				if (!this._Player1Id || !this._Player2Id)
+					return ;
+
+				var res: GameRes = {
+					user1_id: this._Player1Id,
+					user2_id: this._Player2Id,
+					user1_score: this._gameState.player1Score,
+					user2_score: this._gameState.player2Score};
 				addGameToHist(res, core.db);
 			}
 		}
@@ -208,30 +215,36 @@ export class GameInstance
 		this._keysPressed.clear();
 	}
 
-	get state(): Buffer					{ return (this._gameState ? Buffer.from(this._gameState.stateBuffer) : null); }
-	get reversedState(): Buffer			{ return (this._gameState ? Buffer.from(this._gameState.reversedStateBuffer) : null); }
-	get reversedBuffer(): ArrayBuffer	{ return (this._gameState ? this._gameState.reversedStateBuffer : null); }
-	get mode(): string | null			{ return (this._gameMode); }
-	get ballY(): number					{ return (this._gameState.ballY); }
-	get leftPaddleY(): number			{ return (this._gameState.leftPaddleY); }
-	get ballSpeedX(): number			{ return (this._gameState.speedX); }
-	get keysPressed(): Set<string>		{ return (this._keysPressed); }
-	get winnerName(): number | null		{ return (this._winner); }
-	get scoreUpdated(): boolean			{ return (this._scoreUpdated); }
-	get player1Name(): number | null	{ return (this._Player1Id); }
-	get player2Name(): number | null	{ return (this._Player2Id); }
+	get state(): Buffer | null					{ return (this._gameState ? Buffer.from(this._gameState.stateBuffer) : null); }
+	get reversedState(): Buffer | null			{ return (this._gameState ? Buffer.from(this._gameState.reversedStateBuffer) : null); }
+	get reversedBuffer(): ArrayBuffer | null	{ return (this._gameState ? this._gameState.reversedStateBuffer : null); }
+	get mode(): string | null					{ return (this._gameMode); }
+	get ballY(): number							{ return (this._gameState.ballY); }
+	get leftPaddleY(): number					{ return (this._gameState.leftPaddleY); }
+	get ballSpeedX(): number					{ return (this._gameState.speedX); }
+	get keysPressed(): Set<string>				{ return (this._keysPressed); }
+	get winnerName(): number | null				{ return (this._winner); }
+	get winner(): number | null					{ return (this._winner); }
+	get scoreUpdated(): boolean					{ return (this._scoreUpdated); }
+	get player1Name(): number | null			{ return (this._Player1Id); }
+	get player2Name(): number | null			{ return (this._Player2Id); }
+	get player1Id(): number						{ return (this._Player1Id!); }
+	get player2Id(): number						{ return (this._Player2Id!); }
+
+	get p1Score(): number						{ return (this._gameState.player1Score); }
+	get p2Score(): number						{ return (this._gameState.player2Score); }
 	
-	set keysPressed(keys: Set<string>)	{ this._keysPressed = keys; }
-	set running(isRunning: boolean)		{ this._isRunning = isRunning; }
-	set state(value: GameState)			{ this._gameState = value; }
-	set winnerName(name: number | null)	{ this._winner = name; }
-	set scoreUpdated(value: boolean)	{ this._scoreUpdated = value; }
-	set winner(value: number | null)	{ this._winner = value; }
+	set keysPressed(keys: Set<string>)			{ this._keysPressed = keys; }
+	set running(isRunning: boolean)				{ this._isRunning = isRunning; }
+	set state(value: GameState)					{ this._gameState = value; }
+	set winnerName(name: number | null)			{ this._winner = name; }
+	set scoreUpdated(value: boolean)			{ this._scoreUpdated = value; }
+	set winner(value: number | null)			{ this._winner = value; }
 
 	public destroy(): void
 	{
 		clearInterval(this._interval);
 		this._keysPressed.clear();
-		this._gameState = null;
+		// this._gameState = null; // TODO check if issues
 	}
 }
