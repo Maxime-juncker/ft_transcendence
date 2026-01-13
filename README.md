@@ -81,8 +81,8 @@ the first launch will take around ~3min.
 |service | link|
 |-------|-----|
 | main pong site | https://localhost:8081 |
-| Grafana | https://localhost:8081/admin/grafana |
-| Kibana | https://localhost:8081/admin/kibana |
+| Grafana | https://localhost:8081/admin/grafana/ |
+| Kibana | https://localhost:8081/admin/kibana/ |
 
 > [!TIP]
 > Want to learn about the api ? \
