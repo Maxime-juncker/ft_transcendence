@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-29da1eeaf5d39d705726ca4416869f8e1c1b8db5",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/Match.sol": "project/contracts/Match.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Match.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\ncontract Match {\n  address private _owner;\n  struct MatchResult {\n    string  player1;\n    uint8   score1;\n    string  player2;\n    uint8   score2;\n  }\n\n  MatchResult last_result;\n\n  event result_updated();\n\n  constructor() {\n    _owner = msg.sender;\n  }\n\n  function set_last_result(string calldata player1, uint8 score1, string calldata player2, uint8 score2) external {\n    require(msg.sender == _owner, \"You are not the owner of the contract\");\n    last_result.player1 = player1;\n    last_result.score1 = score1;\n    last_result.player2 = player2;\n    last_result.score2 = score2;\n\n    emit result_updated();\n  }\n}"
+      }
+    }
+  }
+}
