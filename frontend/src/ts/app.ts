@@ -35,6 +35,8 @@ customElements.define('about-view', AboutView);
 customElements.define('notfound-view', NotFoundView);
 
 const router = new Router(routes);
+await router.init();
+
 const state = utils.getCookie("crt_state");
 if (state)
 	utils.toggleCrtEffect(state === 'true');

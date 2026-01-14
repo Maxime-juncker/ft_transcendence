@@ -34,7 +34,11 @@ export class Router
 
 		this.m_views = new Map<string, ViewComponent>();
 		this.m_routes = routes;
-		this.createRoutes();
+	}
+
+	public async init()
+	{
+		await this.createRoutes();
 		this.loadInitialRoute();
 
 		window.addEventListener('popstate', () => {
@@ -162,18 +166,22 @@ export class Router
 	}
 
 	// function to create all route in app container
-	public createRoutes()
+	public async createRoutes()
 	{
-		this.m_routes.forEach((route: Route) => {
+		for (let i = 0; i < this.m_routes.length; i++)
+		{
+			const route = this.m_routes[i];
+
 			const view = document.createElement(route.viewName) as ViewComponent;
 			view.setAttribute("templateId", route.templateId);
 			view.routePath = route.path;
 
 			this.m_app.append(view);
+			await view.init()
 
 			view.style.display = "none"; // hide all route
 			this.m_views.set(route.path, view);
-		});
+		};
 	}
 }
 

@@ -14,6 +14,24 @@ export class AboutView extends ViewComponent
 		this.m_user = new MainUser();
 	}
 
+	public async init()
+	{
+		const abidolet = this.querySelector("#abidolet");
+		const sithomas = this.querySelector("#sithomas");
+		const ygille = this.querySelector("#ygille");
+		const mjuncker = this.querySelector("#mjuncker");
+		if (!abidolet || !sithomas || !ygille || !mjuncker)
+		{
+			console.warn("missing credit div");
+			return ;
+		}
+
+		abidolet.addEventListener("click", () => window.location.href = "https://github.com/abidolet/");
+		sithomas.addEventListener("click", () => window.location.href = "https://github.com/Sths147");
+		ygille.addEventListener("click", () => window.location.href = "https://github.com/Bluesmoothie/");
+		mjuncker.addEventListener("click", () => window.location.href = "https://github.com/Maxime-juncker");
+	}
+
 	public async enable()
 	{
 		await this.m_user.loginSession();
@@ -25,6 +43,8 @@ export class AboutView extends ViewComponent
 		this.m_user.onLogout(() => { Router.Instance?.navigateTo("/") });
 
 		new HeaderSmall(this.m_user, this, "header-container");
+
+
 	}
 
 	public async disable()

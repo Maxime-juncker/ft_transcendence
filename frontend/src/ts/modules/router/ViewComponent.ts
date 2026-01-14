@@ -59,11 +59,25 @@ export class ViewComponent extends HTMLElement
 		this.m_listeners = [];
 	}
 
+	/**
+	 * will be called once at page creation
+	*/
+	public async init()
+	{
+
+	}
+
+	/**
+	 * will be called each time the page is loaded
+	*/
 	public async enable()
 	{
 		console.warn("this component as no logic attached")
 	}
 
+	/**
+	* will be called when page is unloaded
+	*/
 	public async disable()
 	{
 

@@ -3,23 +3,107 @@
 		<div id="header-container"></div>
 
 		<div class="pt-25 font-extrabold flex flex-col justify-start items-start w-full h-full overflow-y-scroll">
-			<div class="flex">
-				<input type="checkbox">
-				<h1 data-i18n="disable_crt">disable crt effect</h1>
+			<div class="px-12 gap-5 flex flex-col justify-start items-start w-2/3">
+				<div>
+					<h1 class="text-[2vw] text-purple font-extrabold">FT_TRANSCENDENCE</h1>
+					<pre data-i18n="about_page.intro">
+						ft_transcendence is the final project of the forty two common core, <br/>
+						it involve making a full stack app in typescript, using database, docker, nodejs, html / css. <br/>
+						the goal of this project is to recreate the famous pong game but with some more feature. <br/>
+					</pre>
 
+				</div>
+
+				<div class="flex flex-col justify-start items-start">
+					<h1 class="text-[2vw] text-purple font-extrabold" data-i18n="capital.chosen_modules">CHOSEN MODULES</h1>
+					<h2 class="font-extrabold text-green" data-i18n="about_page.web">Web</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.web_list">
+							blockchain<br/>
+							framework to build the backend (fastify)<br/>
+							framwork / toolkit to build the frontend (tailwindcss)<br/>
+							use a database for the backend (sqlite)<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.user_managment">User Managment</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.usr_list" >
+						standard user managment, (authentication, user profile, friends, etc...) <br/>
+						remote authentification using OAuth2 (support 42 and github OAuth2)<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.ux">Gameplay and user experience</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.ux_list">
+						Remote player <br/>
+						Live chat (with chat commands)<br/>
+						Theme managment<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.ai">AI Algo</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.ai_list">
+						AI opponent <br/>
+						User and game stats dashboards<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.cyber">Cybersecurity</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.cyber_list">
+						WAF / ModSecurity + HashiCorp Vault <br/>
+						use Two Factor Auth + jwt tokens<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.devops">Devops</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.devops_list">
+						Log managment (Elasticsearch, Logstash, Kibana)<br/>
+						Monitoring system (Prometheus and Grafana)<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.accessibility">Accessibility</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.accessibility_list">
+						Expanding browser compatibility<br/>
+						Support multiple languages (en, fr, es)<br/>
+					</pre>
+
+					<h2 class="font-extrabold text-green" data-i18n="about_page.ssp">Server-side Pong</h2>
+					<pre class="font-bold ml-12" data-i18n="about_page.ssp_list">
+						Server side pong<br/>
+						pong gameplay via cli (rust app)<br/>
+					</pre>
+
+				</div>
+			</div>
+			
+			<div class="absolute pt-25 right-[3%] top-[3%]">
+				<h1 class="text-[1vw] text-yellow font-extrabold" data-i18n="capital.links">LINKS</h1>
+				<div class="w-full bg-dark px-7 py-2 flex flex-col justify-start items-end gap-3">
+					<a class="btn w-full" href="https://github.com/Maxime-juncker/ft_transcendence" data-i18n="about_page.source_code">source code</a>
+					<a class="btn w-full" href="https://github.com/Maxime-juncker/ft_transcendence/wiki">wiki</a>
+				</div>
 			</div>
 
-			<label class="inline-flex items-center cursor-pointer">
-				<input 
-					type="checkbox" 
-					class="appearance-none aspect-square w-[30px] h-[30px] border-2 border-white bg-dark cursor-grab checked:bg-dark relative
-					before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
-					before:w-[75%] before:h-[75%] before:bg-white before:opacity-0 checked:before:opacity-100 focus:brightness-100"
-				/>
-				<span class="ml-2">Custom checkbox</span>
-			</label>
+			<div class="absolute right-[3%] bottom-[3%]">
+				<h1 class="text-[1vw] text-yellow font-extrabold" data-i18n="capital.contributors">CONTRIBUTORS</h1>
+				<div class="bg-dark px-7 py-2 flex flex-col justify-start items-end gap-3">
 
+					<div id="abidolet" class="credit-avatar">
+						<h3>abidolet</h3>
+						<img class="w-[6vh] h-[6vh] rounded-full object-cover" src="public/avatars/default.png" alt="">
+					</div>
 
+					<div id="sithomas" class="credit-avatar">
+						<h3>sithomas</h3>
+						<img class="w-[6vh] h-[6vh] rounded-full object-cover" src="public/avatars/sithomas.jpg" alt="">
+					</div>
+
+					<div id="ygille" class="credit-avatar">
+						<h3>ygille</h3>
+						<img class="w-[6vh] h-[6vh] rounded-full object-cover" src="public/avatars/default.png" alt="">
+					</div>
+
+					<div id="mjuncker" class="credit-avatar">
+						<h3>mjuncker</h3>
+						<img class="w-[6vh] h-[6vh] rounded-full object-cover" src="public/avatars/mjuncker.png" alt="">
+					</div>
+
+				</div>
+			</div>
 		</div>
 	</div>
 
