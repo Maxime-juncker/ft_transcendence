@@ -13,7 +13,7 @@ enum Params
 	PADDLE_PADDING = 2,
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
-	COLOR = 'var(--white)',
+	COLOR = 'var(--color-white)',
 	COUNTDOWN_START = 1,
 	IPS = 60,
 }

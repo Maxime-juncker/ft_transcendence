@@ -137,7 +137,7 @@ export class LobbyView extends ViewComponent
 		const text = document.createElement("p");
 		text.innerText = this.state == ListState.USER ? "user list" : "friends list";
 		text.setAttribute('data-i18n', this.state == ListState.USER ? "user_list" : "friend_list");
-		text.style.color = "var(--white)";
+		text.style.color = "var(--color-white)";
 
 		users.forEach((conn: User) => {
 			const elt = new UserElement(conn, container, UserElementType.STANDARD, "user-template");

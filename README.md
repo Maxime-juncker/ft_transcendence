@@ -62,9 +62,10 @@ you will need to setup a .env (a .env-sample is provided just rename it .env)
 | GITHUB_SECRET | secret of your github oauth app |
 | FT_ID | id of your 42 oauth app |
 | FT_SECRET | secret of your 42 oauth app |
-| ELASTIC_PASSWORD | password of elastic service |
-| LOGSTASH_PASSWORD | password of logstash service |
-| LOGSTASH_WRITER_PASSWORD | password of logstash writter |
+| ELASTIC_PASSWORD | password of elastic service (need to be >= 8 Length)|
+| GRAFANA_PASSWORD | password of grafana website (need to be >= 8 Length)|
+| LOGSTASH_PASSWORD | password of logstash website (need to be >= 8 Length) |
+| LOGSTASH_WRITER_PASSWORD | password of logstash writter (need to be >= 8 Length)|
 
 
 ### Run the project
@@ -80,8 +81,13 @@ the first launch will take around ~3min.
 |service | link|
 |-------|-----|
 | main pong site | https://localhost:8081 |
+<<<<<<< HEAD
 | Grafana | https://localhost:8081/admin/grafana |
 | Kibana | https://localhost:8081/admin/kibana |
+=======
+| Grafana | https://localhost:8081/admin/grafana/ |
+| Kibana | https://localhost:8081/admin/kibana/ |
+>>>>>>> origin/master
 
 > [!TIP]
 > Want to learn about the api ? \
