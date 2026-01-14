@@ -56,6 +56,13 @@
 			<button id="save-btn" class="button-full absolute bottom-0 mb-5 max-w-80 w-full" data-i18n="save">save</button>
 		</div>
 
+		<div class="language-selector-div absolute left-[2%] bottom-[8%] z-99">
+			<select id="language-selector" class="language-selector" onchange="changeLanguage(this.value)">
+				<option value="en">🇬🇧 English</option>
+				<option value="fr">🇫🇷 Français</option>
+				<option value="es">🇪🇸 Español</option>
+			</select>
+		</div>
 		<div class="absolute right-0 bottom-0 mb-2 mr-2 flex flex-col items-center justify-center gap-2">
 			<!-- lower settings -->
 			<div class="max-w-[50vw] flex flex-col items-center justify-center align-middle">
