@@ -58,6 +58,7 @@ you will need to setup a .env (a .env-sample is provided just rename it .env)
 |variable|description|
 |----|----|
 | HOST | ip for redirection (leave to localhost if unsure)|
+|RUN_BENCHMARK|if set to 1, benchamrk will be ran (create random user / games / etc...)|
 | GITHUB_ID | id of your github oauth app |
 | GITHUB_SECRET | secret of your github oauth app |
 | FT_ID | id of your 42 oauth app |
@@ -81,13 +82,8 @@ the first launch will take around ~3min.
 |service | link|
 |-------|-----|
 | main pong site | https://localhost:8081 |
-<<<<<<< HEAD
 | Grafana | https://localhost:8081/admin/grafana |
 | Kibana | https://localhost:8081/admin/kibana |
-=======
-| Grafana | https://localhost:8081/admin/grafana/ |
-| Kibana | https://localhost:8081/admin/kibana/ |
->>>>>>> origin/master
 
 > [!TIP]
 > Want to learn about the api ? \
