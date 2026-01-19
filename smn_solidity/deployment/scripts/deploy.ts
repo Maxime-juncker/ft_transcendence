@@ -1,8 +1,11 @@
 import 'dotenv/config';
-import { createWalletClient, createPublicClient, http, defineChain } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { createWalletClient, createPublicClient, WalletClient, http, defineChain, Hex, PublicClient, Address } from 'viem';
+import { Abi } from 'abitype';
+import { privateKeyToAccount, PrivateKeyAccount } from 'viem/accounts';
 
 import FactoryArtifact from '../artifacts/contracts/Factory.sol/Factory.json';
+import TournamentArtifact from '../artifacts/contracts/Tournament.sol/Tournament.json';
+
 
 const PUBKEY = process.env.PUBLIC_KEY
 const PKEY = process.env.PRIVATE_KEY
@@ -23,37 +26,123 @@ const hardhatLocal = defineChain({
     },
 });
 
+class BlockchainContract {
+    private abi: Abi;
+    private tournamentAbi: Abi;
+    private bytecode: Hex;
+    private account: PrivateKeyAccount;
+    private walletClient: WalletClient;
+    private publicClient: PublicClient;
+    private factoryAddress: Hex | undefined;
+
+    constructor() {
+        this.abi = FactoryArtifact.abi as Abi;
+        this.tournamentAbi = TournamentArtifact.abi as Abi;
+        this.bytecode = FactoryArtifact.bytecode as Hex;
+        this.account = privateKeyToAccount(PKEY as `0x${string}`);
+        this.walletClient = createWalletClient({
+            account: this.account,
+            chain: hardhatLocal,
+            transport: http(),
+        });
+        this.publicClient = createPublicClient({
+            chain: hardhatLocal,
+            transport: http(),
+        });
+
+    }
+    
+    async deployFactory() {
+        const hash = await this.walletClient.deployContract({
+            abi: this.abi,
+            account: this.account,
+            bytecode: this.bytecode,
+            chain: hardhatLocal,
+        });
+        
+        console.log("Factory deployment transaction hash: ", hash);
+
+        const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.contractAddress == undefined) {
+           throw ("failed to instatiate factory") 
+        }
+        this.factoryAddress = receipt.contractAddress;
+
+        console.log("factory deployed to: ", this.factoryAddress);
+    }
+
+    async createTournament(): Promise<number> {
+        
+        if (this.factoryAddress == undefined) {
+            throw ("no factory address, cannot create Tournament")
+        }
+
+        console.log("Creating tournament")
+        const { result , request } = await this.publicClient.simulateContract({
+            account: this.account,
+            address: this.factoryAddress,
+            abi: this.abi,
+            functionName: 'createTournament',
+        })
+
+        let hash = await this.walletClient.writeContract(request)
+
+        console.log("Tournament created at : ", hash)
+        return (result);
+    }
+
+    async addMatchResult(tournamentId: number, player1: string, player2: string, player1score: number, player2score: number) {
+        if (this.factoryAddress == undefined) {
+            throw ("no factory address, cannot add match")
+        }
+
+        let tournamentAddress = await this.publicClient.readContract({
+            address: this.factoryAddress,
+            abi: this.abi,
+            functionName: 'getTournament',
+            args: [tournamentId],
+        })
+
+        const { request } = await this.publicClient.simulateContract({
+            account: this.account,
+            address: tournamentAddress as Hex,
+            abi: this.tournamentAbi,
+            functionName: 'addMatch',
+            args: [player1, player2, player1score, player2score],
+        })
+
+        await this.walletClient.writeContract(request);
+    }
+
+    async finishTournament(tournamentId: number, winner: string) {
+        if (this.factoryAddress == undefined) {
+            throw ("no factory address, cannot add match")
+        }
+
+        let tournamentAddress = await this.publicClient.readContract({
+            address: this.factoryAddress,
+            abi: this.abi,
+            functionName: 'getTournament',
+            args: [tournamentId],
+        })
+
+        const { request } = await this.publicClient.simulateContract({
+            account: this.account,
+            address: tournamentAddress as Hex,
+            abi: this.tournamentAbi,
+            functionName: 'finish',
+            args: [winner],
+        })
+
+        await this.walletClient.writeContract(request);
+    }
+}
 
 async function main() {
 
-    const abi = FactoryArtifact.abi;
-    const bytecode = FactoryArtifact.bytecode as `0x${string}`;
-    const account = privateKeyToAccount(PKEY as `0x${string}`);
-    const walletClient = createWalletClient({
-        account,
-        chain: hardhatLocal,
-        transport: http(),
-    });
-    const hash = await walletClient.deployContract({
-        abi,
-        bytecode,
-    });
-
-    console.log("Transaction hash: ", hash);
-
-    const publicClient = createPublicClient({
-        chain: hardhatLocal,
-        transport: http(),
-    });
-
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    const FactoryAddress = receipt.contractAddress;
-
-    console.log("factory deployed to: ", FactoryAddress);
-
+    let blockchainContract = new BlockchainContract();
+    await blockchainContract.deployFactory();
+    let id = await blockchainContract.createTournament();
 }
-// dotenv.config()
-
-// require('dotenv').config()
 
 main().catch(console.error);
