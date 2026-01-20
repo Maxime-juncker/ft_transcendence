@@ -55,8 +55,6 @@ services:
     depends_on:
       - frontend
       - backend
-      - kibana
-      - grafana
     develop:
       watch:
         - path: ./frontend/srcs
@@ -104,8 +102,9 @@ services:
       - grafana:/var/lib/grafana
       - grafana-logs:/var/log/grafana:rw
     networks:
-      - monitoring_net
-      - redirect_net
+      monitoring_net: {}
+      redirect_net:
+          ipv4_address: 172.220.0.10
     depends_on:
       - prometheus
     environment:
@@ -188,8 +187,9 @@ services:
       elastic-init:
         condition: service_completed_successfully
     networks:
-      - elk_net
-      - redirect_net
+      elk_net: {}
+      redirect_net:
+        ipv4_address: 172.220.0.20
     environment:
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_USERNAME=kibana_system
@@ -234,6 +234,8 @@ services:
       - '/:/host:ro,rslave'
     networks:
       - monitoring_net
+    depends_on:
+      - prometheus
 
   logstash-exporter:
     image: ghcr.io/kuskoman/logstash-exporter:v1.9.1
@@ -252,6 +254,10 @@ networks:
     ipam:
       config:
         - subnet: 172.200.0.0/24
+  redirect_net:
+    ipam:
+      config:
+        - subnet: 172.220.0.0/24
   entrypoint_net:
     driver: bridge
   backend_net:
@@ -259,7 +265,6 @@ networks:
   vault_net:
   monitoring_net:
   elk_net:
-  redirect_net:
 
 volumes:
   sqlite:
