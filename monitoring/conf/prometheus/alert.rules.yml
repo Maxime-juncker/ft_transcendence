@@ -54,3 +54,23 @@ groups:
         The Logstash pipeline '{{ $labels.pipeline }}' has been down for more than 5 minutes.
         Job: {{ $labels.job }}
         VALUE = {{ $value }}
+
+- name: ElasticSearch
+  rules:
+
+  - alert: ElasticCPUHigh
+    expr: elasticsearch_process_cpu_percent > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High ElasticSearch CPU usage"
+      description: "CPU usage for ElasticSearch is {{ $value }}% (above 90%)"
+  - alert: ElasticHighMemUsage
+    expr: (elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes) > 0.90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High ElasticSearch Memory usage"
+      description: "Memory usage for ElasticSearch is {{ $value }}% (above 90%)"
