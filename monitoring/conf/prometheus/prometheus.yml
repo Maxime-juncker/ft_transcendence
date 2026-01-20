@@ -4,6 +4,9 @@ global:
   evaluation_interval: 15s
   query_log_file: /prometheus/logs/prometheus.log
   scrape_failure_log_file: /prometheus/logs/prometheus_error.log
+
+rule_files:
+  - 'alert.rules.yml'
 alerting:
   alertmanagers:
     - static_configs:

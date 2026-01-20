@@ -87,7 +87,8 @@ services:
     image: prom/prometheus:v3.9.1
     container_name: prometheus
     volumes:
-      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
       - prometheus-logs:/prometheus/logs:rw
     networks:
       - monitoring_net
@@ -196,25 +197,20 @@ services:
   kibana-init:
     container_name: kibana-init
     image: curlimages/curl:8.18.0
+    user: root
     depends_on:
       - kibana
     volumes:
       - ./elk/kibana/config/export.ndjson:/export.ndjson
-    command: >
-      sh -c "echo 'Waiting for Kibana to be fully ready...';
-             until curl -s -u elastic:${ELASTIC_PASSWORD} http://kibana:5601/admin/kibana/api/status | grep -q '\"level\":\"available\"'; do
-               echo 'Still waiting for Kibana...';
-               sleep 5;
-             done;
-             echo 'Kibana is ready! Importing dashboard and Data View...';
-             curl -X POST http://kibana:5601/admin/kibana/api/saved_objects/_import?overwrite=true -u elastic:${ELASTIC_PASSWORD} -H 'kbn-xsrf: true' --form file=@/export.ndjson;
-             echo 'Import completed successfully!';"
+      - ./elk/kibana/init/script.sh:/script.sh:ro
+    command: sh -c /script.sh
     networks:
       - elk_net
 
   elastic-init:
     container_name: elastic-init
     image: curlimages/curl:8.18.0
+    user: root
     depends_on:
       - elasticsearch
     environment:
@@ -222,38 +218,9 @@ services:
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
       - LOGSTASH_PASSWORD=${LOGSTASH_PASSWORD}
       - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
-    command: >
-      sh -c '
-        echo "Waiting for Elasticsearch to be ready..."
-        until curl -s -u elastic:${ELASTIC_PASSWORD} http://elasticsearch:9200 > /dev/null; do
-          echo "Elasticsearch not ready yet... waiting 5 seconds"
-          sleep 5
-        done
-
-        echo "Elasticsearch is ready!"
-
-        echo "Setting kibana_system password..."
-        curl -s -u elastic:${ELASTIC_PASSWORD} -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password" \
-          -H "Content-Type: application/json" \
-          -d "{\"password\":\"${KIBANA_PASSWORD}\"}"
-
-        echo "Setting logstash_system password..."
-        curl -s -u elastic:${ELASTIC_PASSWORD} -X POST "http://elasticsearch:9200/_security/user/logstash_system/_password" \
-          -H "Content-Type: application/json" \
-          -d "{\"password\":\"${LOGSTASH_PASSWORD}\"}"
-
-        echo "Creating role logstash_writer..."
-        curl -s -u elastic:${ELASTIC_PASSWORD} -X PUT "http://elasticsearch:9200/_security/role/logstash_writer" \
-          -H "Content-Type: application/json" \
-          -d "{\"cluster\":[\"manage_index_templates\",\"monitor\"],\"indices\":[{\"names\":[\"*\"],\"privileges\":[\"auto_configure\",\"create_index\",\"create_doc\",\"index\",\"delete\",\"manage\"]}]}"
-
-        echo "Creating user logstash_writer..."
-        curl -s -u elastic:${ELASTIC_PASSWORD} -X POST "http://elasticsearch:9200/_security/user/logstash_writer" \
-          -H "Content-Type: application/json" \
-          -d "{\"password\":\"${LOGSTASH_WRITER_PASSWORD}\",\"roles\":[\"logstash_writer\"],\"full_name\":\"Logstash Writer for data ingestion\",\"email\":null}"
-
-        echo "Setup completed successfully!"
-      '
+    volumes:
+      - ./elk/elasticsearch/init/script.sh:/script.sh:ro
+    command: sh -c /script.sh
     networks:
       - elk_net
 

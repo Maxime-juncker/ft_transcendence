@@ -1,0 +1,76 @@
+groups:
+- name: Host
+  rules:
+
+  - alert: HighCPUUsage
+    expr: 100 - (avg (rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage is {{ $value }}% (above 90%)"
+  - alert: HighMemUsage
+    expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High Memory usage"
+      description: "Memory usage is {{ $value }}% (above 90%)"
+  - alert: HighSwapUsage
+    expr: (1 - node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes) > 0.90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High Swap usage"
+      description: "Swap usage is {{ $value }}% (above 90%)"
+
+- name: Nginx
+  rules:
+
+  - alert: Nginx
+    expr: nginx_up == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Nginx down"
+      description: "Nginx is down"
+
+- name: Logstash
+  rules:
+
+  - alert: LogstashPipelineDown
+    expr: logstash_stats_pipeline_up == 0
+    for: 5m
+    labels:
+      severity: critical
+      pipeline: "{{ $labels.pipeline }}"
+    annotations:
+      summary: "Logstash pipeline '{{ $labels.pipeline }}' is DOWN"
+      description: |
+        The Logstash pipeline '{{ $labels.pipeline }}' has been down for more than 5 minutes.
+        Job: {{ $labels.job }}
+        VALUE = {{ $value }}
+
+- name: ElasticSearch
+  rules:
+
+  - alert: ElasticCPUHigh
+    expr: elasticsearch_process_cpu_percent > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High ElasticSearch CPU usage"
+      description: "CPU usage for ElasticSearch is {{ $value }}% (above 90%)"
+  - alert: ElasticHighMemUsage
+    expr: (elasticsearch_jvm_memory_used_bytes / elasticsearch_jvm_memory_max_bytes) > 0.90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High ElasticSearch Memory usage"
+      description: "Memory usage for ElasticSearch is {{ $value }}% (above 90%)"
