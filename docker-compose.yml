@@ -203,7 +203,7 @@ services:
     volumes:
       - ./elk/kibana/config/export.ndjson:/export.ndjson
       - ./elk/kibana/init/script.sh:/script.sh:ro
-    command: sh -c /script.sh
+    command: sh /script.sh
     networks:
       - elk_net
 
@@ -220,7 +220,7 @@ services:
       - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
     volumes:
       - ./elk/elasticsearch/init/script.sh:/script.sh:ro
-    command: sh -c /script.sh
+    command: sh /script.sh
     networks:
       - elk_net
 
