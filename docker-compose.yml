@@ -200,6 +200,8 @@ services:
     user: root
     depends_on:
       - kibana
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - ./elk/kibana/config/export.ndjson:/export.ndjson
       - ./elk/kibana/init/script.sh:/script.sh:ro
