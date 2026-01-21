@@ -80,7 +80,6 @@ export async function login(email: string, passw: string, totp: string) : Promis
 
 	try {
 		const row = await core.db.get(sql, [email, hash]);
-		console.log(email, passw, hash);
 		if (!row)
 			return { code: 404, data: { message: "email or password invalid"}};
 		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
