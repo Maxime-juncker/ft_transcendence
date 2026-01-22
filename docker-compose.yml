@@ -9,7 +9,7 @@ services:
       - sqlite:/var/lib/sqlite
       - avatars:/var/www/server/public/avatars
       - vault_key:/vault/config
-      - backend-logs:/var/log/backend/
+      - backend-logs:/var/log/backend
     networks:
       - backend_net
       - vault_net
@@ -188,6 +188,7 @@ services:
       - kibana-logs:/var/log/kibana:ro
       - prometheus-logs:/var/log/prometheus:ro
       - vault-logs:/var/log/vault:ro
+      - backend-logs:/var/log/backend:ro
     depends_on:
       elastic-init:
         condition: service_completed_successfully

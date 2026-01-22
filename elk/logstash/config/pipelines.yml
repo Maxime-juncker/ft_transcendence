@@ -18,3 +18,6 @@
 
 - pipeline.id: vault
   path.config: "/usr/share/logstash/pipeline/vault.conf"
+
+- pipeline.id: backend
+  path.config: "/usr/share/logstash/pipeline/backend.conf"
