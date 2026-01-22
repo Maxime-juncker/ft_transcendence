@@ -9,7 +9,7 @@ import { Logger } from 'modules/logger.js';
 //
 export async function userManagmentRoutes(fastify: FastifyInstance)
 {
-	fastify.get('/get_session', async (request: FastifyRequest, reply) => {
+	fastify.get('/get_session', { config: { rateLimit: core.rateLimitMed } }, async (request: FastifyRequest, reply) => {
 		const token = request.cookies.jwt_session;
 		if (token)
 		{
@@ -38,6 +38,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/create', {
+		config: {
+			rateLimit: {
+				max: 500,
+				timeWindow: '1 minute'
+			}
+		},
 		schema: {
 			body: {
 				type: "object",
@@ -171,6 +177,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/upload/avatar', {
+		config: core.rateLimitHard,
 		schema: {
 			headers: {
 				type: 'object',

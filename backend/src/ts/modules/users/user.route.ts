@@ -7,7 +7,11 @@ import * as mgmt from 'modules/users/userManagment.js';
 
 export async function userRoutes(fastify: FastifyInstance)
 {
-	fastify.get('/get_history_name/:username', async (request: FastifyRequest, reply: FastifyReply) => {
+	fastify.get('/get_history_name/:username', {
+		config: {
+			rateLimit: core.rateLimitMed,
+		}
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
 		return await user.getUserHistByName(request, reply, core.db);
 	})
 
@@ -79,6 +83,9 @@ export async function userRoutes(fastify: FastifyInstance)
 		)
 
 		fastify.post('/get_profile_token', {
+			config: { 
+				rateLimit: core.rateLimitMed
+			},
 			schema: {
 				body: {
 					type: 'object',
