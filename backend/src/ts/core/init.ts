@@ -58,7 +58,6 @@ export async function initFastify()
 		max: 1000,
 		timeWindow: 60 * 1000, // 1 minute
 		onExceeded: onExceeded,
-		onExceeding: onExceeding,
 	});
 
 	await registerOAuth2Providers(core.fastify); // oauth2 for google
