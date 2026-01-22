@@ -9,17 +9,29 @@ export async function chatRoutes(fastify: FastifyInstance)
 {
 
 	fastify.register(async function (fastify) {
-		fastify.get('/api/chat', { websocket: true }, (connection, request) => {
+		fastify.get('/api/chat', {
+			websocket: true,
+			config: { 
+				rateLimit: core.rateLimitMed
+			},
+		}, (connection, request) => {
 			chat.chatSocket(connection, request);
 		});
 	});
 
-	fastify.get('/api/chat/ping', (request: FastifyRequest, reply: FastifyReply) => {
+	fastify.get('/api/chat/ping', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+	}, (request: FastifyRequest, reply: FastifyReply) => {
 		void request;
 		return reply.code(200).send({ message: "pong" });
 	});
 
 	fastify.post('/api/chat/healthCallback', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: "object",
@@ -43,6 +55,9 @@ export async function chatRoutes(fastify: FastifyInstance)
 	});
 
 	fastify.delete('/api/chat/removeQueue', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: "object",
@@ -64,6 +79,9 @@ export async function chatRoutes(fastify: FastifyInstance)
 	});
 
 	fastify.post('/api/chat/dm', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: "object",

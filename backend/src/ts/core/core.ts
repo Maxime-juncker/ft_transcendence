@@ -11,6 +11,26 @@ export interface DbResponse {
 	data:	any;
 }
 
+export const rateLimitHard = {
+	max: 3,
+	timeWindow: '1 minute'
+}
+
+export const rateLimitMed = {
+	max: 500,
+	timeWindow: '1 minute'
+}
+
+export const tokenSchema = {
+	body: {
+		type: "object",
+		properties: {
+			token: { type: "string" },
+		},
+		required: [ "token" ]
+	}
+}
+
 // directory of avatars
 export const uploadDir : string = "/var/www/server/public/"
 

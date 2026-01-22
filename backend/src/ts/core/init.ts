@@ -3,6 +3,7 @@ import { createUser } from 'modules/users/userManagment.js';
 import { Database } from 'sqlite';
 import { hashString } from 'modules/sha256.js';
 import fastifyStatic from '@fastify/static';
+import { FastifyRequest } from 'fastify';
 
 import { registerCorsProvider } from 'providers/cors.js';
 import { registerOAuth2Providers } from 'providers/oauth2.js';
@@ -15,6 +16,7 @@ import { totpRoutes } from 'modules/2fa/2fa.route.js';
 import { duelRoutes } from 'modules/users/duel.route.js';
 
 import * as core from 'core/core.js';
+import { Logger } from 'modules/logger.js';
 
 async function loadConfig(path: string, db: Database)
 {
@@ -29,6 +31,15 @@ async function loadConfig(path: string, db: Database)
 		await createUser(user.email, hash, user.name, AuthSource.INTERNAL, db);
 	}
 }
+function onExceeding(req: FastifyRequest, key: string)
+{
+	Logger.warn("client is exceeding request!", key);
+}
+
+function onExceeded(req: FastifyRequest, key: string)
+{
+	Logger.error("client has exceeded request!", key);
+}
 
 export async function initFastify()
 {
@@ -42,16 +53,12 @@ export async function initFastify()
 
 	await core.fastify.register(import('@fastify/websocket'));
 	await core.fastify.register(import('@fastify/cookie'));
-
-	// register session
-	await core.fastify.register(import('@fastify/session'), {
-		secret: core.sessionKey,
-		cookieName: "sessionId",
-		cookie: {
-			secure: false,
-			maxAge: 24 * 60 * 60 * 1000 // 1 day
-		},
-		saveUninitialized: false
+	await core.fastify.register(import('@fastify/rate-limit'), {
+		global: true,
+		max: 1000,
+		timeWindow: 60 * 1000, // 1 minute
+		onExceeded: onExceeded,
+		onExceeding: onExceeding,
 	});
 
 	await registerOAuth2Providers(core.fastify); // oauth2 for google

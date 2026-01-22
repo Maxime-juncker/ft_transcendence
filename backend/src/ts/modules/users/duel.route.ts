@@ -3,20 +3,27 @@ import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
+const duelSchema = {
+	body: {
+		type: 'object',
+		properties: {
+			token: { type: "string" },
+			id: { type: "number" }
+		},
+		required: ["token", "id"]
+	}
+}
+
 export async function duelRoutes(fastify: FastifyInstance)
 {
 
 	fastify.post('/list', {
-		schema: {
-			body: {
-				type: 'object',
-				properties: {
-					token: { type: "string" }
-				},
-				required: ["token"]
-			}
-		}
-	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+		schema: core.tokenSchema
+	},
+		async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token } = request.body as { token: string };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -26,17 +33,12 @@ export async function duelRoutes(fastify: FastifyInstance)
 		});
 
 	fastify.post('/invite', {
-		schema: {
-			body: {
-				type: 'object',
-				properties: {
-					token: { type: "string" },
-					id: { type: "number" }
-				},
-				required: ["token", "id"]
-			}
-		}
-	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+		schema: duelSchema
+	},
+		async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token, id } = request.body as { token: string, id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -46,17 +48,12 @@ export async function duelRoutes(fastify: FastifyInstance)
 		});
 
 	fastify.post('/accept', {
-		schema: {
-			body: {
-				type: 'object',
-				properties: {
-					token: { type: "string" },
-					id: { type: "number" }
-				},
-				required: ["token", "id" ]
-			}
-		}
-	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+		schema: duelSchema
+	},
+		async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token, id } = request.body as { token: string, id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -66,17 +63,12 @@ export async function duelRoutes(fastify: FastifyInstance)
 		});
 
 	fastify.post('/decline', {
-		schema: {
-			body: {
-				type: 'object',
-				properties: {
-					token: { type: "string" },
-					id: { type: "number" }
-				},
-				required: ["token", "id"]
-			}
-		}
-	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+		schema: duelSchema
+	},
+		async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token, id } = request.body as { token: string, id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)

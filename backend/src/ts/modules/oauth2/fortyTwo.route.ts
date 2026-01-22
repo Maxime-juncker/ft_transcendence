@@ -13,7 +13,12 @@ export function fortyTwoOAuth2Routes (
 {
 	void options;
 
-	fastify.get('/forty_two/callback', function(request: any, reply) {
+	fastify.get('/forty_two/callback', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+	},
+		function(request: any, reply) {
 
 		fastify.FortyTwoOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)

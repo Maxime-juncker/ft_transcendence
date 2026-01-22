@@ -6,6 +6,9 @@ import * as core from 'core/core.js'
 export async function totpRoutes(fastify: FastifyInstance)
 {
 	fastify.post('/api/totp/reset', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -28,6 +31,9 @@ export async function totpRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/api/totp/remove', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -49,6 +55,9 @@ export async function totpRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/api/totp/validate', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',

@@ -20,9 +20,14 @@ export class Logger
 
 	constructor() {}
 
-	private static getTime()
+	private static getTimeFormated()
 	{
 		return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ').slice(11);
+	}
+
+	private static getTimeISO()
+	{
+		return new Date().toISOString();
 	}
 
 	private static createData(level: string, ...args: any): string
@@ -35,7 +40,7 @@ export class Logger
 		const data = JSON.stringify({
 			level: level,
 			message: str,
-			time: Logger.getTime(),
+			time: Logger.getTimeISO(),
 			stats: {
 				ongoing_parties: GameServer.Instance?.activeGames.size,
 				connected_users: connections.size
@@ -57,31 +62,31 @@ export class Logger
 	public static log(...args: any)
 	{
 		Logger.writeLog("INFO", args);
-		console.log(`${Logger.getTime()} ${colors.gray}[LOG]    ${colors.reset}`, ...args);
+		console.log(`${Logger.getTimeFormated()} ${colors.gray}[LOG]    ${colors.reset}`, ...args);
 	}
 
 	public static success(...args: any)
 	{
 		Logger.writeLog("SUCCESS", args);
-		console.log(`${Logger.getTime()} ${colors.green}[SUCCESS]${colors.reset}`, ...args);
+		console.log(`${Logger.getTimeFormated()} ${colors.green}[SUCCESS]${colors.reset}`, ...args);
 	}
 
 	public static warn(...args: any)
 	{
 		Logger.writeLog("WARNING", args);
-		console.log(`${Logger.getTime()} ${colors.orange}[WARN]   ${colors.reset}`, ...args);
+		console.log(`${Logger.getTimeFormated()} ${colors.orange}[WARN]   ${colors.reset}`, ...args);
 	}
 
 	public static error(...args: any)
 	{
 		Logger.writeLog("ERROR", args);
-		console.log(`${Logger.getTime()} ${colors.red}[ERROR]  ${colors.reset}`, ...args);
+		console.log(`${Logger.getTimeFormated()} ${colors.red}[ERROR]  ${colors.reset}`, ...args);
 	}
 
 	public static debug(...args: any)
 	{
 		Logger.writeLog("DEBUG", args);
-		console.log(`${Logger.getTime()} ${colors.blue}[DEBUG]  ${colors.reset}`, ...args);
+		console.log(`${Logger.getTimeFormated()} ${colors.blue}[DEBUG]  ${colors.reset}`, ...args);
 	}
 
 }
