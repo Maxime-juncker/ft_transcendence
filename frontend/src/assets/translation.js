@@ -3,7 +3,7 @@ import Backend from 'https://cdn.skypack.dev/i18next-http-backend';
 import LanguageDetector from 'https://cdn.skypack.dev/i18next-browser-languagedetector';
 
 const selectElement = document.getElementById('language-selector');
-console.log(selectElement);
+// console.log(selectElement);
 
 i18n.use(Backend).use(LanguageDetector).init({
 	fallbackLng: 'en',

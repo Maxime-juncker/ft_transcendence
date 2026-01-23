@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { Logger } from "Logger.js";
 import { Routine, TestResult } from "Routine.js";
 
 type User = {
@@ -85,13 +86,13 @@ async function histTest(i: number): Promise<TestResult>
 {
 	const user = users[i];
 
-	const max = users.length > 15 ? 15 : users.length;
+	const max = users.length > histReq ? histReq : users.length;
 	for (let j = 0; j < max; j++)
 	{
 		if (j == i)
 			continue;
 
-		var r = getRandom(users.length);
+		var r = (i + j + 1) % users.length;
 		if (r == i)
 			r++;
 
@@ -146,7 +147,69 @@ async function logout(i: number): Promise<TestResult>
 	return { code: res.status, data: await res.json()}
 }
 
-const maxUser = 100;
+async function addFriends(i: number)
+{
+	const user = users[i];
+
+	const max = users.length > friendReq ? friendReq : users.length;
+	for (let j = 0; j < max; j++)
+	{
+		if (j == i)
+			continue;
+
+		var r = (i + j + 1) % users.length;
+		if (r == i)
+			r++;
+
+		const player = users[r];
+
+		await fetch("http://backend:3000/api/friends/send_request", {
+			method: "POST",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				token: user.token,
+				friend_id: player.id
+			})
+		});
+	}
+
+	return { code: 200, data: "all friend request sent" };
+}
+
+async function acceptFriends(i: number)
+{
+	const user = users[i];
+
+	var response = await fetch(`http://backend:3000/api/friends/get?user_id=${user.id}`);
+	var json = await response.json();
+	if (response.status != 200)
+		return { code: response.status, data: json };
+
+
+	for (let i = 0; i < json.length; i++)
+	{
+		const data = json[i];
+		if (json.sender_id == user.id)
+			continue;
+
+		const friendId = data.sender_id;
+
+		var response = await fetch("http://backend:3000/api/friends/accept", {
+			method: "POST",
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				token: user.token,
+				friend_id: friendId
+			})
+		});
+	}
+
+	return { code: 200, data: "all request accepted" };
+}
+
+const maxUser = 50;
+const friendReq = 5;
+const histReq = 15;
 
 export async function runTests()
 {
@@ -154,17 +217,23 @@ export async function runTests()
 	const r2 = new Routine("LOGIN_USER", loginTest, maxUser);
 	const r3 = new Routine("TOKEN_EXCHANGE", tokenExchange, maxUser);
 	const r4 = new Routine("HISTORY", histTest, maxUser);
+	const r6 = new Routine("REQUEST SEND", addFriends, maxUser);
+	const r7 = new Routine("REQUEST ACCEPT", acceptFriends, maxUser);
 	const r5 = new Routine("LOGOUT", logout, maxUser);
 
 	await r1.run(200);
 	await r2.run(200);
 	await r3.run(200);
 	await r4.run(200);
+	await r6.run(200);
+	await r7.run(200);
 	await r5.run(200);
 
 	r1.result();
 	r2.result();
 	r3.result();
 	r4.result();
+	r6.result();
+	r7.result();
 	r5.result();
 }

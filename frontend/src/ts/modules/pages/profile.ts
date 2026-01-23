@@ -26,8 +26,6 @@ export class ProfileView extends ViewComponent
 		await MainUser.Instance.updateFriendList();
 		await MainUser.Instance.updateBlockList();
 
-		console.log(MainUser.Instance.friends, MainUser.Instance.pndgFriends);
-
 		new HeaderSmall(MainUser.Instance, this, "header-container");
 
 		this.m_user = MainUser.Instance;
@@ -227,6 +225,7 @@ export class ProfileView extends ViewComponent
 				return;
 			const clone = template.content.cloneNode(true) as HTMLElement;
 			histContainer.append(clone);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 			return ;
 		}
 
@@ -252,7 +251,7 @@ export class ProfileView extends ViewComponent
 		const max = Math.max(...eloValues);
 
 		new Chart(ctx, {
-			type: 'line',                                   // chart type
+			type: 'line',
 			data: {
 				labels: Array.from(eloData.keys()),
 				datasets: [{
@@ -260,7 +259,6 @@ export class ProfileView extends ViewComponent
 					data: eloValues,
 					borderColor: 'rgba(75, 192, 192, 1)',
 					backgroundColor: 'rgba(75, 192, 192, 0.2)',
-					// stepped: true,
 					tension: 0.0
 				}]
 			},

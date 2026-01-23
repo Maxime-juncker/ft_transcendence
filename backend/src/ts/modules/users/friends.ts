@@ -1,13 +1,16 @@
 import { Database } from 'sqlite';
 import { DbResponse } from 'core/core.js'
 import { Logger } from 'modules/logger.js';
+import { getUserName } from 'modules/users/user.js'
 
 export async function removeFriend(user1: number, user2: number, db: Database) : Promise<DbResponse>
 {
 	if (Number(user1) > Number(user2))
 		[user1, user2] = [user2, user1];
 
-	try {
+	try
+	{
+		Logger.log(`removing friend link: ${await getUserName(user1)} <=> ${await getUserName(user1)}`)
 		const sql = "DELETE from friends WHERE user1_id = ? and user2_id = ?";
 		await db.run(sql, [user1.toString(), user2.toString()]);
 		return { code: 200, data: { message: 'Success' }};
@@ -29,7 +32,7 @@ export async function addFriend(user_id: number, friend_id: number, db: Database
 
 		sql = 'INSERT INTO friends (user1_id, user2_id, pending, sender_id) VALUES (?, ?, ?, ?)';
 		var result = await db.run(sql, [user_id, friend_id, true, sender_id]);
-		Logger.log(`Inserted row with id ${result.changes}`);
+		Logger.log(`sending friend request: ${await getUserName(user_id)} <=> ${await getUserName(friend_id)}, id: ${result.lastID}`)
 		return { code: 200, data: { message: 'Success' }};
 	}
 	catch (err) {
@@ -47,7 +50,7 @@ export async function acceptFriend(user1: number, user2: number, db: Database)
 		[user1, user2] = [user2, user1];
 	var sql = 'UPDATE friends SET pending = 0 WHERE user1_id = ? AND user2_id = ? AND sender_id != ? RETURNING *';
 	try {
-		Logger.log(user1, user2)
+		Logger.log(`confirming friend request: ${await getUserName(user1)} <=> ${await getUserName(user1)}`)
 		const row = await db.get(sql, [user1, user2, request_userId]);
 		if (!row)
 			return { code: 404, data: { message: 'Request not found' }};

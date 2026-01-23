@@ -164,7 +164,6 @@ async function onMessage(message: any, connection: WebSocket)
 export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 {
 	try {
-		Logger.log('hello')
 		ws.send(serverMsg("welcome to room chat!"));
 
 		const id = utils.getUrlVar(request.url)["userid"];

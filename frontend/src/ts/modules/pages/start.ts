@@ -15,7 +15,6 @@ export class StartView extends ViewComponent
 
 	public async enable()
 	{
-		console.warn(MainUser.Instance);
 		const playBtn = this.querySelector("#play_btn") as HTMLElement;
 		this.m_profileContainer = this.querySelector("#profile-container") as HTMLElement;
 

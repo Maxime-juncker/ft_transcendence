@@ -116,7 +116,7 @@ export class User
 		this.name = json.name;
 		this.m_email = json.email;
 		this.m_avatarPath = json.avatar;
-		this.m_status = json.status;
+		this.m_status = json.is_login ? json.status : UserStatus.UNAVAILABLE;
 		this.m_source = json.source;
 		this.m_created_at = json.created_at;
 		this.m_stats.currElo = json.elo;
@@ -139,9 +139,9 @@ export class User
 		this.m_pndgFriends = new Map<User, number>();
 	}
 
-	get status(): UserStatus			{ return this.m_status; }
-	get email(): string				{ return this.m_email; }
-	get avatarPath(): string			{ return this.m_avatarPath; }
+	get status(): UserStatus				{ return this.m_status; }
+	get email(): string						{ return this.m_email; }
+	get avatarPath(): string				{ return this.m_avatarPath; }
 	get	elo(): number						{ return this.m_stats.currElo; }
 	get blockUsr(): User[]					{ return this.m_blockUsr; }
 	get friends(): User[]					{ return this.m_friends; }
