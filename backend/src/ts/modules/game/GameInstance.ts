@@ -43,6 +43,8 @@ export class GameInstance
 	private _winner:	number | null = null;
 	private _gameMode:	string | null = null;
 	private _scoreUpdated: boolean = false;
+	public p1Ready: boolean = false;
+	public p2Ready: boolean = false;
 
 	constructor(gameMode: string, player1Id: number, player2Id: number)
 	{
@@ -65,7 +67,7 @@ export class GameInstance
 	{
 		this._interval = setInterval(() =>
 		{
-			if (this._isRunning)
+			if (this._isRunning && this.p1Ready && this.p2Ready)
 			{
 				this.moveBall();
 				this.movePaddle();

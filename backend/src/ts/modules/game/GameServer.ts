@@ -13,24 +13,25 @@ export class GameServer
 	private static readonly BOT_FPS: number = 1;
 	private static readonly BOT_FPS_INTERVAL: number = 1000 / GameServer.BOT_FPS;
 
-	private server!: FastifyInstance;
 	public activeGames: Map<string, GameInstance> = new Map();
 	private bots: Map<string, Bot> = new Map();
-	
+
 	private lobbies: Map<string, any> = new Map(); 
 	private activeTournaments: Map<string, Tournament> = new Map();
-	private tournamentData: Map<string, { 
-		players: Map<number, string>, // ID -> Name
-		matchGames: Map<any, string>,  // Match -> GameId
-		matchDbIds: Map<any, number>, // Match -> DB ID
-		savingMatches: Set<any>
-	}> = new Map();
-    private botId: number = 0;
 
-	constructor(server: FastifyInstance)
+	private tournamentData: Map<string,
 	{
-		this.server = server;
-	}
+		players: Map<number, string>,
+		matchGames: Map<any, string>,
+		matchDbIds: Map<any, number>,
+		savingMatches: Set<any>,
+		rounds: Array<Array<any>>,
+		initialParticipants: Array<{ id: string, name: string }>
+	}> = new Map();
+
+	private botId: number = 0;
+
+	constructor(private server: FastifyInstance) {}
 
 	public async init(): Promise<void>
 	{
@@ -62,12 +63,104 @@ export class GameServer
 		}
 	}
 
+	private async handleGameCompletion(gameId: string, game: GameInstance)
+	{
+		for (const [tId, data] of this.tournamentData)
+		{
+			for (const [match, matchedGameId] of data.matchGames.entries())
+			{
+				if (matchedGameId === gameId && !match.winner)
+				{
+					const winId = game.winner;
+					let winStr = String(winId);
+
+					const p1 = match._player1;
+					const p2 = match._player2;
+					
+					let p1Id: number = p1.startsWith('Bot') ? this.botId : Number(p1);
+					let p2Id: number = p2.startsWith('Bot') ? this.botId : Number(p2);
+
+					if (winId === p1Id)
+					{
+						winStr = p1;
+					}
+					else if (winId === p2Id)
+					{
+						winStr = p2;
+					}
+
+					match.winner = winStr;
+					match._score1 = game.p1Score;
+					match._score2 = game.p2Score;
+
+					const matchId = data.matchDbIds.get(match);
+					if (matchId)
+					{
+						await core.db.run
+						(
+							"UPDATE tournament_matches SET winner_id = ?, score1 = ?, score2 = ?, played_at = ? WHERE id = ?",
+							[winId, game.p1Score, game.p2Score, new Date().toISOString(), matchId]
+						).catch((e: any) => console.error("Error updating match score:", e));
+					}
+					
+					const tournament = this.activeTournaments.get(tId);
+					if (tournament)
+					{
+						const end = tournament.matches.every(m => m.winner !== null);
+						if (end)
+						{
+							const winners = new Set<string>();
+							tournament.matches.forEach(m =>
+							{
+								if (m.winner)
+								{
+									winners.add(m.winner);
+								}
+							});
+
+							if (winners.size === 1)
+							{
+								data.rounds.push(tournament.matches);
+								const winner = winners.values().next().value;
+								if (winner === undefined)
+								{
+									console.error("Tournament winner is undefined!");
+									return ;
+								}
+
+								let tournamentWinnerId = winner.startsWith('Bot') ? this.botId : Number(winner);
+
+								tournament.isFinished = true;
+								core.db.run
+								(
+									"UPDATE tournaments SET status = 'finished', winner_id = ? WHERE id = ?",
+									[tournamentWinnerId, tId]
+								).catch(e => console.error("Error finishing tournament", e));
+							}
+							else
+							{
+								data.rounds.push(tournament.matches);
+								const nextRound = new Tournament(winners, tournament._depth + 1);
+								tournament.next = nextRound;
+								this.activeTournaments.set(tId, nextRound);
+							}
+						}
+					}
+					return;
+				}
+			}
+		}
+	}
+
 	private async processTournaments()
 	{
 		for (const [tournamentId, tournament] of this.activeTournaments)
 		{
 			const data = this.tournamentData.get(tournamentId);
 			if (!data)
+				continue;
+
+			if (tournament.isFinished)
 				continue;
 
 			for (const match of tournament.matches)
@@ -77,14 +170,19 @@ export class GameServer
 					data.savingMatches.add(match);
 					let p1 = match._player1.startsWith('Bot') ? this.botId : Number(match._player1);
 					let p2 = match._player2.startsWith('Bot') ? this.botId : Number(match._player2);
+
 					try
 					{
-						const res = await core.db.run(
+						const res = await core.db.run
+						(
 							"INSERT INTO tournament_matches (tournament_id, player1_id, player2_id, played_at) VALUES (?, ?, ?, ?)",
 							[tournamentId, p1, p2, new Date().toISOString()]
 						);
+
 						if (res && res.lastID)
+						{
 							data.matchDbIds.set(match, res.lastID);
+						}
 					}
 					catch(e)
 					{
@@ -97,12 +195,21 @@ export class GameServer
 				}
 
 				if (match.winner)
-					continue;
+				{
+					continue ;
+				}
 
 				if (data.matchGames.has(match))
 				{
 					const gameId = data.matchGames.get(match)!;
 					const game = this.activeGames.get(gameId);
+					
+					if (!game)
+					{
+						data.matchGames.delete(match);
+						continue ;
+					}
+
 					if (game && game.winner)
 					{
 						const winId = game.winner;
@@ -133,10 +240,40 @@ export class GameServer
 						const allFinished = tournament.matches.every(m => m.winner !== null);
 						if (allFinished)
 						{
-							core.db.run(
-								"UPDATE tournaments SET status = 'finished', winner_id = ? WHERE id = ?",
-								[winId, tournamentId]
-							).catch(e => console.error("Error finishing tournament", e));
+							const winners = new Set<string>();
+							tournament.matches.forEach(m =>
+							{
+								if (m.winner)
+								{
+									winners.add(m.winner);
+								}
+							});
+
+							if (winners.size === 1)
+							{
+								data.rounds.push(tournament.matches);
+								const winner = winners.values().next().value;
+								if (winner === undefined)
+								{
+									console.error("Tournament winner is undefined!");
+									return ;
+								}
+
+								let tournamentWinnerId = winner.startsWith('Bot') ? this.botId : Number(winner);
+
+								tournament.isFinished = true;
+								core.db.run(
+									"UPDATE tournaments SET status = 'finished', winner_id = ? WHERE id = ?",
+									[tournamentWinnerId, tournamentId]
+								).catch(e => console.error("Error finishing tournament", e));
+							}
+							else
+							{
+								data.rounds.push(tournament.matches);
+								const nextRound = new Tournament(winners, tournament._depth + 1);
+								tournament.next = nextRound;
+								this.activeTournaments.set(tournamentId, nextRound);
+							}
 						}
 					}
 					continue ;
@@ -144,27 +281,8 @@ export class GameServer
 
 				const p1IdStr = match._player1;
 				const p2IdStr = match._player2;
-				
-				let p1Id: number;
-				let p2Id: number;
-				
-				if (p1IdStr.startsWith('Bot'))
-				{
-					p1Id = this.botId;
-				}
-				else
-				{
-					p1Id = Number(p1IdStr);
-				}
-
-				if (p2IdStr.startsWith('Bot'))
-				{
-					p2Id = this.botId;
-				}
-				else
-				{
-					p2Id = Number(p2IdStr);
-				}
+				const p1Id = p1IdStr.startsWith('Bot') ? this.botId : Number(p1IdStr);
+				const p2Id = p2IdStr.startsWith('Bot') ? this.botId : Number(p2IdStr);
 
 				if (!p1Id || !p2Id || isNaN(p1Id) || isNaN(p2Id))
 				{
@@ -263,17 +381,69 @@ export class GameServer
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
+				const body = request.body as { userId: number };
+				const userId = body ? Number(body.userId) : null;
+				
 				const game = this.activeGames.get(gameId);
 
 				if (game)
 				{
-					game.running = true;
+					let playerIdentified = false;
+					
+					if (game.mode === 'online' || game.mode === 'bot') {
+						
+						if (userId)
+						{
+							if (userId == game.player1Id)
+							{
+								game.p1Ready = true;
+								playerIdentified = true;
+							}
+							else if (userId == game.player2Id)
+							{
+								game.p2Ready = true;
+								playerIdentified = true;
+							}
+						}
+
+						if (!playerIdentified)
+						{
+							if (game.mode !== 'online') 
+							{
+								if (!game.p1Ready)
+								{
+									game.p1Ready = true;
+								}
+								else if (!game.p2Ready)
+								{
+									game.p2Ready = true;
+								}
+							}
+						}
+						
+						if (game.mode === 'bot')
+						{
+							if (game.player1Id === this.botId) game.p1Ready = true;
+							if (game.player2Id === this.botId) game.p2Ready = true;
+						}
+
+						console.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
+						if (game.p1Ready && game.p2Ready)
+						{
+							console.log(`Game ${gameId} is now RUNNING`);
+							game.running = true;
+						}
+					}
+					else
+					{
+						game.running = true;
+					}
+					
 					reply.status(200).send(game.state);
 
-					if (game.mode === 'bot')
+					if (game.mode === 'bot' && game.reversedBuffer)
 					{
-						if (game.reversedBuffer)
-							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+						this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
 					}
 				}
 				else
@@ -336,6 +506,7 @@ export class GameServer
 					const winner = game?.winnerName;
 					if (winner !== null)
 					{
+						this.handleGameCompletion(gameId, game);
 						connection.send(JSON.stringify({ type: 'winner', winner }));
 						clearInterval(interval);
 					}
@@ -428,9 +599,12 @@ export class GameServer
 	{
 		this.server.get('/api/tournaments', async (request, reply) =>
 		{
-			const list = Array.from(this.lobbies.values()).map(l => ({
+			const list = Array.from(this.lobbies.values()).map(l => (
+			{
 				id: l.id,
 				ownerName: l.ownerName,
+				name: l.ownerName + "'s Tournament",
+				count: l.players.length,
 				type: l.type,
 				playerCount: l.players.length,
 				status: l.status
@@ -449,6 +623,12 @@ export class GameServer
 				const { userId, type } = body;
 				const name = await this.getUserName(userId);
 
+				if (name === "Unknown")
+				{
+					reply.status(404).send({ error: 'User not found' });
+					return ;
+				}
+
 				if (type !== 'public' && type !== 'private')
 				{
 					reply.status(400).send({ error: 'Invalid tournament type' });
@@ -456,7 +636,8 @@ export class GameServer
 				}
 
 				const tournamentId = crypto.randomUUID();
-				const lobby = {
+				const lobby =
+				{
 					id: tournamentId,
 					ownerId: userId,
 					ownerName: name,
@@ -493,28 +674,77 @@ export class GameServer
 				{
 					const t = this.activeTournaments.get(id);
 					const data = this.tournamentData.get(id);
-					
-					const matches = t ? await Promise.all(t.matches.map(async m =>
+
+					const allRoundsRaw = [...(data?.rounds || [])];
+					if (t && !t.isFinished)
 					{
-						const p1Name = data?.players.get(Number(m._player1)) || await this.getUserName(Number(m._player1));
-						const p2Name = data?.players.get(Number(m._player2)) || await this.getUserName(Number(m._player2));
-						const winnerName = m.winner ? (data?.players.get(Number(m.winner)) || await this.getUserName(Number(m.winner))) : null;
-						const gameId = data?.matchGames.get(m);
-						
-						return {
-							_player1: p1Name,
-							_player2: p2Name,
-							_winner: winnerName,
-							_p1Id: m._player1,
-							_p2Id: m._player2,
-							gameId: gameId
-						};
-					})) : [];
+						allRoundsRaw.push(t.matches);
+					}
+
+					const rounds = [];
+					for (const roundMatches of allRoundsRaw)
+					{
+						const processedMatches = await Promise.all(roundMatches.map(async m =>
+						{
+							let p1Name = m._player1;
+							if (!p1Name.startsWith('Bot'))
+							{
+								p1Name = data?.players.get(Number(m._player1)) || await this.getUserName(Number(m._player1));
+							}
+
+							let p2Name = m._player2;
+							if (!p2Name.startsWith('Bot'))
+							{
+								p2Name = data?.players.get(Number(m._player2)) || await this.getUserName(Number(m._player2));
+							}
+
+							let winnerName = null;
+							if (m.winner)
+							{
+								if (m.winner.startsWith('Bot'))
+								{
+									winnerName = m.winner;
+								}
+								else
+								{
+									winnerName = data?.players.get(Number(m.winner)) || await this.getUserName(Number(m.winner));
+								}
+							}
+
+							const gameId = data?.matchGames.get(m);
+
+							return {
+								_player1: p1Name,
+								_player2: p2Name,
+								_score1: m._score1,
+								_score2: m._score2,
+								_winner: winnerName,
+								_p1Id: m._player1,
+								_p2Id: m._player2,
+								gameId: gameId
+							};
+						}));
+						rounds.push(processedMatches);
+					}
+					
+					let status = 'started';
+					let winner = null;
+					
+					if (t && t.isFinished)
+					{
+						status = 'finished';
+						const lastRound = rounds[rounds.length - 1];
+						if (lastRound && lastRound.length === 1)
+						{
+							winner = lastRound[0]._winner;
+						}
+					}
 
 					reply.send({ 
-						status: 'started', 
-						players: t?.players,
-						matches: matches
+						status: status, 
+						winner: winner,
+						players: data?.initialParticipants || [],
+						rounds: rounds
 					});
 				}
 				else
@@ -535,23 +765,32 @@ export class GameServer
 				const { tournamentId, userId } = body;
 				const name = await this.getUserName(userId);
 
+				if (name === "Unknown")
+				{
+					console.error(`joinTournament: User ${userId} not found`);
+					reply.status(404).send({ error: 'User not found' });
+					return ;
+				}
+
 				const lobby = this.lobbies.get(tournamentId);
 
 				if (!lobby)
 				{
+					console.error(`joinTournament: Tournament ${tournamentId} not found`);
 					reply.status(404).send({ error: 'Tournament not found' });
 					return ;
 				}
 				
 				if (lobby.players.find((p: any) => p.id === userId))
 				{
-					reply.send({ tournamentId });
+					reply.send({ tournamentId, message: "You are already at this tournament" });
 					return;
 				}
 
 				if (lobby.type === 'public')
 				{
 					lobby.players.push({ id: userId, name });
+					console.log(`User ${userId} (${name}) joined tournament ${tournamentId}. Total players: ${lobby.players.length}`);
 					reply.status(200).send({ tournamentId });
 				}
 				else
@@ -560,6 +799,7 @@ export class GameServer
 					{
 						lobby.requests.push({ id: userId, name });
 					}
+
 					reply.status(200).send({ tournamentId, message: 'Request sent' });
 				}
 			}
@@ -577,14 +817,18 @@ export class GameServer
 		{
 			const body = request.body as { tournamentId: string, userId: string, accept: boolean };
 			const lobby = this.lobbies.get(body.tournamentId);
+
 			if (!lobby)
-				return reply.status(404).send();
-			
+			{
+				return (reply.status(404).send());
+			}
+
 			const idx = lobby.requests.findIndex((r: any) => r.id == body.userId);
 			if (idx !== -1)
 			{
 				const req = lobby.requests[idx];
 				lobby.requests.splice(idx, 1);
+
 				if (body.accept)
 				{
 					lobby.players.push(req);
@@ -593,7 +837,7 @@ export class GameServer
 			reply.send({ success: true });
 		});
 	}
-    
+
 	private leaveTournament(): void
 	{
 		this.server.post('/api/leave-tournament', async (request, reply) =>
@@ -658,7 +902,17 @@ export class GameServer
 						);
 					}
 				}
-				catch (e) { console.error("Error saving tournament info:", e); }
+				catch (e: any)
+				{ 
+					if (e.code === 'SQLITE_CONSTRAINT')
+					{
+						console.error("Tournament already exists or constraint failed:", e.message);
+					}
+					else
+					{
+						console.error("Error saving tournament info:", e);
+					}
+				}
 
 				const matchDbIds = new Map<any, number>();
 				for (const m of tournament.matches)
@@ -678,15 +932,28 @@ export class GameServer
 					catch(e) { console.error("Error saving match:", e); }
 				}
 
-				this.tournamentData.set(tournamentId, {
+				const initialParticipants = tournament.players.map(pId =>
+				{
+					if (pId.startsWith('Bot'))
+					{
+						return { id: pId, name: pId };
+					}
+
+					const numId = Number(pId);
+					return { id: pId, name: playerMap.get(numId) || 'Unknown' };
+				});
+
+				this.tournamentData.set(tournamentId,
+				{
 					players: playerMap,
 					matchGames: new Map(),
 					matchDbIds: matchDbIds,
-					savingMatches: new Set()
+					savingMatches: new Set(),
+					rounds: [],
+					initialParticipants: initialParticipants
 				});
-				
-				this.lobbies.delete(tournamentId);
 
+				this.lobbies.delete(tournamentId);
 				reply.status(200).send({ message: 'Tournament started successfully' });
 			}
 			catch (error)
@@ -695,5 +962,4 @@ export class GameServer
 			}
 		});
 	}
-
 }

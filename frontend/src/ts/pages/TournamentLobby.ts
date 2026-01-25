@@ -13,9 +13,21 @@ export class TournamentLobby
 	
 	private intervalId: number | null = null;
 	private isOwner: boolean = false;
+	private lastRoundCount: number = 0;
+	private overlayEndTime: number = 0;
+	private isDestroyed: boolean = false;
 
 	constructor(private router: GameRouter, private user: User, private tournamentId: string | null)
 	{
+		if (!this.tournamentId || this.tournamentId === '')
+		{
+			this.tournamentId = localStorage.getItem('currentTournamentId');
+		}
+		else
+		{
+			localStorage.setItem('currentTournamentId', this.tournamentId);
+		}
+
 		this.init();
 		this.setUpDocumentEventListeners();
 	}
@@ -39,9 +51,12 @@ export class TournamentLobby
 
 	private async fetchLobbyState()
 	{
+		if (this.isDestroyed) return;
 		try
 		{
 			const res = await fetch(`/api/tournament/${this.tournamentId}`, { cache: 'no-store' });
+			if (this.isDestroyed) return;
+
 			if (!res.ok)
 			{
 				const data = await res.json().catch(() => ({}));
@@ -54,10 +69,11 @@ export class TournamentLobby
 				return ;
 			}
 			const data = await res.json();
+			console.log('Lobby Data:', data);
 			
-			if (data.status === 'started')
+			if (data.status === 'started' || data.status === 'finished')
 			{
-				this.renderMatches(data);
+				this.renderBracket(data);
 				return;
 			}
 
@@ -69,67 +85,250 @@ export class TournamentLobby
 		}
 	}
 
-	private renderMatches(data: any)
+	private renderBracket(data: any)
 	{
-		if (this.lobbyTitle) this.lobbyTitle.innerText = "Tournament In Progress";
+		if (this.lobbyTitle)
+		{
+			if (data.status === 'finished' && data.winner)
+			{
+				this.lobbyTitle.innerHTML = `The winner is <span class="text-green-400">${data.winner}</span>`;
+			}
+			else
+			{
+				this.lobbyTitle.innerText = "Tournament Bracket";
+			}
+		}
+
 		if (this.requestsContainer) this.requestsContainer.style.display = 'none';
 		if (this.startBtn) this.startBtn.style.display = 'none';
 		if (this.leaveBtn) this.leaveBtn.style.display = 'none';
 		
+		const totalPlayers = data.players?.length || 0;
+		if (totalPlayers < 2)
+		{
+			return ;
+		}
+
+		const totalRounds = Math.ceil(Math.log2(totalPlayers));
+		const currentRounds = data.rounds || [];
+		
+		if (currentRounds.length > this.lastRoundCount)
+		{
+			this.lastRoundCount = currentRounds.length;
+			this.overlayEndTime = Date.now() + 5000;
+		}
+
 		if (this.playerList)
 		{
 			this.playerList.innerHTML = '';
-			const matchesDiv = document.createElement('div');
-			matchesDiv.className = 'flex flex-col gap-2 w-full';
-			
-			if (data.matches && Array.isArray(data.matches)) {
-				data.matches.forEach((m: any, i: number) =>
+
+			const getMatch = (r: number, i: number) =>
+			{
+				if (currentRounds[r] && currentRounds[r][i]) return currentRounds[r][i];
+				return { _player1: '?', _player2: '?', _winner: null };
+			};
+
+			const createMatchBox = (m: any, isCenter: boolean = false) =>
+			{
+				const box = document.createElement('div');
+				box.className = 'bg-gray-800 border-2 border-gray-600 p-3 w-48 text-center flex flex-col gap-2 shadow-lg relative z-10 rounded-none';
+				
+				const p1 = m._player1 || '?';
+				const p2 = m._player2 || '?';
+				const winner = m._winner;
+
+				if (winner) box.setAttribute('data-has-winner', 'true');
+				
+				const p1Class = winner === p1 ? 'text-green-400 font-bold' : (winner ? 'text-red-400 opacity-50' : 'text-white');
+				const p2Class = winner === p2 ? 'text-green-400 font-bold' : (winner ? 'text-red-400 opacity-50' : 'text-white');
+
+				const commonTextClasses = 'break-all whitespace-normal leading-tight';
+
+				const s1 = (m._score1 !== undefined && m._score1 !== null) ? m._score1 : '';
+				const s2 = (m._score2 !== undefined && m._score2 !== null) ? m._score2 : '';
+				
+				box.innerHTML = `
+					<div class="${p1Class} ${commonTextClasses} border-b border-gray-700 pb-1 flex justify-between items-center">
+						<span class="text-left">${p1}</span>
+						<span class="font-mono">${s1}</span>
+					</div>
+					<div class="${p2Class} ${commonTextClasses} flex justify-between items-center">
+						<span class="text-left">${p2}</span>
+						<span class="font-mono">${s2}</span>
+					</div>
+				`;
+				
+				if (isCenter && data.status === 'finished' && data.winner)
 				{
-					const div = document.createElement('div');
-					div.className = 'bg-darker p-3 rounded flex justify-between items-center text-white';
-					const p1 = m._player1 || 'Unknown';
-					const p2 = m._player2 || 'Unknown';
-					const winner = m._winner;
+					box.classList.add('border-yellow-500', 'bg-yellow-900/20');
+				}
+
+				if (!winner && m.gameId && (m._p1Id == this.user.id || m._p2Id == this.user.id))
+				{
+					box.classList.add('ring-4', 'ring-yellow-400', 'animate-pulse');
+					const now = Date.now();
 					
-					div.innerHTML = `
-						<span class="font-bold">Match ${i + 1}</span>
-						<div class="flex gap-4">
-							<span class="${winner === p1 ? 'text-green-500' : ''}">${p1}</span>
-							<span class="text-gray-500">vs</span>
-							<span class="${winner === p2 ? 'text-green-500' : ''}">${p2}</span>
-						</div>
-					`;
+					const timeLeft = this.overlayEndTime - now;
 					
-					if (winner)
+					if (timeLeft <= 0)
 					{
-						div.innerHTML += `<span class="bg-blue-600 px-2 rounded text-sm">Finished</span>`;
+						const notif = document.getElementById('lobby-notification');
+						if (notif) notif.style.display = 'none';
+						
+						console.log("Match ready! Joining...", m.gameId);
+						if (!this.isDestroyed)
+						{
+							this.isDestroyed = true;
+							this.router.navigateTo('game', 'online');
+						}
 					}
 					else
 					{
-						if (m.gameId && (m._p1Id == this.user.id || m._p2Id == this.user.id))
+						const countdown = Math.ceil(timeLeft / 1000);
+						let notif = document.getElementById('lobby-notification');
+						if (!notif)
 						{
-							const joinBtn = document.createElement('button');
-							joinBtn.className = 'btn-small bg-green-600 px-2 py-1 rounded text-sm hover:bg-green-500 cursor-pointer';
-							joinBtn.innerText = 'JOIN MATCH NOW';
-							joinBtn.onclick = () => {
-								this.router.navigateTo('game', 'online');
-							};
-							div.appendChild(joinBtn);
-							
-							if (this.router.currentPage !== 'game')
-							{
-								setTimeout(() => this.router.navigateTo('game', 'online'), 100);
-							}
+							notif = document.createElement('div');
+							notif.id = 'lobby-notification';
+							notif.className = 'fixed top-32 left-1/2 -translate-x-1/2 bg-yellow-600 text-white px-8 py-4 rounded-full shadow-2xl z-50 text-3xl font-bold animate-pulse border-4 border-yellow-400';
+							document.body.appendChild(notif);
 						}
-						else
-						{
-							div.innerHTML += `<span class="bg-yellow-600 px-2 rounded text-sm">Pending</span>`;
-						}
+
+						notif.style.display = 'block';
+						notif.innerText = `YOUR MATCH STARTS IN ${countdown}s`;
 					}
-					matchesDiv.appendChild(div);
-				});
+				}
+				return (box);
+			};
+
+			const scrollWrapper = document.createElement('div');
+			scrollWrapper.className = 'w-full h-full overflow-auto relative custom-scrollbar max-h-[70vh]';
+
+			const bracketContent = document.createElement('div');
+			bracketContent.className = 'min-w-max min-h-max flex justify-center items-center gap-16 p-12 relative';
+
+			const leftCols: any[] = [];
+			const rightCols: any[] = [];
+			
+			for (let r = 0; r < totalRounds - 1; r++)
+			{
+				const matchCount = Math.pow(2, totalRounds - 1 - r);
+				const half = matchCount / 2;
+				
+				const colL = document.createElement('div');
+				colL.className = 'flex flex-col justify-around gap-8';
+				colL.style.height = `${matchCount * 120}px`;
+				
+				for(let i = 0; i < half; i++)
+				{
+					colL.appendChild(createMatchBox(getMatch(r, i)));
+				}
+				leftCols.push(colL);
+				
+				const colR = document.createElement('div');
+				colR.className = 'flex flex-col justify-around gap-8';
+				colR.style.height = `${matchCount * 120}px`; 
+				
+				for(let i = half; i < matchCount; i++)
+				{
+					colR.appendChild(createMatchBox(getMatch(r, i)));
+				}
+				rightCols.push(colR);
 			}
-			this.playerList.appendChild(matchesDiv);
+			
+			const centerCol = document.createElement('div');
+			centerCol.className = 'flex flex-col justify-center z-20';
+			
+			centerCol.appendChild(createMatchBox(getMatch(totalRounds - 1, 0), true));
+
+			leftCols.forEach(c => bracketContent.appendChild(c));
+			bracketContent.appendChild(centerCol);
+			[...rightCols].reverse().forEach(c => bracketContent.appendChild(c));
+
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute('class', 'absolute inset-0 w-full h-full pointer-events-none z-0');
+
+			setTimeout(() =>
+			{
+				const drawLine = (e1: Element, e2: Element) =>
+				{
+					const r1 = e1.getBoundingClientRect();
+					const r2 = e2.getBoundingClientRect();
+					const c = bracketContent.getBoundingClientRect();
+					
+					let startX, startY, endX, endY;
+
+					if (r1.left < r2.left)
+					{
+						startX = r1.right - c.left; 
+						endX = r2.left - c.left;
+					}
+					else
+					{
+						startX = r1.left - c.left;
+						endX = r2.right - c.left;
+					}
+					
+					startY = r1.top + r1.height/2 - c.top;
+					endY = r2.top + r2.height/2 - c.top;
+
+					const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+
+					const midX = startX + (endX - startX) / 2;
+					const d = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+
+					path.setAttribute("d", d);
+
+					const hasWinner = e1.getAttribute('data-has-winner') === 'true';
+
+					if (hasWinner)
+					{
+						path.setAttribute("stroke", "#4ade80");
+						path.setAttribute("stroke-opacity", "1");
+						path.setAttribute("stroke-width", "4");
+					}
+					else
+					{
+						path.setAttribute("stroke", "white");
+						path.setAttribute("stroke-opacity", "0.3");
+						path.setAttribute("stroke-width", "2");
+					}
+					
+					path.setAttribute("fill", "none");
+					svg.appendChild(path);
+				};
+				
+				for (let i = 0; i < leftCols.length; i++)
+				{
+					const curr = leftCols[i];
+					const next = (i === leftCols.length - 1) ? centerCol : leftCols[i+1];
+					const targets = next.children;
+					Array.from(curr.children).forEach((child, idx) =>
+					{
+						const target = targets[Math.floor(idx/2)];
+						if (target) drawLine(child as any, target);
+					});
+				}
+
+				for (let i = 0; i < rightCols.length; i++)
+				{
+					const curr = rightCols[i];
+					const next = (i === rightCols.length - 1) ? centerCol : rightCols[i+1];
+					const targets = next.children;
+					Array.from(curr.children).forEach((child, idx) =>
+					{
+						const target = targets[Math.floor(idx / 2)];
+						if (target)
+						{
+							drawLine(child as any, target);
+						}
+					});
+				}
+			}, 50);
+
+			bracketContent.appendChild(svg);
+			scrollWrapper.appendChild(bracketContent);
+			this.playerList.appendChild(scrollWrapper);
 		}
 	}
 
@@ -138,6 +337,12 @@ export class TournamentLobby
 		this.isOwner = data.ownerId === this.user.id;
 		if (this.lobbyTitle) this.lobbyTitle.innerText = data.ownerName + "'s Tournament";
 		
+		if (!this.playerList)
+		{
+			console.error("TournamentLobby: playerList element not found!");
+			this.playerList = document.getElementById('lobby-player-list') as HTMLDivElement;
+		}
+
 		if (this.playerList)
 		{
 			this.playerList.innerHTML = '';
@@ -204,6 +409,7 @@ export class TournamentLobby
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ tournamentId: this.tournamentId, userId, accept })
 		});
+
 		this.fetchLobbyState();
 	}
 
@@ -237,6 +443,7 @@ export class TournamentLobby
 
 	public destroy(): void
 	{
+		this.isDestroyed = true;
 		if (this.intervalId) clearInterval(this.intervalId);
 		Router.removeEventListener(this.startBtn, 'click', this.startTournament);
 		Router.removeEventListener(this.leaveBtn, 'click', this.leaveTournament);

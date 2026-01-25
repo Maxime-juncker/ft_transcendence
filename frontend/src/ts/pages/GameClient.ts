@@ -1,10 +1,10 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from 'modules/user/User.js';
-import { Chat } from 'modules/chat/chat.js';
-import { UserElement, UserElementType } from 'modules/user/UserElement.js';
-import { GameRouter } from 'router.js';
-import { Router } from 'modules/router/Router.js';
+import { User, getUserFromId } from '../modules/user/User.js';
+import { Chat } from '../modules/chat/chat.js';
+import { UserElement, UserElementType } from '../modules/user/UserElement.js';
+import { GameRouter } from '../router.js';
+import { Router } from '../modules/router/Router.js';
 
 enum Params
 {
@@ -77,12 +77,16 @@ export class GameClient extends Utils
 	private	m_prevP1Score:		number | null = null;
 	private	m_prevP2Score:		number | null = null;
 	private m_router:			GameRouter;
+	private m_chat:				Chat | undefined;
+	private m_gameCreatedCallback: ((json: any) => void) | undefined;
+	private m_endTimeout:		any | null = null;
 
 	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
 	{
 		super();
 
 		this.m_router = router;
+		this.m_chat = chat;
 		this.m_playerContainer = Router.getElementById("player-container");
 		if (!this.m_playerContainer)
 		{
@@ -94,7 +98,10 @@ export class GameClient extends Utils
 			this.m_user = user;
 		this.createPlayerHtml();
 		if (chat)
-			chat.onGameCreated((json) => this.createGameFeedback(json));
+		{
+			this.m_gameCreatedCallback = (json) => this.createGameFeedback(json);
+			chat.onGameCreated(this.m_gameCreatedCallback);
+		}
 
 		if (this.isModeValid())
 		{
@@ -151,8 +158,6 @@ export class GameClient extends Utils
 			return ;
 		try
 		{
-			// window.addEventListener('beforeunload', this.destroy);
-
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',
@@ -223,9 +228,13 @@ export class GameClient extends Utils
 	private async startGame(): Promise<void>
 	{
 		console.log(this.playerSide);
+		if (!this.m_user) return;
+		
 		const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 		{
 			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ userId: this.m_user.id })
 		});
 
 		if (!response.ok)
@@ -233,8 +242,12 @@ export class GameClient extends Utils
 			console.error('Failed to start game:', response.status, response.statusText);
 			return ;
 		}
-
-		this.updateGameState(await response.arrayBuffer());
+		
+		const buffer = await response.arrayBuffer();
+		if (buffer.byteLength > 0)
+		{
+			this.updateGameState(buffer);
+		}
 
 		this.socket = new WebSocket(`wss://${window.location.host}/api/game/${this.gameId}/${this.playerSide}`);
 		this.socket.binaryType = 'arraybuffer';
@@ -295,8 +308,6 @@ export class GameClient extends Utils
 
 	private send(): void
 	{
-		if (!this.socket)
-			return ;
 		this.keysToSend = '';
 
 		if (this.mode === 'online' || this.mode === 'bot')
@@ -417,14 +428,27 @@ export class GameClient extends Utils
 		this.hide('paddle-right');
 		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
-		this.setContent('play-again-msg', Msgs.PLAY_AGAIN);
-		this.setColor('play-again-msg', Params.COLOR, undefined, true);
+		
+		if (this.mode === 'online')
+		{
+			this.m_endTimeout = setTimeout(() =>
+			{
+				this.m_router.navigateTo('tournament-lobby', '');
+			}, 3000);
+		}
+		else
+		{
+			this.setContent('play-again-msg', Msgs.PLAY_AGAIN);
+			this.setColor('play-again-msg', Params.COLOR, undefined, true);
+		}
 	}
 
 	private async removeQueue(): Promise<void>
 	{
 		if (!this.m_user)
+		{
 			return ;
+		}
 
 		await fetch("/api/chat/removeQueue",
 		{
@@ -439,6 +463,11 @@ export class GameClient extends Utils
 		if (this.countdownInterval)
 		{
 			clearInterval(this.countdownInterval);
+		}
+
+		if (this.m_endTimeout)
+		{
+			clearTimeout(this.m_endTimeout);
 		}
 
 		await this.removeQueue();

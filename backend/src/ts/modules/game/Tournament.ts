@@ -28,17 +28,11 @@ export class Tournament
 	private _players: Array<string> = [];
 	private _matches: Array<Match> = [];
 	private _next: Tournament | null = null;
+	public isFinished: boolean = false;
 
 	constructor(inputs: Set<string>, public readonly _depth: number = 0)
 	{
-		if (this._depth > 0)
-		{
-			this.init(inputs);
-		}
-		else
-		{
-			this._players = Array.from(inputs);
-		}
+		this.init(inputs);
 
 		if (this._players.length > 1)
 		{

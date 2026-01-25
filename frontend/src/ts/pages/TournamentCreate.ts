@@ -25,18 +25,20 @@ export class TournamentCreate
 				headers: { 'Content-Type': 'application/json', },
 				body: JSON.stringify({ userId: this.user.id, type: type }),
 			});
-			
-			if (res.ok) {
+
+			if (res.ok)
+			{
 				const data = await res.json();
 				this.router.navigateTo('tournament-lobby', data.tournamentId);
-			} else {
-				alert('Failed to create tournament');
+			}
+			else
+			{
+				console.error('Failed to create tournament');
 			}
 		}
 		catch (e)
 		{
 			console.error(e);
-			alert('Error creating tournament');
 		}
 	}
 

@@ -68,10 +68,14 @@ export class TournamentMenu
 
 	private async joinTournament(id: string)
 	{
-		if (!this.router.m_user)
+		if (!this.router.m_user || this.router.m_user.id <= 0)
 		{
+			console.error("joinTournament: User not logged in or invalid ID", this.router.m_user?.id);
+			alert("You seem to be logged out. Please refresh the page.");
 			return ;
 		}
+
+		console.log(`Joining tournament ${id} as user ${this.router.m_user.id} (${this.router.m_user.name})`);
 
 		try
 		{
@@ -85,11 +89,15 @@ export class TournamentMenu
 			if (res.ok)
 			{
 				const data = await res.json();
+				if (data.message === "You are already at this tournament")
+					alert("You are already joined to this tournament!");
 				this.router.navigateTo('tournament-lobby', data.tournamentId);
 			}
 			else
 			{
-				console.error('Failed to join tournament');
+				const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+				console.error('Failed to join tournament:', res.status, err);
+				alert('Failed to join: ' + (err.error || 'Unknown error'));
 			}
 		}
 		catch (e)
@@ -103,11 +111,21 @@ export class TournamentMenu
 		this.router.navigateTo('tournament-create', '');
 	}
 
+	private refreshClickHandler = () =>
+	{
+		this.loadTournaments();
+	}
+
 	private setUpDocumentEventListeners(): void
 	{
 		if (this.createBtn)
 		{
 			Router.addEventListener(this.createBtn, "click", this.createTournamentClickHandler);
+		}
+		const refreshBtn = document.getElementById('tournament-refresh-btn');
+		if (refreshBtn)
+		{
+			Router.addEventListener(refreshBtn, "click", this.refreshClickHandler);
 		}
 	}
 
@@ -116,6 +134,11 @@ export class TournamentMenu
 		if (this.createBtn)
 		{
 			Router.removeEventListener(this.createBtn, "click", this.createTournamentClickHandler);
+		}
+		const refreshBtn = document.getElementById('tournament-refresh-btn');
+		if (refreshBtn)
+		{
+			Router.removeEventListener(refreshBtn, "click", this.refreshClickHandler);
 		}
 	}
 }
