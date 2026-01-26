@@ -130,8 +130,15 @@ export class TournamentLobby
 
 			const createMatchBox = (m: any, isCenter: boolean = false) =>
 			{
-				const box = document.createElement('div');
-				box.className = 'bg-gray-800 border-2 border-gray-600 p-3 w-48 text-center flex flex-col gap-2 shadow-lg relative z-10 rounded-none';
+				const template = document.getElementById('tournament-match-template') as HTMLTemplateElement;
+				if (!template)
+				{
+					console.error('tournament-match-template not found');
+					return document.createElement('div');
+				}
+
+				const clone = template.content.cloneNode(true) as DocumentFragment;
+				const box = clone.querySelector('.match-box') as HTMLElement;
 				
 				const p1 = m._player1 || '?';
 				const p2 = m._player2 || '?';
@@ -139,24 +146,26 @@ export class TournamentLobby
 
 				if (winner) box.setAttribute('data-has-winner', 'true');
 				
+				const p1Container = box.querySelector('.player1-container') as HTMLElement;
+				const p2Container = box.querySelector('.player2-container') as HTMLElement;
+				const p1Name = box.querySelector('.player1-name') as HTMLElement;
+				const p2Name = box.querySelector('.player2-name') as HTMLElement;
+				const p1Score = box.querySelector('.player1-score') as HTMLElement;
+				const p2Score = box.querySelector('.player2-score') as HTMLElement;
+
 				const p1Class = winner === p1 ? 'text-green-400 font-bold' : (winner ? 'text-red-400 opacity-50' : 'text-white');
 				const p2Class = winner === p2 ? 'text-green-400 font-bold' : (winner ? 'text-red-400 opacity-50' : 'text-white');
 
-				const commonTextClasses = 'break-all whitespace-normal leading-tight';
+				if (p1Container) p1Container.className += ` ${p1Class}`;
+				if (p2Container) p2Container.className += ` ${p2Class}`;
+				if (p1Name) p1Name.textContent = p1;
+				if (p2Name) p2Name.textContent = p2;
 
 				const s1 = (m._score1 !== undefined && m._score1 !== null) ? m._score1 : '';
 				const s2 = (m._score2 !== undefined && m._score2 !== null) ? m._score2 : '';
 				
-				box.innerHTML = `
-					<div class="${p1Class} ${commonTextClasses} border-b border-gray-700 pb-1 flex justify-between items-center">
-						<span class="text-left">${p1}</span>
-						<span class="font-mono">${s1}</span>
-					</div>
-					<div class="${p2Class} ${commonTextClasses} flex justify-between items-center">
-						<span class="text-left">${p2}</span>
-						<span class="font-mono">${s2}</span>
-					</div>
-				`;
+				if (p1Score) p1Score.textContent = String(s1);
+				if (p2Score) p2Score.textContent = String(s2);
 				
 				if (isCenter && data.status === 'finished' && data.winner)
 				{
@@ -198,7 +207,10 @@ export class TournamentLobby
 						notif.innerText = `YOUR MATCH STARTS IN ${countdown}s`;
 					}
 				}
-				return (box);
+				
+				const wrapper = document.createElement('div');
+				wrapper.appendChild(clone);
+				return (wrapper.firstElementChild as HTMLElement);
 			};
 
 			const scrollWrapper = document.createElement('div');
@@ -346,12 +358,17 @@ export class TournamentLobby
 		if (this.playerList)
 		{
 			this.playerList.innerHTML = '';
+			const template = document.getElementById('tournament-player-template') as HTMLTemplateElement;
+
 			data.players.forEach((p: any) =>
 			{
-				const div = document.createElement('div');
-				div.className = 'text-white bg-dark p-2 rounded';
-				div.innerText = p.name;
-				this.playerList.appendChild(div);
+				if (template)
+				{
+					const clone = template.content.cloneNode(true) as DocumentFragment;
+					const nameSpan = clone.querySelector('.player-name') as HTMLElement;
+					if (nameSpan) nameSpan.textContent = p.name;
+					this.playerList.appendChild(clone);
+				}
 			});
 		}
 
@@ -365,20 +382,23 @@ export class TournamentLobby
 			if (this.requestList)
 			{
 				this.requestList.innerHTML = '';
+				const template = document.getElementById('tournament-request-template') as HTMLTemplateElement;
+
 				data.requests.forEach((r: any) =>
 				{
-					const div = document.createElement('div');
-					div.className = 'flex justify-between items-center text-white bg-dark p-2 rounded';
-					div.innerHTML = `
-						<span>${r.name}</span>
-						<div class="flex gap-2">
-							<button class="accept-btn btn-small bg-green-600 text-xs px-2 py-1 rounded" data-id="${r.id}">✓</button>
-							<button class="reject-btn btn-small bg-red-600 text-xs px-2 py-1 rounded" data-id="${r.id}">✗</button>
-						</div>
-					`;
-					div.querySelector('.accept-btn')?.addEventListener('click', () => this.handleRequest(r.id, true));
-					div.querySelector('.reject-btn')?.addEventListener('click', () => this.handleRequest(r.id, false));
-					this.requestList.appendChild(div);
+					if (template)
+					{
+						const clone = template.content.cloneNode(true) as DocumentFragment;
+						const nameSpan = clone.querySelector('.request-name') as HTMLElement;
+						const acceptBtn = clone.querySelector('.accept-btn') as HTMLElement;
+						const rejectBtn = clone.querySelector('.reject-btn') as HTMLElement;
+
+						if (nameSpan) nameSpan.textContent = r.name;
+						acceptBtn?.addEventListener('click', () => this.handleRequest(r.id, true));
+						rejectBtn?.addEventListener('click', () => this.handleRequest(r.id, false));
+						
+						this.requestList.appendChild(clone);
+					}
 				});
 			}
 		}

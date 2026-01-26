@@ -25,6 +25,35 @@
 		</div>
 	</template>
 
+	<template id="tournament-player-template">
+		<div class="text-white bg-dark p-2 rounded">
+			<span class="player-name"></span>
+		</div>
+	</template>
+
+	<template id="tournament-request-template">
+		<div class="flex justify-between items-center text-white bg-dark p-2 rounded">
+			<span class="request-name"></span>
+			<div class="flex gap-2">
+				<button class="accept-btn btn-small bg-green-600 text-xs px-2 py-1 rounded">✓</button>
+				<button class="reject-btn btn-small bg-red-600 text-xs px-2 py-1 rounded">✗</button>
+			</div>
+		</div>
+	</template>
+
+	<template id="tournament-match-template">
+		<div class="match-box bg-gray-800 border-2 border-gray-600 p-3 w-48 text-center flex flex-col gap-2 shadow-lg relative z-10 rounded-none">
+			<div class="player1-container border-b border-gray-700 pb-1 flex justify-between items-center break-all whitespace-normal leading-tight">
+				<span class="player1-name text-left"></span>
+				<span class="player1-score font-mono"></span>
+			</div>
+			<div class="player2-container flex justify-between items-center break-all whitespace-normal leading-tight">
+				<span class="player2-name text-left"></span>
+				<span class="player2-score font-mono"></span>
+			</div>
+		</div>
+	</template>
+
 	<template id="user-game-template">
 		<div id="user-profile"
 			class="user-profile">

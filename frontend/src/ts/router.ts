@@ -3,7 +3,6 @@ import { GameMenu } from 'pages/GameMenu.js';
 import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { TournamentCreate } from 'pages/TournamentCreate.js';
-import { TournamentJoin } from 'pages/TournamentJoin.js';
 import { TournamentLobby } from 'pages/TournamentLobby.js';
 import { User } from "modules/user/User.js";
 import { Chat } from 'modules/chat/chat';
@@ -195,9 +194,6 @@ export class GameRouter
 			case 'tournament-lobby':
 				if (this.m_user)
 					return (new TournamentLobby(this, this.m_user, mode));
-			case 'tournament-join':
-				if (this.m_user)
-					return (new TournamentJoin(this.m_user));
 			default:
 				return (null);
 		}
