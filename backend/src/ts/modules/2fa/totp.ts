@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
 import qrcode from 'qrcode';
-import { Database } from 'sqlite';
+import { Logger } from 'modules/logger.js';
 import { DbResponse, db } from 'core/core.js';
 
 function generate_totp(seed: string, time: number): string
@@ -31,7 +31,7 @@ export function check_totp(seed: string, totp: string): boolean
 
 export async function new_totp(user_id: number, email: string): Promise<DbResponse>
 {
-	console.log("Received request for new totp");
+	Logger.log("Received request for new totp");
 	const sql = "UPDATE users SET totp_seed = ? WHERE id = ?";
 
 	const seed = base32Encode(crypto.randomBytes(20), 'RFC4648');

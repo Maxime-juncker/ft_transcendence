@@ -1,13 +1,17 @@
 import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
-import { getUserByName } from '@modules/users/user.js';
+import { getUserByName, getUserName } from 'modules/users/user.js';
 import * as core from 'core/core.js';
-import { addPlayerToQueue, notifyMatch } from '@modules/chat/chat.js';
+import { addPlayerToQueue } from 'modules/chat/chat.js';
 import { Tournament } from './Tournament.js';
+import { notifyMatch } from 'modules/chat/chat.js';
+import { Logger } from 'modules/logger.js';
 
 export class GameServer
 {
+	private static m_instance: GameServer | null = null;
+
 	private static readonly FPS: number = 60;
 	private static readonly FPS_INTERVAL: number = 1000 / GameServer.FPS;
 	private static readonly BOT_FPS: number = 1;
@@ -32,6 +36,8 @@ export class GameServer
 	private botId: number = 0;
 
 	constructor(private server: FastifyInstance) {}
+
+	static get Instance(): GameServer | null { return GameServer.m_instance; }
 
 	public async init(): Promise<void>
 	{
@@ -59,8 +65,30 @@ export class GameServer
 		}
 		catch (error)
 		{
-			console.error('Error starting server:', error);
+			Logger.error('Error starting server:', error);
 		}
+	}
+
+	/**
+	 * start a duel between two player
+	 * @param player1 first player
+	 * @param player2 second player
+	 * @returns the id of the created game
+	*/
+	public async startDuel(player1: number, player2: number): Promise<string>
+	{
+		const name1 = await getUserName(player1);
+		const name2 = await getUserName(player2);
+
+		const gameId = crypto.randomUUID();
+
+		await notifyMatch(player1, player2, gameId, 1);
+		await notifyMatch(player2, player1, gameId, 2);
+
+		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
+
+		Logger.log(`starting duel between: ${name1} and ${name2}`);
+		return gameId;
 	}
 
 	private async handleGameCompletion(gameId: string, game: GameInstance)
@@ -345,6 +373,7 @@ export class GameServer
 					const opponentId = 0;
 					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
+					Logger.log(`starting local game for: ${await getUserName(body.playerName)}`);
 					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
 				}
 				else if (mode === 'online')
@@ -352,6 +381,8 @@ export class GameServer
 					await addPlayerToQueue(Number(name), this);
 					reply.status(202).send({ message: "added to queue" });
 				}
+				else if (mode === 'duel')
+						return reply.status(202).send({ message: "waiting for opponent" });
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();
@@ -359,6 +390,7 @@ export class GameServer
 					const opponentId = data.data.id;
 					const game = new GameInstance(mode, name, opponentId);
 					this.activeGames.set(gameId, game);
+					Logger.log(`starting bot game for: ${await getUserName(body.playerName)}`);
 					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
 				}
 				else
@@ -368,7 +400,7 @@ export class GameServer
 			}
 			catch (error)
 			{
-				console.error('Error creating game:', error);
+				Logger.error('Error creating game:', error);
 				reply.status(500).send({ error });
 			}
 		});
@@ -443,7 +475,8 @@ export class GameServer
 
 					if (game.mode === 'bot' && game.reversedBuffer)
 					{
-						this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+						if (game.reversedBuffer)
+							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
 					}
 				}
 				else
@@ -453,7 +486,7 @@ export class GameServer
 			}
 			catch (error)
 			{
-				console.error('Error starting game:', error);
+				Logger.error('Error starting game:', error);
 				reply.status(500).send({ error });
 			}
 		});
@@ -547,7 +580,7 @@ export class GameServer
 						const bot = this.bots.get(gameId);
 						if (!bot)
 						{
-							console.error(`Bot not found for game ${gameId}`);
+							Logger.error(`Bot not found for game ${gameId}`);
 						}
 
 						bot?.destroy();
@@ -562,13 +595,13 @@ export class GameServer
 
 				connection.on('error', () =>
 				{
-					console.error(`Connection error for game ${gameId}`);
+					Logger.error(`Connection error for game ${gameId}`);
 					closeConnection();
 				});
 			}
 			catch (error)
 			{
-				console.error('Error in websocket connection:', error);
+				Logger.error('Error in websocket connection:', error);
 				connection.close();
 			}
 		});
@@ -648,11 +681,12 @@ export class GameServer
 				};
 				this.lobbies.set(tournamentId, lobby);
 
+				Logger.log(`Tournament ${tournamentId} created by ${name}`);
 				reply.status(201).send({ tournamentId });
 			}
 			catch (error)
 			{
-				console.error('Error creating tournament:', error);
+				Logger.error('Error creating tournament:', error);
 				reply.status(500).send({ error });
 			}
 		});
@@ -672,7 +706,7 @@ export class GameServer
 			{
 				if (this.activeTournaments.has(id))
 				{
-					const t = this.activeTournaments.get(id);
+					const t: Tournament | undefined = this.activeTournaments.get(id);
 					const data = this.tournamentData.get(id);
 
 					const allRoundsRaw = [...(data?.rounds || [])];
@@ -805,7 +839,7 @@ export class GameServer
 			}
 			catch (error)
 			{
-				console.error(error);
+				Logger.error('Error joining tournament:', error);
 				reply.status(500).send({ error });
 			}
 		});
@@ -958,6 +992,7 @@ export class GameServer
 			}
 			catch (error)
 			{
+				Logger.error('Error joining tournament:', error);
 				reply.status(500).send({ error });
 			}
 		});

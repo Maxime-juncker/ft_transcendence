@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { readFileSync } from 'fs';
+import { Logger } from 'modules/logger.js';
 
 export class ServerSideRendering
 {
@@ -96,7 +97,7 @@ export class ServerSideRendering
 		this.server = server;
 		this.setupRoutes();
 		this.constructSPA(routes);
-		console.log("spa ready");
+		Logger.log("spa ready");
 	}
 
 	/**
@@ -114,7 +115,7 @@ export class ServerSideRendering
 		})
 		this.m_spaPage += this.htmlFooter;
 
-		// console.log("assembled spa:\n", this.m_spaPage);
+		// Logger.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void
@@ -125,7 +126,7 @@ export class ServerSideRendering
 			{
 				return reply.code(404).send({ message: 'route not found' });
 			}
-			console.log("sending page");
+			Logger.log("sending page");
 			reply.type('text/html').send(this.m_spaPage);
 		});
 

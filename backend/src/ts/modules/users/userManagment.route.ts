@@ -1,21 +1,21 @@
-import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import * as core from '@core/core.js';
-import * as mgmt from '@modules/users/userManagment.js';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import * as core from 'core/core.js';
+import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
+import { Logger } from 'modules/logger.js';
 
 //
 // User managment
 //
-export async function userManagmentRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
+export async function userManagmentRoutes(fastify: FastifyInstance)
 {
-	fastify.get('/get_session', async (request: FastifyRequest, reply) => {
+	fastify.get('/get_session', { config: { rateLimit: core.rateLimitMed } }, async (request: FastifyRequest, reply) => {
 		const token = request.cookies.jwt_session;
 		if (token)
 		{
-			const res = await mgmt.loginSession(token, core.db);
+			const res = await mgmt.loginSession(token);
 			if (res.code != 200)
 				return reply.code(res.code).send(res.data);
-			console.log("user is login has:", res.data.name);
 			return reply.code(res.code).send(res.data);
 		}
 		else
@@ -24,7 +24,14 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		}
 	})
 
-	fastify.post('/create_guest', async (request: any, reply: FastifyReply) => {
+	fastify.post('/create_guest', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+	},
+	async (request: any, reply: FastifyReply) => {
+		void request;
+
 		const res = await mgmt.createGuest();
 		if (res.code == 200)
 		{
@@ -33,14 +40,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		}
 
 		return reply.code(res.code).send(res.data);
-	})
-
-	/**
-	 * @deprecated
-	 */
-	fastify.post('/guest_cli', async (request: any, reply: FastifyReply) => {
-		const res = await mgmt.createGuest();
-		return reply.code(res.code).send(res);
 	})
 
 	fastify.post('/create', {
@@ -83,11 +82,11 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		}
 	}, async (request: any, reply: FastifyReply) => {
 		const { email, passw, totp } = request.body as { email: string, passw: string, totp: string };
-		const res = await mgmt.login(email, passw, totp, core.db);
+		const res = await mgmt.login(email, passw, totp);
 		if (res.code == 200)
 		{
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
-			console.log("creating new token:", token);
+			Logger.log("creating new token:", token);
 			return reply.code(200).send({ token: token });
 		}
 		return reply.code(res.code).send(res.data);
@@ -114,6 +113,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 	})
 
 	fastify.delete('/reset', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: { 
 			body: {
 				type: 'object',
@@ -134,6 +136,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.delete('/delete', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -155,18 +160,21 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/set_status', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: "object",
 				properties: {
 					token: { type: "string" },
-					new_status: { type: "string" }
+					new_status: { type: "number" }
 				},
 				required: ["token", "new_status"]
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { token, new_status} = request.body as { token: string, new_status: string };
+		const { token, new_status} = request.body as { token: string, new_status: number };
 		const data: any = await jwt.jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send({ message: "invalid token" });
@@ -176,6 +184,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 	})
 
 	fastify.post('/upload/avatar', {
+		config: core.rateLimitHard,
 		schema: {
 			headers: {
 				type: 'object',
@@ -195,6 +204,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/update/passw', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -217,6 +229,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/update/name', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -238,6 +253,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/update/email', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -259,6 +277,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/block', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',
@@ -280,6 +301,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance, options: Fas
 		})
 
 	fastify.post('/unblock', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
 		schema: {
 			body: {
 				type: 'object',

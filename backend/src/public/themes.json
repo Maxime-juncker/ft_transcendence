@@ -1,0 +1,101 @@
+{
+	"themes": [
+		{
+			"name": "onedark",
+
+			"dark":		"#282C34",
+			"darker":	"#16181D",
+			"darkest":	"#02040A",
+			"red":		"#E06C75",
+			"yellow":	"#E5C07B",
+			"blue":		"#61AFEF",
+			"white":	"#FBF1C7",
+			"green":	"#98C379",
+			"purple":	"#C678DD"
+		},
+
+		{
+			"name": "gruvbox",
+
+			"dark":		"#282828",
+			"darker":	"#1d2021",
+			"darkest":	"#02040A",
+			"red":		"#fb4934",
+			"yellow":	"#fabd2f",
+			"blue":		"#83a598",
+			"white":	"#ebdbb2",
+			"green":	"#b8bb26",
+			"purple":	"#d3869b"
+		},	
+
+		{
+			"name": "vscode",
+
+			"dark":		"#333333",
+			"darker":	"#1e1e1e",
+			"darkest":	"#02040A",
+			"red":		"#569cd6",
+			"yellow":	"#569cd6",
+			"blue":		"#569cd6",
+			"white":	"#e5e5e5",
+			"green":	"#23d18b",
+			"purple":	"#569cd6"
+		},
+
+		{
+			"name": "github",
+
+			"dark":		"#2b3137",
+			"darker":	"#24292e",
+			"darkest":	"#02040a",
+			"red":		"#2dba4e",
+			"yellow":	"#569cd6",
+			"blue":		"#569cd6",
+			"white":	"#fafbfc",
+			"green":	"#2dba4e",
+			"purple":	"#2dba4e"
+		},
+
+		{
+			"name": "Nord-dark",
+
+			"dark":		"#4c566a",
+			"darker":	"#2e3440",
+			"darkest":	"#02040a",
+			"red":		"#bf616a",
+			"yellow":	"#ebcb8b",
+			"blue":		"#8fbcbb",
+			"white":	"#f2d5cf",
+			"green":	"#a3be8c",
+			"purple":	"#b48ead"
+		},
+
+		{
+			"name": "Catppuccin-Macchiato",
+
+			"dark":		"#414559",
+			"darker":	"#303446",
+			"darkest":	"#232634",
+			"red":		"#e78284",
+			"yellow":	"#ef9f76",
+			"blue":		"#f4b8e4",
+			"white":	"#f2d5cf",
+			"green":	"#ca9ee6",
+			"purple":	"#ca9ee6"
+		},
+		
+		{
+			"name": "classic",
+
+			"dark":		"#000000",
+			"darker":	"#000000",
+			"darkest":	"#000000",
+			"red":		"#ffffff",
+			"yellow":	"#ffffff",
+			"blue":		"#ffffff",
+			"white":	"#ffffff",
+			"green":	"#ffffff",
+			"purple":	"#ffffff"
+		}
+	]
+}

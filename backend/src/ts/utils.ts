@@ -24,3 +24,4 @@ export function getSqlDate()
 {
 	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
 }
+

@@ -1,10 +1,10 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from '../modules/user/User.js';
-import { Chat } from '../modules/chat/chat.js';
-import { UserElement, UserElementType } from '../modules/user/UserElement.js';
-import { GameRouter } from '../router.js';
-import { Router } from '../modules/router/Router.js';
+import { User, getUserFromId } from 'modules/user/User.js';
+import { Chat } from 'modules/chat/chat.js';
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
+import { GameRouter } from 'router.js';
+import { Router } from 'modules/router/Router.js';
 
 enum Params
 {
@@ -13,7 +13,7 @@ enum Params
 	PADDLE_PADDING = 2,
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
-	COLOR = 'var(--white)',
+	COLOR = 'var(--color-white)',
 	COUNTDOWN_START = 1,
 	IPS = 60,
 }
@@ -77,8 +77,6 @@ export class GameClient extends Utils
 	private	m_prevP1Score:		number | null = null;
 	private	m_prevP2Score:		number | null = null;
 	private m_router:			GameRouter;
-	private m_chat:				Chat | undefined;
-	private m_gameCreatedCallback: ((json: any) => void) | undefined;
 	private m_endTimeout:		any | null = null;
 
 	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
@@ -86,7 +84,6 @@ export class GameClient extends Utils
 		super();
 
 		this.m_router = router;
-		this.m_chat = chat;
 		this.m_playerContainer = Router.getElementById("player-container");
 		if (!this.m_playerContainer)
 		{
@@ -99,8 +96,8 @@ export class GameClient extends Utils
 		this.createPlayerHtml();
 		if (chat)
 		{
-			this.m_gameCreatedCallback = (json) => this.createGameFeedback(json);
-			chat.onGameCreated(this.m_gameCreatedCallback);
+			console.log("adding listener");
+			chat.onGameCreated((json) => this.createGameFeedback(json));
 		}
 
 		if (this.isModeValid())
@@ -110,20 +107,35 @@ export class GameClient extends Utils
 		}
 	}
 
-	private createPlayerHtml()
+	private initPlayerHtml(player: User): UserElement | null
 	{
 		if (!this.m_playerContainer)
+			return null;
+		const elt = new UserElement(player, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
+		const winrate = elt.getElement("#winrate");
+		if (winrate)
+			winrate.innerText = `${player.stats.gamePlayed > 0 ? player.winrate + "%" : "n/a" }`;
+		const elo = elt.getElement("#elo");
+		if (elo)
+			elo.innerText = `${player.elo}p`;
+		return elt;
+	}
+
+	private createPlayerHtml()
+	{
+		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 			return ;
 		this.m_playerContainer.innerHTML = "";
-		this.m_player1 = new UserElement(this.m_user, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
-		this.m_player2 = new UserElement(this.m_user2, this.m_playerContainer, UserElementType.STANDARD, "user-game-template");
+		this.m_player1 = this.initPlayerHtml(this.m_user);
+		this.m_player2 = this.initPlayerHtml(this.m_user2);
 	}
 
 	private isModeValid(): boolean
 	{
 		return (this.mode === 'local'
 			|| this.mode === 'online'
-			|| this.mode === 'bot');
+			|| this.mode === 'bot'
+			|| this.mode === 'duel');
 	}
 
 	private init(): void
@@ -145,14 +157,13 @@ export class GameClient extends Utils
 		this.gameId = json.gameId.toString();
 		this.m_user2 = await getUserFromId(json.opponentId.toString());
 		this.playerSide = json.playerSide;
-		console.log(this.playerSide);
 		this.createPlayerHtml();
 		this.m_player2?.updateHtml(this.m_user2);
 
 		this.launchCountdown();
 	}
 
-	private async createGame(): Promise<void>
+	public async createGame(): Promise<void>
 	{
 		if (!this.m_user)
 			return ;
@@ -169,7 +180,6 @@ export class GameClient extends Utils
 				return ;
 
 			const data = await response.json();
-			console.log(data);
 			this.gameId = data.gameId;
 			this.playerSide = data.playerSide;
 
@@ -185,8 +195,10 @@ export class GameClient extends Utils
 		}
 	}
 
-	private launchCountdown(): void
+	public launchCountdown(gameId?: string): void
 	{
+		if (gameId)
+			this.gameId = gameId;
 		let count: number = Params.COUNTDOWN_START;
 		const countdownIntervalTime =  (count > 0) ? 1000 : 0;
 		this.hide('searching-msg');
@@ -202,7 +214,7 @@ export class GameClient extends Utils
 			{
 				clearInterval(this.countdownInterval);
 				this.showElements();
-				this.startGame();
+				this.startGame(gameId);
 			}
 		}, countdownIntervalTime);
 	}
@@ -225,28 +237,32 @@ export class GameClient extends Utils
 			this.m_player2.updateHtml(this.m_user2);
 	}
 
-	private async startGame(): Promise<void>
+	public async startGame(gameId? : string ): Promise<void>
 	{
-		console.log(this.playerSide);
-		if (!this.m_user) return;
-		
-		const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
+		if (!gameId)
 		{
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ userId: this.m_user.id })
-		});
+			console.log(this.playerSide);
+			if (!this.m_user) return;
+			
+			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userId: this.m_user.id })
+			});
 
-		if (!response.ok)
-		{
-			console.error('Failed to start game:', response.status, response.statusText);
-			return ;
-		}
-		
-		const buffer = await response.arrayBuffer();
-		if (buffer.byteLength > 0)
-		{
-			this.updateGameState(buffer);
+			if (!response.ok)
+			{
+				console.error('Failed to start game:', response.status, response.statusText);
+				return ;
+			}
+			
+			const buffer = await response.arrayBuffer();
+			if (buffer.byteLength > 0)
+			{
+				this.updateGameState(buffer);
+			}
+
 		}
 
 		this.socket = new WebSocket(`wss://${window.location.host}/api/game/${this.gameId}/${this.playerSide}`);
@@ -287,17 +303,7 @@ export class GameClient extends Utils
 
 		if (event.key === Keys.PLAY_AGAIN && this.end)
 		{
-			const targetElement = event.target as HTMLElement;
-			if (!targetElement)
-			{
-				return ;
-			}
-
-			const tagName = targetElement.tagName.toLowerCase();
-			if (tagName && tagName !== 'input' && tagName !== 'textarea')
-			{
-				this.m_router.navigateTo("game", this.mode);
-			}
+			this.m_router.navigateTo("home", "")
 		}
 	}
 
@@ -308,9 +314,11 @@ export class GameClient extends Utils
 
 	private send(): void
 	{
+		if (!this.socket)
+			return ;
 		this.keysToSend = '';
 
-		if (this.mode === 'online' || this.mode === 'bot')
+		if (this.mode === 'online' || this.mode === 'bot' || this.mode === 'duel')
 		{
 			this.keysPressed.forEach((key) => { this.getKeyToSend1Player(key); });
 		}
@@ -369,6 +377,7 @@ export class GameClient extends Utils
 		{
 			try
 			{
+
 				this.updateDisplay(new GameState(data));
 			}
 			catch (error)

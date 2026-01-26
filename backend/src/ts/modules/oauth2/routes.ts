@@ -1,6 +1,4 @@
 import { FastifyInstance, FastifyPluginOptions } from "fastify";
-import * as core from '@core/core.js';
-import { loginOAuth2 } from "@modules/users/userManagment.js";
 
 import { fortyTwoOAuth2Routes } from "./fortyTwo.route.js";
 import { githubOAuth2Routes } from "./github.route.js";
@@ -15,7 +13,7 @@ export enum AuthSource {
 	FORTY_TWO,
 }
 
-export async function OAuthRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
+export async function OAuthRoutes(fastify: FastifyInstance)
 {
 	await fastify.register(fortyTwoOAuth2Routes);
 	await fastify.register(githubOAuth2Routes);

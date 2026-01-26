@@ -12,6 +12,12 @@
 		</div>
 	</template>
 
+	<template id="no-histo-template">
+		<div id="no-histo" class="absolute w-full h-1/4 bg-darker top-1/3 flex justify-center items-center">
+			<p data-i18n="no_history" class="font-bold text-[3vw]">no recorded history</p>
+		</div>
+	</template>
+
 	<template id="user-friend-template">
 		<div class="relative flex gap-4 items-center justify-between h-20 w-[90%]">
 
@@ -44,26 +50,26 @@
 			<!-- profile expended -->
 			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2 relative">
 
-	<div class="small-lines w-[200vw] h-[6vw] absolute top-[40%] right-[-5%] -z-1">
-		<div class="line bg-red"></div>
-		<div class="line bg-yellow"></div>
-		<div class="line bg-blue"></div>
-		<div class="line bg-green"></div>
-	</div>
+				<div class="small-lines w-[200vw] h-[6vw] absolute top-[40%] right-[-5%] -z-1">
+					<div class="line bg-red"></div>
+					<div class="line bg-yellow"></div>
+					<div class="line bg-blue"></div>
+					<div class="line bg-green"></div>
+				</div>
 				<div id="profile-extended" class="flex flex-row justify-center align-middle h-full">
 					<div class="relative h-full flex justify-center items-center">
 						<img
 							id="avatar-img"
-							src="" 
+							src="/public/avatars/default.png" 
 							alt="Profile" 
-							class="bg-white rounded-full aspect-square border-2 border-darker object-cover h-[80%]"/>
-						<div id="user-status" class="user-status right-2 w-[30px] top-[70%]"></div>
+							class="bg-white rounded-full aspect-square border-2 border-white object-cover min-h=[80%] h-[80%]"/>
+						<div id="user-status" class="user-status right-2 w-[30px] h-[30px] top-[70%]"></div>
 					</div>
 					<div class="flex flex-col align-middle justify-center ml-4">
 						<h1 id="name" class="text-3xl bg-darker px-3 py-1">super username</h1>
-						<p id="created_at" data-i18n="created_at" class="px-3 text-sm">created 11-7-2025</p>
-						<button id="main-btn-friend" class="button-empty text-blue border-blue mt-3">tmp</button>
-						<button id="main-btn-block" class="button-empty text-red border-red mt-3">tmp</button>
+						<p id="created_at" class="px-3 text-sm">created 11-7-2025</p>
+						<button id="main-btn-friend" data-i18n="profile_friend_btn" class="button-empty text-blue border-blue mt-3">tmp</button>
+						<button id="main-btn-block" data-i18n="profile_block_btn" class="button-empty text-red border-red mt-3">tmp</button>
 					</div>
 
 					<div class="self-center ml-4 h-[80%] w-2 bg-darker"></div>
@@ -111,7 +117,7 @@
 
 				<div id="history" class="h-[50%]">
 					<h1 class="w-full font-bold text-xl" data-i18n="History">History</h1>
-					<div id="history-container" class="h-full w-full bg-dark overflow-y-scroll py-5">
+					<div id="history-container" class="relative h-full w-full bg-dark overflow-y-scroll py-5">
 						<div class="w-full flex flex-row justify-around align-middle px-2">
 							<p class="underline w-[50%]" data-i18n="match">match</p>
 							<p class="underline w-[10%]" data-i18n="result">result</p>
@@ -124,15 +130,15 @@
 				<div class="flex h-[45%] w-full justify-center items-center gap-5">
 					<div id="friends" class="h-full w-1/3">
 						<h1 class="w-full font-bold text-xl" data-i18n="Friends">Friends</h1>
-						<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+						<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3 overflow-y-scroll"></div>
 					</div>
 					<div id="pending" class="h-full w-1/3">
 						<h1 id="request-title" class="w-full font-bold text-xl" data-i18n="Requests">Request</h1>
-						<div id="pndg-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+						<div id="pndg-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3 overflow-y-scroll"></div>
 					</div>
 					<div id="blocked" class="h-full w-1/3">
 						<h1 id="block-title" class="w-full font-bold text-xl" data-i18n="Blocked">Blocked</h1>
-						<div id="blocked-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3"></div>
+						<div id="blocked-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3 overflow-y-scroll"></div>
 					</div>
 				</div>
 			</div>

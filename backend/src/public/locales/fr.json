@@ -2,9 +2,12 @@
 	"capital": {
 		"play": "JOUER",
 		"signup": "INSCRIPTION",
-  	"login": "CONNEXION",
+		"login": "CONNEXION",
 		"settings": "PARAMÈTRES",
-		"leaderboard": "MEILLEURS SCORES"
+		"leaderboard": "MEILLEURS SCORES",
+		"links": "LIENS",
+		"chosen_modules": "SELECTION MODULES",
+		"contributors": "COLLABORATEURS"
 	},
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
@@ -72,5 +75,31 @@
 	"unavailable": "indisponible",
 	"busy": "occupé",
 	"in_game": "en jeu",
-	"no_data": "pas de données"
+	"no_data": "pas de données",
+	"usr_not_found": "utilisateur non trouvé :(",
+	"profile_friend_btn": "ajouter ami(e)",
+	"profile_block_btn": "bloquer",
+
+	"about_page": {
+		"web": "Web",
+		"user_managment": "Gestion Utilisateur",
+		"ux": "Gameplay et experience utilisateur",
+		"ai": "algo et IA",
+		"cyber": "Cybersecurité",
+		"devops": "Devops",
+		"accessibility": "Accessibilité",
+		"ssp": "Pong Server-side",
+
+		"web_list": "blockchain\nframework pour le backend (fastify)\nframwork / toolkit pour le frontend (tailwindcss)\nutilisation d'une database pour le backend (sqlite)\n",
+		"usr_list": "gestion utilisateur standard, (authentication, profile, amis, etc...)\nauthentification avec OAuth2 (42 et github OAuth2)",
+		"ux_list": "joueur distant\nchat (avec commands)\nGestion des theme",
+		"ai_list": "joueur IA\n Stats / dashboards du joueur",
+		"cyber_list": "WAF / ModSecurity + HashiCorp Vault\nutilisation du 2fa + token jwt",
+		"devops_list": "Gestion des log (Elasticsearch, Logstash, Kibana)\nsystem de surveillance (Prometheus and Grafana)",
+		"accessibility_list": "compatibilité navigatuers\nsupport de plusieurs langues (en, fr, es)",
+		"ssp_list": "pong en Server side\nPong gameplay via cli (application rust)",
+
+		"source_code": "code source",
+		"intro": "ft_transcendence est le projet final du tronc commun de 42\nil faut faire une app full stack en ts, avec une database, docker, nodejs, html / css\nLe but est de recrée pong avec plus de fonnctionalité"
+	}
 }

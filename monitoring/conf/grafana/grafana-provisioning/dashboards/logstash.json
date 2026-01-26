@@ -1,0 +1,593 @@
+{
+	"__inputs": [
+	  {
+		"name": "DS_PROMETHEUS",
+		"label": "Prometheus",
+		"description": "",
+		"type": "datasource",
+		"pluginId": "prometheus",
+		"pluginName": "Prometheus"
+	  },
+	  {
+		"name": "VAR_CPU_THRESHOLD",
+		"type": "constant",
+		"label": "CPU Threshold",
+		"value": "1.0",
+		"description": ""
+	  }
+	],
+	"__elements": {},
+	"__requires": [
+	  {
+		"type": "grafana",
+		"id": "grafana",
+		"name": "Grafana",
+		"version": "12.4.0-20836657505"
+	  },
+	  {
+		"type": "datasource",
+		"id": "prometheus",
+		"name": "Prometheus",
+		"version": "1.0.0"
+	  },
+	  {
+		"type": "panel",
+		"id": "stat",
+		"name": "Stat",
+		"version": ""
+	  }
+	],
+	"annotations": {
+	  "list": [
+		{
+		  "builtIn": 1,
+		  "datasource": {
+			"uid": "-- Grafana --"
+		  },
+		  "enable": true,
+		  "hide": true,
+		  "iconColor": "rgba(0, 211, 255, 1)",
+		  "limit": 100,
+		  "name": "Annotations & Alerts",
+		  "showIn": 0,
+		  "target": {
+			"limit": 100,
+			"matchAny": false,
+			"tags": [],
+			"type": "dashboard"
+		  },
+		  "type": "dashboard"
+		}
+	  ]
+	},
+	"description": "Logstash Health Monitoring: System, JVM, Pipeline and individual plugin stats for Logstash replicas running on Kubernetes.",
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"links": [],
+	"panels": [
+	  {
+		"collapsed": false,
+		"gridPos": {
+		  "h": 1,
+		  "w": 24,
+		  "x": 0,
+		  "y": 0
+		},
+		"id": 6793,
+		"panels": [],
+		"title": "Status Overview",
+		"type": "row"
+	  },
+	  {
+		"datasource": {
+		  "type": "prometheus",
+		  "uid": "${DS_PROMETHEUS}"
+		},
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "thresholds"
+			},
+			"mappings": [
+			  {
+				"options": {
+				  "0": {
+					"color": "dark-red",
+					"index": 0,
+					"text": "Down"
+				  },
+				  "1": {
+					"color": "green",
+					"index": 1,
+					"text": "Up"
+				  }
+				},
+				"type": "value"
+			  },
+			  {
+				"options": {
+				  "match": "null+nan",
+				  "result": {
+					"color": "#72946d",
+					"index": 2,
+					"text": "–"
+				  }
+				},
+				"type": "special"
+			  }
+			],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "dark-green",
+				  "value": 0
+				}
+			  ]
+			},
+			"unit": "iops"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 5,
+		  "w": 10,
+		  "x": 0,
+		  "y": 1
+		},
+		"id": 6775,
+		"options": {
+		  "colorMode": "background",
+		  "graphMode": "area",
+		  "justifyMode": "auto",
+		  "orientation": "auto",
+		  "percentChangeColorMode": "standard",
+		  "reduceOptions": {
+			"calcs": [
+			  "lastNotNull"
+			],
+			"fields": "",
+			"values": false
+		  },
+		  "showPercentChange": false,
+		  "text": {},
+		  "textMode": "value_and_name",
+		  "wideLayout": true
+		},
+		"pluginVersion": "12.4.0-20836657505",
+		"targets": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "${DS_PROMETHEUS}"
+			},
+			"exemplar": true,
+			"expr": "max(logstash_stats_pipeline_up{}) by (pipeline)",
+			"format": "table",
+			"hide": true,
+			"instant": false,
+			"interval": "",
+			"legendFormat": "{{pipeline}}",
+			"refId": "status"
+		  },
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "${DS_PROMETHEUS}"
+			},
+			"exemplar": false,
+			"expr": "max(rate(logstash_stats_pipeline_events_out{pod=~'$instance',pipeline=~\"$pipeline\"}[$__range]) / rate(logstash_stats_pipeline_events_duration{pod=~'$instance',pipeline=~\"$pipeline\"}[$__range])*1000 > 0) by (pipeline) or max(logstash_stats_pipeline_up{}) by (pipeline)",
+			"format": "table",
+			"instant": true,
+			"interval": "",
+			"legendFormat": "{{rate}}",
+			"refId": "rate"
+		  }
+		],
+		"title": "Pipeline Status + Max Rate Last Hour",
+		"transformations": [
+		  {
+			"id": "seriesToColumns",
+			"options": {
+			  "byField": "pipeline"
+			}
+		  },
+		  {
+			"id": "sortBy",
+			"options": {
+			  "fields": {},
+			  "sort": [
+				{
+				  "field": "pipeline"
+				}
+			  ]
+			}
+		  },
+		  {
+			"id": "rowsToFields",
+			"options": {
+			  "mappings": [
+				{
+				  "fieldName": "pipeline",
+				  "handlerKey": "field.name"
+				},
+				{
+				  "fieldName": "Time 1",
+				  "handlerKey": "__ignore"
+				},
+				{
+				  "fieldName": "Value #status",
+				  "handlerKey": "mappings.color"
+				},
+				{
+				  "fieldName": "Time 2",
+				  "handlerKey": "__ignore"
+				},
+				{
+				  "fieldName": "Value #rate",
+				  "handlerKey": "__ignore"
+				},
+				{
+				  "fieldName": "Value",
+				  "handlerKey": "field.value"
+				},
+				{
+				  "fieldName": "Time",
+				  "handlerKey": "__ignore"
+				}
+			  ]
+			}
+		  }
+		],
+		"type": "stat"
+	  },
+	  {
+		"datasource": {
+		  "type": "prometheus",
+		  "uid": "${DS_PROMETHEUS}"
+		},
+		"description": "Successful Writes to Elasticsearch/OpenSearch",
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "fixedColor": "dark-purple",
+			  "mode": "palette-classic"
+			},
+			"mappings": [],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": 0
+				}
+			  ]
+			},
+			"unit": "Ok"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 6,
+		  "w": 12,
+		  "x": 12,
+		  "y": 1
+		},
+		"id": 6919,
+		"options": {
+		  "colorMode": "value",
+		  "graphMode": "area",
+		  "justifyMode": "auto",
+		  "orientation": "auto",
+		  "percentChangeColorMode": "standard",
+		  "reduceOptions": {
+			"calcs": [
+			  "lastNotNull"
+			],
+			"fields": "",
+			"values": false
+		  },
+		  "showPercentChange": false,
+		  "textMode": "value_and_name",
+		  "wideLayout": true
+		},
+		"pluginVersion": "12.4.0-20836657505",
+		"targets": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "${DS_PROMETHEUS}"
+			},
+			"exemplar": true,
+			"expr": "sum by (pipeline, plugin, plugin_id) (logstash_stats_pipeline_plugin_documents_successes{plugin!=\"stdout\"})",
+			"format": "time_series",
+			"instant": false,
+			"interval": "",
+			"legendFormat": "{{pipeline}} -> {{plugin}}",
+			"refId": "A"
+		  }
+		],
+		"title": "Output Write Successes",
+		"transformations": [
+		  {
+			"disabled": true,
+			"id": "rowsToFields",
+			"options": {}
+		  }
+		],
+		"transparent": true,
+		"type": "stat"
+	  },
+	  {
+		"datasource": {
+		  "type": "prometheus",
+		  "uid": "${DS_PROMETHEUS}"
+		},
+		"description": "Failed Writes to Elasticsearch/OpenSearch",
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "fixedColor": "dark-purple",
+			  "mode": "thresholds"
+			},
+			"mappings": [],
+			"noValue": "0",
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": 0
+				},
+				{
+				  "color": "#EAB839",
+				  "value": 1
+				},
+				{
+				  "color": "dark-orange",
+				  "value": 100
+				},
+				{
+				  "color": "dark-red",
+				  "value": 1000
+				}
+			  ]
+			},
+			"unit": "Failed"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 5,
+		  "w": 12,
+		  "x": 12,
+		  "y": 7
+		},
+		"id": 6952,
+		"options": {
+		  "colorMode": "value",
+		  "graphMode": "area",
+		  "justifyMode": "auto",
+		  "orientation": "auto",
+		  "percentChangeColorMode": "standard",
+		  "reduceOptions": {
+			"calcs": [
+			  "lastNotNull"
+			],
+			"fields": "",
+			"values": false
+		  },
+		  "showPercentChange": false,
+		  "text": {},
+		  "textMode": "value_and_name",
+		  "wideLayout": true
+		},
+		"pluginVersion": "12.4.0-20836657505",
+		"targets": [
+		  {
+			"datasource": {
+			  "type": "prometheus",
+			  "uid": "${DS_PROMETHEUS}"
+			},
+			"exemplar": true,
+			"expr": "sum by (pipeline, plugin, plugin_id) (logstash_stats_pipeline_plugin_documents_non_retryable_failures{plugin!=\"stdout\"})",
+			"format": "time_series",
+			"instant": false,
+			"interval": "",
+			"legendFormat": "{{pipeline}} -> {{plugin}}",
+			"refId": "A"
+		  }
+		],
+		"title": "Output Write Failures",
+		"transformations": [
+		  {
+			"disabled": true,
+			"id": "rowsToFields",
+			"options": {}
+		  }
+		],
+		"transparent": true,
+		"type": "stat"
+	  }
+	],
+	"preload": false,
+	"refresh": "",
+	"schemaVersion": 42,
+	"tags": [
+	  "logstash",
+	  "telemetry"
+	],
+	"templating": {
+	  "list": [
+		{
+		  "description": "Number of cores or K8s CPU limit (Used as load threshold line)",
+		  "hide": 2,
+		  "label": "CPU Threshold",
+		  "name": "cpu_threshold",
+		  "query": "${VAR_CPU_THRESHOLD}",
+		  "skipUrlSync": true,
+		  "type": "constant",
+		  "current": {
+			"value": "${VAR_CPU_THRESHOLD}",
+			"text": "${VAR_CPU_THRESHOLD}",
+			"selected": false
+		  },
+		  "options": [
+			{
+			  "value": "${VAR_CPU_THRESHOLD}",
+			  "text": "${VAR_CPU_THRESHOLD}",
+			  "selected": false
+			}
+		  ]
+		},
+		{
+		  "current": {},
+		  "datasource": {
+			"type": "prometheus",
+			"uid": "${DS_PROMETHEUS}"
+		  },
+		  "definition": "query_result({app='logstash'})",
+		  "includeAll": true,
+		  "label": "Replica",
+		  "multi": true,
+		  "name": "pod",
+		  "options": [],
+		  "query": {
+			"query": "query_result({app='logstash'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*pod=\"([^\"]*).*/",
+		  "regexApplyTo": "value",
+		  "sort": 1,
+		  "type": "query"
+		},
+		{
+		  "current": {},
+		  "definition": "query_result(logstash_stats_pipeline_events_in{pod=~'$instance'})",
+		  "description": "Logstash Pipeline",
+		  "includeAll": true,
+		  "label": "Logstash Pipeline",
+		  "multi": true,
+		  "name": "pipeline",
+		  "options": [],
+		  "query": {
+			"query": "query_result(logstash_stats_pipeline_events_in{pod=~'$instance'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*pipeline=\"([^\"]*).*/",
+		  "regexApplyTo": "value",
+		  "sort": 1,
+		  "type": "query"
+		},
+		{
+		  "current": {},
+		  "datasource": {
+			"type": "prometheus",
+			"uid": "${DS_PROMETHEUS}"
+		  },
+		  "definition": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='input'})",
+		  "includeAll": true,
+		  "multi": true,
+		  "name": "input_plugin",
+		  "options": [],
+		  "query": {
+			"query": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='input'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*plugin=\"([^\"]*).*/",
+		  "regexApplyTo": "value",
+		  "sort": 2,
+		  "type": "query"
+		},
+		{
+		  "current": {},
+		  "datasource": {
+			"type": "prometheus",
+			"uid": "${DS_PROMETHEUS}"
+		  },
+		  "definition": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='filter'})",
+		  "includeAll": true,
+		  "multi": true,
+		  "name": "filter_plugin",
+		  "options": [],
+		  "query": {
+			"query": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='filter'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*plugin=\"([^\"]*).*/",
+		  "regexApplyTo": "value",
+		  "sort": 2,
+		  "type": "query"
+		},
+		{
+		  "current": {},
+		  "datasource": {
+			"type": "prometheus",
+			"uid": "${DS_PROMETHEUS}"
+		  },
+		  "definition": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='output'})",
+		  "includeAll": true,
+		  "multi": true,
+		  "name": "output_plugin",
+		  "options": [],
+		  "query": {
+			"query": "query_result(logstash_stats_pipeline_plugin_events_out{pod=~'$instance',plugin_type='output'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*plugin=\"([^\"]*).*/",
+		  "regexApplyTo": "value",
+		  "sort": 2,
+		  "type": "query"
+		},
+		{
+		  "current": {},
+		  "definition": "query_result(logstash_stats_pipeline_plugin_events_duration{pod=~'$instance'})",
+		  "description": "Pipeline Plugin Type",
+		  "includeAll": true,
+		  "label": "Plugin Type",
+		  "multi": true,
+		  "name": "plugin_type",
+		  "options": [],
+		  "query": {
+			"query": "query_result(logstash_stats_pipeline_plugin_events_duration{pod=~'$instance'})",
+			"refId": "StandardVariableQuery"
+		  },
+		  "refresh": 1,
+		  "regex": "/.*plugin_type=\"([^\"]+).*/",
+		  "regexApplyTo": "value",
+		  "type": "query"
+		},
+		{
+		  "current": {
+			"text": "",
+			"value": "${DS_PROMETHEUS}",
+			"selected": true
+		  },
+		  "label": "Datasource",
+		  "name": "DS_PROMETHEUS",
+		  "options": [],
+		  "query": "prometheus",
+		  "refresh": 1,
+		  "regex": "",
+		  "type": "datasource"
+		}
+	  ]
+	},
+	"time": {
+	  "from": "now-1h",
+	  "to": "now"
+	},
+	"timepicker": {},
+	"timezone": "browser",
+	"title": "Logstash",
+	"uid": "logstash-development",
+	"version": 2,
+	"weekStart": "",
+	"id": null
+  }

@@ -3,8 +3,6 @@ import { ViewComponent } from 'modules/router/ViewComponent.js';
 
 export class NotFoundView extends ViewComponent
 {
-	private m_profileContainer: HTMLElement | null = null;
-
 	constructor()
 	{
 		super();

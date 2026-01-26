@@ -3,6 +3,7 @@ import Backend from 'https://cdn.skypack.dev/i18next-http-backend';
 import LanguageDetector from 'https://cdn.skypack.dev/i18next-browser-languagedetector';
 
 const selectElement = document.getElementById('language-selector');
+// console.log(selectElement);
 
 i18n.use(Backend).use(LanguageDetector).init({
 	fallbackLng: 'en',
@@ -24,7 +25,8 @@ function translatePage() {
 }
 
 function updateLanguageSelector() {
-	selectElement.value = i18n.language;
+	if (selectElement)
+		selectElement.value = i18n.language;
 }
 
 i18n.on('initialized', () => {

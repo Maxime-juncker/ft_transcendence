@@ -1,18 +1,40 @@
 <template id="lobby-template">
 
+	<template id="user-game-template">
+		<div id="profile" class="flex flex-row w-full h-full items-center gap-2 hover:bg-white hover:cursor-grab hover:text-darker
+			p-2 border-2 border-(--white) hover:border-white hover:border-2">
+			<div class="relative">
+				<img
+					id="avatar-img"
+					src="" 
+					alt="Profile" 
+					class="avatar-img"/>
+				<div id="user-status" class="user-status right-0 top-[70%]"></div>
+			</div>
+			<div class="w-full h-full flex justify-between items-center">
+				<h1 id="avatar-name" class="text-[100%] w-2/3 truncate font-bold select-none break-all">user</h1>
+				<div class="flex h-full w-1/3 gap-3 items-center">
+					<h1 id="elo" class="text-[100%] w-1/2 select-none break-all">elo: NaN</h1>
+					<h1 id="winrate" class="text-[100%] w-1/2 select-none break-all">W/R: NaN</h1>
+				</div>
+			</div>
+		</div>
+	</template>
+
 	<template id="user-template">
-		<div class="relative flex gap-2 items-center justify-between h-20 w-full max-w-125 p-2 hover:bg-darker active:bg-darkest">
-			<div class="flex flex-row items-center gap-2">
+		<div class="relative flex gap-4 items-center justify-between h-20 w-[90%]">
+			<div id="profile" class="flex flex-1 flex-row w-full items-center gap-2 hover:bg-white hover:cursor-grab hover:text-darker
+				p-2 border-2 border-white hover:border-white hover:border-2">
 				<div class="relative">
 					<img
 						id="avatar-img"
-						src=""
-						alt="Profile"
+						src="" 
+						alt="Profile" 
 						class="avatar-img"/>
 					<div id="user-status" class="user-status right-0 top-[70%]"></div>
 				</div>
-				<div id="avatar-name" class="text-[100%] font-bold select-none">
-					user
+				<div class="w-full h-full flex justify-between">
+					<h1 id="avatar-name" class="text-[100%] w-2/3 truncate font-bold select-none break-all">user</h1>
 				</div>
 			</div>
 		</div>
@@ -54,26 +76,37 @@
 		</div>
 	</template>
 
-	<template id="user-game-template">
-		<div id="user-profile"
-			class="user-profile">
-			<div id="avatar-container">
-				<img
-					id="avatar-img"
-					src="" 
-					alt="Profile" 
-					class="avatar border-white border-2"/>
-
-				<div id="avatar-name">
-					user
-				</div>
-				<div id="user-status" class="user-status"> </div>
-			</div>
-		</div>
-	</template>
-
 	<div class="h-full">
 		<div id="header-container"></div>
+		<div id="tutorial_panel_holder" class="absolute w-full h-full flex justify-center items-center relative z-99">
+			<div id="tutorial_panel" class="w-[60vw] h-[55vh] py-12 bg-dark flex flex-col justify-start items-center border-2 border-purple">
+				<h1 data-i18n="capital.welcome" class="text-[3vw] font-bold mb-12">WELCOME TO FT_TRANSCENDENCE</h1>
+				<div class="w-[95%] h-full flex justify-between items-center">
+					<div class="flex flex-col justify-start items-start gap-3 w-1/2">
+						<p data-i18n="tut.chat">use the chatbox to talk to other people</p>
+						<p data-i18n="tut.chat-cmd">type "/help" in chat for a list of all commands</p>
+						<div class="flex justify-start items-center gap-2">
+							<p data-i18n="tut.user-list">user this button to list connected users</p>
+							<button data-i18n="user" class="button-empty border-purple text-purple">users</button>
+						</div>
+						<div class="flex justify-start items-center gap-2">
+							<p data-i18n="tut.friend-list">user this button to list all your's friends</p>
+							<button data-i18n="friends" class="button-empty border-purple text-purple">friends</button>
+						</div>
+					</div>
+					<div class="h-[25vh] border-darker border-2">
+					</div>
+					<div class="flex flex-col justify-center items-end gap-3 w-1/2">
+						<p data-i18n="tut.user">clicking on a user will show you his profile</p>
+						<p data-i18n="tut.settings">change your theme / toggle crt effect in the settings</p>
+						<p data-i18n="tut.move">in online / bot use ↑/↓ to move</p>
+						<p data-i18n="tut.local-move">in local use w/s for player1 and ↑/↓ to move player2</p>
+					</div>
+				</div>
+
+				<button data-i18n="tut.continue" id="continue-btn" class="button-empty border-blue text-blue">continue</button>
+			</div>
+		</div>
 
 		<div class="h-full w-full flex flex-col gap-5 py-15 sm:flex-row md:px-5 lg:px-20 pt-36">
 
@@ -193,7 +226,6 @@
 				<div id="player-container" class="h-32 w-full bg-dark border-t-4 border-t-red
 					flex flex-row-reverse justify-around items-center align-middle">
 				</div>
-				<!-- <script>var exports = {};</script> -->
-				<!-- <script type="module" src="dist/lobby.js"></script> -->
+
 			</div>
 </template>

@@ -1,0 +1,19 @@
+{
+	"name": "src",
+	"type": "module",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc && tsc-alias",
+		"start": "node dist/app.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@types/node": "^25.0.9",
+		"tsc-alias": "^1.8.16",
+		"typescript": "^5.9.3"
+	}
+}

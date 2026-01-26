@@ -1,8 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { createUserOAuth2, loginOAuth2 } from '@modules/users/userManagment.js';
-import * as core from '@core/core.js';
+import { createUserOAuth2, loginOAuth2 } from 'modules/users/userManagment.js';
+import * as core from 'core/core.js';
 import * as jwt from 'modules/jwt/jwt.js';
-import { AuthSource } from '@modules/oauth2/routes.js'
+import { AuthSource } from 'modules/oauth2/routes.js'
+import { Logger } from 'modules/logger.js';
 
 export function fortyTwoOAuth2Routes (
 	fastify: FastifyInstance,
@@ -10,12 +11,19 @@ export function fortyTwoOAuth2Routes (
 	done: () => void,
 )
 {
-	fastify.get('/forty_two/callback', function(request: any, reply) {
+	void options;
+
+	fastify.get('/forty_two/callback', {
+		config: { 
+			rateLimit: core.rateLimitMed
+		},
+	},
+		function(request: any, reply) {
 
 		fastify.FortyTwoOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)
 			{
-				console.log('OAuth Error:', err);
+				Logger.log('OAuth Error:', err);
 				reply.send(err);
 				return;
 			}
@@ -28,7 +36,7 @@ export function fortyTwoOAuth2Routes (
 
 			if (!fetchResult.ok)
 			{
-				console.log("failed to fetch user infos");
+				Logger.log("failed to fetch user infos");
 				reply.send(new Error('Failed to fetch user info'));
 				return;
 			}

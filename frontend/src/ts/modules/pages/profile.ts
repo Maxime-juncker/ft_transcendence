@@ -11,9 +11,7 @@ Chart.register(...registerables);
 
 export class ProfileView extends ViewComponent
 {
-	private m_main: MainUser | null = null;
 	private m_user: User | null = null;
-	private m_searchInput: HTMLInputElement | null = null;
 
 	constructor()
 	{
@@ -22,24 +20,26 @@ export class ProfileView extends ViewComponent
 
 	public async enable()
 	{
-		this.m_main = new MainUser();
-		await this.m_main.loginSession();
-		if (this.m_main.id == -1) // user not login
-		{
-			Router.Instance?.navigateTo("/");
-			return ;
-		}
-		this.m_main.onLogout(() => { Router.Instance?.navigateTo("/") })
-		new HeaderSmall(this.m_main, this, "header-container");
+		if (!MainUser.Instance)
+			return;
 
-		this.m_user = this.m_main;
+		await MainUser.Instance.updateFriendList();
+		await MainUser.Instance.updateBlockList();
+
+		new HeaderSmall(MainUser.Instance, this, "header-container");
+
+		this.m_user = MainUser.Instance;
 		const usernameQuery = utils.getUrlVar().get("username");
 		if (usernameQuery)
 			this.m_user = await getUserFromName(usernameQuery);
-		if (!this.m_user) return;
+		if (!this.m_user)
+		{
+			await this.setUnknowProfile();
+			return;
+		}
 
 		const stats: Stats = this.m_user.stats;
-		new FriendManager(this.m_user, "pndg-container", "friend-container", "blocked-container", this.m_main);
+		new FriendManager(this.m_user, "pndg-container", "friend-container", "blocked-container", MainUser.Instance);
 		this.setBtn();
 		this.addMatch(this.m_user);
 
@@ -51,13 +51,15 @@ export class ProfileView extends ViewComponent
 				UserElement.setStatusColor(this.m_user, status);
 			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = this.m_user.avatarPath;
 			(<HTMLElement>profile_extended.querySelector("#name")).textContent = this.m_user.name;
-			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `created at: ${this.m_user.created_at.split(' ')[0]}`;
+			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `creation: ${this.m_user.created_at.split(' ')[0]}`;
 		}
 
 		(<HTMLElement>this.querySelector("#game-played")).innerText		= `${stats.gamePlayed}`;
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
 		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? this.m_user.winrate + "%" : "n/a" }`;
 		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
+
+		window.dispatchEvent(new CustomEvent('pageChanged'));
 	}
 
 	public async disable()
@@ -66,12 +68,6 @@ export class ProfileView extends ViewComponent
 		const userContainer = this.querySelector("#user-container") as HTMLElement;
 		const historyContainer = this.querySelector("#history-container") as HTMLElement;
 		if (!userContainer || !historyContainer) return;
-
-		if (this.m_main)
-		{
-			this.m_main.resetCallbacks();
-			this.m_main = null;
-		}
 
 		var ctx = document.getElementById('eloEvo') as HTMLCanvasElement;
 		if (!ctx)
@@ -88,57 +84,64 @@ export class ProfileView extends ViewComponent
 
 	private async setFriendBtn(addBtn: HTMLButtonElement)
 	{
-		if (!this.m_main || !this.m_user)
+		if (!MainUser.Instance || !this.m_user)
 			return ;
 
-		for (var [pndg, sender] of this.m_main.pndgFriends)
+		for (var [pndg, sender] of MainUser.Instance.pndgFriends)
 		{
 			if (pndg.id == this.m_user.id) // set button for friends
 			{
-				if (sender == this.m_main.id)
+				if (sender == MainUser.Instance.id)
 				{
 					addBtn.innerText = "cancel request";
-					this.addTrackListener(addBtn, "click", async () => { await this.m_main?.removeFriend(pndg), this.setBtn(); });
+					this.addTrackListener(addBtn, "click", async () => { await MainUser.Instance?.removeFriend(pndg), this.setBtn(); });
 				}
 				else
 				{
 					addBtn.innerText = "accept friend";
-					this.addTrackListener(addBtn, "click", async () => { await this.m_main?.acceptFriend(pndg); this.setBtn(); });
+					this.addTrackListener(addBtn, "click", async () => { await MainUser.Instance?.acceptFriend(pndg); this.setBtn(); });
 				}
 				return ;
 			}
 		}
-		for (var i = 0; i < this.m_main.friends.length; i++)
+		for (var i = 0; i < MainUser.Instance.friends.length; i++)
 		{
-			if (this.m_main.friends[i].id == this.m_user.id) // set button for friends
+			if (MainUser.Instance.friends[i].id == this.m_user.id) // set button for friends
 			{
 				addBtn.innerText = "remove friend";
-				this.addTrackListener(addBtn, "click", async () => { await this.m_main?.removeFriend(this.m_main.friends[i]); this.setBtn(); });
+				this.addTrackListener(addBtn, "click", async () => { await MainUser.Instance?.removeFriend(MainUser.Instance.friends[i]); this.setBtn(); });
 				break;
 			}
 		}
-		if (i == this.m_main.friends.length)
+		if (i == MainUser.Instance.friends.length)
 		{
 			addBtn.innerText = "add friend";
 			this.addTrackListener(addBtn, "click", async () => {
-				if (!this.m_user) return;
-				await this.m_main?.addFriend(this.m_user.name); this.setBtn(); 
+				if (!this.m_user)
+					return;
+				await MainUser.Instance?.addFriend(this.m_user.name); this.setBtn(); 
 			});
 		}
 	}
 
 	private async setBtn()
 	{
-		if (!this.m_main || !this.m_user)
+		var addBtn = this.querySelector("#main-btn-friend") as HTMLButtonElement;
+		var blockBtn = this.querySelector("#main-btn-block") as HTMLButtonElement;
+
+		if (!MainUser.Instance || !this.m_user)
+		{
+			addBtn.style.display = "none";
+			blockBtn.style.display = "none";
 			return ;
+		}
 
-		await this.m_main.updateSelf();
+		await MainUser.Instance.updateSelf();
 		this.replaceBtn();
+		addBtn = this.querySelector("#main-btn-friend") as HTMLButtonElement;
+		blockBtn = this.querySelector("#main-btn-block") as HTMLButtonElement;
 
-		const addBtn = this.querySelector("#main-btn-friend") as HTMLButtonElement;
-		const blockBtn = this.querySelector("#main-btn-block") as HTMLButtonElement;
-
-		if (this.m_user.id == this.m_main.id)
+		if (MainUser.Instance.id == -1 || this.m_user.id == MainUser.Instance.id)
 		{
 			addBtn.style.display = "none";
 			blockBtn.style.display = "none";
@@ -154,7 +157,7 @@ export class ProfileView extends ViewComponent
 
 	private async setBlockBtn(blockBtn: HTMLButtonElement)
 	{
-		if (!this.m_main || !this.m_user)
+		if (!MainUser.Instance || !this.m_user)
 			return ;
 
 		const clone = blockBtn.cloneNode(true) as HTMLElement;
@@ -162,7 +165,7 @@ export class ProfileView extends ViewComponent
 
 		var found = false;
 
-		this.m_main.blockUsr.forEach((block: User) => {
+		MainUser.Instance.blockUsr.forEach((block: User) => {
 		
 			if (!this.m_user) return ;
 
@@ -171,7 +174,7 @@ export class ProfileView extends ViewComponent
 				clone.innerText = "unblock";
 				this.addTrackListener(clone, "click", async () => {
 					if (!this.m_user) return;
-					await this.m_main?.unblockUser(this.m_user.id); this.setBtn();
+					await MainUser.Instance?.unblockUser(this.m_user.id); this.setBtn();
 				});
 				found = true;
 				return ;
@@ -182,7 +185,7 @@ export class ProfileView extends ViewComponent
 		clone.innerText = "block";
 		this.addTrackListener(clone, "click", async () => {
 			if (!this.m_user) return;
-			await this.m_main?.blockUser(this.m_user.id);
+			await MainUser.Instance?.blockUser(this.m_user.id);
 			await this.setBtn();
 		});
 	}
@@ -217,11 +220,11 @@ export class ProfileView extends ViewComponent
 
 		if (code == 404)
 		{
-			const text = document.createElement("p");
-
-			text.innerText = "no recorded history";
-			text.setAttribute("data-i18n", "no_history");
-			histContainer.append(text);
+			const template = this.querySelector("#no-histo-template") as HTMLTemplateElement;
+			if (!template)
+				return;
+			const clone = template.content.cloneNode(true) as HTMLElement;
+			histContainer.append(clone);
 			window.dispatchEvent(new CustomEvent('pageChanged'));
 			return ;
 		}
@@ -248,7 +251,7 @@ export class ProfileView extends ViewComponent
 		const max = Math.max(...eloValues);
 
 		new Chart(ctx, {
-			type: 'line',                                   // chart type
+			type: 'line',
 			data: {
 				labels: Array.from(eloData.keys()),
 				datasets: [{
@@ -256,7 +259,6 @@ export class ProfileView extends ViewComponent
 					data: eloValues,
 					borderColor: 'rgba(75, 192, 192, 1)',
 					backgroundColor: 'rgba(75, 192, 192, 0.2)',
-					// stepped: true,
 					tension: 0.0
 				}]
 			},
@@ -327,6 +329,22 @@ export class ProfileView extends ViewComponent
 		eloData.set(json.created_at, elo);
 
 		return clone;
+	}
+
+	private async setUnknowProfile()
+	{
+		await this.setBtn();
+		const profile_extended = this.querySelector("#profile-extended");
+		if (profile_extended)
+		{
+			const status = profile_extended?.querySelector("#user-status") as HTMLElement;
+			if (status)
+				UserElement.setStatusColor(this.m_user, status);
+			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = "/public/avatars/default.png";
+			(<HTMLElement>profile_extended.querySelector("#name")).textContent = "USER NOT FOUND";
+			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `USER NOT FOUND`;
+		}
+
 	}
 
 }

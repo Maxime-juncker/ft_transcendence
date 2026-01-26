@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import * as core from '@core/core.js';
-import * as friends from '@modules/users/friends.js'
-import { jwtVerif } from '@modules/jwt/jwt.js';
+import * as core from 'core/core.js';
+import * as friends from 'modules/users/friends.js'
+import { jwtVerif } from 'modules/jwt/jwt.js';
 
 export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPluginOptions)
 {

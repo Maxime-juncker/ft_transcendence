@@ -15,6 +15,8 @@
 	--color-scan:			rgba(171, 171, 171, 0.1);
 	--color-px-black:		rgba(70, 70, 70, 0.007);
 
+	--background-size-pixel: 100% 2px, 3px 100%;
+
 	--background-image-pixel-mask: linear-gradient(transparent 50%, rgba(0,0,0,0.01) 50%), linear-gradient(90deg, rgba(255,0,0,0.1), rgba(0,255,0,0.05), rgba(0,0,255,0.1));
 
 @keyframes bootup-text {
@@ -138,7 +140,7 @@
 				before:content-[''] before:block before:absolute
 				before:top-0 before:left-0 before:bottom-0 before:right-0
 				before:pointer-events-none
-				before:bg-size-[100%_2px,3px_100%]
+				before:bg-[size:var(--background-size-pixel)]
 				before:bg-pixel-mask before:z-9999999
 				
 				after:content-[''] after:block after:absolute after:z-999998

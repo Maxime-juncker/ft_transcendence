@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 	-- 1=player 0=admin
 	rank			INTEGER NOT NULL DEFAULT 1,
-	created_at		DATE NOT NULL
+	created_at		DATE NOT NULL,
+
+	show_tutorial	INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS blocked_usr (

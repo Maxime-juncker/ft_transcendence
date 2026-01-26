@@ -1,4 +1,4 @@
-import { createSecret, readSecret } from '@modules/vault/vault.js';
+import { createSecret, readSecret } from 'modules/vault/vault.js';
 
 export interface OAuthSecrets {
   google: { id: string; secret: string };

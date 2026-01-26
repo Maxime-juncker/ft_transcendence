@@ -1,4 +1,5 @@
-import * as base64Url from '@modules/jwt/base64Url.js'
+import * as base64Url from 'modules/jwt/base64Url.js'
+import { Logger } from 'modules/logger.js';
 
 /**
  * create new jwt token
@@ -55,14 +56,14 @@ export async function jwtVerif(token: string, secret: string): Promise<string | 
 		const payload = JSON.parse(base64Url.decode(rawPayload))
 		if (payload.exp && payload.exp < Math.floor(Date.now() / 1000))
 		{
-			console.log('Token expiré')
+			Logger.log('Token expiré')
 			return null
 		}
 
 		const toSign = `${rawHeader}.${rawPayload}`
 		if (rawSignature !== await calcSign(toSign, secret))
 		{
-			console.log('Token JWT invalide')
+			Logger.log('Token JWT invalide')
 			return null
 		}
 
@@ -70,7 +71,7 @@ export async function jwtVerif(token: string, secret: string): Promise<string | 
 	}
 	catch(err)
 	{
-		console.error('JWT invalide:', err)
+		Logger.error('JWT invalide:', err)
 		return null
 	}
 }

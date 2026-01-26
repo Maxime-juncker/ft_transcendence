@@ -13,7 +13,7 @@ COPY src/ /var/www/server
 COPY config.json /config.json
 
 RUN mkdir -p /var/www/server/public/avatars/
-COPY ./default.png /default.png
+COPY ./avatars/ /avatars
 
 WORKDIR /var/www/server
 

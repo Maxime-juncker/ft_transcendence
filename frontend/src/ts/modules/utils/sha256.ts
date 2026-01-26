@@ -1,5 +1,4 @@
 
-// Todo: change using sha256
 export async function hashString(msg: string)
 {
 	const msgBuf = new TextEncoder().encode(msg);

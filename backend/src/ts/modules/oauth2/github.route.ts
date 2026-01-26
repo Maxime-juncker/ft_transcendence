@@ -1,8 +1,9 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { createUserOAuth2, loginOAuth2 } from '@modules/users/userManagment.js';
-import * as core from '@core/core.js';
+import { createUserOAuth2, loginOAuth2 } from 'modules/users/userManagment.js';
+import * as core from 'core/core.js';
 import * as jwt from 'modules/jwt/jwt.js';
-import { AuthSource } from '@modules/oauth2/routes.js';
+import { AuthSource } from 'modules/oauth2/routes.js';
+import { Logger } from 'modules/logger.js';
 
 export function githubOAuth2Routes (
 	fastify: FastifyInstance,
@@ -10,13 +11,13 @@ export function githubOAuth2Routes (
 	done: () => void,
 )
 {
-	fastify.get('/github/callback', function(request: any, reply) {
+	fastify.get('/github/callback',  function(request: any, reply) {
 		
 		fastify.GithubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)
 			{
 				reply.send(err);
-				console.log(err);
+				Logger.log(err);
 				return
 			}
 
@@ -28,7 +29,7 @@ export function githubOAuth2Routes (
 
 			if (!fetchResult.ok)
 			{
-				console.log("failed to fetch user infos");
+				Logger.log("failed to fetch user infos");
 				reply.send(new Error('Failed to fetch user info'));
 				return;
 			}

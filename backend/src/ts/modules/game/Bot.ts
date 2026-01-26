@@ -1,8 +1,9 @@
 import { GameState } from './GameState.js';
 import { GameInstance } from './GameInstance.js';
 import WebSocket from 'ws';
-import { getUserByName } from '@modules/users/user.js';
+import { getUserByName } from 'modules/users/user.js';
 import * as core from 'core/core.js';
+import { Logger } from 'modules/logger.js';
 
 enum Keys
 {
@@ -60,7 +61,7 @@ export class Bot
 
 		this.socket.onerror = (error) =>
 		{
-			console.error('WebSocket error:', error);
+			Logger.error(`WebSocket error: ${error}`);
 			this.stopGameLoop();
 		};
 	}
@@ -84,7 +85,7 @@ export class Bot
 			}
 			catch (error)
 			{
-				console.error('Error updating game state:', error);
+				Logger.error(`Error updating game state: ${error}`);
 			}
 		}
 	}

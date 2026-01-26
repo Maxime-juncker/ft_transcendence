@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/node": "^25.0.3",
     "autoprefixer": "^10.4.22",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
@@ -22,6 +23,7 @@
     "@tailwindcss/cli": "^4.1.17",
     "chart.js": "^4.5.1",
     "echarts": "^6.0.0",
+    "fs": "^0.0.1-security",
     "tsc-alias": "^1.8.16"
   }
 }

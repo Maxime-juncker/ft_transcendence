@@ -46,7 +46,9 @@ export class UserElement
 			console.warn("no btn username txt found");
 
 		if (user && clickRedirect)
+		{
 			this.getElement("#profile")?.addEventListener("click", () => { Router.Instance?.navigateTo(`/profile?username=${user.name}`) });
+		}
 
 		parent.prepend(this.m_clone);
 		this.m_clone = parent.firstElementChild as HTMLElement;
@@ -79,19 +81,19 @@ export class UserElement
 		switch (user.status)
 		{
 			case UserStatus.UNKNOW:
-				statusElt.style.background = "black";
+				statusElt.style.background = "var(--color-darker)";
 				break;
 			case UserStatus.UNAVAILABLE:
-				statusElt.style.background = "gray";
+				statusElt.style.background = "var(--color-darker)";
 				break;
 			case UserStatus.AVAILABLE:
-				statusElt.style.background = "green";
+				statusElt.style.background = "var(--color-green)";
 				break;
 			case UserStatus.BUSY:
-				statusElt.style.background = "red";
+				statusElt.style.background = "var(--color-red)";
 				break;
 			case UserStatus.IN_GAME:
-				statusElt.style.background = "blue";
+				statusElt.style.background = "var(--color-blue)";
 				break;
 			default:
 				break;

@@ -1,5 +1,7 @@
-import { addGameToHist, GameRes } from '@modules/users/user.js';
+import { addGameToHist, GameRes } from 'modules/users/user.js';
 import { GameState } from './GameState.js';
+import { Logger } from 'modules/logger.js';
+import { getUserName } from 'modules/users/user.js';
 import * as core from 'core/core.js';
 
 enum Keys
@@ -51,7 +53,6 @@ export class GameInstance
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;
-		console.log(this._Player1Id, this._Player2Id);
 		this.normalizeSpeed();
 		this.gameLoop();
 	}
@@ -132,14 +133,16 @@ export class GameInstance
 		}
 	}
 
-	private getWinner(score: number, player: number | null): void
+	private async getWinner(score: number, player: number | null): Promise<void>
 	{
+		if (!player)
+			return;
 		if (score >= Parameters.POINTS_TO_WIN)
 		{
 			this._winner = player;
 			this._isRunning = false;
-			console.log(`${this._winner} won the game (mode: ${this.mode})`);
-			if (this.mode == 'online' || this.mode == 'bot')
+			Logger.log(`${await getUserName(this._winner)} won the game (mode: ${this.mode})`);
+			if (this.mode == 'duel' || this.mode == 'online' || this.mode == 'bot')
 			{
 				if (!this._Player1Id || !this._Player2Id)
 					return ;
@@ -228,8 +231,6 @@ export class GameInstance
 	get winnerName(): number | null				{ return (this._winner); }
 	get winner(): number | null					{ return (this._winner); }
 	get scoreUpdated(): boolean					{ return (this._scoreUpdated); }
-	get player1Name(): number | null			{ return (this._Player1Id); }
-	get player2Name(): number | null			{ return (this._Player2Id); }
 	get player1Id(): number						{ return (this._Player1Id!); }
 	get player2Id(): number						{ return (this._Player2Id!); }
 

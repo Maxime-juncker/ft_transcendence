@@ -12,6 +12,31 @@
 	--color-purple:		#C678DD;
 
 	--font-family-saira: "Saira Semi Condensed", sans-serif;
+
+	@keyframes crt-open {
+		0% {
+			transform: scale(0.5, 0.008);
+		}
+
+		20% {
+			transform: scale(1, 0.3)
+		}
+
+		100% {
+			transform: scale(1, 1);
+		}
+	}
+
+	@keyframes bg-flicker {
+		0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+			visibility: visible;
+			/* background-color: var(--color-white); */
+		}
+		20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+			visibility: hidden;
+			/* background-color: transparent; */
+		}
+	}
 }
 
 @layer base {
@@ -38,6 +63,10 @@
 
 @layer components
 {
+	.crt_anim {
+		@apply bg-dark animate-[crt-open_0.3s];
+	}
+
 	input {
 		@apply	bg-dark border-b-2 border-blue px-3 py-2
 		focus:outline-none focus:brightness-[1.4]
@@ -76,7 +105,7 @@
 	}
 
 	.user-status {
-		@apply	absolute w-[15px] aspect-square rounded-full
+		@apply	absolute w-[15px] h-[15px] rounded-full
 		bottom-[25%] bg-red;
 	}
 	.user-profile #user-stats {
@@ -212,13 +241,7 @@
 	.stat-item p {
 		@apply text-center w-full;
 	}
-	/**/
-	/* @layer base */
-	/* { */
-	/* 	h1		{ @apply text-[10vh] my-[10vh]; } */
-	/* } */
 
-	/* .animation		{ @apply animate-pulse duration-500; } */
 	.centered		{ @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2; }
 	.page			{ @apply relative flex-col justify-center gap-4 h-full w-full }
 
@@ -237,4 +260,8 @@
 	.player1		{ @apply absolute top-0 left-0 text-[2vw] m-[1vw]; }
 	.player2		{ @apply absolute top-0 right-0 text-[2vw] m-[1vw]; }
 	.searching-msg	{ @apply text-[2vw] }
+
+	.credit-avatar {
+		@apply w-full px-3 py-2 flex gap-3 justify-end items-center hover:bg-white hover:text-darker hover:cursor-grab;
+	}
 }

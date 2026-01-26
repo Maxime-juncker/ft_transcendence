@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { Logger } from 'modules/logger.js';
 import { Client } from "@litehex/node-vault";
 
 const vc = new Client({
@@ -59,7 +60,7 @@ async function mountVault() {
 	if (!mounted.data)
 		throw new Error("Error mounting Hashi Corp Vault !");
 	else
-		console.log("Successfully mounted Vault");
+		Logger.log("Successfully mounted Vault");
 }
 
 export async function initVault() {

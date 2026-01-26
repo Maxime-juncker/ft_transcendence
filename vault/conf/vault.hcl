@@ -13,3 +13,7 @@ listener "tcp" {
 }
 
 log_file = "/vault/logs/vault.log"
+
+log_rotate_bytes     = 104857600
+log_rotate_duration  = "24h"
+log_rotate_max_files = 14

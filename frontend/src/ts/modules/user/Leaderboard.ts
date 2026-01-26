@@ -17,7 +17,7 @@ export class Leaderboard
 
 	public async Init()
 	{
-		const res = await fetch('/api/user/get_all');
+		const res = await fetch('/api/user/get_best_elo');
 		const data = await res.json();
 		if (res.status != 200)
 		{
@@ -33,7 +33,6 @@ export class Leaderboard
 			await usr.updateSelf()
 			this.m_users.push(usr);
 		}
-		this.m_users.sort((a: User, b: User) => { return Number(a.elo < b.elo) })
 	}
 
 	public async cleanContainer()

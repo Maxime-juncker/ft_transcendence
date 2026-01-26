@@ -25,6 +25,10 @@ clean:
 fclean: clean
 	docker volume prune -a -f
 
+.PHONY: benchmark
+benchmark:
+	docker compose --profile benchmark up
+
 .PHONY: re
 re:
 	$(MAKE) fclean;

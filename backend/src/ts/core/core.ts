@@ -3,11 +3,32 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite'
 import Fastify, { FastifyInstance } from "fastify";
 import '@fastify/session';
-import { getJwtSecret } from '@modules/vault/secrets.js';
+import { getJwtSecret } from 'modules/vault/secrets.js';
+import { Logger } from "modules/logger.js";
 
 export interface DbResponse {
 	code:	number;
 	data:	any;
+}
+
+export const rateLimitHard = {
+	max: 3,
+	timeWindow: '1 minute'
+}
+
+export const rateLimitMed = {
+	max: 500,
+	timeWindow: '1 minute'
+}
+
+export const tokenSchema = {
+	body: {
+		type: "object",
+		properties: {
+			token: { type: "string" },
+		},
+		required: [ "token" ]
+	}
 }
 
 // directory of avatars
@@ -32,15 +53,19 @@ export async function createServer()
 
 	fastify = Fastify({ logger: false });
 	sessionKey = await getJwtSecret();
-	console.log("server created");
 }
 
 export async function start() {
-	try {
+	try
+	{
 		await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		console.log("server ready!")
-		console.log(`access at: https://${process.env.HOST}:8081`)
-	} catch (err) {
+		Logger.success("server ready!")
+		Logger.log(`pong access at: https://${process.env.HOST}:8081`);
+		Logger.log(`grafana access at: https://${process.env.HOST}:8081/admin/grafana/`);
+		Logger.log(`kibana access at: https://${process.env.HOST}:8081/admin/kibana/`);
+	}
+	catch (err)
+	{
 		fastify.log.error(err);
 		process.exit(1)
 	}
@@ -56,9 +81,9 @@ export async function shutdown()
 	}
 	catch (err)
 	{
-		console.error(`error on shutdown: ${err}`);
+		Logger.error(`error on shutdown: ${err}`);
 	}
 	db.close();
-	console.log('shutdown complete, bye.');
+	Logger.log('shutdown complete, bye.');
 	process.exit(0);
 }

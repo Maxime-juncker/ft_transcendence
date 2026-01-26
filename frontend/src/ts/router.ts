@@ -21,6 +21,8 @@ export class GameRouter
 	private static readonly TOURNAMENT_CREATE_KEY: string = 'c';
 	private static readonly TOURNAMENT_JOIN_KEY: string = 'j';
 
+	private m_playerContainer:	HTMLElement | null = null;
+
 	currentPage: string = 'home';
 	currentClass: any = null;
 	pages: Map<string, HTMLDivElement> = new Map();
@@ -43,17 +45,29 @@ export class GameRouter
 		this.setUpWindowEventListeners();
 		this.showPage(this.currentPage, null);
 
+		if (view)
+			this.m_playerContainer = view.querySelector("#player-container");
+	}
+
+	private cleanupPlayerContainer()
+	{
+		if (this.m_playerContainer)
+			this.m_playerContainer.innerHTML = "";
 	}
 
 	public assignListener()
 	{
 		if (!this.m_view)
 			return ;
-		this.m_view.addTrackListener(this.m_view.querySelector('#local-game'), "click", this.localGameClickHandler);
-		this.m_view.addTrackListener(this.m_view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
-		this.m_view.addTrackListener(this.m_view.querySelector('#bot-game'), "click", this.botGameClickHandler);
-		this.m_view.addTrackListener(this.m_view.querySelector('#game'), "click", this.menuGameClickHandler);
-		this.m_view.addTrackListener(this.m_view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
+		this.m_view.querySelector('#local-game')?.addEventListener("click", this.localGameClickHandler);
+		this.m_view.querySelector('#online-game')?.addEventListener("click", this.onlineGameClickHandler);
+		this.m_view.querySelector('#bot-game')?.addEventListener("click", this.botGameClickHandler);
+		this.m_view.querySelector('#game')?.addEventListener("click", this.menuGameClickHandler);
+		this.m_view.querySelector('#tournament')?.addEventListener("click", this.menuTournamentClickHandler);
+		// this.m_view.addTrackListener(this.m_view.querySelector('#online-game'), "click", this.onlineGameClickHandler);
+		// this.m_view.addTrackListener(this.m_view.querySelector('#bot-game'), "click", this.botGameClickHandler);
+		// this.m_view.addTrackListener(this.m_view.querySelector('#game'), "click", this.menuGameClickHandler);
+		// this.m_view.addTrackListener(this.m_view.querySelector('#tournament'), "click", this.menuTournamentClickHandler);
 	}
 
 	private menuGameClickHandler = () =>
@@ -148,15 +162,12 @@ export class GameRouter
 			case GameRouter.TOURNAMENT_CREATE_KEY:
 				this.navigateTo('tournament-create', '');
 				break ;
-			case GameRouter.TOURNAMENT_JOIN_KEY:
-				this.navigateTo('tournament-join', '');
-				break ;
 		}
 	}
 
 	public navigateTo(page: string, mode: string): void
 	{
-		history.pushState({page: page}, '', `#${page}`);
+		this.cleanupPlayerContainer();
 		this.showPage(page, mode);
 	}
 
@@ -185,7 +196,8 @@ export class GameRouter
 				return this.m_gameMenu;
 			case 'game':
 				if (this.m_chat && this.m_user)
-					return (new GameClient(this, mode!, this.m_user, this.m_chat));
+					this.gameInstance = new GameClient(this, mode!, this.m_user, this.m_chat);
+					return (this.gameInstance);
 			case 'tournament-menu':
 				return (new TournamentMenu(this));
 			case 'tournament-create':

@@ -1,17 +1,31 @@
-import { hashString } from 'modules/utils/sha256.js'
 import { setCookie, setPlaceHolderText, getUrlVar } from 'modules/utils/utils.js';
-import { MainUser } from 'modules/user/User.js';
 import { ViewComponent } from 'modules/router/ViewComponent.js';
 import { Router } from 'modules/router/Router.js';
+import { MainUser } from 'modules/user/User.js';
 
 export class LoginView extends ViewComponent
 {
-	private m_user: MainUser;
-
 	constructor()
 	{
 		super();
-		this.m_user = new MainUser();
+	}
+
+	public async init()
+	{
+		MainUser.Instance?.onLogin(() => {
+			if (Router.Instance?.activeView?.routePath === "/login")
+				Router.Instance?.navigateTo("/lobby")
+		});
+
+		this.querySelector("#create_btn")?.addEventListener("click", () => this.submitNewUser());
+		this.querySelector("#login_btn")?.addEventListener("click", () => this.login());
+		this.querySelector("#forty_two_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.querySelector("#github_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
+		this.querySelector("#guest_log_btn")?.addEventListener("click", () => this.logAsGuest());
+
+		this.querySelector("#home_btn")?.addEventListener("click", () => { 
+			Router.Instance?.navigateTo("/");
+		});
 	}
 
 	public async enable()
@@ -19,52 +33,32 @@ export class LoginView extends ViewComponent
 		const vars = getUrlVar();
 		if (vars.get("oauth_token"))
 		{
-			console.log("session:", vars.get("oauth_token"))
 			setCookie("jwt_session", vars.get("oauth_token"), 10);
 			window.history.replaceState({}, document.title, "/login");
+			await MainUser.Instance?.loginSession();
+			Router.Instance?.setView("/lobby");
 		}
-
-		await this.m_user.loginSession();
-		if (this.m_user.id != -1)
-		{
-			if (Router.Instance?.prevView && Router.Instance.prevView.routePath == "/lobby")
-				Router.Instance.navigateTo("/");
-			else
-				Router.Instance?.navigateTo("/lobby");
-		}
-
-		this.m_user.onLogin((user) => { Router.Instance?.navigateTo("/lobby") })
-
-		this.addTrackListener(this.querySelector("#create_btn"), "click", () => this.submitNewUser());
-		this.addTrackListener(this.querySelector("#login_btn"), 'click', () => this.login());
-		this.addTrackListener(this.querySelector("#forty_two_log_btn"), "click", () => oauthLogin("/api/oauth2/forty_two"));
-		this.addTrackListener(this.querySelector("#github_log_btn"), "click", () => oauthLogin("/api/oauth2/github"));
-		this.addTrackListener(this.querySelector("#guest_log_btn"), "click", () => this.logAsGuest());
-
-		this.addTrackListener(this.querySelector("#home_btn"), "click", () => { 
-			Router.Instance?.navigateTo("/");
-		});
 	}
 
 	public async disable()
 	{
-		if (this.m_user)
-		{
-			this.m_user.resetCallbacks();
-		}
+		this.clearTrackListener();
 	}
 
 	private async login()
 	{
+		if (!MainUser.Instance)
+			return;
+
 		var	emailInput = this.querySelector("#login_email") as HTMLInputElement;
 		var	passwInput = this.querySelector("#login_passw") as HTMLInputElement;
 		var totpInput = this.querySelector("#login_totp") as HTMLInputElement;
 
-		const { status, data } = await this.m_user.login(emailInput.value, passwInput.value, totpInput.value);
+		const { status, data } = await MainUser.Instance.login(emailInput.value, passwInput.value, totpInput.value);
 		if (status == 200)
 		{
-			console.log("session:", data.token)
 			setCookie("jwt_session", data.token, 10);
+			await MainUser.Instance.loginSession();
 			Router.Instance?.navigateTo("/lobby");
 			return ;
 		}
@@ -89,14 +83,16 @@ export class LoginView extends ViewComponent
 		const data = await res.json();
 		if (res.status == 200)
 		{
-			console.log("session:", data.token)
 			setCookie("jwt_session", data.token, 10);
-			this.m_user.loginSession();
+			await MainUser.Instance?.loginSession();
 		}
 	}
 
 	private async submitNewUser()
 	{
+		if (!MainUser.Instance)
+			return;
+
 		var		email = (<HTMLInputElement>this.querySelector("#create_email")).value;
 		var		passw = (<HTMLInputElement>this.querySelector("#create_passw")).value;
 		var		confirmPassw = (<HTMLInputElement>this.querySelector("#confirm_passw")).value;
@@ -120,22 +116,20 @@ export class LoginView extends ViewComponent
 			},
 			body: JSON.stringify({
 				email: email,
-				passw: await hashString(passw),
+				passw: passw,
 				username: username,
 			})
 		});
 		if (response.status == 200)
 		{
-			const { status, data } = await this.m_user.login(email, passw, "");
+			const { status, data } = await MainUser.Instance.login(email, passw, "");
 			if (status == 200)
 			{
-				console.log("session:", data.token)
 				setCookie("jwt_session", data.token, 10);
-				this.m_user.loginSession();
+				MainUser.Instance.loginSession();
 				return ;
 			}
 			setPlaceHolderText("user created");
-			await this.login();
 		}
 		else if (response.status == 403)
 			setPlaceHolderText("email invalid");

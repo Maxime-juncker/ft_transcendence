@@ -1,20 +1,31 @@
 - pipeline.id: modsec
   path.config: "/usr/share/logstash/pipeline/modsec.conf"
+  pipeline.workers: 1
 
 - pipeline.id: grafana
   path.config: "/usr/share/logstash/pipeline/grafana.conf"
+  pipeline.workers: 1
 
 - pipeline.id: logstash
   path.config: "/usr/share/logstash/pipeline/self.conf"
+  pipeline.workers: 1
 
 - pipeline.id: elasticsearch
   path.config: "/usr/share/logstash/pipeline/elasticsearch.conf"
+  pipeline.workers: 1
 
 - pipeline.id: kibana
   path.config: "/usr/share/logstash/pipeline/kibana.conf"
+  pipeline.workers: 1
 
 - pipeline.id: prometheus
   path.config: "/usr/share/logstash/pipeline/prometheus.conf"
+  pipeline.workers: 1
 
 - pipeline.id: vault
   path.config: "/usr/share/logstash/pipeline/vault.conf"
+  pipeline.workers: 1
+
+- pipeline.id: backend
+  path.config: "/usr/share/logstash/pipeline/backend.conf"
+  pipeline.workers: 1

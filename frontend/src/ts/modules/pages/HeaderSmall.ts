@@ -5,11 +5,9 @@ import { MainUser } from "modules/user/User.js";
 export class HeaderSmall
 {
 	private m_searchInput: HTMLInputElement | null = null;
-	// private m_user: MainUser;
 
 	constructor(user: MainUser, view: ViewComponent, parentId: string)
 	{
-		
 		const parent = view.querySelector(`#${parentId}`);
 		if (!parent)
 		{
@@ -26,14 +24,27 @@ export class HeaderSmall
 		}
 
 		const clone = template.content.cloneNode(true) as HTMLElement;
-
-		user.setHtml(clone.querySelector("#user-container"));
-		this.m_searchInput = clone.querySelector("#search-input");
 		const userMenuContainer = clone.querySelector("#user-menu-container");
+		this.setUserHeader(user, clone, view);
+
 		view.addTrackListener(clone.querySelector("#banner"), "click", () => {
 			userMenuContainer?.classList.add("hide");
 			Router.Instance?.navigateTo("/")
 		});
+
+		this.m_searchInput = clone.querySelector("#search-input");
+		view.addTrackListener(this.m_searchInput, "keypress", (e) => this.searchUser(e));
+
+		parent.append(clone);
+
+	}
+
+	private setUserHeader(user: MainUser, clone: HTMLElement, view: ViewComponent)
+	{
+		if (user.id == -1)
+			return ;
+		user.setHtml(clone.querySelector("#user-container"));
+		const userMenuContainer = clone.querySelector("#user-menu-container");
 
 		view.addTrackListener(clone.querySelector("#logout_btn"), "click", () => {
 			userMenuContainer?.classList.add("hide");
@@ -58,10 +69,6 @@ export class HeaderSmall
 		view.addTrackListener(clone.querySelector("#user-menu-btn"), 'click', () => {
 			userMenuContainer?.classList.toggle("hide");
 		});
-
-		view.addTrackListener(this.m_searchInput, "keypress", (e) => this.searchUser(e));
-
-		parent.append(clone);
 
 	}
 
