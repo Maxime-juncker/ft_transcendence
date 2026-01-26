@@ -4,12 +4,13 @@ services:
     restart: always
     build: ./backend/
     container_name: backend
-    env_file: ./.env
+    environment:
+      - HOST=${HOST}
     volumes:
-      - sqlite:/var/lib/sqlite
-      - avatars:/var/www/server/public/avatars
-      - vault_key:/vault/config
-      - backend-logs:/var/log/backend
+      - sqlite:/var/lib/sqlite:rw
+      - avatars:/var/www/server/public/avatars:rw
+      - vault_key:/vault/config:rw
+      - backend-logs:/var/log/backend:rw
     networks:
       - backend_net
       - vault_net
@@ -25,7 +26,8 @@ services:
     restart: always
     build: ./frontend/
     container_name: frontend
-    env_file: ./.env
+    environment:
+      - HOST=${HOST}
     depends_on:
       - backend
     networks:
@@ -40,7 +42,8 @@ services:
   benchmark:
     build: ./benchmark/
     container_name: benchmark
-    env_file: ./.env
+    environment:
+      - RUN_BENCHMARK=${RUN_BENCHMARK:-0}
     depends_on:
       - backend
     networks:
@@ -57,7 +60,7 @@ services:
     build: ./modsecurity/
     container_name: modsecurity
     volumes:
-      - cert:/etc/nginx/conf/ssl
+      - cert:/etc/nginx/conf/ssl:rw
       - modsecurity_logs:/var/log/nginx/:rw
     ports:
       - "8080:80"
@@ -87,7 +90,7 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - vault:/vault/file
+      - vault:/vault/file:rw
       - ./vault/conf:/vault/conf:ro
       - vault-logs:/vault/logs:rw
     networks:
@@ -115,9 +118,9 @@ services:
     image: grafana/grafana:12.4.0-20836657505
     container_name: grafana
     volumes:
-      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
-      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning
-      - grafana:/var/lib/grafana
+      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini:ro
+      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning:ro
+      - grafana:/var/lib/grafana:rw
       - grafana-logs:/var/log/grafana:rw
     networks:
       monitoring_net: {}
@@ -168,7 +171,7 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     mem_limit: 4g
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - es_data:/usr/share/elasticsearch/data:rw
       - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
       - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
       - elastic-logs:/usr/share/elasticsearch/logs:rw
