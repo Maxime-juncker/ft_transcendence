@@ -340,7 +340,7 @@ export class ProfileView extends ViewComponent
 			const status = profile_extended?.querySelector("#user-status") as HTMLElement;
 			if (status)
 				UserElement.setStatusColor(this.m_user, status);
-			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = "/public/avatars/default.png";
+			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = "/public/avatars/default.webp";
 			(<HTMLElement>profile_extended.querySelector("#name")).textContent = "USER NOT FOUND";
 			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `USER NOT FOUND`;
 		}

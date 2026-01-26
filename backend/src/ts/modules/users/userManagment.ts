@@ -37,7 +37,7 @@ export async function createGuest(): Promise<DbResponse>
 		const rBytes = randomBytes(8).toString('hex');
 		const name = `guest${highest["MAX(id)"]}${rBytes}`;
 		const data = await core.db.get(sql, [name, AuthSource.GUEST, date]);
-		await updateAvatarPath(data.id, 'default.png');
+		await updateAvatarPath(data.id, 'default.webp');
 		return { code: 200, data: data};
 	}
 	catch (err)
@@ -150,7 +150,7 @@ export async function createUser(email: string, passw: string, username: string,
 			throw new Error("failed to create user");
 
 		Logger.success(`${username} has been register with id: ${result.lastID}`);
-		await updateAvatarPath(result.lastID, 'default.png');
+		await updateAvatarPath(result.lastID, 'default.webp');
 		return { code: 200, data: { message: "Success", id: result.lastID }};
 	}
 	catch (err)
@@ -195,7 +195,7 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 	const sql = "UPDATE users SET name = ?, email = ?, passw = ?, oauth_id = ?, source = ? WHERE id = ?";
 	try
 	{
-		await updateAvatarPath(user_id, 'default.png');
+		await updateAvatarPath(user_id, 'default.webp');
 		await db.run(sql, [name, rBytes, rBytes, rBytes, AuthSource.DELETED, user_id]);
 		Logger.success(`user has been deleted`)
 		return { code: 200, data: { message: "Success" }};

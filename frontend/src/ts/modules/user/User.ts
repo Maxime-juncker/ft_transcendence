@@ -96,7 +96,7 @@ export class User
 		this.m_id = -1;
 		this.name = "";
 		this.m_email = "";
-		this.m_avatarPath = "/public/avatars/default.png";
+		this.m_avatarPath = "/public/avatars/default.webp";
 		this.m_status = UserStatus.UNKNOW;
 		this.m_source = 0;
 		this.m_created_at = "";
