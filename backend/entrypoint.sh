@@ -19,6 +19,7 @@ mkdir -p public/avatars/
 # npx tailwindcss -i public/profile.css -o public/dist/profile.css
 ./node_modules/.bin/tailwindcss -i ./public/crt.css -o ./public/output_crt.css
 npm run build:css
+npx hardhat compile
 
 # tail -f
 exec npm run start

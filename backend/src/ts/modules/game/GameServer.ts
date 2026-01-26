@@ -5,6 +5,7 @@ import { getUserByName } from '@modules/users/user.js';
 import * as core from 'core/core.js';
 import { addPlayerToQueue, notifyMatch } from '@modules/chat/chat.js';
 import { Tournament } from './Tournament.js';
+import { BlockchainContract } from '../blockchain/blockchainTournament.js';
 
 export class GameServer
 {
@@ -29,6 +30,8 @@ export class GameServer
 		initialParticipants: Array<{ id: string, name: string }>
 	}> = new Map();
 
+	private contractAdress: BlockchainContract = new BlockchainContract();
+
 	private botId: number = 0;
 
 	constructor(private server: FastifyInstance) {}
@@ -46,7 +49,7 @@ export class GameServer
 			this.createGame();
 			this.startGame();
 			this.sendGameState();
-			
+			this.contractAdress.deployFactory();
 			this.listTournaments();
 			this.createTournament();
 			this.getTournamentInfo();
@@ -62,6 +65,8 @@ export class GameServer
 			console.error('Error starting server:', error);
 		}
 	}
+
+
 
 	private async handleGameCompletion(gameId: string, game: GameInstance)
 	{

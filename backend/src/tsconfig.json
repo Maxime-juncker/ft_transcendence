@@ -3,6 +3,7 @@
 		"module": "es2022",
 		"target": "es2017",
 		"moduleResolution": "node",
+		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"types": ["node"],
 		"strict": true,
