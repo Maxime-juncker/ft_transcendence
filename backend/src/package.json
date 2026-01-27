@@ -48,7 +48,10 @@
 		"@types/node": "^24.9.1",
 		"@types/qrcode": "^1.5.6",
 		"@types/ws": "^8.18.1",
-		"tailwindcss": "^4.1.18"
+		"hardhat": "^3.1.4",
+		"tailwindcss": "^4.1.18",
+		"ts-node": "^10.9.2",
+		"viem": "^2.45.0"
 	},
 	"overrides": {
 		"rimraf": "^5.0.0",

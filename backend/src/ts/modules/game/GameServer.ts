@@ -7,6 +7,7 @@ import { addPlayerToQueue } from 'modules/chat/chat.js';
 import { Tournament } from './Tournament.js';
 import { notifyMatch } from 'modules/chat/chat.js';
 import { Logger } from 'modules/logger.js';
+import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 
 export class GameServer
 {
@@ -33,6 +34,8 @@ export class GameServer
 		initialParticipants: Array<{ id: string, name: string }>
 	}> = new Map();
 
+	private contractAddress: BlockchainContract = new BlockchainContract();
+
 	private botId: number = 0;
 
 	constructor(private server: FastifyInstance) {}
@@ -52,7 +55,12 @@ export class GameServer
 			this.createGame();
 			this.startGame();
 			this.sendGameState();
-			
+			try {
+				this.contractAddress.init();
+				Logger.log('smart contract deployyyyyed');
+			} catch (error) {
+				Logger.error('Error deploying smart contract: ', error);
+			}
 			this.listTournaments();
 			this.createTournament();
 			this.getTournamentInfo();

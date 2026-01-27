@@ -1,8 +1,9 @@
 {
 	"compilerOptions": {
 		"module": "es2022",
-		"target": "es2017",
+		"target": "es2022",
 		"moduleResolution": "node",
+		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"types": ["node"],
 		"strict": true,
@@ -10,5 +11,8 @@
 		"baseUrl": "./ts",
 	},
 	"include": ["ts/**/*"],
-	"exclude": ["node_modules"]
+	"exclude": [
+		"node_modules",
+	    "ts/modules/blockchain/artifacts/**/*.d.ts"
+	]
 }
