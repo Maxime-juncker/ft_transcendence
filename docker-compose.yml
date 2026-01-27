@@ -6,6 +6,10 @@ services:
     container_name: backend
     environment:
       - HOST=${HOST}
+      - GITHUB_ID=${GITHUB_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - FT_ID=${FT_ID}
+      - FT_SECRET=${FT_SECRET}
     volumes:
       - sqlite:/var/lib/sqlite:rw
       - avatars:/var/www/server/public/avatars:rw
