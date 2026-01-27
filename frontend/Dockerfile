@@ -1,7 +1,11 @@
 FROM alpine:3.20
 
-RUN apk update && apk upgrade
-RUN apk add nginx bash openssl nodejs npm make
+RUN apk add --update --no-cache nginx	\
+								bash	\
+								openssl	\
+								nodejs	\
+								npm		\
+								make
 
 WORKDIR /var/www/html/
 
