@@ -4,25 +4,10 @@ import { privateKeyToAccount, PrivateKeyAccount } from 'viem/accounts';
 import { avalancheFuji } from 'viem/chains';
 import { promises as fs } from 'fs';
 
-const TOURNAMENT_PATH = "/var/www/server/ts/modules/blockchain/artifacts/blockchain/contracts/Tournament.sol/Tournament.json";
-const FACTORY_PATH = "/var/www/server/ts/modules/blockchain/artifacts/blockchain/contracts/Factory.sol/Factory.json";
+const TOURNAMENT_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Tournament.sol/Tournament.json";
+const FACTORY_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Factory.sol/Factory.json";
 const PKEY = process.env.PRIVATE_KEY
 const RPC_URL = process.env.AVAX_INFURA
-// const hardhatLocal = defineChain({
-//     id: 31337,
-//     name: 'HardhatLocal',
-//     network: 'hardhat',
-//     nativeCurrency: {
-//         decimals: 18,
-//         name: 'Ether',
-//         symbol: 'ETH',
-//     },
-//     rpcUrls: {
-//         default: {
-//             http: ['http://10.11.6.2:8545'],
-//         },
-//     },
-// });
 
 export class BlockchainContract {
     private abi: Abi | undefined;
