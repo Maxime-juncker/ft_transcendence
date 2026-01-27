@@ -20,6 +20,12 @@ services:
           target: /var/www/server
     depends_on:
       - vault
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://backend:3000 || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   frontend:
     restart: always
@@ -36,6 +42,12 @@ services:
         - path: ./frontend/src
           action: rebuild
           target: /var/www/html
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://frontend:80 || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   benchmark:
     build: ./benchmark/
@@ -79,6 +91,12 @@ services:
         - path: ./frontend/conf/nginx.conf
           action: rebuild
           target: /etc/nginx/nginx.conf
+    healthcheck:
+      test: wget --quiet --tries=1 --spider --no-check-certificate https://localhost:443 || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   vault:
     restart: always
@@ -96,6 +114,11 @@ services:
       VAULT_API_ADDR: "http://127.0.0.1:8200"
       VAULT_ADDR: "http://127.0.0.1:8200"
     command: vault server -config=/vault/conf/vault.hcl
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   prometheus:
     restart: always
@@ -109,6 +132,12 @@ services:
       - monitoring_net
       - export_net
     user: root
+    healthcheck:
+      test: wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   grafana:
     restart: always
