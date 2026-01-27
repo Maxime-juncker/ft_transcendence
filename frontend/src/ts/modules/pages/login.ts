@@ -31,6 +31,13 @@ export class LoginView extends ViewComponent
 	public async enable()
 	{
 		const vars = getUrlVar();
+
+		const error = vars.get("error");
+		if (error)
+		{
+			setPlaceHolderText(`error: ${error.replace(/%20/g, ' ')}`);
+		}
+
 		if (vars.get("oauth_token"))
 		{
 			setCookie("jwt_session", vars.get("oauth_token"), 10);
@@ -120,6 +127,7 @@ export class LoginView extends ViewComponent
 				username: username,
 			})
 		});
+		const json = await response.json();
 		if (response.status == 200)
 		{
 			const { status, data } = await MainUser.Instance.login(email, passw, "");
@@ -132,13 +140,11 @@ export class LoginView extends ViewComponent
 			setPlaceHolderText("user created");
 		}
 		else if (response.status == 403)
-			setPlaceHolderText("email invalid");
+			setPlaceHolderText(json.message);
 		else 
 			setPlaceHolderText("database error");
 	}
 }
-
-
 
 function oauthLogin(path: string)
 {

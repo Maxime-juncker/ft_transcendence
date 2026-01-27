@@ -37,13 +37,12 @@ export const uploadDir : string = "/var/www/server/public/"
 export var db:		Database;
 export var fastify:	FastifyInstance;
 export var sessionKey: string;
- 
-declare module '@fastify/session' {
-	interface FastifySessionObject {
-		user?: number;
-	}
-}
 
+export function getDateFormated()
+{
+	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
+}
+ 
 export async function createServer()
 {
 	db = await open({

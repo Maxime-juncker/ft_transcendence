@@ -7,7 +7,7 @@ import { randomBytes } from "crypto";
 
 import * as core from 'core/core.js';
 import { DbResponse } from "core/core.js";
-import { getUserById, getUserByName } from "./user.js";
+import { getUserById, getUserByName, getUserByEmail } from "./user.js";
 import { hashString } from "modules/sha256.js";
 import { check_totp } from "modules/2fa/totp.js";
 import { AuthSource } from "modules/oauth2/routes.js";
@@ -17,14 +17,62 @@ import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
 import { disconnectClientById } from "modules/chat/chat.js";
 
+// TODO: pour le oauth si le username exist deja, ajouter une uid puis demander un changement de username
 
-function validate_email(email:string)
+async function validateCreationInput(email: string, name: string): Promise<DbResponse>
+{
+	if (!validate_email(email))
+		return { code: 403, data: { message: "email is invalid" }};
+	if (!validate_name(name))
+		return { code: 403, data: { message: "name is invalid" }};
+
+	if (name.length <= 0)
+		return { code: 403, data: { message: `name is too short` }};
+	if (name.length > 20)
+		return { code: 403, data: { message: `name is too long` }};
+
+	if (await isUsernameTaken(name))
+	{
+		Logger.warn(`${name} is already in database`);
+		return { code: 403, data: { message: `this username is already taken` }};
+	}
+
+	if (await isEmailTaken(email))
+	{
+		Logger.warn(`${email} is already associated to an account`);
+		return { code: 403, data: { message: `this email is already taken` }};
+	}
+
+	return { code: 200, data: { message: "ok" }};
+}
+
+async function isEmailTaken(email: string): Promise<boolean>
+{
+	var res = await getUserByEmail(email);
+	return res.code != 404;
+}
+
+async function isUsernameTaken(name: string): Promise<boolean>
+{
+	const res = await getUserByName(name, core.db);	
+	return res.code != 404;
+}
+
+function validate_email(email: string)
 {
 	return String(email)
 	.toLowerCase()
 	.match(
 		/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
 	);
+}
+
+function validate_name(name: string): boolean
+{
+	const regex = /[\W]/g;
+	const match = name.match(regex)
+
+	return match ? false : true;
 }
 
 export async function createGuest(): Promise<DbResponse>
@@ -112,11 +160,22 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 
 export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
+	if (await isEmailTaken(email))
+	{
+		return { code: 403, data: { message: "email is already taken" }}
+	}
+
+	if (await isUsernameTaken(name))
+	{
+		const rBytes = randomBytes(4).toString('hex');
+		name = `${name}${rBytes}`;
+	}
+
 	const res = await loginOAuth2(id, source, db);
 	if (res.code == 200)
 		return { code: 200, data: { message: "User already in db" }};
-	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
+	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 	try {
 		const result = await db.run(sql, [name, email, id, source, avatar, getSqlDate()]);
 		Logger.log(`Inserted row with id ${result.lastID}`);
@@ -130,10 +189,11 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 
 export async function createUser(email: string, passw: string, username: string, source: AuthSource, db: Database) : Promise<DbResponse>
 {
-	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
+	const validation = await validateCreationInput(email, username)
+	if (validation.code != 200)
+		return validation;
 
-	if (!validate_email(email) && source == AuthSource.INTERNAL)
-		return { code: 403, data: { message: "error: email not valid" }};
+	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
 	const res = await getUserByName(username, core.db);	
 	if (res.code != 404)
 	{

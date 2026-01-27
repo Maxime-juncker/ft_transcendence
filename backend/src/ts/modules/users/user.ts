@@ -43,6 +43,23 @@ export async function updateUserStats(id: number, win: boolean, db: Database)
 	}
 }
 
+export async function getUserByEmail(email: string)
+{
+	const sql = 'SELECT id, name, avatar, status, is_login, source, created_at, elo, games_played, wins, rank FROM users WHERE email = ?';
+
+	try {
+		const row = await core.db.get(sql, [email])
+		if (!row)
+			return { code: 404, data: { message: "profile not found" } };
+		return { code: 200, data: row };
+	}
+	catch (err) {
+		Logger.error(`database err: ${err}`);
+		return { code: 500, data: { message: `database error ${err}` }};
+	}
+
+}
+
 export async function getUserByName(username: string, db: Database) : Promise<DbResponse>
 {
 	const sql = 'SELECT id, name, avatar, status, is_login, source, created_at, elo, games_played, wins, rank FROM users WHERE name = ?';
@@ -69,9 +86,7 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 		[id1, id2] = [id2, id1];
 		[game.user1_score, game.user2_score] = [game.user2_score, game.user1_score];
 	}
-	var sql = "INSERT INTO games (user1_id, user2_id, user1_score, user2_score, created_at, user1_elo, user2_elo) VALUES(?, ?, ?, ?, ?, ?, ?);";
 	var sql_elo = "UPDATE users SET elo = elo + ? WHERE id = ? RETURNING elo";
-	const date = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
 	try {
 		var user1Elo;
 		var user2Elo;
@@ -86,8 +101,11 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 			user2Elo = await db.get(sql_elo, [10, id2]);
 		}
 
-		const response = await db.run(sql, [id1, id2, game.user1_score, game.user2_score, date, user1Elo.elo, user2Elo.elo]);
-		Logger.log(`added game to history. id: ${response.lastID} (${id1} <=> ${id2})`);
+		var sql = "INSERT INTO tournament_matches (tournament_id, player1_id, player2_id, played_at, user1_elo, user2_elo, score1, score2, winner_id) VALUES (-1, ?, ?, ?, ?, ?, ?, ?, ?)"
+		const winnerId = game.user1_score > game.user2_score ? id1 : id2;
+		const response = await db.run(sql, [id1, id2, core.getDateFormated(), user1Elo.elo, user2Elo.elo, game.user1_score, game.user2_score, winnerId]);
+
+		Logger.log(`added game to history. id: ${response.lastID} (${id1} <=> ${id2})`, user1Elo.elo, user2Elo.elo);
 		await updateUserStats(id1, game.user1_score > game.user2_score, db);
 		await updateUserStats(id2, game.user2_score > game.user1_score, db);
 
@@ -119,7 +137,7 @@ export async function getUserHistByName(request: FastifyRequest, reply: FastifyR
 	const { username } = request.params as { username: string };
 	const res = await getUserByName(username, db);
 	const id = res.data.id;
-	const sql = "SELECT * FROM games WHERE user1_id = ? OR user2_id = ?";
+	const sql = "SELECT * FROM tournament_matches WHERE player1_id = ? OR player2_id = ?"
 	try {
 		const rows = await db.all(sql, [id, id]);
 		if (!rows || rows.length === 0) {

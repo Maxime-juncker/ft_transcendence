@@ -13,19 +13,13 @@ export function fortyTwoOAuth2Routes (
 {
 	void options;
 
-	fastify.get('/forty_two/callback', {
-		config: { 
-			rateLimit: core.rateLimitMed
-		},
-	},
-		function(request: any, reply) {
+	fastify.get('/forty_two/callback', function(request: any, reply) {
 
 		fastify.FortyTwoOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)
 			{
 				Logger.log('OAuth Error:', err);
-				reply.send(err);
-				return;
+				return reply.send(err);
 			}
 
 			const fetchResult = await fetch('https://api.intra.42.fr/v2/me', {
@@ -47,10 +41,12 @@ export function fortyTwoOAuth2Routes (
 			const email = data.email;
 			const avatar = data.image.link;
 
-			await createUserOAuth2(email, name, id, AuthSource.FORTY_TWO, avatar, core.db);
-			const res = await loginOAuth2(id, AuthSource.FORTY_TWO, core.db);
+			var res = await createUserOAuth2(email, name, id, AuthSource.FORTY_TWO, avatar, core.db);
 			if (res.code != 200)
-				return reply.redirect(`https://${process.env.HOST}:8081/login`);
+				return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
+			res = await loginOAuth2(id, AuthSource.FORTY_TWO, core.db);
+			if (res.code != 200)
+				return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
 
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
 			const url = `https://${process.env.HOST}:8081/login?oauth_token=${token}`;

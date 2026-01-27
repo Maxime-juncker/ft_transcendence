@@ -16,9 +16,8 @@ export function githubOAuth2Routes (
 		fastify.GithubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request, async (err, result) => {
 			if (err)
 			{
-				reply.send(err);
 				Logger.log(err);
-				return
+				return reply.send(err);
 			}
 
 			const fetchResult = await fetch('https://api.github.com/user', {
@@ -40,10 +39,12 @@ export function githubOAuth2Routes (
 			const email = data.email;
 			const avatar = data.avatar_url;
 
-			await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
-			const res = await loginOAuth2(id, AuthSource.GITHUB, core.db);
+			var res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
 			if (res.code != 200)
-				return reply.redirect(`https://${process.env.HOST}:8081/login`);
+				return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
+			res = await loginOAuth2(id, AuthSource.GITHUB, core.db);
+			if (res.code != 200)
+				return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
 
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
 			const url = `https://${process.env.HOST}:8081/login?oauth_token=${token}`;
