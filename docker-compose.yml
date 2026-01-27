@@ -5,11 +5,12 @@ services:
     build: ./backend/
     container_name: backend
     environment:
-      - HOST=${HOST}
+      - HOST=${HOST:-localhost}
       - GITHUB_ID=${GITHUB_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
       - FT_ID=${FT_ID}
       - FT_SECRET=${FT_SECRET}
+      - HEALTH_CHECK_TIMER=${HEALTH_CHECK_TIMER:-60}
     volumes:
       - sqlite:/var/lib/sqlite:rw
       - avatars:/var/www/server/public/avatars:rw
@@ -31,7 +32,7 @@ services:
     build: ./frontend/
     container_name: frontend
     environment:
-      - HOST=${HOST}
+      - HOST=${HOST:-localhost}
     depends_on:
       - backend
     networks:
