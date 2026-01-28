@@ -35,7 +35,7 @@ export class LoginView extends ViewComponent
 		const error = vars.get("error");
 		if (error)
 		{
-			setPlaceHolderText(`error: ${error.replace(/%20/g, ' ')}`);
+			setPlaceHolderText(`error: ${decodeURIComponent(error)}`);
 		}
 
 		if (vars.get("oauth_token"))

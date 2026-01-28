@@ -38,6 +38,6 @@ if (i == 5)
 	process.exit(1);
 }
 
-runTests();
+await runTests();
 
 Logger.log("benchmark over, bye.");

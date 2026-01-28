@@ -41,16 +41,8 @@ services:
     build: ./benchmark/
     container_name: benchmark
     env_file: ./.env
-    depends_on:
-      - backend
     networks:
       - backend_net
-    profiles: [benchmark]
-    develop:
-      watch:
-        - path: ./benchmark/src
-          action: rebuild
-          target: /var/www/app
 
   modsecurity:
     restart: always

@@ -31,8 +31,7 @@ export const tokenSchema = {
 	}
 }
 
-// directory of avatars
-export const uploadDir : string = "/var/www/server/public/"
+export const publicDir : string = "/var/www/server/public/"
 
 export var db:		Database;
 export var fastify:	FastifyInstance;

@@ -17,8 +17,6 @@ import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
 import { disconnectClientById } from "modules/chat/chat.js";
 
-// TODO: pour le oauth si le username exist deja, ajouter une uid puis demander un changement de username
-
 async function validateCreationInput(email: string, name: string): Promise<DbResponse>
 {
 	if (!validate_email(email))
@@ -28,7 +26,7 @@ async function validateCreationInput(email: string, name: string): Promise<DbRes
 
 	if (name.length <= 0)
 		return { code: 403, data: { message: `name is too short` }};
-	if (name.length > 20)
+	if (name.length > 35)
 		return { code: 403, data: { message: `name is too long` }};
 
 	if (await isUsernameTaken(name))
@@ -63,7 +61,7 @@ function validate_email(email: string)
 	return String(email)
 	.toLowerCase()
 	.match(
-		/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/
 	);
 }
 
@@ -189,9 +187,12 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 
 export async function createUser(email: string, passw: string, username: string, source: AuthSource, db: Database) : Promise<DbResponse>
 {
-	const validation = await validateCreationInput(email, username)
-	if (validation.code != 200)
-		return validation;
+	if (source == AuthSource.INTERNAL)
+	{
+		const validation = await validateCreationInput(email, username)
+		if (validation.code != 200)
+			return validation;
+	}
 
 	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
 	const res = await getUserByName(username, core.db);	
@@ -267,6 +268,7 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 	}
 }
 
+//TODO is called three time for some reason ?
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
 	Logger.log(await getUserName(user_id), "is login out");

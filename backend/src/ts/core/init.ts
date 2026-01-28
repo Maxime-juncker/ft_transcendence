@@ -70,7 +70,7 @@ export async function initFastify()
 
 	/* root to access avatars */
 	core.fastify.register(fastifyStatic, {
-		root: core.uploadDir,
+		root: core.publicDir,
 		prefix: '/public/',
 	});
 

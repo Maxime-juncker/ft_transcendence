@@ -37,12 +37,13 @@ export class Logger
 			str += arg;
 		});
 
+		const ongoingGame = GameServer.Instance ? GameServer.Instance.activeGames.size : 0;
 		const data = JSON.stringify({
 			level: level,
 			message: str,
 			time: Logger.getTimeISO(),
 			stats: {
-				ongoing_parties: GameServer.Instance?.activeGames.size,
+				ongoing_parties: ongoingGame,
 				connected_users: connections.size
 			}
 		}) + "\n";

@@ -189,6 +189,8 @@ export class User
 
 
 	public async logoutDB() {
+		if (this.m_id === -1)
+			return;
 		const response = await fetch("/api/user/logout", {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
@@ -196,7 +198,6 @@ export class User
 				token: this.m_token,
 			})
 		});
-		this.setUser(-1, "Guest", "", "", UserStatus.UNKNOW);
 		return response;
 	}
 
@@ -480,8 +481,8 @@ export class MainUser extends User
 
 		this.m_onLogoutCb.forEach(cb => cb(this));
 
-		setCookie("jwt_session", "", 0);
 		this.reset();
+		setCookie("jwt_session", "", 0);
 	}
 
 	public async refreshSelf()
