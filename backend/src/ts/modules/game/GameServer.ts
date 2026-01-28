@@ -265,8 +265,17 @@ export class GameServer
 						try { match.winner = winStr; } catch (e) {}
 
 						const matchId = data.matchDbIds.get(match);
+						Logger.log('match Id?');
 						if (matchId)
 						{
+							Logger.log('adding match result');
+							try {
+								await this.contractAddress.addMatchResult(this.lobbies.get(tournamentId).blockchainId, 
+									game.player1Id, game.player2Id, game.p1Score, game.p2Score);
+								Logger.log('added match result');
+							} catch (error) {
+								Logger.log('error adding match: ', error);
+							}
 							core.db.run(
 								"UPDATE tournament_matches SET winner_id = ?, score1 = ?, score2 = ?, played_at = ? WHERE id = ?",
 								[winId, game.p1Score, game.p2Score, new Date().toISOString(), matchId]
@@ -675,11 +684,20 @@ export class GameServer
 					reply.status(400).send({ error: 'Invalid tournament type' });
 					return ;
 				}
-
+				//CREATE TOURNAMENT
+				let blockchainTournamentId: number = 18;
+				try {
+					Logger.log('BlockchainId before: ', blockchainTournamentId);
+					blockchainTournamentId = await this.contractAddress.createTournament();
+					Logger.log('BlockchainId after: ', blockchainTournamentId);
+				} catch (error) {
+					Logger.log('error creating tournament', error); 
+				}
 				const tournamentId = crypto.randomUUID();
 				const lobby =
 				{
 					id: tournamentId,
+					blockchainId: blockchainTournamentId,
 					ownerId: userId,
 					ownerName: name,
 					type: type,
@@ -687,8 +705,8 @@ export class GameServer
 					requests: [],
 					status: 'pending'
 				};
+				Logger.log('lobby blockchainId: ', lobby.blockchainId);
 				this.lobbies.set(tournamentId, lobby);
-
 				Logger.log(`Tournament ${tournamentId} created by ${name}`);
 				reply.status(201).send({ tournamentId });
 			}
@@ -771,14 +789,20 @@ export class GameServer
 					
 					let status = 'started';
 					let winner = null;
-					
 					if (t && t.isFinished)
 					{
 						status = 'finished';
 						const lastRound = rounds[rounds.length - 1];
-						if (lastRound && lastRound.length === 1)
+						Logger.log('Tournament finished');
+						if (lastRound)
 						{
 							winner = lastRound[0]._winner;
+							Logger.log('lobby id before finishing tournament: ', lobby.blockchainId);
+							try {
+								await this.contractAddress.finishTournament(lobby.blockchainId , winner);
+							} catch (error) {
+								Logger.log('error finishing tournament: ', error);
+							}
 						}
 					}
 
@@ -980,7 +1004,6 @@ export class GameServer
 					{
 						return { id: pId, name: pId };
 					}
-
 					const numId = Number(pId);
 					return { id: pId, name: playerMap.get(numId) || 'Unknown' };
 				});

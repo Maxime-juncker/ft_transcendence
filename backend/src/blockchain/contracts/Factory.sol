@@ -7,14 +7,14 @@ import "./Tournament.sol";
 contract Factory {
     address         owner;
     Tournament[]    tournaments;
-    uint256         count;
+    uint32         count;
 
 
     constructor() {
         owner = msg.sender;
         count = 0;
     }
-    function createTournament() public returns (uint256) {
+    function createTournament() public returns (uint32) {
         require (owner == msg.sender);
         Tournament tournament = new Tournament(count);
         tournaments.push(tournament);

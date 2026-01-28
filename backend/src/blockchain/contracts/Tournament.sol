@@ -6,26 +6,26 @@ pragma solidity >=0.8.2 <0.9.0;
 
 contract Tournament {
     struct Match {
-        string  player1;
-        string  player2;
+        uint64  player1;
+        uint64  player2;
         uint8   player1_score;
         uint8   player2_score;
     }
     
-    uint256           id;
+    uint64           id;
     address         owner;
     string          winner;
     Match[]         matches;
     bool            finished;
 
-    constructor(uint256 tournament_id) {
+    constructor(uint64 tournament_id) {
         // console.log("New tournament contract deployed");
         owner = msg.sender;
         finished = false;
         id = tournament_id;
     }
 
-    function addMatch(string calldata player1, string calldata player2, uint8 score1, uint8 score2) public {
+    function addMatch(uint64 player1, uint64 player2, uint8 score1, uint8 score2) public {
         require (owner == msg.sender && finished == false);
         matches.push(Match(player1, player2, score1, score2));
     }

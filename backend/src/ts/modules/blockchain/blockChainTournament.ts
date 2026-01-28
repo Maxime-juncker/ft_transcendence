@@ -80,7 +80,7 @@ export class BlockchainContract {
         return (result);
     }
 
-    async addMatchResult(tournamentId: number, player1: string, player2: string, player1score: number, player2score: number) {
+    async addMatchResult(tournamentId: number, player1: number, player2: number, player1score: number, player2score: number) {
         let tournamentAddress = await this.publicClient!.readContract({
             address: this.factoryAddress!,
             abi: this.abi!,
@@ -96,7 +96,8 @@ export class BlockchainContract {
             args: [player1, player2, player1score, player2score],
         })
 
-        await this.walletClient!.writeContract(request);
+        let hash = await this.walletClient!.writeContract(request);
+        console.log("Match added on-chain : ", hash);
     }
 
     async finishTournament(tournamentId: number, winner: string) {
@@ -116,6 +117,7 @@ export class BlockchainContract {
             args: [winner],
         })
 
-        await this.walletClient!.writeContract(request);
+        let hash = await this.walletClient!.writeContract(request);
+        console.log("Tournament finished : ", hash);
     }
 }
