@@ -57,8 +57,9 @@ export class BlockchainContract {
             
             const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
             if (receipt.contractAddress == undefined) {
-                throw ("failed to instatiate factory") 
+                throw ("failed to instatiate factory")
             }
+            console.log("receipt: ", receipt);
             this.factoryAddress = receipt.contractAddress;
 
             console.log("factory deployed to: ", this.factoryAddress);
@@ -66,7 +67,7 @@ export class BlockchainContract {
     }
 
     async createTournament(): Promise<number> {
-        console.log("Creating tournament")
+        console.log("Creating tournament");
         const { result , request } = await this.publicClient!.simulateContract({
             account: this.account,
             address: this.factoryAddress!,
@@ -74,9 +75,14 @@ export class BlockchainContract {
             functionName: 'createTournament',
         })
 
-        let hash = await this.walletClient!.writeContract(request)
+        let hash = await this.walletClient!.writeContract(request);
+        const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
 
-        console.log("Tournament created at : ", hash)
+        console.log("Tournament created at : ", result);
+
+        await this.addMatchResult(0, 15, 16, 2, 2);
+
+        await this.finishTournament(0, "jean-paul");
         return (result);
     }
 
@@ -97,6 +103,7 @@ export class BlockchainContract {
         })
 
         let hash = await this.walletClient!.writeContract(request);
+        const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
         console.log("Match added on-chain : ", hash);
     }
 
@@ -118,6 +125,7 @@ export class BlockchainContract {
         })
 
         let hash = await this.walletClient!.writeContract(request);
-        console.log("Tournament finished : ", hash);
+        const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
+        console.log("Tournament finished : ", receipt);
     }
 }

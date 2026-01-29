@@ -689,6 +689,8 @@ export class GameServer
 				try {
 					Logger.log('BlockchainId before: ', blockchainTournamentId);
 					blockchainTournamentId = await this.contractAddress.createTournament();
+					// await this.contractAddress.addMatchResult(blockchainTournamentId, 15, 16, 1, 3);
+					// await this.contractAddress.finishTournament(blockchainTournamentId, "MEEERCI");
 					Logger.log('BlockchainId after: ', blockchainTournamentId);
 				} catch (error) {
 					Logger.log('error creating tournament', error); 
