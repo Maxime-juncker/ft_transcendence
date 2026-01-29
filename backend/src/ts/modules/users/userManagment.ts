@@ -141,6 +141,21 @@ export async function login(email: string, passw: string, totp: string) : Promis
 	}
 }
 
+export async function findOAuth2User(id: string, source: number)
+{
+	var sql = 'SELECT * from users WHERE oauth_id = ? AND source = ?';
+	try {
+		const row = await core.db.get(sql, [id, source]);
+		if (!row)
+			return { code: 404, data: { message: "user not found" }};
+		return { code: 200, data: row}
+	}
+	catch (err) {
+		Logger.error(`database err: ${err}`);
+		return { code: 500, data: { message: `database error: ${err}` }};
+	}
+}
+
 export async function loginOAuth2(id: string, source: number, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE oauth_id = ? AND source = ? RETURNING *';
@@ -158,11 +173,6 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 
 export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
-	if (await isEmailTaken(email))
-	{
-		return { code: 403, data: { message: "email is already taken" }}
-	}
-
 	if (await isUsernameTaken(name))
 	{
 		const rBytes = randomBytes(4).toString('hex');
@@ -268,7 +278,6 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 	}
 }
 
-//TODO is called three time for some reason ?
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
 	Logger.log(await getUserName(user_id), "is login out");
@@ -280,7 +289,6 @@ export async function logoutUser(user_id: number, db: Database) : Promise<DbResp
 	}
 
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
-	disconnectClientById(user_id);
 
 	try {
 		await db.run(sql, [user_id]);

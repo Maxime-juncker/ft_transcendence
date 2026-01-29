@@ -1,6 +1,7 @@
-import { User } from 'modules/user/User.js';
+import { getUserFromId, User } from 'modules/user/User.js';
 import { GameRouter } from '../router.js';
 import { Router } from 'modules/router/Router.js';
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 
 export class TournamentLobby
 {
@@ -16,6 +17,8 @@ export class TournamentLobby
 	private lastRoundCount: number = 0;
 	private overlayEndTime: number = 0;
 	private isDestroyed: boolean = false;
+
+	private m_players: User[] = [];
 
 	constructor(private router: GameRouter, private user: User, private tournamentId: string | null)
 	{
@@ -344,7 +347,7 @@ export class TournamentLobby
 		}
 	}
 
-	private render(data: any)
+	private async render(data: any)
 	{
 		this.isOwner = data.ownerId === this.user.id;
 		if (this.lobbyTitle) this.lobbyTitle.innerText = data.ownerName + "'s Tournament";
@@ -358,17 +361,29 @@ export class TournamentLobby
 		if (this.playerList)
 		{
 			this.playerList.innerHTML = '';
-			const template = document.getElementById('tournament-player-template') as HTMLTemplateElement;
+			// const template = document.getElementById('tournament-player-template') as HTMLTemplateElement;
 
-			data.players.forEach((p: any) =>
+			this.m_players = [];
+			await data.players.forEach(async (p: any) =>
 			{
-				if (template)
-				{
-					const clone = template.content.cloneNode(true) as DocumentFragment;
-					const nameSpan = clone.querySelector('.player-name') as HTMLElement;
-					if (nameSpan) nameSpan.textContent = p.name;
-					this.playerList.appendChild(clone);
-				}
+
+				const user = await getUserFromId(p.id);
+				if (!user)
+					return;
+
+				this.m_players.push(user);
+				const elt = new UserElement(user, this.playerList, UserElementType.STANDARD, 'user-game-template');
+				const stats = elt.getElement("#stats");
+				if (stats)
+					stats.style.display = "none";
+
+				// if (template)
+				// {
+				// 	const clone = template.content.cloneNode(true) as DocumentFragment;
+				// 	const nameSpan = clone.querySelector('.player-name') as HTMLElement;
+				// 	if (nameSpan) nameSpan.textContent = p.name;
+				// 	this.playerList.appendChild(clone);
+				// }
 			});
 		}
 

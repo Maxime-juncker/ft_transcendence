@@ -31,7 +31,7 @@ export class ServerSideRendering
 						<div class="line bg-green"></div>
 					</div>
 				</div>
-				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-1/3">
+				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-full">
 				<div id="user-container">
 				</div>
 			</header>

@@ -31,17 +31,18 @@ export const tokenSchema = {
 	}
 }
 
+export function getDateFormated()
+{
+	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
+}
+ 
+
 export const publicDir : string = "/var/www/server/public/"
 
 export var db:		Database;
 export var fastify:	FastifyInstance;
 export var sessionKey: string;
 
-export function getDateFormated()
-{
-	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
-}
- 
 export async function createServer()
 {
 	db = await open({

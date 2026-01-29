@@ -77,8 +77,7 @@ export async function disconnectClient(ws: WebSocket)
 	const id = connections.get(ws);
 	if (!id)
 		return ;
-	if (id != -1)
-		await logoutUser(id, core.db);
+	logoutUser(id, core.db);
 	ws.close();
 	connections.delete(ws);
 	clearDuel(id);
@@ -189,12 +188,14 @@ export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 
 		ws.on('close', async (code: any, reason: any) =>
 		{
+			void reason;
+
 			const conn = connections.get(ws);
 			if (!conn)
 				return ;
 
 			removePlayerFromQueue(conn);
-			Logger.log(`${login} has left the room for ${reason} {${code}}`);
+			Logger.log(`${login} has left the room (code: ${code})`);
 			broadcast(serverMsg(`${login} has left the room`), ws);
 
 			await disconnectClient(ws);

@@ -3,6 +3,7 @@ import * as core from 'core/core.js';
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
+import { disconnectClientById } from 'modules/chat/chat.js';
 
 //
 // User managment
@@ -108,8 +109,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		if (!data)
 			return reply.code(400).send({ message: "invalid token" });
 
-		const res = await mgmt.logoutUser(data.id, core.db);
-		return reply.code(res.code).send(res.data);
+		disconnectClientById(data.id);
+		// const res = await mgmt.logoutUser(data.id, core.db);
+		return reply.code(200).send("Success");
 	})
 
 	fastify.delete('/reset', {

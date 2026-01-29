@@ -3,6 +3,7 @@ import { Database } from 'sqlite'
 import { DbResponse } from 'core/core.js';
 import * as core from 'core/core.js';
 import { Logger } from 'modules/logger.js';
+import { AuthSource } from 'modules/oauth2/routes.js';
 
 export interface GameRes {
 	user1_id:		number;
@@ -45,10 +46,10 @@ export async function updateUserStats(id: number, win: boolean, db: Database)
 
 export async function getUserByEmail(email: string)
 {
-	const sql = 'SELECT id, name, avatar, status, is_login, source, created_at, elo, games_played, wins, rank FROM users WHERE email = ?';
+	const sql = 'SELECT id, name, avatar, status, is_login, source, created_at, elo, games_played, wins, rank FROM users WHERE email = ? AND source = ?';
 
 	try {
-		const row = await core.db.get(sql, [email])
+		const row = await core.db.get(sql, [email, AuthSource.INTERNAL])
 		if (!row)
 			return { code: 404, data: { message: "profile not found" } };
 		return { code: 200, data: row };
