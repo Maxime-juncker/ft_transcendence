@@ -12,6 +12,7 @@ import { ProfileView } from "modules/pages/profile.js"
 import { SearchView } from "modules/pages/search.js";
 import { AboutView } from "modules/pages/about.js"
 import { NotFoundView } from "modules/pages/404.js";
+import { DashboardView } from "modules/pages/dashboard.js";
 import { MainUser } from "modules/user/User.js";
 
 const routes: Route[] = [
@@ -22,6 +23,7 @@ const routes: Route[] = [
 	{ path: "/settings",	viewName: "settings-view",	templateId: "settings-template" },
 	{ path: "/search",		viewName: "search-view",	templateId: "search-template" },
 	{ path: "/about",		viewName: "about-view",		templateId: "about-template" },
+	{ path: "/dashboard",	viewName: "dashboard-view",	templateId: "dashboard-template" },
 	{ path: "*",			viewName: "notfound-view",	templateId: "notfound-template" },
 ]
 
@@ -33,6 +35,7 @@ customElements.define('settings-view', SettingsView);
 customElements.define('profile-view', ProfileView);
 customElements.define('search-view', SearchView);
 customElements.define('about-view', AboutView);
+customElements.define('dashboard-view', DashboardView);
 customElements.define('notfound-view', NotFoundView);
 
 const user = new MainUser();

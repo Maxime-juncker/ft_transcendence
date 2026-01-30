@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
 	source			INTEGER	NOT NULL DEFAULT 0,
 	oauth_id		STRING NOT NULL DEFAULT 0,
 
-	-- 1=player 0=admin
-	rank			INTEGER NOT NULL DEFAULT 1,
+	is_admin		INTEGER NOT NULL DEFAULT 0,
+	is_ban			INTEGER NOT NULL DEFAULT 0,
 	created_at		DATE NOT NULL,
 
 	show_tutorial	INTEGER NOT NULL DEFAULT 1

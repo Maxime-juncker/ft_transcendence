@@ -1,0 +1,72 @@
+<template id="dashboard-template">
+
+	<div class="h-full overflow-hidden overflow-y-hidden relative">
+		<div id="header-container">
+		</div>
+
+		<div class="h-full w-full flex flex-col justify-start align-middle items-center pt-25 overflow-y-scroll overflow-x-hidden">
+			<!-- profile expended -->
+			<div class="flex flex-row h-72 w-[95%] bg-dark my-5 px-15 border-white border-2 relative">
+
+				<div class="small-lines w-[200vw] h-[6vw] absolute top-[40%] right-[-5%] -z-1">
+					<div class="line bg-red"></div>
+					<div class="line bg-yellow"></div>
+					<div class="line bg-blue"></div>
+					<div class="line bg-green"></div>
+				</div>
+
+				<div class="stat-container">
+					<div class="stat-item">
+						<p data-i18n="games_played">game played</p>
+						<h1 id="game-played">n/a</h1>
+					</div>
+
+					<div class="stat-item">
+						<p data-i18n="games_won">game won</p>
+						<h1 id="game-won">n/a</h1>
+					</div>
+
+					<div class="stat-item">
+						<p data-i18n="winrate">winrate</p>
+						<h1 id="winrate">n/a</h1>
+					</div>
+				</div>
+			</div>
+
+				<!-- stats -->
+				<div class="flex w-2/3 bg-dark h-[30vh] py-2 flex-row justify-around items-center">
+					<div class="w-[40%]">
+						<canvas id="eloEvo"></canvas>
+					</div>
+					<div class="stat-container">
+						<div class="stat-item">
+							<p data-i18n="max_elo">max elo</p>
+							<h1 id="max-elo">n/a</h1>
+						</div>
+
+						<div class="stat-item">
+							<p data-i18n="current_elo">current elo</p>
+							<h1 id="curr-elo">n/a</h1>
+						</div>
+					</div>
+				</div>
+
+			<!-- history / friends -->
+			<div class="flex w-[95%] gap-10 flex-col h-screen min-h-screen mb-10">
+
+				<div id="history" class="h-[50%]">
+					<h1 class="w-full font-bold text-xl" data-i18n="History">History</h1>
+					<div id="log-container" class="relative h-full w-full bg-dark overflow-y-scroll py-5">
+					</div>
+				</div>
+
+				<div class="flex h-[45%] w-full justify-center items-center gap-5">
+					<div id="friends" class="h-full w-1/3">
+						<h1 class="w-full font-bold text-xl" data-i18n="Friends">Friends</h1>
+						<div id="friend-container" class="h-full flex flex-col justify-start items-center align-top w-full bg-dark py-3 gap-3 overflow-y-scroll"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+</template>

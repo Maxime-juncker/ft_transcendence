@@ -75,6 +75,7 @@ export class User
 	private m_stats:		Stats = { gamePlayed: 0, gameWon: 0, currElo: 0, maxElo: 0, avrTime: "", shortTime: "" };
 	private m_source:		AuthSource = AuthSource.INTERNAL;
 	private m_finishedTutorial:	boolean = false;
+	private m_isAdmin: boolean = false;
 
 	private m_blockUsr:		User[] = [];
 	private m_friends:		User[] = []; // accepted request
@@ -123,6 +124,7 @@ export class User
 		this.m_stats.gameWon = json.wins;
 		this.m_stats.gamePlayed = json.games_played;
 		this.m_finishedTutorial = json.show_tutorial ? true : false;
+		this.m_isAdmin = json.is_admin;
 		this.m_friends = [];
 		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();

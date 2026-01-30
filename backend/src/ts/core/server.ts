@@ -50,6 +50,7 @@ const routes = [
 	"/profile.html",
 	"/search.html",
 	"/about.html",
+	"/dashboard.html",
 	"/404.html",
 ]
 
