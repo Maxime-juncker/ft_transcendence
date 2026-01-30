@@ -1,4 +1,4 @@
-import * as core from 'core/core.js';
+import { core, tokenSchema, rateLimitMed } from 'core/server.js';
 import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -19,9 +19,9 @@ export async function duelRoutes(fastify: FastifyInstance)
 
 	fastify.post('/list', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
-		schema: core.tokenSchema
+		schema: tokenSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token } = request.body as { token: string };
@@ -34,7 +34,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 
 	fastify.post('/invite', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: duelSchema
 	},
@@ -49,7 +49,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 
 	fastify.post('/accept', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: duelSchema
 	},
@@ -64,7 +64,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 
 	fastify.post('/decline', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: duelSchema
 	},

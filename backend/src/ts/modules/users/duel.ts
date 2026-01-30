@@ -1,6 +1,5 @@
-import * as core from 'core/core.js';
+import { core, DbResponse } from 'core/server.js';
 import { getUserById } from './user.js';
-import { DbResponse } from 'core/core.js';
 import { GameServer } from 'modules/game/GameServer.js';
 import { getUserName } from './user.js';
 import { Logger } from 'modules/logger.js';

@@ -5,8 +5,7 @@ import path from 'path';
 import { FastifyRequest } from 'fastify';
 import { randomBytes } from "crypto";
 
-import * as core from 'core/core.js';
-import { DbResponse } from "core/core.js";
+import { core, DbResponse } from 'core/server.js';
 import { getUserById, getUserByName, getUserByEmail } from "./user.js";
 import { hashString } from "modules/sha256.js";
 import { check_totp } from "modules/2fa/totp.js";
@@ -15,7 +14,6 @@ import { getSqlDate } from "utils.js";
 import { jwtVerif } from "modules/jwt/jwt.js";
 import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
-import { disconnectClientById } from "modules/chat/chat.js";
 
 async function validateCreationInput(email: string, name: string): Promise<DbResponse>
 {
@@ -187,6 +185,7 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 	try {
 		const result = await db.run(sql, [name, email, id, source, avatar, getSqlDate()]);
 		Logger.log(`Inserted row with id ${result.lastID}`);
+		core.userCount++;
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
@@ -221,6 +220,7 @@ export async function createUser(email: string, passw: string, username: string,
 			throw new Error("failed to create user");
 
 		Logger.success(`${username} has been register with id: ${result.lastID}`);
+		core.userCount++;
 		await updateAvatarPath(result.lastID, 'default.webp');
 		return { code: 200, data: { message: "Success", id: result.lastID }};
 	}

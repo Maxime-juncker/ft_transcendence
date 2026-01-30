@@ -369,4 +369,14 @@ export function registerCmds(chat: Chat)
 
 		displayResponse(chat, response);
 	});
+
+	cmd.register("getUsersCount", "\n\tshow the total amount of users register", async (chat: Chat) => {
+		const response = await fetch('/api/user/user_count');
+		displayResponse(chat, response);
+	});
+
+	cmd.register("getGameCount", "\n\tshow the total amount of games played", async (chat: Chat) => {
+		const response = await fetch('/api/user/game_count');
+		displayResponse(chat, response);
+	});
 }

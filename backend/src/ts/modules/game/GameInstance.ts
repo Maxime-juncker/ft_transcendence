@@ -2,7 +2,7 @@ import { addGameToHist, GameRes } from 'modules/users/user.js';
 import { GameState } from './GameState.js';
 import { Logger } from 'modules/logger.js';
 import { getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 
 enum Keys
 {

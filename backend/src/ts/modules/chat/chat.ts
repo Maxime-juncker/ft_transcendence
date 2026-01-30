@@ -1,4 +1,4 @@
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import { getUserById, getBlockUser, getUserName } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import * as utils from 'utils.js';

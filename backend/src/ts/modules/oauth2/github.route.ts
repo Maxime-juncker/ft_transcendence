@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { createUserOAuth2, findOAuth2User, loginOAuth2 } from 'modules/users/userManagment.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { AuthSource } from 'modules/oauth2/routes.js';
 import { Logger } from 'modules/logger.js';
@@ -42,7 +42,7 @@ export function githubOAuth2Routes (
 			var res = await findOAuth2User(id, AuthSource.GITHUB);
 			if (res.code == 404)
 			{
-				var res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
+				res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
 				if (res.code != 200)
 					return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
 			}

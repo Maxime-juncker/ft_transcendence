@@ -1,4 +1,4 @@
-import * as core from 'core/core.js';
+import { core, rateLimitMed } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
 import * as chat from 'modules/chat/chat.js';
 import { getUserById, getUserByName } from 'modules/users/user.js';
@@ -12,7 +12,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 		fastify.get('/api/chat', {
 			websocket: true,
 			config: { 
-				rateLimit: core.rateLimitMed
+				rateLimit: rateLimitMed
 			},
 		}, (connection, request) => {
 			chat.chatSocket(connection, request);
@@ -21,7 +21,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 
 	fastify.get('/api/chat/ping', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 	}, (request: FastifyRequest, reply: FastifyReply) => {
 		void request;
@@ -30,7 +30,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 
 	fastify.post('/api/chat/healthCallback', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {
@@ -56,7 +56,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 
 	fastify.delete('/api/chat/removeQueue', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {
@@ -80,7 +80,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 
 	fastify.post('/api/chat/dm', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {

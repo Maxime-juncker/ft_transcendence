@@ -1,8 +1,7 @@
 import { GameServer } from "modules/game/GameServer.js";
 import { connections } from "modules/chat/chat.js";
+import { core } from "core/server.js";
 import fs from 'fs';
-import { pipeline } from "stream/promises";
-import { Readable } from "stream";
 
 const colors = {
 	reset:	'\x1b[0m',
@@ -43,8 +42,10 @@ export class Logger
 			message: str,
 			time: Logger.getTimeISO(),
 			stats: {
-				ongoing_parties: ongoingGame,
-				connected_users: connections.size
+				ongoing_matches: ongoingGame,
+				connected_users: connections.size,
+				registerUser: core.userCount,
+				totalGamePlayed: core.gameCount
 			}
 		}) + "\n";
 

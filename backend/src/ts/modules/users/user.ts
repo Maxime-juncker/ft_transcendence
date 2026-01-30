@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Database } from 'sqlite'
-import { DbResponse } from 'core/core.js';
-import * as core from 'core/core.js';
+import { core, DbResponse, getDateFormated } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { AuthSource } from 'modules/oauth2/routes.js';
 
@@ -104,11 +103,12 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 
 		var sql = "INSERT INTO tournament_matches (tournament_id, player1_id, player2_id, played_at, user1_elo, user2_elo, score1, score2, winner_id) VALUES (-1, ?, ?, ?, ?, ?, ?, ?, ?)"
 		const winnerId = game.user1_score > game.user2_score ? id1 : id2;
-		const response = await db.run(sql, [id1, id2, core.getDateFormated(), user1Elo.elo, user2Elo.elo, game.user1_score, game.user2_score, winnerId]);
+		const response = await db.run(sql, [id1, id2, getDateFormated(), user1Elo.elo, user2Elo.elo, game.user1_score, game.user2_score, winnerId]);
 
 		Logger.log(`added game to history. id: ${response.lastID} (${id1} <=> ${id2})`, user1Elo.elo, user2Elo.elo);
 		await updateUserStats(id1, game.user1_score > game.user2_score, db);
 		await updateUserStats(id2, game.user2_score > game.user1_score, db);
+		core.gameCount++;
 
 		return { code: 200, data: { message: "Success" }};
 	}
@@ -322,4 +322,36 @@ export async function completeTutorial(id: number): Promise<DbResponse>
 		Logger.error(`Database error: ${err}`);
 		return { code: 500, data: { message: "Database Error" }};
 	}
+}
+
+export async function getUserCount(): Promise<DbResponse>
+{
+	const sql = "SELECT COUNT(*) FROM users";
+	try
+	{
+		const row = await core.db.get(sql);
+		return { code: 200, data: { message: row }};
+	}
+	catch (err)
+	{
+		Logger.error(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+
+}
+
+export async function getGameCount(): Promise<DbResponse>
+{
+	const sql = "SELECT COUNT(*) FROM tournament_matches";
+	try
+	{
+		const row = await core.db.get(sql);
+		return { code: 200, data: { message: row }};
+	}
+	catch (err)
+	{
+		Logger.error(`Database error: ${err}`);
+		return { code: 500, data: { message: "Database Error" }};
+	}
+
 }

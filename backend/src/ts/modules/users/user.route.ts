@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import * as core from 'core/core.js';
+import { core, DbResponse, tokenSchema } from 'core/server.js';
 import * as user from 'modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -71,7 +71,7 @@ export async function userRoutes(fastify: FastifyInstance)
 		)
 
 		fastify.post('/get_profile_token', {
-			schema: core.tokenSchema
+			schema: tokenSchema
 		}, async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token } = request.body as { token: string};
 
@@ -186,4 +186,14 @@ export async function userRoutes(fastify: FastifyInstance)
 			const res = await user.completeTutorial(data.id);
 			return reply.code(res.code).send(res.data);
 		})
+
+	fastify.get('/user_count', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getUserCount();
+		return reply.code(200).send({ userCount: core.userCount });
+	});
+
+	fastify.get('/game_count', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getGameCount();
+		return reply.code(200).send({ gameCount: core.gameCount });
+	});
 }

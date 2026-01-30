@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { createUserOAuth2, loginOAuth2, findOAuth2User } from 'modules/users/userManagment.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { AuthSource } from 'modules/oauth2/routes.js'
 import { Logger } from 'modules/logger.js';

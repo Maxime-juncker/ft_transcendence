@@ -2,7 +2,7 @@ import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import { addPlayerToQueue } from 'modules/chat/chat.js';
 import { Tournament } from './Tournament.js';
 import { notifyMatch } from 'modules/chat/chat.js';

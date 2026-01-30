@@ -3,7 +3,7 @@ import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
 import qrcode from 'qrcode';
 import { Logger } from 'modules/logger.js';
-import { DbResponse, db } from 'core/core.js';
+import { core, DbResponse } from 'core/server.js';
 
 function generate_totp(seed: string, time: number): string
 {
@@ -38,7 +38,7 @@ export async function new_totp(user_id: number, email: string): Promise<DbRespon
 	const otpauth = "otpauth://totp/Transcendence:" + email + "?secret=" + seed + "&issuer=Transcendence";
 	try
 	{
-		const row = await db.get(sql, [seed, user_id]);
+		const row = await core.db.get(sql, [seed, user_id]);
 		const url = await qrcode.toDataURL(otpauth)
 		return { code: 200, data: { qrcode: `${url}` }};
 	}
@@ -54,7 +54,7 @@ export async function del_totp(user_id: number): Promise<DbResponse>
 
 	try
 	{
-		const row = await db.get(sql, user_id);
+		const row = await core.db.get(sql, user_id);
 		return { code: 200, data: { message: "ok"}};
 	}
 	catch (err: any)
@@ -69,11 +69,11 @@ export async function validate_totp(user_id: number, totp: string): Promise<DbRe
 
 	try
 	{
-		const row = await db.get(sql, user_id)
+		const row = await core.db.get(sql, user_id)
 		if (check_totp(row.totp_seed, totp))
 		{
 			const sql = "UPDATE users SET totp_enable = 1 WHERE id = ?";
-			await db.get(sql, [user_id])
+			await core.db.get(sql, [user_id])
 
 			return { code: 200, data: { message: "ok, totp fully enabled" }};
 		}

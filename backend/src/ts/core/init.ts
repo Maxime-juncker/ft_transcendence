@@ -15,8 +15,9 @@ import { chatRoutes } from 'modules/chat/chat.route.js';
 import { totpRoutes } from 'modules/2fa/2fa.route.js';
 import { duelRoutes } from 'modules/users/duel.route.js';
 
-import * as core from 'core/core.js';
+import { core, DbResponse } from './server.js';
 import { Logger } from 'modules/logger.js';
+import { getUserCount, getGameCount } from 'modules/users/user.js';
 
 async function loadConfig(path: string, db: Database)
 {
@@ -77,5 +78,8 @@ export async function initFastify()
 	// create account for bot
 	await createUser("", "", "bot", AuthSource.BOT, core.db);
 	await loadConfig("/config.json", core.db); // create default_users
+
+	await getUserCount().then((value: DbResponse) => { core.userCount = value.data.message['COUNT(*)']});
+	await getGameCount().then((value: DbResponse) => { core.gameCount = value.data.message['COUNT(*)']});
 }
 
