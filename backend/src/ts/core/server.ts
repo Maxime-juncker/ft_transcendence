@@ -4,6 +4,7 @@ import { ServerSideRendering } from 'modules/ssr/ServerSideRendering.js';
 import { GameServer } from 'modules/game/GameServer.js';
 import { initVault } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
+import { Chat } from 'modules/chat/chat.js';
 
 export interface DbResponse {
 	code:	number;
@@ -36,6 +37,7 @@ export function getDateFormated()
 }
 
 export const core = new Core();
+export const chat = new Chat();
 
 await initVault();
 
@@ -56,6 +58,7 @@ const routes = [
 new ServerSideRendering(core.fastify, routes);
 const gameServer = new GameServer(core.fastify);
 await gameServer.init();
+
 
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {

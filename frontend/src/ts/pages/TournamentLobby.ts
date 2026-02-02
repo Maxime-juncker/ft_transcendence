@@ -17,11 +17,19 @@ export class TournamentLobby
 	private lastRoundCount: number = 0;
 	private overlayEndTime: number = 0;
 	private isDestroyed: boolean = false;
+	private router: GameRouter;
+	private user: User;
+	private tournamentId: string | null;
 
 	private m_players: User[] = [];
 
-	constructor(private router: GameRouter, private user: User, private tournamentId: string | null)
+	get id(): string | null { return this.tournamentId; }
+
+	constructor(router: GameRouter, user: User, id: string | null)
 	{
+		this.router = router;
+		this.tournamentId = id;
+		this.user = user;
 		if (!this.tournamentId || this.tournamentId === '')
 		{
 			this.tournamentId = localStorage.getItem('currentTournamentId');
@@ -72,7 +80,7 @@ export class TournamentLobby
 				return ;
 			}
 			const data = await res.json();
-			console.log('Lobby Data:', data);
+			// console.log('Lobby Data:', data);
 			
 			if (data.status === 'started' || data.status === 'finished')
 			{
@@ -94,7 +102,7 @@ export class TournamentLobby
 		{
 			if (data.status === 'finished' && data.winner)
 			{
-				this.lobbyTitle.innerHTML = `The winner is <span class="text-green-400">${data.winner}</span>`;
+				this.lobbyTitle.innerHTML = `The winner is <span class="text-green">${data.winner}</span>`;
 			}
 			else
 			{

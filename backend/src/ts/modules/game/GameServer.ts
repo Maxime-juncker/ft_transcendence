@@ -2,10 +2,8 @@ import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import { core } from 'core/server.js';
-import { addPlayerToQueue } from 'modules/chat/chat.js';
+import { core, chat } from 'core/server.js';
 import { Tournament } from './Tournament.js';
-import { notifyMatch } from 'modules/chat/chat.js';
 import { Logger } from 'modules/logger.js';
 
 export class GameServer
@@ -82,8 +80,8 @@ export class GameServer
 
 		const gameId = crypto.randomUUID();
 
-		await notifyMatch(player1, player2, gameId, 1);
-		await notifyMatch(player2, player1, gameId, 2);
+		await chat.notifyMatch(player1, player2, gameId, 1);
+		await chat.notifyMatch(player2, player1, gameId, 2);
 
 		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
 
@@ -328,8 +326,8 @@ export class GameServer
 				this.activeGames.set(gameId, game);
 				data.matchGames.set(match, gameId);
 				
-				notifyMatch(p1Id, p2Id, gameId, 1);
-				notifyMatch(p2Id, p1Id, gameId, 2);
+				chat.notifyMatch(p1Id, p2Id, gameId, 1);
+				chat.notifyMatch(p2Id, p1Id, gameId, 2);
 				
 				const originalDestroy = game.destroy.bind(game);
 				game.destroy = () =>
@@ -378,7 +376,7 @@ export class GameServer
 				}
 				else if (mode === 'online')
 				{
-					await addPlayerToQueue(Number(name), this);
+					await chat.addPlayerToQueue(Number(name), this);
 					reply.status(202).send({ message: "added to queue" });
 				}
 				else if (mode === 'duel')

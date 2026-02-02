@@ -190,17 +190,27 @@
 						<h2 class="text-4xl font-bold text-white">Create Tournament</h2>
 						<div class="flex flex-col gap-4 w-full">
 							<div class="flex flex-row gap-4 justify-center">
-								<label class="flex items-center gap-2 cursor-pointer">
-									<input type="radio" name="tournament-type" value="public" checked class="w-6 h-6">
-									<span class="text-2xl">Public</span>
+
+								<label class="inline-flex items-center cursor-grab">
+									<input 
+										type="radio"
+										name="tournament-type" value="public" checked
+										class="checkbox"
+									/>
+									<span class="ml-2 font-bold select-none">Public</span>
 								</label>
-								<label class="flex items-center gap-2 cursor-pointer">
-									<input type="radio" name="tournament-type" value="private" class="w-6 h-6">
-									<span class="text-2xl">Invitation Only</span>
+
+								<label class="inline-flex items-center cursor-grab">
+									<input 
+										type="radio"
+										name="tournament-type" value="private"
+										class="checkbox"
+									/>
+									<span class="ml-2 font-bold select-none">Invitation Only</span>
 								</label>
 							</div>
 							<button class="btn w-full text-4xl font-bold mt-5" id="tournament-confirm-create">Create</button>
-							<button class="btn w-full text-2xl font-bold bg-dark" id="tournament-cancel-create">Back</button>
+							<button class="btn w-full text-2xl font-bold" id="tournament-cancel-create">Back</button>
 						</div>
 					</section>
 
@@ -218,7 +228,7 @@
 						</div>
 						<div class="flex w-full gap-4">
 							<button class="btn flex-1 text-2xl font-bold" id="lobby-start-btn">Start Tournament</button>
-							<button class="btn flex-1 text-2xl font-bold bg-red" id="lobby-leave-btn">Leave</button>
+							<button class="btn flex-1 text-2xl font-bold hover:bg-red" id="lobby-leave-btn">Leave</button>
 						</div>
 					</section>
 

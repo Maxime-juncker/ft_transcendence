@@ -1,9 +1,19 @@
-import { core, rateLimitMed } from 'core/server.js';
+import { core, chat, rateLimitMed } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
-import * as chat from 'modules/chat/chat.js';
 import { getUserById, getUserByName } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
+
+export const InviteSchema = {
+	body: {
+		type: "object",
+		properties: {
+			token: { type: "string" },
+
+		},
+		required: [ "token" ]
+	}
+}
 
 export async function chatRoutes(fastify: FastifyInstance)
 {
@@ -129,4 +139,97 @@ export async function chatRoutes(fastify: FastifyInstance)
 			return reply.code(200).send({ message: "Success" });
 		return reply.code(200).send({ message: "user is offline" });
 	});
+
+	fastify.post('/api/chat/list', {
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					token: { type: 'string' },
+				},
+				required: [ 'token' ]
+			}
+		}
+	},
+	async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token } = request.body as { token: string }
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "invalid token"});
+
+			const invites = chat.listInvites(data.id);
+			return reply.code(200).send(invites);
+		})
+
+	fastify.post('/api/chat/invite', {
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					token:		{ type: 'string' },
+					lobbyId:	{ type: 'string' },
+					userId:		{ type: 'number' }
+				},
+				required: [ 'token', 'lobbyId', 'userId' ]
+			}
+		}
+	},
+	async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token, lobbyId, userId } = request.body as { token: string, lobbyId: string, userId: number };
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "invalid token"});
+
+			const res = chat.invite(data.id, userId, lobbyId);
+			return reply.code(res.code).send(res.data);
+		})
+
+	fastify.post('/api/chat/accept', {
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					token:	{ type: 'string' },
+					userId:	{ type: 'number' },
+				},
+				required: [ 'token', 'userId' ]
+			}
+		}
+	},
+	async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token, userId } = request.body as { token: string, userId: number };
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "invalid token"});
+
+			const id = chat.acceptInvite(data.id, userId);
+			if (id == "")
+				return reply.code(404).send({ message: "invite not found" });
+			return reply.code(200).send({ lobbyId: id });
+		})
+
+	fastify.post('/api/chat/decline', {
+		schema: {
+			body: {
+				type: 'object',
+				properties: {
+					token:	{ type: 'string' },
+					userId:	{ type: 'number' },
+				},
+				required: [ 'token', 'userId' ]
+			}
+		}
+	},
+	async (request: FastifyRequest, reply: FastifyReply) => {
+			const { token, userId } = request.body as { token: string, userId: number };
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				return reply.code(400).send({ message: "invalid token"});
+
+			const success = chat.declineInvite(data.id, userId);
+			if (success == false)
+				return reply.code(404).send({ message: "invite not found" });
+			return reply.code(200).send({ message: "Success" });
+		})
+
 }

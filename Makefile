@@ -8,7 +8,7 @@ build:
 	cp shared/* backend/src/ts/modules/game
 	cp shared/* frontend/src/ts/pages
 	docker compose build
-	(cd cli-app && ./build.sh)
+	# (cd cli-app && ./build.sh)
 
 .PHONY: start
 start:

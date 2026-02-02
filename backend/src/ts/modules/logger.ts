@@ -1,6 +1,5 @@
 import { GameServer } from "modules/game/GameServer.js";
-import { connections } from "modules/chat/chat.js";
-import { core } from "core/server.js";
+import { core, chat } from "core/server.js";
 import fs from 'fs';
 
 const colors = {
@@ -43,7 +42,7 @@ export class Logger
 			time: Logger.getTimeISO(),
 			stats: {
 				ongoing_matches: ongoingGame,
-				connected_users: connections.size,
+				connected_users: chat.connections.size,
 				registerUser: core.userCount,
 				totalGamePlayed: core.gameCount
 			}
