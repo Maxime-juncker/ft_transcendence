@@ -1,23 +1,22 @@
 FROM alpine:3.20 AS dev
 
-RUN apk update			&& \
-	apk add  --no-cache 	\
-	git						\
-	libtool					\
-	automake				\
-	autoconf				\
-	gawk					\
-	make					\
-	g++						\
-	flex					\
-	byacc					\
-	yajl-dev				\
-	pcre2-dev				\
-	libxml2-dev				\
-	curl-dev				\
-	linux-headers			\
-	ssdeep					\
-	libfuzzy2-dev			\
+RUN apk add --update --no-cache \
+	git							\
+	libtool						\
+	automake					\
+	autoconf					\
+	gawk						\
+	make						\
+	g++							\
+	flex						\
+	byacc						\
+	yajl-dev					\
+	pcre2-dev					\
+	libxml2-dev					\
+	curl-dev					\
+	linux-headers				\
+	ssdeep						\
+	libfuzzy2-dev				\
 	libssl3
 
 RUN	git clone --recursive https://github.com/Bluesmoothie/ModSecurity.git	&& \
@@ -39,16 +38,15 @@ RUN git clone https://github.com/Bluesmoothie/coreruleset.git
 
 FROM alpine:3.20 AS prod
 
-RUN apk update			&& \
-	apk add  --no-cache 	\
-	libcurl					\
-	libxml2					\
-	pcre2					\
-	yajl					\
-	libstdc++				\
-	ssdeep					\
-	libfuzzy2				\
-	libssl3					\
+RUN apk add --update --no-cache \
+	libcurl						\
+	libxml2						\
+	pcre2						\
+	yajl						\
+	libstdc++					\
+	ssdeep						\
+	libfuzzy2					\
+	libssl3						\
 	openssl
 
 COPY --from=dev /etc/nginx/ /etc/nginx/
