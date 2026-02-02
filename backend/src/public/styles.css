@@ -143,11 +143,11 @@
 	}
 
 	.header-small {
-		@apply w-full h-25 bg-dark flex align-middle justify-between items-center fixed z-3;
+		@apply w-full h-25 bg-dark grid grid-cols-3 items-center fixed z-3;
 	}
 
 	.banner-small {
-		@apply h-full flex align-middle justify-center items-center
+		@apply h-full flex align-middle justify-start items-center
 	}
 	.banner-small h1 {
 		@apply bg-dark z-1 text-2xl py-1 px-3 font-bold;
@@ -162,7 +162,7 @@
 	}
 
 	.user-menu {
-		@apply relative py-3 flex h-full justify-center items-center mr-5 gap-3;
+		@apply relative py-3 flex h-full justify-end items-center mr-5 gap-3;
 	}
 
 	.user-menu #user-menu-container {
@@ -263,5 +263,9 @@
 
 	.credit-avatar {
 		@apply w-full px-3 py-2 flex gap-3 justify-end items-center hover:bg-white hover:text-darker hover:cursor-grab;
+	}
+
+	.btn-disable {
+		@apply grayscale-100;
 	}
 }

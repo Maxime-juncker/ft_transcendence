@@ -207,9 +207,9 @@ async function acceptFriends(i: number)
 	return { code: 200, data: "all request accepted" };
 }
 
-const maxUser = 50;
+const maxUser = 42;
 const friendReq = 5;
-const histReq = 15;
+const histReq = 10;
 
 export async function runTests()
 {

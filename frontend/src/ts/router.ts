@@ -3,7 +3,7 @@ import { GameMenu } from 'pages/GameMenu.js';
 import { GameClient } from 'pages/GameClient.js';
 import { TournamentMenu } from 'pages/TournamentMenu.js';
 import { TournamentCreate } from 'pages/TournamentCreate.js';
-import { TournamentJoin } from 'pages/TournamentJoin.js';
+import { TournamentLobby } from 'pages/TournamentLobby.js';
 import { User } from "modules/user/User.js";
 import { Chat } from 'modules/chat/chat';
 import { UserElement } from 'modules/user/UserElement.js';
@@ -162,9 +162,6 @@ export class GameRouter
 			case GameRouter.TOURNAMENT_CREATE_KEY:
 				this.navigateTo('tournament-create', '');
 				break ;
-			case GameRouter.TOURNAMENT_JOIN_KEY:
-				this.navigateTo('tournament-join', '');
-				break ;
 		}
 	}
 
@@ -205,10 +202,10 @@ export class GameRouter
 				return (new TournamentMenu(this));
 			case 'tournament-create':
 				if (this.m_user)
-					return (new TournamentCreate(this.m_user));
-			case 'tournament-join':
+					return (new TournamentCreate(this, this.m_user));
+			case 'tournament-lobby':
 				if (this.m_user)
-					return (new TournamentJoin(this.m_user));
+					return (new TournamentLobby(this, this.m_user, mode));
 			default:
 				return (null);
 		}

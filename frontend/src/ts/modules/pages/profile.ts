@@ -32,7 +32,7 @@ export class ProfileView extends ViewComponent
 		const usernameQuery = utils.getUrlVar().get("username");
 		if (usernameQuery)
 			this.m_user = await getUserFromName(usernameQuery);
-		if (!this.m_user)
+		if (!this.m_user || this.m_user.id == -1)
 		{
 			await this.setUnknowProfile();
 			return;
@@ -306,9 +306,9 @@ export class ProfileView extends ViewComponent
 			return clone;
 		}
 
-		const player2Id = json.user1_id === user.id ? json.user2_id : json.user1_id;
-		const player2Score = json.user1_id === user.id ? json.user2_score: json.user1_score;
-		const player1Score = json.user1_id === user.id ? json.user1_score: json.user2_score;
+		const player2Id = json.player1_id === user.id ? json.player2_id : json.player1_id;
+		const player2Score = json.player1_id === user.id ? json.score2: json.score1;
+		const player1Score = json.player1_id === user.id ? json.score1: json.score2;
 
 		const user2: User | null = await getUserFromId(player2Id);
 		if (!user2)
@@ -325,8 +325,8 @@ export class ProfileView extends ViewComponent
 		status.innerText = `${player1Score > player2Score ? "won" : "lost" }`;
 		status.style.color = `${player1Score > player2Score ? "var(--color-green)" : "var(--color-red)" }`;
 		score.innerText = `${player1Score} - ${player2Score}`;
-		date.innerText = json.created_at;
-		eloData.set(json.created_at, elo);
+		date.innerText = json.played_at;
+		eloData.set(json.played_at, elo);
 
 		return clone;
 	}
@@ -340,7 +340,7 @@ export class ProfileView extends ViewComponent
 			const status = profile_extended?.querySelector("#user-status") as HTMLElement;
 			if (status)
 				UserElement.setStatusColor(this.m_user, status);
-			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = "/public/avatars/default.png";
+			(<HTMLImageElement>profile_extended.querySelector("#avatar-img")).src = "/public/avatars/default.webp";
 			(<HTMLElement>profile_extended.querySelector("#name")).textContent = "USER NOT FOUND";
 			(<HTMLElement>profile_extended.querySelector("#created_at")).innerText	= `USER NOT FOUND`;
 		}

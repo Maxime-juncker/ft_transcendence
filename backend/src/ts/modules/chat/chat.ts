@@ -1,4 +1,4 @@
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import { getUserById, getBlockUser, getUserName } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import * as utils from 'utils.js';
@@ -77,8 +77,7 @@ export async function disconnectClient(ws: WebSocket)
 	const id = connections.get(ws);
 	if (!id)
 		return ;
-	if (id != -1)
-		await logoutUser(id, core.db);
+	logoutUser(id, core.db);
 	ws.close();
 	connections.delete(ws);
 	clearDuel(id);
@@ -105,7 +104,7 @@ async function getPlayerName(id: number) : Promise<string>
 	const res = await getUserById(id, core.db);
 	if (res.code == 200)
 		return res.data.name;
-	return "undifined";
+	return "undefined";
 }
 
 /**
@@ -189,12 +188,14 @@ export async function chatSocket(ws: WebSocket, request: FastifyRequest)
 
 		ws.on('close', async (code: any, reason: any) =>
 		{
+			void reason;
+
 			const conn = connections.get(ws);
 			if (!conn)
 				return ;
 
 			removePlayerFromQueue(conn);
-			Logger.log(`${login} has left the room for ${reason} {${code}}`);
+			Logger.log(`${login} has left the room (code: ${code})`);
 			broadcast(serverMsg(`${login} has left the room`), ws);
 
 			await disconnectClient(ws);

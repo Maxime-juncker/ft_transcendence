@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
 	id				INTEGER PRIMARY KEY AUTOINCREMENT,
 	name			STRING NOT NULL UNIQUE,
-	email			STRING UNIQUE,
+	email			STRING,
 	passw			STRING,
 
 	totp_enable		BOOLEAN NOT NULL DEFAULT false,
@@ -50,21 +50,37 @@ CREATE TABLE IF NOT EXISTS friends (
 	CHECK(user1_id < user2_id)
 );
 
-CREATE TABLE IF NOT EXISTS games (
-	id				INTEGER PRIMARY KEY AUTOINCREMENT,
-
-	user1_id		INTEGER NOT NULL,
-	user2_id		INTEGER NOT NULL,
-	user1_score		INTEGER NOT NULL,
-	user2_score		INTEGER NOT NULL,
-
-	user1_elo		INTEGER NOT NULL,
-	user2_elo		INTEGER NOT NULL,
-
+CREATE TABLE IF NOT EXISTS tournaments (
+	id				TEXT PRIMARY KEY,
+	name			TEXT NOT NULL,
+	owner_id		INTEGER NOT NULL,
+	status			TEXT NOT NULL,
+	winner_id		INTEGER,
 	created_at		DATE NOT NULL,
-
-	FOREIGN KEY (user1_id) REFERENCES users(id),
-	FOREIGN KEY (user2_id) REFERENCES users(id),
-
-	CHECK(user1_id < user2_id)
+	FOREIGN KEY (owner_id) REFERENCES users(id),
+	FOREIGN KEY (winner_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS tournament_participants (
+	tournament_id	TEXT NOT NULL,
+	user_id			INTEGER NOT NULL,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
+	FOREIGN KEY (user_id) REFERENCES users(id),
+	PRIMARY KEY (tournament_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS tournament_matches (
+	id				INTEGER PRIMARY KEY AUTOINCREMENT,
+	tournament_id	TEXT NOT NULL,
+	player1_id		INTEGER,
+	player2_id		INTEGER,
+	winner_id		INTEGER,
+	score1			INTEGER DEFAULT 0,
+	score2			INTEGER DEFAULT 0,
+	played_at		DATE,
+
+	user1_elo		INTEGER NOT NULL DEFAULT 1000,
+	user2_elo		INTEGER NOT NULL DEFAULT 1000,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
+);
+

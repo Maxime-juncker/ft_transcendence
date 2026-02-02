@@ -5,9 +5,8 @@ import path from 'path';
 import { FastifyRequest } from 'fastify';
 import { randomBytes } from "crypto";
 
-import * as core from 'core/core.js';
-import { DbResponse } from "core/core.js";
-import { getUserById, getUserByName } from "./user.js";
+import { core, DbResponse } from 'core/server.js';
+import { getUserById, getUserByName, getUserByEmail } from "./user.js";
 import { hashString } from "modules/sha256.js";
 import { check_totp } from "modules/2fa/totp.js";
 import { AuthSource } from "modules/oauth2/routes.js";
@@ -15,16 +14,61 @@ import { getSqlDate } from "utils.js";
 import { jwtVerif } from "modules/jwt/jwt.js";
 import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
-import { disconnectClientById } from "modules/chat/chat.js";
 
+async function validateCreationInput(email: string, name: string): Promise<DbResponse>
+{
+	if (!validate_email(email))
+		return { code: 403, data: { message: "email is invalid" }};
+	if (!validate_name(name))
+		return { code: 403, data: { message: "name is invalid" }};
 
-function validate_email(email:string)
+	if (name.length <= 0)
+		return { code: 403, data: { message: `name is too short` }};
+	if (name.length > 35)
+		return { code: 403, data: { message: `name is too long` }};
+
+	if (await isUsernameTaken(name))
+	{
+		Logger.warn(`${name} is already in database`);
+		return { code: 403, data: { message: `this username is already taken` }};
+	}
+
+	if (await isEmailTaken(email))
+	{
+		Logger.warn(`${email} is already associated to an account`);
+		return { code: 403, data: { message: `this email is already taken` }};
+	}
+
+	return { code: 200, data: { message: "ok" }};
+}
+
+async function isEmailTaken(email: string): Promise<boolean>
+{
+	var res = await getUserByEmail(email);
+	return res.code != 404;
+}
+
+async function isUsernameTaken(name: string): Promise<boolean>
+{
+	const res = await getUserByName(name, core.db);	
+	return res.code != 404;
+}
+
+function validate_email(email: string)
 {
 	return String(email)
 	.toLowerCase()
 	.match(
-		/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/
 	);
+}
+
+function validate_name(name: string): boolean
+{
+	const regex = /[\W]/g;
+	const match = name.match(regex)
+
+	return match ? false : true;
 }
 
 export async function createGuest(): Promise<DbResponse>
@@ -37,7 +81,7 @@ export async function createGuest(): Promise<DbResponse>
 		const rBytes = randomBytes(8).toString('hex');
 		const name = `guest${highest["MAX(id)"]}${rBytes}`;
 		const data = await core.db.get(sql, [name, AuthSource.GUEST, date]);
-		await updateAvatarPath(data.id, 'default.png');
+		await updateAvatarPath(data.id, 'default.webp');
 		return { code: 200, data: data};
 	}
 	catch (err)
@@ -95,6 +139,21 @@ export async function login(email: string, passw: string, totp: string) : Promis
 	}
 }
 
+export async function findOAuth2User(id: string, source: number)
+{
+	var sql = 'SELECT * from users WHERE oauth_id = ? AND source = ?';
+	try {
+		const row = await core.db.get(sql, [id, source]);
+		if (!row)
+			return { code: 404, data: { message: "user not found" }};
+		return { code: 200, data: row}
+	}
+	catch (err) {
+		Logger.error(`database err: ${err}`);
+		return { code: 500, data: { message: `database error: ${err}` }};
+	}
+}
+
 export async function loginOAuth2(id: string, source: number, db: Database) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE oauth_id = ? AND source = ? RETURNING *';
@@ -112,14 +171,21 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 
 export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
+	if (await isUsernameTaken(name))
+	{
+		const rBytes = randomBytes(4).toString('hex');
+		name = `${name}${rBytes}`;
+	}
+
 	const res = await loginOAuth2(id, source, db);
 	if (res.code == 200)
 		return { code: 200, data: { message: "User already in db" }};
-	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
+	const sql = 'INSERT INTO users (name, email, oauth_id, source, avatar, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 	try {
 		const result = await db.run(sql, [name, email, id, source, avatar, getSqlDate()]);
 		Logger.log(`Inserted row with id ${result.lastID}`);
+		core.userCount++;
 		return { code: 200, data: { message: "Success" }};
 	}
 	catch (err) {
@@ -130,10 +196,14 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 
 export async function createUser(email: string, passw: string, username: string, source: AuthSource, db: Database) : Promise<DbResponse>
 {
-	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
+	if (source == AuthSource.INTERNAL)
+	{
+		const validation = await validateCreationInput(email, username)
+		if (validation.code != 200)
+			return validation;
+	}
 
-	if (!validate_email(email) && source == AuthSource.INTERNAL)
-		return { code: 403, data: { message: "error: email not valid" }};
+	const sql = 'INSERT INTO users (name, email, passw, source, created_at) VALUES (?, ?, ?, ?, ?)';
 	const res = await getUserByName(username, core.db);	
 	if (res.code != 404)
 	{
@@ -150,7 +220,8 @@ export async function createUser(email: string, passw: string, username: string,
 			throw new Error("failed to create user");
 
 		Logger.success(`${username} has been register with id: ${result.lastID}`);
-		await updateAvatarPath(result.lastID, 'default.png');
+		core.userCount++;
+		await updateAvatarPath(result.lastID, 'default.webp');
 		return { code: 200, data: { message: "Success", id: result.lastID }};
 	}
 	catch (err)
@@ -195,7 +266,7 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 	const sql = "UPDATE users SET name = ?, email = ?, passw = ?, oauth_id = ?, source = ? WHERE id = ?";
 	try
 	{
-		await updateAvatarPath(user_id, 'default.png');
+		await updateAvatarPath(user_id, 'default.webp');
 		await db.run(sql, [name, rBytes, rBytes, rBytes, AuthSource.DELETED, user_id]);
 		Logger.success(`user has been deleted`)
 		return { code: 200, data: { message: "Success" }};
@@ -218,7 +289,6 @@ export async function logoutUser(user_id: number, db: Database) : Promise<DbResp
 	}
 
 	const sql = "UPDATE users SET is_login = 0 WHERE id = ?";
-	disconnectClientById(user_id);
 
 	try {
 		await db.run(sql, [user_id]);

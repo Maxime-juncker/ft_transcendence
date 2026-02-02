@@ -1,6 +1,6 @@
 import { Database } from 'sqlite';
-import { DbResponse } from 'core/core.js'
 import { Logger } from 'modules/logger.js';
+import { core, DbResponse } from 'core/server.js';
 import { getUserName } from 'modules/users/user.js'
 
 export async function removeFriend(user1: number, user2: number, db: Database) : Promise<DbResponse>

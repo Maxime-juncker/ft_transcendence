@@ -2,9 +2,16 @@ import { setCookie, setPlaceHolderText, getUrlVar } from 'modules/utils/utils.js
 import { ViewComponent } from 'modules/router/ViewComponent.js';
 import { Router } from 'modules/router/Router.js';
 import { MainUser } from 'modules/user/User.js';
+import { Utils } from 'pages/Utils';
 
 export class LoginView extends ViewComponent
 {
+	private m_createBtn: HTMLButtonElement | null = null
+	private m_loginBtn: HTMLButtonElement | null = null
+	private m_fortytwoBtn: HTMLButtonElement | null = null
+	private m_githubBtn: HTMLButtonElement | null = null
+	private m_guestBtn: HTMLButtonElement | null = null
+
 	constructor()
 	{
 		super();
@@ -17,20 +24,34 @@ export class LoginView extends ViewComponent
 				Router.Instance?.navigateTo("/lobby")
 		});
 
-		this.querySelector("#create_btn")?.addEventListener("click", () => this.submitNewUser());
-		this.querySelector("#login_btn")?.addEventListener("click", () => this.login());
-		this.querySelector("#forty_two_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-		this.querySelector("#github_log_btn")?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
-		this.querySelector("#guest_log_btn")?.addEventListener("click", () => this.logAsGuest());
-
 		this.querySelector("#home_btn")?.addEventListener("click", () => { 
 			Router.Instance?.navigateTo("/");
 		});
+
+		this.m_createBtn = this.querySelector("#create_btn");
+		this.m_loginBtn = this.querySelector("#login_btn");
+		this.m_fortytwoBtn = this.querySelector("#forty_two_log_btn");
+		this.m_githubBtn = this.querySelector("#github_log_btn");
+		this.m_guestBtn = this.querySelector("#guest_log_btn");
+
+		this.m_createBtn?.addEventListener("click", () => this.submitNewUser());
+		this.m_loginBtn?.addEventListener("click", () => this.login());
+		this.m_fortytwoBtn?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.m_githubBtn?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
+		this.m_guestBtn?.addEventListener("click", () => this.logAsGuest());
+
 	}
 
 	public async enable()
 	{
 		const vars = getUrlVar();
+
+		const error = vars.get("error");
+		if (error)
+		{
+			setPlaceHolderText(`error: ${decodeURIComponent(error)}`);
+		}
+
 		if (vars.get("oauth_token"))
 		{
 			setCookie("jwt_session", vars.get("oauth_token"), 10);
@@ -38,6 +59,43 @@ export class LoginView extends ViewComponent
 			await MainUser.Instance?.loginSession();
 			Router.Instance?.setView("/lobby");
 		}
+
+		if (MainUser.Instance?.id != -1)
+			this.disableBtns();
+	}
+
+	private disableBtn(elt: HTMLElement): HTMLElement
+	{
+		var clone = elt.cloneNode(true) as HTMLElement;
+		elt.parentNode?.replaceChild(clone, elt);
+		clone.classList.add("btn-disable");
+		return clone;
+	}
+
+	public disableBtns()
+	{
+		if (this.m_createBtn)
+			this.m_createBtn = this.disableBtn(this.m_createBtn) as HTMLButtonElement;
+		
+		if (this.m_loginBtn)
+			this.m_loginBtn = this.disableBtn(this.m_loginBtn) as HTMLButtonElement;
+
+		if (this.m_fortytwoBtn)
+			this.m_fortytwoBtn = this.disableBtn(this.m_fortytwoBtn) as HTMLButtonElement;
+
+		if (this.m_githubBtn)
+			this.m_githubBtn = this.disableBtn(this.m_githubBtn) as HTMLButtonElement;
+
+		if (this.m_guestBtn)
+			this.m_guestBtn = this.disableBtn(this.m_guestBtn) as HTMLButtonElement;
+
+		this.m_createBtn?.removeEventListener("click", () => this.submitNewUser());
+		this.m_loginBtn?.removeEventListener("click", () => this.login());
+		this.m_fortytwoBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.m_githubBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/github"));
+		this.m_guestBtn?.removeEventListener("click", () => this.logAsGuest());
+
+		setPlaceHolderText("you already are login");
 	}
 
 	public async disable()
@@ -120,6 +178,7 @@ export class LoginView extends ViewComponent
 				username: username,
 			})
 		});
+		const json = await response.json();
 		if (response.status == 200)
 		{
 			const { status, data } = await MainUser.Instance.login(email, passw, "");
@@ -132,13 +191,11 @@ export class LoginView extends ViewComponent
 			setPlaceHolderText("user created");
 		}
 		else if (response.status == 403)
-			setPlaceHolderText("email invalid");
+			setPlaceHolderText(json.message);
 		else 
 			setPlaceHolderText("database error");
 	}
 }
-
-
 
 function oauthLogin(path: string)
 {

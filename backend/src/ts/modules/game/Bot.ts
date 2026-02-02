@@ -2,7 +2,7 @@ import { GameState } from './GameState.js';
 import { GameInstance } from './GameInstance.js';
 import WebSocket from 'ws';
 import { getUserByName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 
 enum Keys
@@ -39,9 +39,11 @@ export class Bot
 
 	private async start(gameId: string): Promise<void>
 	{
+		await new Promise(r => setTimeout(r, 500));
+
 		this.socket = new WebSocket(`ws://localhost:3000/api/game/${gameId}/${Bot.PLAYER_ID}`);
 		this.socket.binaryType = 'arraybuffer';
-
+		
 		this.socket.onopen = () =>
 		{
 			this.interval = setInterval(() => { this.send(); }, Bot.INTERVAL_TIME);
@@ -118,7 +120,9 @@ export class Bot
 	private goToCenter(): void
 	{
 		if (!this.gameInstance)
+		{
 			return ;
+		}
 
 		const centerY = 50;
 		if (this.gameInstance.leftPaddleY > centerY)
@@ -134,7 +138,9 @@ export class Bot
 	private goToBall(): void
 	{
 		if (!this.gameInstance)
+		{
 			return ;
+		}
 
 		if (this.gameInstance.ballY < this.gameInstance.leftPaddleY)
 		{

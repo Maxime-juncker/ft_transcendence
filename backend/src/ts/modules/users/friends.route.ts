@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import * as friends from 'modules/users/friends.js'
 import { jwtVerif } from 'modules/jwt/jwt.js';
 

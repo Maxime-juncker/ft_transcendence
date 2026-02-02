@@ -2,7 +2,7 @@ import { addGameToHist, GameRes } from 'modules/users/user.js';
 import { GameState } from './GameState.js';
 import { Logger } from 'modules/logger.js';
 import { getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 
 enum Keys
 {
@@ -45,6 +45,8 @@ export class GameInstance
 	private _winner:	number | null = null;
 	private _gameMode:	string | null = null;
 	private _scoreUpdated: boolean = false;
+	public p1Ready: boolean = false;
+	public p2Ready: boolean = false;
 
 	constructor(gameMode: string, player1Id: number, player2Id: number)
 	{
@@ -66,7 +68,7 @@ export class GameInstance
 	{
 		this._interval = setInterval(() =>
 		{
-			if (this._isRunning)
+			if (this._isRunning && this.p1Ready && this.p2Ready)
 			{
 				this.moveBall();
 				this.movePaddle();
@@ -221,22 +223,26 @@ export class GameInstance
 	get state(): Buffer | null					{ return (this._gameState ? Buffer.from(this._gameState.stateBuffer) : null); }
 	get reversedState(): Buffer | null			{ return (this._gameState ? Buffer.from(this._gameState.reversedStateBuffer) : null); }
 	get reversedBuffer(): ArrayBuffer | null	{ return (this._gameState ? this._gameState.reversedStateBuffer : null); }
-	get mode(): string | null			{ return (this._gameMode); }
-	get ballY(): number					{ return (this._gameState.ballY); }
-	get leftPaddleY(): number			{ return (this._gameState.leftPaddleY); }
-	get ballSpeedX(): number			{ return (this._gameState.speedX); }
-	get keysPressed(): Set<string>		{ return (this._keysPressed); }
-	get winnerName(): number | null		{ return (this._winner); }
-	get scoreUpdated(): boolean			{ return (this._scoreUpdated); }
-	get player1Name(): number | null	{ return (this._Player1Id); }
-	get player2Name(): number | null	{ return (this._Player2Id); }
+	get mode(): string | null					{ return (this._gameMode); }
+	get ballY(): number							{ return (this._gameState.ballY); }
+	get leftPaddleY(): number					{ return (this._gameState.leftPaddleY); }
+	get ballSpeedX(): number					{ return (this._gameState.speedX); }
+	get keysPressed(): Set<string>				{ return (this._keysPressed); }
+	get winnerName(): number | null				{ return (this._winner); }
+	get winner(): number | null					{ return (this._winner); }
+	get scoreUpdated(): boolean					{ return (this._scoreUpdated); }
+	get player1Id(): number						{ return (this._Player1Id!); }
+	get player2Id(): number						{ return (this._Player2Id!); }
+
+	get p1Score(): number						{ return (this._gameState.player1Score); }
+	get p2Score(): number						{ return (this._gameState.player2Score); }
 	
-	set keysPressed(keys: Set<string>)	{ this._keysPressed = keys; }
-	set running(isRunning: boolean)		{ this._isRunning = isRunning; }
-	set state(value: GameState)			{ this._gameState = value; }
-	set winnerName(name: number | null)	{ this._winner = name; }
-	set scoreUpdated(value: boolean)	{ this._scoreUpdated = value; }
-	set winner(value: number | null)	{ this._winner = value; }
+	set keysPressed(keys: Set<string>)			{ this._keysPressed = keys; }
+	set running(isRunning: boolean)				{ this._isRunning = isRunning; }
+	set state(value: GameState)					{ this._gameState = value; }
+	set winnerName(name: number | null)			{ this._winner = name; }
+	set scoreUpdated(value: boolean)			{ this._scoreUpdated = value; }
+	set winner(value: number | null)			{ this._winner = value; }
 
 	public destroy(): void
 	{
