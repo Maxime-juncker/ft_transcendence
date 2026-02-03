@@ -15,6 +15,8 @@ export type LobbyInvite = {
 	lobbyId:	string
 }
 
+// TODO: quand on deco, tout ne marche pas
+
 export class Chat
 {
 	private m_connections: Map<WebSocket, number>; // websocket <=> user login
@@ -287,7 +289,7 @@ export class Chat
 	 * @param lobbyId id of tournament lobby
 	 * @return 400 if user invite self, 409 if receiver is already invited, 200 if ok
 	 */
-	public invite(senderId: number, userId: number, lobbyId: string): DbResponse
+	public async invite(senderId: number, userId: number, lobbyId: string): Promise<DbResponse>
 	{
 		if (senderId === userId)
 			return { code: 400, data: { message: "you can't invite yourself" }};
@@ -299,6 +301,7 @@ export class Chat
 				return { code: 409, data: { message: "user is already invited to this tournament" }};
 		}
 
+		this.sendTo(userId, this.serverMsg(`${await this.getPlayerName(senderId)} is inviting you to his lobby`));
 		this.m_lobbyInvites.push({ senderId: senderId, userId: userId, lobbyId: lobbyId })
 
 		return { code: 200, data: { message: "invite sent" }};
@@ -329,13 +332,14 @@ export class Chat
 	 * @param senderId senderid
 	 * @returns the lobby id or empty string if invite not found
 	*/
-	public acceptInvite(userId: number, senderId: number): string
+	public async acceptInvite(userId: number, senderId: number): Promise<string>
 	{
 		for (let i = 0; i < this.m_lobbyInvites.length; i++)
 		{
 			const invite = this.m_lobbyInvites[i];
 			if (invite.userId == userId && invite.senderId == senderId)
 			{
+				this.sendTo(senderId, this.serverMsg(`${await this.getPlayerName(userId)} has accepted your invite`));
 				this.removeInvite(invite);
 				return invite.lobbyId;
 			}
@@ -349,13 +353,14 @@ export class Chat
 	 * @param senderId senderid
 	 * @returns true if invite declined, false if not found
 	*/
-	public declineInvite(userId: number, senderId: number): boolean
+	public async declineInvite(userId: number, senderId: number): Promise<boolean>
 	{
 		for (let i = 0; i < this.m_lobbyInvites.length; i++)
 		{
 			const invite = this.m_lobbyInvites[i];
 			if (invite.userId == userId && invite.senderId == senderId)
 			{
+				this.sendTo(senderId, this.serverMsg(`${await this.getPlayerName(userId)} has decline your invite`));
 				this.removeInvite(invite);
 				return true;
 			}
@@ -368,7 +373,7 @@ export class Chat
 		for (let i = 0; i < this.m_lobbyInvites.length; i++)
 		{
 			const invite = this.m_lobbyInvites[i];
-			if (invite.userId == senderId && invite.senderId == senderId)
+			if (invite.senderId == senderId)
 			{
 				this.removeInvite(invite);
 			}

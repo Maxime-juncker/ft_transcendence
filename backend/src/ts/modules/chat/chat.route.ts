@@ -180,7 +180,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 			if (!data)
 				return reply.code(400).send({ message: "invalid token"});
 
-			const res = chat.invite(data.id, userId, lobbyId);
+			const res = await chat.invite(data.id, userId, lobbyId);
 			return reply.code(res.code).send(res.data);
 		})
 
@@ -202,7 +202,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 			if (!data)
 				return reply.code(400).send({ message: "invalid token"});
 
-			const id = chat.acceptInvite(data.id, userId);
+			const id = await chat.acceptInvite(data.id, userId);
 			if (id == "")
 				return reply.code(404).send({ message: "invite not found" });
 			return reply.code(200).send({ lobbyId: id });
@@ -226,7 +226,7 @@ export async function chatRoutes(fastify: FastifyInstance)
 			if (!data)
 				return reply.code(400).send({ message: "invalid token"});
 
-			const success = chat.declineInvite(data.id, userId);
+			const success = await chat.declineInvite(data.id, userId);
 			if (success == false)
 				return reply.code(404).send({ message: "invite not found" });
 			return reply.code(200).send({ message: "Success" });
