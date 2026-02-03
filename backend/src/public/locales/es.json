@@ -4,8 +4,12 @@
 		"signup": "REGISTRO",
   	"login": "CONEXIÓN",
 		"settings": "PARÁMETROS",
-		"leaderboard": "CLASIFICACIÓN"
-	},
+		"leaderboard": "CLASIFICACIÓN",
+		"links": "ENLACES",
+		"chosen_modules": "MÓDULOS SELECCIONADOS",
+		"contributors": "COLABORADORES",
+		"welcome": "BIENVENIDO A FT_TRANSCENDENCE"
+		},
 	"text": {
 		"guest": "*todos los datos se perderán al desconectarse",
 		"tournament": {
@@ -72,5 +76,43 @@
 	"unavailable": "indisponible",
 	"busy": "ocupado",
 	"in_game": "apostar",
-	"no_data": "sin datos"
+	"no_data": "sin datos",
+	"usr_not_found": "usuario no encontrado :(",
+	"profile_friend_btn": "agregar amigo",
+	"profile_block_btn": "bloquear",
+
+	"tut": {
+		"chat": "usa el chat para hablar con otras personas",
+		"chat-cmd": "escribe '/help' en el chat para obtener una lista de comandos",
+		"user-list": "utilice este botón para listar los usuarios conectados",
+		"friend-list": "usa este botón para listar amigos",
+		"user": "al hacer clic en un usuario se mostrará su perfil",
+		"settings": "cambia tu tema / activa el efecto CRT en la configuración",
+		"move": "en línea/bot usa ↑/↓ para moverte",
+		"local-move": "en uso local w/s para el jugador1 y ↑/↓ para mover al jugador2",
+		"continue": "continuar"
+	},
+
+	"about_page": {
+		"web": "Web",
+		"user_managment": "Gestión de usuarios",
+		"ux": "Jugabilidad y experiencia de usuario",
+		"ai": "AI Algo",
+		"cyber": "Ciberseguridad",
+		"devops": "DevOps",
+		"accessibility": "Accesibilidad",
+		"ssp": "Pong del lado del servidor",
+
+		"web_list": "blockchain\nmarco para construir el backend (fastify)\nmarco / kit de herramientas para construir el frontend (tailwindcss)\nutilizar una base de datos para el backend (sqlite)\n",
+		"usr_list": "gestión de usuarios estándar (autenticación, perfil de usuario, amigos, etc...)\nautenticación remota mediante OAuth2 (compatible con 42 y Github OAuth2)",
+		"ux_list": "Jugador remoto\nChat en vivo (con comandos de chat)\nGestión de temas",
+		"ai_list": "Opositor AI\nPaneles de estadísticas de usuarios y juegos",
+		"cyber_list": "WAF / ModSecurity y HashiCorp Vault\nTokens JWT y autenticación de dos factores",
+		"devops_list": "Gestión de registros (Elasticsearch, Logstash, Kibana)\nSistema de monitoreo (Prometheus and Grafana)",
+		"accessibility_list": "Ampliación de la compatibilidad del navegador\nAdmite varios idiomas (en, fr, es)",
+		"ssp_list": "Pong del lado del servidor\nJuego de Pong a través de CLI (aplicación Rust)",
+
+		"source_code": "código fuente",
+		"intro": "ft_transcendence es el proyecto final del núcleo común de cuarenta y dos\nimplica crear una aplicación completa en TypeScript, usando bases de datos, Docker, Nodejs, HTML/CSS.\nEl objetivo de este proyecto es recrear el famoso juego de pong pero con algunas características más.\n"
+	}
 }
