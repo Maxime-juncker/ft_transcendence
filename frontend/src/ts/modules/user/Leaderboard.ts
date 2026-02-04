@@ -24,6 +24,7 @@ export class Leaderboard
 			console.warn(res.status, data)
 			return ;
 		}
+		this.m_users = [];
 		for (let i = 0; i < data.length; i++)
 		{
 			const element = data[i];
@@ -43,6 +44,73 @@ export class Leaderboard
 		this.m_container.innerHTML = "";
 	}
 
+	private setUserRankColor(elt: UserElement, i: number)
+	{
+		const rank = elt.getElement("#ranking");
+		if (rank)
+		{
+			switch (i) {
+				case 0:
+					rank.style.color = "var(--color-red)";
+					if (rank.parentElement)
+						rank.parentElement.style.borderColor = "var(--color-red)";
+					break;
+
+				case 1:
+					rank.style.color = "var(--color-yellow)";
+					if (rank.parentElement)
+						rank.parentElement.style.borderColor = "var(--color-yellow)";
+					break;
+
+				case 2:
+					rank.style.color = "var(--color-green)";
+					if (rank.parentElement)
+						rank.parentElement.style.borderColor = "var(--color-green)";
+					break;
+				default:
+					break;
+			}
+			rank.innerText = `${i + 1}`;
+		}
+	}
+
+	private async addUser(i: number)
+	{
+		const user = this.m_users[i];
+
+		if (!this.m_container)
+		{
+			console.warn("no container");
+			return ;
+		}
+		await user.updateSelf();
+		const elt = new UserElement(user, this.m_container, UserElementType.STANDARD, "user-leaderboard-template");
+		const elo = elt.getElement("#elo");
+		const winrate = elt.getElement("#winrate");
+		if (elo)
+			elo.innerText = `elo: ${user.elo}p`;
+		if (winrate)
+		{
+			winrate.innerHTML = "";
+			const prefix = document.createElement("span");
+			prefix.innerText= "W/R: ";
+			winrate.appendChild(prefix);
+
+			const valueSpan = document.createElement("span");
+			valueSpan.textContent = user.gamePlayed > 0 ? `${user.winrate}%` : "";
+			winrate.appendChild(valueSpan);
+
+			if (user.gamePlayed === 0)
+			{
+				const noData = document.createElement("span");
+				noData.setAttribute('data-i18n', "no_data");
+				winrate.appendChild(noData);
+			}
+			window.dispatchEvent(new CustomEvent('pageChanged'));
+		}
+		this.setUserRankColor(elt, i);
+	}
+
 	public async RefreshContainer()
 	{
 		if (!this.m_container)
@@ -51,64 +119,7 @@ export class Leaderboard
 		let max = this.m_users.length < this.m_LeaderboardSize ? this.m_users.length : this.m_LeaderboardSize;
 		for (let i = 0; i < max; i++)
 		{
-			const user = this.m_users[i];
-			if (!this.m_container)
-			{
-				console.warn("no container");
-				return ;
-			}
-			await user.updateSelf();
-			const elt = new UserElement(user, this.m_container, UserElementType.STANDARD, "user-leaderboard-template");
-			// elt.getElement("#profile")?.addEventListener("click", () => { Router.Instance?.navigateTo(`/profile?username=${user.name}`) });
-			const elo = elt.getElement("#elo");
-			const winrate = elt.getElement("#winrate");
-			if (elo)
-				elo.innerText = `elo: ${user.elo}p`;
-			if (winrate)
-			{
-				winrate.innerHTML = "";
-  			const prefix = document.createElement("span");
-  			prefix.innerText= "W/R: ";
-  			winrate.appendChild(prefix);
-
-  			const valueSpan = document.createElement("span");
-  			valueSpan.textContent = user.gamePlayed > 0 ? `${user.winrate}%` : "";
-  			winrate.appendChild(valueSpan);
-
-  			if (user.gamePlayed === 0) {
-    			const noData = document.createElement("span");
-    			noData.setAttribute('data-i18n', "no_data");
-    			winrate.appendChild(noData);
-				}
-			window.dispatchEvent(new CustomEvent('pageChanged'));
-			}
-
-			const rank = elt.getElement("#ranking");
-			if (rank)
-			{
-				switch (i) {
-					case 0:
-						rank.style.color = "var(--color-red)";
-						if (rank.parentElement)
-							rank.parentElement.style.borderColor = "var(--color-red)";
-						break;
-
-					case 1:
-						rank.style.color = "var(--color-yellow)";
-						if (rank.parentElement)
-							rank.parentElement.style.borderColor = "var(--color-yellow)";
-						break;
-
-					case 2:
-						rank.style.color = "var(--color-green)";
-						if (rank.parentElement)
-							rank.parentElement.style.borderColor = "var(--color-green)";
-						break;
-					default:
-						break;
-				}
-				rank.innerText = `${i + 1}`;
-			}
+			await this.addUser(i);
 		}
 	}
 }

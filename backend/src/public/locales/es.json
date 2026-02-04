@@ -2,14 +2,17 @@
 	"capital": {
 		"play": "JUGAR",
 		"signup": "REGISTRO",
-  	"login": "CONEXIÓN",
+	  	"login": "CONEXIÓN",
 		"settings": "PARÁMETROS",
 		"leaderboard": "CLASIFICACIÓN",
+		"blockchain": "HISTORIAL DE PARTIDOS",
 		"links": "ENLACES",
 		"chosen_modules": "MÓDULOS SELECCIONADOS",
 		"contributors": "COLABORADORES",
 		"welcome": "BIENVENIDO A FT_TRANSCENDENCE"
 		},
+	"leaderboard": "clasificación",
+	"history": "historial",
 	"text": {
 		"guest": "*todos los datos se perderán al desconectarse",
 		"tournament": {

@@ -41,7 +41,7 @@
 
 @layer base {
 	html {
-		@apply pointer-events-auto;
+		@apply pointer-events-auto selection:bg-white selection:text-dark;
 	}
 
 	body {

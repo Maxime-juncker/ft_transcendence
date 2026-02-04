@@ -18,6 +18,7 @@ export class ServerSideRendering
 	<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 	<link href="/public/output.css" rel="stylesheet">
 	<link href="/public/output_crt.css" rel="stylesheet">
+	<link href="/public/test.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
 		<template id="header-small-template">

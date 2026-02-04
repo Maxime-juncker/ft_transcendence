@@ -5,11 +5,14 @@
 		"login": "CONNEXION",
 		"settings": "PARAMÈTRES",
 		"leaderboard": "MEILLEURS SCORES",
+		"blockchain": "HISTORIQUE BLOCKCHAIN",
 		"links": "LIENS",
 		"chosen_modules": "SELECTION MODULES",
 		"contributors": "COLLABORATEURS",
 		"welcome": "WELCOME TO FT_TRANSCENDENCE"
 	},
+	"leaderboard": "meilleurs scores",
+	"history": "historique",
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
 		"tournament": {
