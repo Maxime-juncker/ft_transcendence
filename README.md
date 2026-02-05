@@ -60,6 +60,7 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 | HOST | hostname or IP used for redirection (leave to localhost if unsure)|
 |RUN_BENCHMARK|if set to 1, benchamrk will run (create random user / games / etc...)|
 | GITHUB_ID | ID of your github OAuth app |
+|PROTECTED_ROUTE_PASS| password for protected routes (e.g: /add_game)|
 | GITHUB_SECRET | secret of your github OAuth app |
 | FT_ID | ID of your 42 OAuth app |
 | FT_SECRET | secret of your 42 OAuth app |
