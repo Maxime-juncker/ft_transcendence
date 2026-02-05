@@ -16,7 +16,7 @@ export class TournamentMenu
 
 	private async loadTournaments()
 	{
-		this.listContainer.innerHTML = '<div class="text-center text-gray-400">Loading...</div>';
+		this.listContainer.innerHTML = '<div class="text-center text-dark">Loading...</div>';
 
 		try
 		{
@@ -31,7 +31,7 @@ export class TournamentMenu
 		}
 		catch (e)
 		{
-			this.listContainer.innerHTML = '<div class="text-center text-red-500">Error loading tournaments</div>';
+			this.listContainer.innerHTML = '<div class="text-center text-red">Error loading tournaments</div>';
 		}
 	}
 
@@ -40,7 +40,7 @@ export class TournamentMenu
 		this.listContainer.innerHTML = '';
 		if (!tournaments || tournaments.length === 0)
 		{
-			this.listContainer.innerHTML = '<div class="text-center text-gray-500">No active tournaments</div>';
+			this.listContainer.innerHTML = '<div class="text-center text-gray">No active tournaments</div>';
 			return ;
 		}
 
@@ -51,9 +51,9 @@ export class TournamentMenu
 			item.innerHTML = `
 				<div class="flex flex-col">
 					<span class="font-bold text-white text-lg">${t.ownerName}'s Tournament</span>
-					<span class="text-sm text-gray-400 capitalize">${t.type} • ${t.playerCount} players</span>
+					<span class="text-sm text-dark capitalize">${t.type} • ${t.playerCount} players</span>
 				</div>
-				<button class="join-btn btn bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-4 text-sm" data-id="${t.id}" data-type="${t.type}">
+				<button class="join-btn btn bg-green hover:bg-green text-white font-bold py-1 px-4 text-sm" data-id="${t.id}" data-type="${t.type}">
 					${t.type === 'public' ? 'Join' : 'Request'}
 				</button>
 			`;
@@ -66,7 +66,7 @@ export class TournamentMenu
 		});
 	}
 
-	private async joinTournament(id: string)
+	public async joinTournament(id: string)
 	{
 		if (!this.router.m_user || this.router.m_user.id <= 0)
 		{

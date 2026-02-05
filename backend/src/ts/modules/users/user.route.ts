@@ -28,21 +28,26 @@ export async function userRoutes(fastify: FastifyInstance)
 			body: {
 				type: "object",
 				properties: {
-					user1_id: { type: "number" },
-					user2_id: { type: "number" },
-					user1_score: { type: "number" },
-					user2_score: { type: "number" },
+					user1_id:		{ type: "number" },
+					user2_id:		{ type: "number" },
+					user1_score:	{ type: "number" },
+					user2_score:	{ type: "number" },
+					pass:			{ type: "string" },
 				},
-				required: ["user1_id", "user2_id", "user1_score", "user2_score"]
+				required: [ "pass", "user1_id", "user2_id", "user1_score", "user2_score"]
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { user1_id, user2_id, user1_score, user2_score } = request.body as {
+			const { pass, user1_id, user2_id, user1_score, user2_score } = request.body as {
+				pass:			string,
 				user1_id:		number,
 				user2_id:		number,
 				user1_score:	number,
 				user2_score:	number,
 			};
+
+			if (pass != process.env.PROTECTED_ROUTE_PASS)
+				return reply.code(400).send({ message: "bad password" });
 
 			var game: GameRes = { user1_id, user2_id, user1_score, user2_score };
 			const res = await user.addGameToHist(game, core.db);

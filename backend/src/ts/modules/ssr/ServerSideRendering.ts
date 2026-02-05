@@ -18,6 +18,7 @@ export class ServerSideRendering
 	<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 	<link href="/public/output.css" rel="stylesheet">
 	<link href="/public/output_crt.css" rel="stylesheet">
+	<link href="/public/test.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
 		<template id="header-small-template">
@@ -83,8 +84,8 @@ export class ServerSideRendering
 		}
 		</script>
 		<script>var exports = {};</script>
-		<script type="module" src="dist/app.js"></script>
-		<script type="module" src="assets/translation.js"></script>
+		<script type="module" src="/dist/app.js"></script>
+		<script type="module" src="/assets/translation.js"></script>
 	</body>
 </html>
 `
@@ -114,8 +115,6 @@ export class ServerSideRendering
 			this.m_spaPage += data;
 		})
 		this.m_spaPage += this.htmlFooter;
-
-		// Logger.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void

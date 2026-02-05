@@ -28,8 +28,7 @@ async function loadConfig(path: string, db: Database)
 	for (let i = 0; i < users.length; i++)
 	{
 		const user = users[i];
-		const hash = await hashString(user.passw);
-		await createUser(user.email, hash, user.name, AuthSource.INTERNAL, db);
+		await createUser(user.email, user.passw, user.name, AuthSource.INTERNAL, db);
 	}
 }
 
@@ -63,9 +62,9 @@ export async function initFastify()
 	await core.fastify.register(userManagmentRoutes, { prefix: '/api/user'});
 	await core.fastify.register(friendsRoutes, { prefix: '/api/friends'});
 	await core.fastify.register(userRoutes, { prefix: '/api/user'});
+	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
 	await core.fastify.register(chatRoutes);
 	await core.fastify.register(totpRoutes);
-	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
 
 	registerCorsProvider(core.fastify);
 

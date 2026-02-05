@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Logger } from "Logger.js";
 import { Routine, TestResult } from "Routine.js";
+import { WebSocket } from 'undici'
 
 type User = {
 	id:		number;
@@ -8,6 +9,7 @@ type User = {
 	name:	string;
 	passw:	string;
 	token:	string;
+	ws:		WebSocket | null;
 }
 
 function getRandom(max: number)
@@ -25,7 +27,7 @@ async function createTest(i: number): Promise<TestResult>
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(body)
 	});
-	users.push({ id: -1, email: body.email, name: body.username, passw: body.passw, token: "" });
+	users.push({ id: -1, email: body.email, name: body.username, passw: body.passw, token: "", ws: null });
 	const data = await res.json();
 	return { code: res.status, data: data };
 }
@@ -104,6 +106,7 @@ async function histTest(i: number): Promise<TestResult>
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
+				pass: process.env.PROTECTED_ROUTE_PASS,
 				user1_id: user.id,
 				user2_id: player.id,
 				user1_score: score1,
@@ -129,7 +132,7 @@ function randomLogin(i: number)
 	return {
 		username: usr,
 		email: email,
-		passw: "123"
+		passw: "Test123"
 	};
 }
 
@@ -207,15 +210,25 @@ async function acceptFriends(i: number)
 	return { code: 200, data: "all request accepted" };
 }
 
+async function connectChat(i: number)
+{
+	const user = users[i];
+
+	user.ws = new WebSocket(`http://backend:3000/api/chat?userid=${user.token}`);
+
+	return { code: 200, data: "Ok" };
+}
+
 const maxUser = 42;
 const friendReq = 5;
-const histReq = 10;
+const histReq = 15;
 
 export async function runTests()
 {
 	const r1 = new Routine("CREATE_TEST", createTest, maxUser);
 	const r2 = new Routine("LOGIN_USER", loginTest, maxUser);
 	const r3 = new Routine("TOKEN_EXCHANGE", tokenExchange, maxUser);
+	const r3bis = new Routine("CONN_CHAT", connectChat, maxUser);
 	const r4 = new Routine("HISTORY", histTest, maxUser);
 	const r6 = new Routine("REQUEST SEND", addFriends, maxUser);
 	const r7 = new Routine("REQUEST ACCEPT", acceptFriends, maxUser);
@@ -224,6 +237,7 @@ export async function runTests()
 	await r1.run(200);
 	await r2.run(200);
 	await r3.run(200);
+	await r3bis.run(200);
 	await r4.run(200);
 	await r6.run(200);
 	await r7.run(200);
@@ -232,6 +246,7 @@ export async function runTests()
 	r1.result();
 	r2.result();
 	r3.result();
+	r3bis.result();
 	r4.result();
 	r6.result();
 	r7.result();

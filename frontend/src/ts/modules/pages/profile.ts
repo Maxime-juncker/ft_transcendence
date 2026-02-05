@@ -6,6 +6,7 @@ import { ViewComponent } from "modules/router/ViewComponent.js";
 import { Router } from "modules/router/Router.js";
 import { HeaderSmall } from "./HeaderSmall.js";
 import { Chart, registerables } from 'chart.js';
+import { ThemeController } from "./Theme.js";
 
 Chart.register(...registerables);
 
@@ -257,8 +258,8 @@ export class ProfileView extends ViewComponent
 				datasets: [{
 					label: 'elo graph',
 					data: eloValues,
-					borderColor: 'rgba(75, 192, 192, 1)',
-					backgroundColor: 'rgba(75, 192, 192, 0.2)',
+					borderColor: ThemeController.Instance?.currentTheme?.blue,
+					backgroundColor: ThemeController.Instance?.currentTheme?.blue,
 					tension: 0.0
 				}]
 			},

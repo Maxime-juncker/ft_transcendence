@@ -1,9 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { core, rateLimitMed, rateLimitHard } from 'core/server.js';
+import { core, chat, rateLimitMed, rateLimitHard } from 'core/server.js';
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
-import { disconnectClientById } from 'modules/chat/chat.js';
 
 //
 // User managment
@@ -109,9 +108,8 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		if (!data)
 			return reply.code(400).send({ message: "invalid token" });
 
-		disconnectClientById(data.id);
-		// const res = await mgmt.logoutUser(data.id, core.db);
-		return reply.code(200).send("Success");
+		chat.disconnectClientById(data.id);
+		return reply.code(200).send({ message: "Success"});
 	})
 
 	fastify.delete('/reset', {

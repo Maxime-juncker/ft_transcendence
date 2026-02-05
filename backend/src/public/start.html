@@ -56,9 +56,32 @@
 				<button class="btn" data-i18n="capital.play" id="play_btn">PLAY</button>
 			</div>
 			<div id="leaderboard" class="flex flex-col h-full justify-center items-center z-3 mr-5 mt-[10vh]">
-				<h1 data-i18n="capital.leaderboard"><strong>LEADERBOARD</strong></h1>
+
+				<h1 data-i18n="capital.leaderboard" class="text-[1.5vw] font-bold" id="board-title">LEADERBOARD</h1>
 				<div id="leaderboard-container" class="flex flex-col-reverse justify-end items-center w-full h-1/2 bg-dark
 					gap-3 py-5"></div>
+
+				<div class="flex w-full justify-around mt-4">
+					<label class="inline-flex items-center cursor-grab">
+						<input 
+							type="radio"
+							name="board-input"
+							id="leaderboard-input" value="leaderboard" checked
+							class="checkbox"
+						/>
+						<span class="ml-2 font-bold select-none" data-i18n="leaderboard">leaderboard</span>
+					</label>
+
+					<label class="inline-flex items-center cursor-grab">
+						<input 
+							type="radio"
+							name="board-input"
+							id="history-input" value="history"
+							class="checkbox"
+						/>
+						<span class="ml-2 font-bold select-none" data-i18n="history">history</span>
+					</label>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -15,8 +15,37 @@ import { jwtVerif } from "modules/jwt/jwt.js";
 import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
 
-async function validateCreationInput(email: string, name: string): Promise<DbResponse>
+/**
+* check if passw is valid
+* pass policy:
+*	- at least 3 characters
+*	- at least 1 upper char
+*	- at least 1 lower char
+*	- at least 1 number
+*/
+function checkPasswPolicy(passw: string): DbResponse
 {
+	if (passw.length < 3)
+		return { code: 403, data: { message: "password must be at least 3 character" }};
+
+	if (!passw.match(/[A-Z]/g))
+		return { code: 403, data: { message: "at least 1 upper character is needed" }};
+
+	if (!passw.match(/[a-z]/g))
+		return { code: 403, data: { message: "at least 1 lower character is needed" }};
+
+	if (!passw.match(/[0-9]/g))
+		return { code: 403, data: { message: "at least 1 number is needed" }};
+
+	return { code: 200, data: { message: "ok" }};
+}
+
+async function validateCreationInput(email: string, name: string, passw: string): Promise<DbResponse>
+{
+	const retval = checkPasswPolicy(passw);
+	if (retval.code != 200)
+		return retval;
+
 	if (!validate_email(email))
 		return { code: 403, data: { message: "email is invalid" }};
 	if (!validate_name(name))
@@ -198,7 +227,7 @@ export async function createUser(email: string, passw: string, username: string,
 {
 	if (source == AuthSource.INTERNAL)
 	{
-		const validation = await validateCreationInput(email, username)
+		const validation = await validateCreationInput(email, username, passw);
 		if (validation.code != 200)
 			return validation;
 	}
@@ -236,7 +265,6 @@ export async function resetUser(user_id: number)
 	var sql = "UPDATE users SET elo = 1000, wins = 0, games_played = 0 WHERE id = ?";
 	try
 	{
-		Logger.debug("deleting", await getUserName(user_id));
 		await core.db.run(sql, user_id);
 		sql = "DELETE FROM friends WHERE user1_id = ? OR user2_id = ?";
 		await core.db.run(sql, [user_id, user_id]);
@@ -280,7 +308,6 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
-	Logger.log(await getUserName(user_id), "is login out");
 	const res = await getUserById(user_id, db);
 	if (res.code != 200)
 	{

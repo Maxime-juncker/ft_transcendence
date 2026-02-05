@@ -10,6 +10,7 @@ services:
       - GITHUB_SECRET=${GITHUB_SECRET}
       - FT_ID=${FT_ID}
       - FT_SECRET=${FT_SECRET}
+      - PROTECTED_ROUTE_PASS=${PROTECTED_ROUTE_PASS}
       - HEALTH_CHECK_TIMER=${HEALTH_CHECK_TIMER:-60}
     volumes:
       - sqlite:/var/lib/sqlite:rw
@@ -49,6 +50,7 @@ services:
     container_name: benchmark
     environment:
       - RUN_BENCHMARK=${RUN_BENCHMARK:-0}
+      - PROTECTED_ROUTE_PASS=${PROTECTED_ROUTE_PASS}
     depends_on:
       - backend
     networks:
