@@ -102,8 +102,8 @@ services:
     image: prom/prometheus:v3.9.1
     container_name: prometheus
     volumes:
-      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+      - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro,z
       - prometheus-logs:/prometheus/logs:rw
     networks:
       - monitoring_net
@@ -115,8 +115,8 @@ services:
     image: grafana/grafana:12.4.0-20836657505
     container_name: grafana
     volumes:
-      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
-      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning
+      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini:ro,z
+      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning:ro,z
       - grafana:/var/lib/grafana
       - grafana-logs:/var/log/grafana:rw
     networks:
@@ -169,8 +169,8 @@ services:
     mem_limit: 4g
     volumes:
       - es_data:/usr/share/elasticsearch/data
-      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
+      - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro,z
       - elastic-logs:/usr/share/elasticsearch/logs:rw
     networks:
       - elk_net
@@ -180,9 +180,9 @@ services:
     image: docker.elastic.co/logstash/logstash:8.12.0
     container_name: logstash
     volumes:
-      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro
+      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro,z
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,z
+      - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro,z
       - modsecurity_logs:/var/log/nginx:ro
       - grafana-logs:/var/log/grafana:ro
       - elastic-logs:/var/log/elasticsearch:ro
@@ -206,7 +206,7 @@ services:
     image: docker.elastic.co/kibana/kibana:8.12.0
     container_name: kibana
     volumes:
-      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,z
       - kibana-logs:/usr/share/kibana/logs:rw
     depends_on:
       elastic-init:
@@ -228,8 +228,8 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
-      - ./elk/kibana/init/export.ndjson:/export.ndjson:ro
-      - ./elk/kibana/init/script.sh:/script.sh:ro
+      - ./elk/kibana/init/export.ndjson:/export.ndjson:ro,z
+      - ./elk/kibana/init/script.sh:/script.sh:ro,z
     command: sh /script.sh
     networks:
       - elk_net
@@ -246,7 +246,7 @@ services:
       - LOGSTASH_PASSWORD=${LOGSTASH_PASSWORD}
       - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
     volumes:
-      - ./elk/elasticsearch/init/script.sh:/script.sh:ro
+      - ./elk/elasticsearch/init/script.sh:/script.sh:ro,z
     command: sh /script.sh
     networks:
       - elk_net

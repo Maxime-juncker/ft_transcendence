@@ -1,6 +1,6 @@
 import { setCookie, getCookie} from 'modules/utils/utils.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
-import { GameRouter } from 'router';
+import { GameRouter } from 'modules/game/GameRouter';
 import { Router } from 'modules/router/Router.js';
 
 export enum UserStatus {

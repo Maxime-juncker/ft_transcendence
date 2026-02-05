@@ -135,11 +135,9 @@ export class GameInstance
 
 	private async getWinner(score: number, player: number | null): Promise<void>
 	{
-		if (!player)
-			return;
 		if (score >= Parameters.POINTS_TO_WIN)
 		{
-			this._winner = player;
+			this._winner = player ? player : 0;
 			this._isRunning = false;
 			Logger.log(`${await getUserName(this._winner)} won the game (mode: ${this.mode})`);
 			if (this.mode == 'duel' || this.mode == 'online' || this.mode == 'bot')
@@ -147,11 +145,13 @@ export class GameInstance
 				if (!this._Player1Id || !this._Player2Id)
 					return ;
 
-				var res: GameRes = {
+				var res: GameRes =
+				{
 					user1_id: this._Player1Id,
 					user2_id: this._Player2Id,
 					user1_score: this._gameState.player1Score,
-					user2_score: this._gameState.player2Score};
+					user2_score: this._gameState.player2Score
+				};
 				addGameToHist(res, core.db);
 			}
 		}
@@ -248,6 +248,5 @@ export class GameInstance
 	{
 		clearInterval(this._interval);
 		this._keysPressed.clear();
-		// this._gameState = null; // TODO check if issues
 	}
 }
