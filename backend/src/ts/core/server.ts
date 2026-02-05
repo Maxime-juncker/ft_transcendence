@@ -59,7 +59,6 @@ new ServerSideRendering(core.fastify, routes);
 const gameServer = new GameServer(core.fastify);
 await gameServer.init();
 
-
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {
 	process.on(signal, async () => {

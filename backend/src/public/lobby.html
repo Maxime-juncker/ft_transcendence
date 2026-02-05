@@ -78,8 +78,8 @@
 
 	<div class="h-full">
 		<div id="header-container"></div>
-		<div id="tutorial_panel_holder" class="absolute w-full h-full flex justify-center items-center relative z-99">
-			<div id="tutorial_panel" class="w-[60vw] h-[55vh] py-12 bg-dark flex flex-col justify-start items-center border-2 border-purple">
+		<div id="tutorial_panel_holder" class="w-full h-full flex justify-center items-center relative z-99">
+			<div id="tutorial_panel" class="w-[60vw] h-[55vh] py-12 bg-dark flex flex-col justify-start items-center border-2 border-white">
 				<h1 data-i18n="capital.welcome" class="text-[3vw] font-bold mb-12">WELCOME TO FT_TRANSCENDENCE</h1>
 				<div class="w-[95%] h-full flex justify-between items-center">
 					<div class="flex flex-col justify-start items-start gap-3 w-1/2">
@@ -104,7 +104,7 @@
 					</div>
 				</div>
 
-				<button data-i18n="tut.continue" id="continue-btn" class="button-empty border-blue text-blue">continue</button>
+				<button data-i18n="tut.continue" id="continue-btn" class="btn">continue</button>
 			</div>
 		</div>
 
@@ -112,7 +112,7 @@
 
 			<div class="relative w-[40%] h-full border-4 border-blue flex flex-col">
 				<div id="user-list-parent" class="hide absolute top-0 left-0 w-full z-2 h-[90%] bg-darkest">
-					<div id="user-list-container" class="flex-1 flex flex-col items-center py-4 gap-2">
+					<div id="user-list-container" class="h-full flex flex-col items-center py-4 gap-2 overflow-y-scroll">
 					</div>
 				</div>
 				<div id="chat-out" class="flex h-[90%] overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-darker">

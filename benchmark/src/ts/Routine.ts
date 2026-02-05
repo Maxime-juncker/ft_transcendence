@@ -41,7 +41,7 @@ export class Routine
 			}
 			catch (err)
 			{
-				Logger.error(`${this.m_name}: crash when running test, aborting.`);
+				Logger.error(`${this.m_name}: crash when running test, aborting. err: ${err}`);
 				this.m_end = performance.now();
 				return 1;
 			}

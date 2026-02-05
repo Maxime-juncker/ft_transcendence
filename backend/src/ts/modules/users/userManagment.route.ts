@@ -109,8 +109,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			return reply.code(400).send({ message: "invalid token" });
 
 		chat.disconnectClientById(data.id);
-		// const res = await mgmt.logoutUser(data.id, core.db);
-		return reply.code(200).send("Success");
+		return reply.code(200).send({ message: "Success"});
 	})
 
 	fastify.delete('/reset', {

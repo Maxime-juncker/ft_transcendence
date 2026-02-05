@@ -84,8 +84,8 @@ export class ServerSideRendering
 		}
 		</script>
 		<script>var exports = {};</script>
-		<script type="module" src="dist/app.js"></script>
-		<script type="module" src="assets/translation.js"></script>
+		<script type="module" src="/dist/app.js"></script>
+		<script type="module" src="/assets/translation.js"></script>
 	</body>
 </html>
 `
@@ -115,8 +115,6 @@ export class ServerSideRendering
 			this.m_spaPage += data;
 		})
 		this.m_spaPage += this.htmlFooter;
-
-		// Logger.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void

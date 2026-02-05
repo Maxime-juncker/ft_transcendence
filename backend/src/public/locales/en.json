@@ -13,6 +13,8 @@
 	},
 	"leaderboard": "leaderboard",
 	"history": "history",
+	"homepage": "homepage",
+	"404": "404 - NOT FOUND",
 	"text": {
 		"guest": "*all data will be lost on logout",
 		"tournament": {

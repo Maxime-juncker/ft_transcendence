@@ -13,6 +13,8 @@
 		},
 	"leaderboard": "clasificación",
 	"history": "historial",
+	"homepage": "página principal",
+	"404": "404 no encontrado",
 	"text": {
 		"guest": "*todos los datos se perderán al desconectarse",
 		"tournament": {

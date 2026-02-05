@@ -265,7 +265,6 @@ export async function resetUser(user_id: number)
 	var sql = "UPDATE users SET elo = 1000, wins = 0, games_played = 0 WHERE id = ?";
 	try
 	{
-		Logger.debug("deleting", await getUserName(user_id));
 		await core.db.run(sql, user_id);
 		sql = "DELETE FROM friends WHERE user1_id = ? OR user2_id = ?";
 		await core.db.run(sql, [user_id, user_id]);
@@ -309,7 +308,6 @@ export async function deleteUser(user_id: number, db: Database) : Promise<DbResp
 
 export async function logoutUser(user_id: number, db: Database) : Promise<DbResponse>
 {
-	Logger.log(await getUserName(user_id), "is login out");
 	const res = await getUserById(user_id, db);
 	if (res.code != 200)
 	{

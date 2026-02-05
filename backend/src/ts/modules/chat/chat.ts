@@ -8,14 +8,13 @@ import { GameInstance } from 'modules/game/GameInstance.js'
 import { Logger } from 'modules/logger.js';
 import { logoutUser } from 'modules/users/userManagment.js';
 import { clearDuel } from 'modules/users/duel.js';
+import { jwtVerif } from 'modules/jwt/jwt.js';
 
 export type LobbyInvite = {
 	senderId:	number,
 	userId:		number,
 	lobbyId:	string
 }
-
-// TODO: quand on deco, tout ne marche pas
 
 export class Chat
 {
@@ -85,7 +84,11 @@ export class Chat
 	{
 		this.m_connections.forEach(async (id: number, ws: WebSocket) => {
 			if (user_id == id)
+		{
+
+				// RESUME HERE
 				this.disconnectClient(ws);
+			}
 		});
 	}
 
@@ -101,13 +104,13 @@ export class Chat
 		}
 
 		const id = this.m_connections.get(ws);
-		if (!id)
+		if (!id || id == -1)
 			return ;
-		logoutUser(id, core.db);
-		ws.close();
 		clearDuel(id);
 		this.clearInviteUser(id);
 		this.m_connections.delete(ws);
+		logoutUser(id, core.db);
+		ws.close();
 
 		Logger.log(await getUserName(id), "was disconnected");
 		if (this.m_connections.size == 0 && this.m_timerId != null)
@@ -208,14 +211,18 @@ export class Chat
 		try {
 			ws.send(this.serverMsg("welcome to room chat!"));
 
-			const id = utils.getUrlVar(request.url)["userid"];
-			var res = await getUserById(id, core.db);
+			const token = utils.getUrlVar(request.url)["userid"];
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+				throw new Error("invalid token");
+
+			var res = await getUserById(data.id, core.db);
 			var login = "Guest"; // will stay at -1 if user is not login
 			if (res.code === 200)
 				login = res.data.name;
 
 			Logger.log(`${login} as connected to lobby`);
-			this.m_connections.set(ws, id);
+			this.m_connections.set(ws, data.id);
 
 			if (this.m_connections.size == 1)
 			{
