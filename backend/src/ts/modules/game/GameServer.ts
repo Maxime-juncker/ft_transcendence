@@ -2,9 +2,7 @@ import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
-import { addPlayerToQueue } from 'modules/chat/chat.js';
-import { notifyMatch } from 'modules/chat/chat.js';
+import { core, chat } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { TournamentServer } from 'modules/tournament/TournamentServer.js';
 
@@ -58,10 +56,8 @@ export class GameServer
 
 		const gameId = crypto.randomUUID();
 
-		await notifyMatch(player1, player2, gameId, 1);
-		await notifyMatch(player2, player1, gameId, 2);
-
-		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
+		await chat.notifyMatch(player1, player2, gameId, 1);
+		await chat.notifyMatch(player2, player1, gameId, 2);
 
 		Logger.log(`starting duel between: ${name1} and ${name2}`);
 		return gameId;
@@ -102,7 +98,7 @@ export class GameServer
 						}
 					}
 
-					await addPlayerToQueue(Number(name), this);
+					await chat.addPlayerToQueue(Number(name), this);
 					reply.status(202).send({ message: "added to queue" });
 				}
 				else if (mode === 'duel')

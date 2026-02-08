@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import * as core from 'core/core.js';
+import { core, DbResponse, tokenSchema } from 'core/server.js';
 import * as user from 'modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -28,21 +28,26 @@ export async function userRoutes(fastify: FastifyInstance)
 			body: {
 				type: "object",
 				properties: {
-					user1_id: { type: "number" },
-					user2_id: { type: "number" },
-					user1_score: { type: "number" },
-					user2_score: { type: "number" },
+					user1_id:		{ type: "number" },
+					user2_id:		{ type: "number" },
+					user1_score:	{ type: "number" },
+					user2_score:	{ type: "number" },
+					pass:			{ type: "string" },
 				},
-				required: ["user1_id", "user2_id", "user1_score", "user2_score"]
+				required: [ "pass", "user1_id", "user2_id", "user1_score", "user2_score"]
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { user1_id, user2_id, user1_score, user2_score } = request.body as {
+			const { pass, user1_id, user2_id, user1_score, user2_score } = request.body as {
+				pass:			string,
 				user1_id:		number,
 				user2_id:		number,
 				user1_score:	number,
 				user2_score:	number,
 			};
+
+			if (pass != process.env.PROTECTED_ROUTE_PASS)
+				return reply.code(400).send({ message: "bad password" });
 
 			var game: GameRes = { user1_id, user2_id, user1_score, user2_score };
 			const res = await user.addGameToHist(game, core.db);
@@ -71,7 +76,7 @@ export async function userRoutes(fastify: FastifyInstance)
 		)
 
 		fastify.post('/get_profile_token', {
-			schema: core.tokenSchema
+			schema: tokenSchema
 		}, async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token } = request.body as { token: string};
 
@@ -186,4 +191,14 @@ export async function userRoutes(fastify: FastifyInstance)
 			const res = await user.completeTutorial(data.id);
 			return reply.code(res.code).send(res.data);
 		})
+
+	fastify.get('/user_count', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getUserCount();
+		return reply.code(200).send({ userCount: core.userCount });
+	});
+
+	fastify.get('/game_count', async (request: FastifyRequest, reply: FastifyReply) => {
+		const res = await user.getGameCount();
+		return reply.code(200).send({ gameCount: core.gameCount });
+	});
 }

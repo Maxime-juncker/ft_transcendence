@@ -118,7 +118,7 @@ export class Chat
 		if (!this.m_chatInput || !MainUser.Instance || MainUser.Instance.id == -1)
 			return;
 
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${MainUser.Instance.id}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${MainUser.Instance.token}`);
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		this.m_isConnected = true;
 	}

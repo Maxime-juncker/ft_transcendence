@@ -116,7 +116,7 @@ export class TournamentMenu
 		});
 	}
 
-	private async joinTournament(id: string)
+	public async joinTournament(id: string)
 	{
 		if (!this.router.m_user || this.router.m_user.id <= 0)
 		{
@@ -148,7 +148,7 @@ export class TournamentMenu
 		{
 			console.error(e);
 		}
-	}
+	} 
 
 	private createTournamentClickHandler = async () =>
 	{

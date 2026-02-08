@@ -44,6 +44,8 @@ export function setPlaceHolderText(msg: string)
 		placeholder = document.getElementById("placeholder-text") as HTMLElement;
 	else
 		placeholder = Router.getElementById("placeholder-text") as HTMLElement;
+	if (!placeholder)
+		return;
 	placeholder.classList.remove("hide");
 	placeholder.innerText = msg;
 }

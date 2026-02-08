@@ -1,6 +1,6 @@
 {
 	"default_users": [
-		{ "name": "usr1", "email": "usr@gmail.com", "passw": "123", "avatar": "", "rank": 0 },
-		{ "name": "usr2", "email": "usr2@gmail.com", "passw": "123", "avatar": "", "rank": 0 }
+		{ "name": "usr1", "email": "usr@gmail.com", "passw": "Test1", "avatar": "", "rank": 0 },
+		{ "name": "usr2", "email": "usr2@gmail.com", "passw": "Test2", "avatar": "", "rank": 0 }
 	]
 }

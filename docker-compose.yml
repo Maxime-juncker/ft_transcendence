@@ -4,12 +4,21 @@ services:
     restart: always
     build: ./backend/
     container_name: backend
-    env_file: ./.env
+    environment:
+      - HOST=${HOST:-localhost}
+      - GITHUB_ID=${GITHUB_ID}
+      - GITHUB_SECRET=${GITHUB_SECRET}
+      - FT_ID=${FT_ID}
+      - FT_SECRET=${FT_SECRET}
+      - PROTECTED_ROUTE_PASS=${PROTECTED_ROUTE_PASS}
+      - HEALTH_CHECK_TIMER=${HEALTH_CHECK_TIMER:-60}
+      - AVAX_INFURA=${AVAX_INFURA}
+      - PRIVATE_KEY=${PRIVATE_KEY}
     volumes:
-      - sqlite:/var/lib/sqlite
-      - avatars:/var/www/server/public/avatars
-      - vault_key:/vault/config
-      - backend-logs:/var/log/backend
+      - sqlite:/var/lib/sqlite:rw
+      - avatars:/var/www/server/public/avatars:rw
+      - vault_key:/vault/config:rw
+      - backend-logs:/var/log/backend:rw
     networks:
       - backend_net
       - vault_net
@@ -25,7 +34,8 @@ services:
     restart: always
     build: ./frontend/
     container_name: frontend
-    env_file: ./.env
+    environment:
+      - HOST=${HOST:-localhost}
     depends_on:
       - backend
     networks:
@@ -40,24 +50,20 @@ services:
   benchmark:
     build: ./benchmark/
     container_name: benchmark
-    env_file: ./.env
+    environment:
+      - RUN_BENCHMARK=${RUN_BENCHMARK:-0}
+      - PROTECTED_ROUTE_PASS=${PROTECTED_ROUTE_PASS}
     depends_on:
       - backend
     networks:
       - backend_net
-    profiles: [benchmark]
-    develop:
-      watch:
-        - path: ./benchmark/src
-          action: rebuild
-          target: /var/www/app
 
   modsecurity:
     restart: always
     build: ./modsecurity/
     container_name: modsecurity
     volumes:
-      - cert:/etc/nginx/conf/ssl
+      - cert:/etc/nginx/conf/ssl:rw
       - modsecurity_logs:/var/log/nginx/:rw
     ports:
       - "8080:80"
@@ -87,8 +93,9 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - vault:/vault/file
-      - ./vault/conf:/vault/conf:ro
+      - vault:/vault/file:rw
+      - vault_key:/vault/config:rw
+      - ./vault/conf:/vault/conf:ro,z
       - vault-logs:/vault/logs:rw
     networks:
       - vault_net
@@ -117,7 +124,7 @@ services:
     volumes:
       - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini:ro,z
       - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning:ro,z
-      - grafana:/var/lib/grafana
+      - grafana:/var/lib/grafana:rw
       - grafana-logs:/var/log/grafana:rw
     networks:
       monitoring_net: {}
@@ -168,7 +175,7 @@ services:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     mem_limit: 4g
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - es_data:/usr/share/elasticsearch/data:rw
       - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
       - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro,z
       - elastic-logs:/usr/share/elasticsearch/logs:rw
@@ -276,6 +283,18 @@ services:
       - monitoring_net
     depends_on:
       - logstash
+
+  sqlite-web:
+    restart: always
+    image: coleifer/sqlite-web
+    container_name: sqlite-web
+    entrypoint: ["sqlite_web", "-H", "0.0.0.0", "-x", "/data/app.sqlite"]
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - sqlite:/data:rw
+    networks:
+      - backend_net
 
 networks:
   export_net:

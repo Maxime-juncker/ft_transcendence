@@ -16,6 +16,8 @@ export class TournamentLobby
 	private matchListener: ((json: any) => void) | null = null;
 	private matchStarted: boolean = false;
 
+	get id(): string | null { return this.tournamentId; }
+
 	constructor(private router: GameRouter, private user: User, private mode: string, private chat: Chat)
 	{
 		this.tournamentId = mode;

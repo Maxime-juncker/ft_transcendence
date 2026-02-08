@@ -4,3 +4,4 @@ dist/
 backend/src/public/avatars/
 backend/src/public/dist/
 .vscode
+cli-app/target

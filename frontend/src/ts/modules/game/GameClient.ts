@@ -343,9 +343,11 @@ export class GameClient extends Utils
 	{
 		this.keysPressed.add(event.key);
 
-		if (event.key === Keys.PLAY_AGAIN && this.end)
+		if (event.key === Keys.PLAY_AGAIN && this.end
+			&& (this.mode === 'local' || this.mode === 'online'
+				|| this.mode === 'bot' || this.mode === 'duel'))
 		{
-			this.m_router.navigateTo("home", "")
+			this.m_router.navigateTo('game', this.mode);
 		}
 	}
 

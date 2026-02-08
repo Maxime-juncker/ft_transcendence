@@ -1,9 +1,8 @@
 import { GameInstance } from 'modules/game/GameInstance.js';
 import { Bot } from 'modules/game/Bot.js';
 import { FastifyInstance } from 'fastify';
-import * as core from 'core/core.js';
+import { core, chat } from 'core/server.js';
 import { Tournament } from '../tournament/Tournament.js';
-import { notifyMatch } from 'modules/chat/chat.js';
 import { Logger } from 'modules/logger.js';
 import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 
@@ -494,8 +493,8 @@ export class TournamentServer
 			this.monitorMatchEnd(tournamentId, tournament, match, gameId, game);
 			
 			const playerNum = botIsPlayer2 ? 1 : 2;
-			notifyMatch(humanId, this.botId, gameId, playerNum);
-			return;
+			chat.notifyMatch(humanId, this.botId, gameId, playerNum);
+			return ;
 		}
 
 		const p1Id = match._player1;
@@ -508,13 +507,13 @@ export class TournamentServer
 		else
 		{
 			Logger.error(`[Tournament ${tournamentId}] activeGamesMap not set!`);
-			return;
+			return ;
 		}
 
 		this.monitorMatchEnd(tournamentId, tournament, match, gameId, game);
 		
-		notifyMatch(Number(p1Id), Number(p2Id), gameId, 1);
-		notifyMatch(Number(p2Id), Number(p1Id), gameId, 2);
+		chat.notifyMatch(Number(p1Id), Number(p2Id), gameId, 1);
+		chat.notifyMatch(Number(p2Id), Number(p1Id), gameId, 2);
 	}
 
 	private monitorMatchEnd(tournamentId: string, tournament: Tournament, match: any, gameId: string, game: GameInstance): void

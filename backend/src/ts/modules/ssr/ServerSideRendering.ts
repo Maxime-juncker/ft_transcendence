@@ -11,13 +11,14 @@ export class ServerSideRendering
 	<html lang="en">
 	<head>
 	<meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+	<link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 	<link href="/public/output.css" rel="stylesheet">
 	<link href="/public/output_crt.css" rel="stylesheet">
+	<link href="/public/test.css" rel="stylesheet">
 	</head>
 	<body class="h-screen">
 		<template id="header-small-template">
@@ -31,7 +32,7 @@ export class ServerSideRendering
 						<div class="line bg-green"></div>
 					</div>
 				</div>
-				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-1/3">
+				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-full">
 				<div id="user-container">
 				</div>
 			</header>
@@ -118,8 +119,8 @@ export class ServerSideRendering
 		}
 		</script>
 		<script>var exports = {};</script>
-		<script type="module" src="dist/app.js"></script>
-		<script type="module" src="assets/translation.js"></script>
+		<script type="module" src="/dist/app.js"></script>
+		<script type="module" src="/assets/translation.js"></script>
 	</body>
 </html>
 `
@@ -149,8 +150,6 @@ export class ServerSideRendering
 			this.m_spaPage += data;
 		})
 		this.m_spaPage += this.htmlFooter;
-
-		// Logger.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void

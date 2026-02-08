@@ -2,7 +2,7 @@ import { addGameToHist, GameRes } from 'modules/users/user.js';
 import { GameState } from './GameState.js';
 import { Logger } from 'modules/logger.js';
 import { getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 
 enum Keys
 {
@@ -12,25 +12,59 @@ enum Keys
 	PLAYER2_DOWN = '2D',
 }
 
-enum Parameters
+class Parameters
 {
-	PADDLE_SPEED = 1.5,
-	PADDLE_HEIGHT = 15,
-	PADDLE_WIDTH = 2,
-	PADDLE_PADDING = 2,
-	MIN_Y_PADDLE = PADDLE_HEIGHT / 2,
-	MAX_Y_PADDLE = 100 - MIN_Y_PADDLE,
-	BALL_SIZE = 2,
-	MIN_Y_BALL = BALL_SIZE / 2,
-	MAX_Y_BALL = 100 - MIN_Y_BALL,
-	MIN_X_BALL = PADDLE_PADDING + PADDLE_WIDTH + MIN_Y_BALL,
-	MAX_X_BALL = 100 - MIN_X_BALL,
-	MAX_ANGLE = 1.5,
-	SPEED = 1.0,
-	SPEED_INCREMENT = 0.1,
-	POINTS_TO_WIN = 3,
-	FPS = 60,
-	FRAME_TIME = 1000 / FPS,
+	static PADDLE_SPEED: number = 1.5;
+	static PADDLE_HEIGHT: number = 15;
+	static PADDLE_WIDTH: number = 2;
+	static PADDLE_PADDING: number = 2;
+	static BALL_SIZE: number = 2;
+	static MAX_ANGLE: number = 1.5;
+	static SPEED: number = 1.0;
+	static SPEED_INCREMENT: number = 0.1;
+	static POINTS_TO_WIN: number = 3;
+	static FPS: number = 60;
+
+	static MIN_Y_PADDLE: number = Parameters.PADDLE_HEIGHT / 2;
+	static MAX_Y_PADDLE: number = 100 - Parameters.MIN_Y_PADDLE;
+	static MIN_Y_BALL: number = Parameters.BALL_SIZE / 2;
+	static MAX_Y_BALL: number = 100 - Parameters.MIN_Y_BALL;
+	static MIN_X_BALL: number = Parameters.PADDLE_PADDING + Parameters.PADDLE_WIDTH + Parameters.MIN_Y_BALL;
+	static MAX_X_BALL: number = 100 - Parameters.MIN_X_BALL;
+	static FRAME_TIME: number = 1000 / Parameters.FPS;
+
+	static async load(): Promise<void>
+	{
+		try
+		{
+			const row = await core.db.get("SELECT * FROM game_parameters LIMIT 1");
+			if (row)
+			{
+				Parameters.PADDLE_SPEED = row.paddle_speed;
+				Parameters.PADDLE_HEIGHT = row.paddle_height;
+				Parameters.PADDLE_WIDTH = row.paddle_width;
+				Parameters.PADDLE_PADDING = row.paddle_padding;
+				Parameters.BALL_SIZE = row.ball_size;
+				Parameters.MAX_ANGLE = row.max_angle;
+				Parameters.SPEED = row.speed;
+				Parameters.SPEED_INCREMENT = row.speed_increment;
+				Parameters.POINTS_TO_WIN = row.points_to_win;
+				Parameters.FPS = row.fps;
+
+				Parameters.MIN_Y_PADDLE = Parameters.PADDLE_HEIGHT / 2;
+				Parameters.MAX_Y_PADDLE = 100 - Parameters.MIN_Y_PADDLE;
+				Parameters.MIN_Y_BALL = Parameters.BALL_SIZE / 2;
+				Parameters.MAX_Y_BALL = 100 - Parameters.MIN_Y_BALL;
+				Parameters.MIN_X_BALL = Parameters.PADDLE_PADDING + Parameters.PADDLE_WIDTH + Parameters.MIN_Y_BALL;
+				Parameters.MAX_X_BALL = 100 - Parameters.MIN_X_BALL;
+				Parameters.FRAME_TIME = 1000 / Parameters.FPS;
+			}
+		}
+		catch (err)
+		{
+			Logger.log("Failed to load game parameters from DB, using defaults");
+		}
+	}
 }
 
 export class GameInstance
@@ -53,6 +87,12 @@ export class GameInstance
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;
+		this.initAndStart();
+	}
+
+	private async initAndStart(): Promise<void>
+	{
+		await Parameters.load();
 		this.normalizeSpeed();
 		this.gameLoop();
 	}
