@@ -80,9 +80,9 @@ export class BlockchainContract {
 
         console.log("Tournament created at : ", result);
 
-        await this.addMatchResult(0, 15, 16, 2, 2);
+        // await this.addMatchResult(0, 15, 16, 2, 2);
 
-        await this.finishTournament(0, "jean-paul");
+        // await this.finishTournament(0, "jean-paul");
         return (result);
     }
 
