@@ -19,7 +19,11 @@ export class GameServer
 	private bots: Map<string, Bot> = new Map();
 	private botId: number = 0;
 
-	constructor(private server: FastifyInstance) {}
+	constructor(private server: FastifyInstance)
+	{
+		if (!GameServer.Instance)
+			GameServer.m_instance = this;
+	}
 
 	static get Instance(): GameServer | null { return GameServer.m_instance; }
 
@@ -58,6 +62,8 @@ export class GameServer
 
 		await chat.notifyMatch(player1, player2, gameId, 1);
 		await chat.notifyMatch(player2, player1, gameId, 2);
+
+		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
 
 		Logger.log(`starting duel between: ${name1} and ${name2}`);
 		return gameId;

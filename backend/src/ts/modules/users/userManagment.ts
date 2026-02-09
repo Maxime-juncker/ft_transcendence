@@ -223,6 +223,24 @@ export async function createUserOAuth2(email: string, name: string, id: string, 
 	}
 }
 
+export async function getBot(): Promise<number>
+{
+	try
+	{
+		const sql = 'SELECT id FROM users WHERE source = ?';
+		const row = await core.db.get(sql, AuthSource.BOT);
+		if (!row)
+			return -1;
+		return row.id;
+
+	}
+	catch (err)
+	{
+		Logger.error(`database err: ${err}`);
+		return -1;
+	}
+}
+
 export async function createUser(email: string, passw: string, username: string, source: AuthSource, db: Database) : Promise<DbResponse>
 {
 	if (source == AuthSource.INTERNAL)
