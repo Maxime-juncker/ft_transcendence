@@ -470,3 +470,21 @@ export async function updateEmail(user_id: number, email: string): Promise<DbRes
 		return { code: 500, data: { message: "Database Error" }};
 	}
 }
+
+export async function getBot(): Promise<number>
+{
+    try
+    {
+        const sql = 'SELECT id FROM users WHERE source = ?';
+        const row = await core.db.get(sql, AuthSource.BOT);
+        if (!row)
+            return -1;
+        return row.id;
+
+    }
+    catch (err)
+    {
+        Logger.error(`database err: ${err}`);
+        return -1;
+    }
+}

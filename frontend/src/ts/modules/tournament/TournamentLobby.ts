@@ -32,8 +32,10 @@ export class TournamentLobby
 	{
 		if (this.chat)
 		{
+			console.log('[TournamentLobby] Setting up match listener');
 			this.matchListener = (json: any) =>
 			{
+				console.log('[TournamentLobby] Match notification received:', json);
 				if (this.matchStarted)
 				{
 					console.log('[TournamentLobby] Match already started, ignoring duplicate notification');
@@ -41,9 +43,15 @@ export class TournamentLobby
 				}
 
 				this.matchStarted = true;
+				console.log('[TournamentLobby] Navigating to game with mode: online');
 				this.router.navigateTo('game', 'online');
 			};
 			this.chat.onGameCreated(this.matchListener);
+			console.log('[TournamentLobby] Match listener registered');
+		}
+		else
+		{
+			console.error('[TournamentLobby] Chat not available, cannot set up match listener');
 		}
 	}
 
@@ -54,6 +62,13 @@ export class TournamentLobby
 		this.startBtn = context.querySelector('#lobby-start-btn') as HTMLButtonElement;
 		this.leaveBtn = context.querySelector('#lobby-leave-btn') as HTMLButtonElement;
 		this.lobbyTitle = context.querySelector('#lobby-title') as HTMLElement;
+		
+		console.log('[TournamentLobby] Elements found:', {
+			playerList: !!this.playerList,
+			startBtn: !!this.startBtn,
+			leaveBtn: !!this.leaveBtn,
+			lobbyTitle: !!this.lobbyTitle
+		});
 	}
 
 	private async init()
@@ -137,14 +152,26 @@ export class TournamentLobby
 
 	private setUpEventListeners()
 	{
+		console.log('[TournamentLobby] Setting up event listeners');
 		if (this.startBtn)
 		{
+			console.log('[TournamentLobby] Adding click listener to start button');
 			Router.addEventListener(this.startBtn, 'click', this.handleStart);
+		}
+		else
+		{
+			console.error('[TournamentLobby] Start button not found!');
 		}
 		
 		if (this.leaveBtn)
 		{
+
+			console.log('[TournamentLobby] Adding click listener to leave button');
 			Router.addEventListener(this.leaveBtn, 'click', this.handleLeave);
+		}
+		else
+		{
+			console.error('[TournamentLobby] Leave button not found!');
 		}
 	}
 
@@ -181,6 +208,8 @@ export class TournamentLobby
 
 	private handleLeave = async () =>
 	{
+		console.log('[TournamentLobby] handleLeave called, tournamentId:', this.tournamentId);
+		
 		try
 		{
 			const res = await fetch('/api/leave-tournament',

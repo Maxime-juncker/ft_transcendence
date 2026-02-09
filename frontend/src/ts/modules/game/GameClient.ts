@@ -289,8 +289,6 @@ export class GameClient extends Utils
 		{
 			if (!this.m_user) return;
 
-			console.log("token: ", MainUser.Instance?.token);
-
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
@@ -369,10 +367,12 @@ export class GameClient extends Utils
 
 	private send(): void
 	{
-		if (!this.socket)
+		if (!this.socket || this.socket.readyState !== WebSocket.OPEN)
+		{
 			return ;
-		this.keysToSend = '';
+		}
 
+		this.keysToSend = '';
 		if (this.mode === 'online' || this.mode === 'bot' || this.mode === 'duel')
 		{
 			this.keysPressed.forEach((key) => { this.getKeyToSend1Player(key); });
@@ -473,6 +473,7 @@ export class GameClient extends Utils
 		if (this.interval)
 		{
 			clearInterval(this.interval);
+			this.interval = null;
 		}
 	}
 

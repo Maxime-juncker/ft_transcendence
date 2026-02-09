@@ -218,7 +218,7 @@ export class GameServer
 								}
 							}
 						}
-						
+
 						if (game.mode === 'bot')
 						{
 							if (game.player1Id === this.botId) game.p1Ready = true;
