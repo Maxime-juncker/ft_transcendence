@@ -11,7 +11,7 @@ export class ServerSideRendering
 	<html lang="en">
 	<head>
 	<meta charset="UTF-8">
-    <link rel="icon" type="image/x-icon" href="/public/favicon.ico">
+	<link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +31,7 @@ export class ServerSideRendering
 						<div class="line bg-green"></div>
 					</div>
 				</div>
-				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-1/3">
+				<input type="text" id="search-input" data-i18n-placeholder="search" placeholder="search" class="bg-darker border-purple w-full">
 				<div id="user-container">
 				</div>
 			</header>
@@ -55,6 +55,41 @@ export class ServerSideRendering
 						alt="Profile" 
 						class="avatar-img"/>
 					<div id="user-status" class="user-status right-0 top-[60%]"></div>
+				</div>
+			</div>
+		</template>
+		<template id="tournament-item-template">
+			<div class="flex justify-between items-center bg-darker p-3 rounded border border-gray-700 hover:border-blue-500 transition-colors">
+				<div class="flex flex-col">
+					<span class="tournament-owner-name font-bold text-white text-lg"></span>
+					<span class="tournament-info text-sm text-gray-400 capitalize"></span>
+				</div>
+				<button class="join-btn btn bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-4 text-sm"></button>
+			</div>
+		</template>
+		<template id="tournament-player-template">
+			<div class="text-white bg-dark p-2 rounded">
+				<span class="player-name"></span>
+			</div>
+		</template>
+		<template id="tournament-request-template">
+			<div class="flex justify-between items-center text-white bg-dark p-2 rounded">
+				<span class="request-name"></span>
+				<div class="flex gap-2">
+					<button class="accept-btn btn-small bg-green-600 text-xs px-2 py-1 rounded">✓</button>
+					<button class="reject-btn btn-small bg-red-600 text-xs px-2 py-1 rounded">✗</button>
+				</div>
+			</div>
+		</template>
+		<template id="tournament-match-template">
+			<div class="match-box bg-gray-800 border-2 border-gray-600 p-3 w-48 text-center flex flex-col gap-2 shadow-lg relative z-10 rounded-none">
+				<div class="player1-container border-b border-gray-700 pb-1 flex justify-between items-center gap-2">
+					<span class="player1-name text-left truncate text-sm max-w-[70%]"></span>
+					<span class="player1-score font-mono text-sm"></span>
+				</div>
+				<div class="player2-container flex justify-between items-center gap-2">
+					<span class="player2-name text-left truncate text-sm max-w-[70%]"></span>
+					<span class="player2-score font-mono text-sm"></span>
 				</div>
 			</div>
 		</template>
@@ -83,8 +118,8 @@ export class ServerSideRendering
 		}
 		</script>
 		<script>var exports = {};</script>
-		<script type="module" src="dist/app.js"></script>
-		<script type="module" src="assets/translation.js"></script>
+		<script type="module" src="/dist/app.js"></script>
+		<script type="module" src="/assets/translation.js"></script>
 	</body>
 </html>
 `
@@ -114,8 +149,6 @@ export class ServerSideRendering
 			this.m_spaPage += data;
 		})
 		this.m_spaPage += this.htmlFooter;
-
-		// Logger.log("assembled spa:\n", this.m_spaPage);
 	}
 
 	private setupRoutes(): void

@@ -38,6 +38,14 @@ customElements.define('notfound-view', NotFoundView);
 const user = new MainUser();
 await user.loginSession();
 
+var defaultTheme = "onedark";
+const themeCookie = utils.getCookie("theme");
+if (themeCookie)
+	defaultTheme = themeCookie;
+
+const themes = await loadTheme();
+new ThemeController(themes, defaultTheme);
+
 const router = new Router(routes);
 await router.init();
 
@@ -47,10 +55,3 @@ const state = utils.getCookie("crt_state");
 if (state)
 	utils.toggleCrtEffect(state === 'true');
 
-var defaultTheme = "onedark";
-const themeCookie = utils.getCookie("theme");
-if (themeCookie)
-	defaultTheme = themeCookie;
-
-const themes = await loadTheme();
-new ThemeController(themes, defaultTheme);

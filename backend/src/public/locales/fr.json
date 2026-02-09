@@ -5,10 +5,16 @@
 		"login": "CONNEXION",
 		"settings": "PARAMÈTRES",
 		"leaderboard": "MEILLEURS SCORES",
+		"blockchain": "HISTORIQUE BLOCKCHAIN",
 		"links": "LIENS",
 		"chosen_modules": "SELECTION MODULES",
-		"contributors": "COLLABORATEURS"
+		"contributors": "COLLABORATEURS",
+		"welcome": "WELCOME TO FT_TRANSCENDENCE"
 	},
+	"leaderboard": "meilleurs scores",
+	"history": "historique",
+	"homepage": "accueil",
+	"404": "404 - introuvable",
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
 		"tournament": {
@@ -79,27 +85,39 @@
 	"usr_not_found": "utilisateur non trouvé :(",
 	"profile_friend_btn": "ajouter ami(e)",
 	"profile_block_btn": "bloquer",
+	
+	"tut": {
+		"chat": "utilisez le chat pour parler aux autres utilisateurs",
+		"chat-cmd": "écrivez '/help' dans le chat pour une liste des commandes",
+		"user-list": "utilisez ce bouton pour afficher les utilisateurs connectés",
+		"friend-list": "utilisez ce bouton pour afficher vos amis",
+		"user": "cliquer sur un utilisateur vous affichera son profil",
+		"settings": "changez votre thème / désactivez l'effet CRT dans les paramètres",
+		"move": "en mode en ligne / bot utilisez ↑/↓ pour bouger",
+		"local-move": "en mode local utilisez w/s pour le joueur 1 et ↑/↓ pour le joueur 2",
+		"continue": "continuer"
+	},
 
 	"about_page": {
 		"web": "Web",
 		"user_managment": "Gestion Utilisateur",
 		"ux": "Gameplay et experience utilisateur",
-		"ai": "algo et IA",
+		"ai": "Algo et IA",
 		"cyber": "Cybersecurité",
-		"devops": "Devops",
+		"devops": "DevOps",
 		"accessibility": "Accessibilité",
 		"ssp": "Pong Server-side",
 
-		"web_list": "blockchain\nframework pour le backend (fastify)\nframwork / toolkit pour le frontend (tailwindcss)\nutilisation d'une database pour le backend (sqlite)\n",
-		"usr_list": "gestion utilisateur standard, (authentication, profile, amis, etc...)\nauthentification avec OAuth2 (42 et github OAuth2)",
-		"ux_list": "joueur distant\nchat (avec commands)\nGestion des theme",
-		"ai_list": "joueur IA\n Stats / dashboards du joueur",
-		"cyber_list": "WAF / ModSecurity + HashiCorp Vault\nutilisation du 2fa + token jwt",
-		"devops_list": "Gestion des log (Elasticsearch, Logstash, Kibana)\nsystem de surveillance (Prometheus and Grafana)",
-		"accessibility_list": "compatibilité navigatuers\nsupport de plusieurs langues (en, fr, es)",
-		"ssp_list": "pong en Server side\nPong gameplay via cli (application rust)",
+		"web_list": "blockchain\nframework pour le backend (Fastify)\nframwork / toolkit pour le frontend (Tailwindcss)\nutilisation d'une base de données pour le backend (Sqlite)\n",
+		"usr_list": "gestion utilisateur standard, (authentification, profile, amis, etc...)\nauthentification avec OAuth2 (42 et Github OAuth2)",
+		"ux_list": "joueur distant\nchat (avec commandes)\nGestion des thèmes",
+		"ai_list": "joueur IA\n Stats / dashboard du joueur",
+		"cyber_list": "WAF / ModSecurity et HashiCorp Vault\nAuthetification à deux facteurs et tokens JWT",
+		"devops_list": "Gestion des log (Elasticsearch, Logstash, Kibana)\nsystème de surveillance (Prometheus and Grafana)",
+		"accessibility_list": "compatibilité navigateurs\nsupport de plusieurs langues (en, fr, es)",
+		"ssp_list": "pong en Server side\nPong gameplay via CLI (application rust)",
 
 		"source_code": "code source",
-		"intro": "ft_transcendence est le projet final du tronc commun de 42\nil faut faire une app full stack en ts, avec une database, docker, nodejs, html / css\nLe but est de recrée pong avec plus de fonnctionalité"
+		"intro": "ft_transcendence est le projet final du tronc commun de 42\nil faut faire une app full stack en Typescript, avec une base de données, Docker, Nodejs, HTML / CSS\nLe but est de recreer pong avec plus de fonctionnalités"
 	}
 }

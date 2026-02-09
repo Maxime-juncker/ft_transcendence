@@ -6,84 +6,73 @@ import '@fastify/session';
 import { getJwtSecret } from 'modules/vault/secrets.js';
 import { Logger } from "modules/logger.js";
 
-export interface DbResponse {
-	code:	number;
-	data:	any;
-}
-
-export const rateLimitHard = {
-	max: 3,
-	timeWindow: '1 minute'
-}
-
-export const rateLimitMed = {
-	max: 500,
-	timeWindow: '1 minute'
-}
-
-export const tokenSchema = {
-	body: {
-		type: "object",
-		properties: {
-			token: { type: "string" },
-		},
-		required: [ "token" ]
-	}
-}
-
-// directory of avatars
-export const uploadDir : string = "/var/www/server/public/"
-
-export var db:		Database;
-export var fastify:	FastifyInstance;
-export var sessionKey: string;
- 
-declare module '@fastify/session' {
-	interface FastifySessionObject {
-		user?: number;
-	}
-}
-
-export async function createServer()
+export class Core
 {
-	db = await open({
-		filename: '/var/lib/sqlite/app.sqlite',
-		driver: sqlite3.Database
-	});
+	public readonly publicDir: string = "/var/www/server/public/"
 
-	fastify = Fastify({ logger: false });
-	sessionKey = await getJwtSecret();
-}
+	private m_db!:			Database;
+	private m_fastify!:		FastifyInstance;
+	private m_sessionKey!:	string;
 
-export async function start() {
-	try
+	private m_userCount:	number = 0;
+	private m_gameCount:	number = 0;
+
+	public get db():			Database { return this.m_db; }
+	public get fastify():		FastifyInstance { return this.m_fastify; }
+	public get sessionKey():	string { return this.m_sessionKey; }
+
+	public get userCount():		number	{ return this.m_userCount; }
+	public set userCount(count: number) { this.m_userCount = count; }
+
+	public get gameCount():		number	{ return this.m_gameCount; }
+	public set gameCount(count: number) { this.m_gameCount = count; }
+
+	constructor()
 	{
-		await fastify.listen({ port: 3000, host: '0.0.0.0' });
-		Logger.success("server ready!")
-		Logger.log(`pong access at: https://${process.env.HOST}:8081`);
-		Logger.log(`grafana access at: https://${process.env.HOST}:8081/admin/grafana/`);
-		Logger.log(`kibana access at: https://${process.env.HOST}:8081/admin/kibana/`);
 	}
-	catch (err)
-	{
-		fastify.log.error(err);
-		process.exit(1)
-	}
-}
 
-export async function shutdown()
-{
-	await fastify.close();
-
-	const sql = "UPDATE users SET is_login = 0";
-	try {
-		await db.run(sql); 
-	}
-	catch (err)
+	public async createServer()
 	{
-		Logger.error(`error on shutdown: ${err}`);
+		this.m_db = await open({
+			filename: '/var/lib/sqlite/app.sqlite',
+			driver: sqlite3.Database
+		});
+
+		this.m_fastify = Fastify({ logger: false });
+		this.m_sessionKey = await getJwtSecret();
 	}
-	db.close();
-	Logger.log('shutdown complete, bye.');
-	process.exit(0);
+
+	public async start()
+	{
+		try
+		{
+			await this.m_fastify.listen({ port: 3000, host: '0.0.0.0' });
+			Logger.success("server ready!")
+			Logger.log(`pong access at: https://${process.env.HOST}:8081`);
+			Logger.log(`grafana access at: https://${process.env.HOST}:8081/admin/grafana/`);
+			Logger.log(`kibana access at: https://${process.env.HOST}:8081/admin/kibana/`);
+		}
+		catch (err)
+		{
+			this.m_fastify.log.error(err);
+			process.exit(1)
+		}
+	}
+
+	public async shutdown()
+	{
+		await this.m_fastify.close();
+
+		const sql = "UPDATE users SET is_login = 0";
+		try {
+			await this.m_db.run(sql); 
+		}
+		catch (err)
+		{
+			Logger.error(`error on shutdown: ${err}`);
+		}
+		this.m_db.close();
+		Logger.log('shutdown complete, bye.');
+		process.exit(0);
+	}
 }

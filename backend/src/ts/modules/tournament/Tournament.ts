@@ -6,6 +6,35 @@ class Match
 		public _score2: number = 0,
 		private _winner: string | null = null) {}
 
+	public static isBot(player: string): boolean
+	{
+		return player.startsWith('Bot_');
+	}
+
+	public isBotVsBot(): boolean
+	{
+		return Match.isBot(this._player1) && Match.isBot(this._player2);
+	}
+
+	public isHumanVsBot(): boolean
+	{
+		return Match.isBot(this._player1) !== Match.isBot(this._player2);
+	}
+
+	public getBotPlayer(): string | null
+	{
+		if (Match.isBot(this._player1)) return this._player1;
+		if (Match.isBot(this._player2)) return this._player2;
+		return null;
+	}
+
+	public getHumanPlayer(): string | null
+	{
+		if (!Match.isBot(this._player1)) return this._player1;
+		if (!Match.isBot(this._player2)) return this._player2;
+		return null;
+	}
+
 	get winner(): string | null { return (this._winner); }
 
 	set winner(winner: string)
@@ -32,7 +61,14 @@ export class Tournament
 
 	constructor(inputs: Set<string>, public readonly _depth: number = 0)
 	{
-		this.init(inputs);
+		if (_depth === 0)
+		{
+			this.init(inputs);
+		}
+		else
+		{
+			this._players = Array.from(inputs);
+		}
 
 		if (this._players.length > 1)
 		{

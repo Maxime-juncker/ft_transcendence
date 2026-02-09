@@ -113,7 +113,7 @@ export class UserElement
 		if (!user)
 		{
 			this.m_htmlStatusImg.style.background = "black:"
-			this.m_htmlAvatar.src = "/public/avatars/default.png";
+			this.m_htmlAvatar.src = "/public/avatars/default.webp";
 			this.m_htmlName.innerText = "guest";
 			return ;
 		}

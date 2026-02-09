@@ -5,11 +5,16 @@
 		"login": "LOGIN",
 		"settings": "SETTINGS",
 		"leaderboard": "LEADERBOARD",
+		"blockchain": "BLOCKCHAIN HISTORY",
 		"links": "LINKS",
 		"chosen_modules": "CHOSEN MODULES",
 		"contributors": "CONTRIBUTORS",
 		"welcome": "WELCOME TO FT_TRANSCENDENCE"
 	},
+	"leaderboard": "leaderboard",
+	"history": "history",
+	"homepage": "homepage",
+	"404": "404 - NOT FOUND",
 	"text": {
 		"guest": "*all data will be lost on logout",
 		"tournament": {
@@ -82,8 +87,8 @@
 	"profile_block_btn": "block",
 
 	"tut": {
-		"chat": "use the chatbox to talk to other people",
-		"chat-cmd": "type '/help' in chat for a list of all commands",
+		"chat": "use the chatbox to talk to other peoples",
+		"chat-cmd": "type '/help' in chat for a list of commands",
 		"user-list": "use this button to list connected users",
 		"friend-list": "use this button to list friends",
 		"user": "clicking on a user will show you his profile",
@@ -95,24 +100,24 @@
 
 	"about_page": {
 		"web": "Web",
-		"user_managment": "User Managment",
-		"ux": "Gameplay and user experience",
+		"user_managment": "User Management",
+		"ux": "Gameplay and User eXperience",
 		"ai": "AI Algo",
 		"cyber": "Cybersecurity",
-		"devops": "Devops",
+		"devops": "DevOps",
 		"accessibility": "Accessibility",
-		"ssp": "Server-side Pong",
+		"ssp": "Server-Side Pong",
 
 		"web_list": "blockchain\nframework to build the backend (fastify)\nframwork / toolkit to build the frontend (tailwindcss)\nuse a database for the backend (sqlite)\n",
-		"usr_list": "standard user managment, (authentication, user profile, friends, etc...)\nremote authentification using OAuth2 (support 42 and github OAuth2)",
-		"ux_list": "Remote player\nLive chat (with chat commands)\nTheme managment",
+		"usr_list": "standard user management (authentication, user profile, friends, etc...)\nremote authentication using OAuth2 (support 42 and Github OAuth2)",
+		"ux_list": "Remote player\nLive chat (with chat commands)\nTheme management",
 		"ai_list": "AI opponent\nUser and game stats dashboards",
-		"cyber_list": "WAF / ModSecurity + HashiCorp Vault\nuse Two Factor Auth + jwt tokens",
-		"devops_list": "Log managment (Elasticsearch, Logstash, Kibana)\nMonitoring system (Prometheus and Grafana)",
+		"cyber_list": "WAF / ModSecurity and HashiCorp Vault\nTwo Factor Auth and JWT tokens",
+		"devops_list": "Log management (Elasticsearch, Logstash, Kibana)\nMonitoring system (Prometheus and Grafana)",
 		"accessibility_list": "Expanding browser compatibility\nSupport multiple languages (en, fr, es)",
-		"ssp_list": "Server side pong\nPong gameplay via cli (rust app)",
+		"ssp_list": "Server side pong\nPong gameplay via CLI (rust app)",
 
 		"source_code": "source code",
-		"intro": "ft_transcendence is the final project of the forty two common core\nit involve making a full stack app in typescript, using database, docker, nodejs, html / css.\nthe goal of this project is to recreate the famous pong game but with some more feature.\n"
+		"intro": "ft_transcendence is the final project of the forty two common core\nit involve making a full stack app in Typescript, using database, Docker, Nodejs, HTML / CSS.\nthe goal of this project is to recreate the famous pong game but with some more features.\n"
 	}
 }

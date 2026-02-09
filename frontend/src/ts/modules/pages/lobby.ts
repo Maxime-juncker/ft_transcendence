@@ -1,7 +1,7 @@
 import { MainUser, User, UserStatus } from "modules/user/User.js";
 import { UserElement, UserElementType } from "modules/user/UserElement.js";
 import { Chat } from "modules/chat/chat.js";
-import { GameRouter } from "router.js";
+import { GameRouter } from "modules/game/GameRouter.js";
 import { Router } from "modules/router/Router.js";
 import { HeaderSmall } from "./HeaderSmall.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
@@ -18,8 +18,6 @@ export class LobbyView extends ViewComponent
 	private m_chat:	Chat;
 	private state:	ListState = ListState.HIDDEN;
 	private	m_gameRouter:	GameRouter | null = null;
-
-	private m_userContainer: HTMLElement | null = null;
 
 	constructor()
 	{
@@ -46,14 +44,13 @@ export class LobbyView extends ViewComponent
 			return;
 		}
 
-		this.m_userContainer = this.querySelector("#user-container");
-
 		if (MainUser.Instance.id == -1)
 		{
 			Router.Instance?.navigateTo("/");
 			return ;
 		}
 
+		this.hideUserList();
 		MainUser.Instance.displayTutorial();
 
 		if (this.m_chat && !this.m_chat.isConnected)
@@ -97,9 +94,16 @@ export class LobbyView extends ViewComponent
 		if (this.m_gameRouter?.m_gameMenu)
 			this.m_gameRouter.m_gameMenu.destroy();
 
-		if (this.m_userContainer)
-			this.m_userContainer.innerHTML = "";
+	}
 
+	private hideUserList()
+	{
+		const userListParent = this.querySelector("#user-list-parent");
+		if (!userListParent)
+			return;
+
+		this.state = ListState.HIDDEN;
+		userListParent.classList.add("hide");
 	}
 
 	private showListContainer(newState: ListState, chat: Chat, user: User)

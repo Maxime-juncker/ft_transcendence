@@ -1,10 +1,9 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from 'modules/user/User.js';
+import { MainUser, User, getUserFromId } from 'modules/user/User.js';
 import { Chat } from 'modules/chat/chat.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
-import { GameRouter } from 'router.js';
-import { Router } from 'modules/router/Router.js';
+import { GameRouter } from 'modules/game/GameRouter.js';
 
 enum Params
 {
@@ -14,7 +13,7 @@ enum Params
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = 'var(--color-white)',
-	COUNTDOWN_START = 1,
+	COUNTDOWN_START = 3,
 	IPS = 60,
 }
 
@@ -84,7 +83,8 @@ export class GameClient extends Utils
 		super();
 
 		this.m_router = router;
-		this.m_playerContainer = Router.getElementById("player-container");
+		const root = this.m_router.view || document;
+		this.m_playerContainer = root.querySelector("#player-container") as HTMLElement;
 		if (!this.m_playerContainer)
 		{
 			console.error("no player-container found");
@@ -100,7 +100,7 @@ export class GameClient extends Utils
 			chat.onGameCreated((json) => this.createGameFeedback(json));
 		}
 
-		if (this.isModeValid())
+		if (this.isModeValid() && this.m_user)
 		{
 			this.init();
 			this.createGame();
@@ -140,13 +140,19 @@ export class GameClient extends Utils
 
 	private init(): void
 	{
-		const section = document.querySelector('.game') as HTMLDivElement;
+		const root = this.m_router.view || document;
+		const section = root.querySelector('.game') as HTMLDivElement;
+		if (!section)
+		{
+			console.error('GameClient: .game section not found!');
+			return;
+		}
 		this.HTMLelements.set('GAME', section);
 		Array.from(section.children).forEach((child) =>
 		{
 			const element = child as HTMLDivElement;
 			this.HTMLelements.set(element.id, element);
-			element.style.display = ('none');
+			element.setAttribute('hidden', '');
 		});
 
 		this.setContent('searching-msg', Msgs.SEARCHING, true);
@@ -154,8 +160,27 @@ export class GameClient extends Utils
 
 	private async createGameFeedback(json: any)
 	{
+		if (this.m_endTimeout)
+		{
+			clearTimeout(this.m_endTimeout);
+			this.m_endTimeout = null;
+		}
+
+		this.hide('winner-msg');
+		this.setContent('searching-msg', 'Next match starting...', true);
 		this.gameId = json.gameId.toString();
-		this.m_user2 = await getUserFromId(json.opponentId.toString());
+
+		if (json.opponentId === 0)
+		{
+			this.m_user2 = new User();
+			const name = this.mode === 'bot' ? 'Bot' : 'Player 2';
+			this.m_user2.setUser(0, name, '', '/avatars/default.png', 0);
+		}
+		else
+		{
+			this.m_user2 = await getUserFromId(json.opponentId.toString());
+		}
+		
 		this.playerSide = json.playerSide;
 		this.createPlayerHtml();
 		this.m_player2?.updateHtml(this.m_user2);
@@ -165,25 +190,40 @@ export class GameClient extends Utils
 
 	public async createGame(): Promise<void>
 	{
-		if (!this.m_user)
-			return ;
 		try
 		{
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, playerName: this.m_user.id }),
+				body: JSON.stringify({ mode: this.mode, playerName: this.m_user!.id, token: MainUser.Instance?.token }),
 			});
 
 			if (response.status == 202)
+			{
 				return ;
+			}
 
 			const data = await response.json();
+			if (!response.ok)
+			{
+				console.error('Failed to create game:', response.status, data);
+				return ;
+			}
 			this.gameId = data.gameId;
 			this.playerSide = data.playerSide;
 
-			this.m_user2 = await getUserFromId(data.opponentId);
+			if (data.opponentId === 0)
+			{
+				this.m_user2 = new User();
+				const name = this.mode === 'bot' ? 'Bot' : 'Player 2';
+				this.m_user2.setUser(0, name, '', '/avatars/default.png', 0);
+			}
+			else
+			{
+				this.m_user2 = await getUserFromId(data.opponentId);
+			}
+			
 			this.createPlayerHtml();
 			this.m_player2?.updateHtml(this.m_user2);
 
@@ -198,7 +238,10 @@ export class GameClient extends Utils
 	public launchCountdown(gameId?: string): void
 	{
 		if (gameId)
+		{
 			this.gameId = gameId;
+		}
+
 		let count: number = Params.COUNTDOWN_START;
 		const countdownIntervalTime =  (count > 0) ? 1000 : 0;
 		this.hide('searching-msg');
@@ -222,33 +265,37 @@ export class GameClient extends Utils
 	private showElements(): void
 	{
 		this.hide('countdown');
-		this.setHeight('paddle-left', Params.PADDLE_HEIGHT + '%');
-		this.setHeight('paddle-right', Params.PADDLE_HEIGHT + '%');
+		this.setHeight('paddle-left', Params.PADDLE_HEIGHT + '%', true);
+		this.setHeight('paddle-right', Params.PADDLE_HEIGHT + '%', true);
 		this.setWidth('paddle-left', Params.PADDLE_WIDTH + '%');
 		this.setWidth('paddle-right', Params.PADDLE_WIDTH + '%');
-		this.setLeft('paddle-left', Params.PADDLE_PADDING + '%', true);
-		this.setRight('paddle-right', Params.PADDLE_PADDING + '%', true);
+		this.setLeft('paddle-left', Params.PADDLE_PADDING + '%');
+		this.setRight('paddle-right', Params.PADDLE_PADDING + '%');
 		this.setWidth('ball', Params.BALL_SIZE + '%', true);
+		this.setHeight('ball', Params.BALL_SIZE + '%');
 		this.setContent('score-left', '0', true);
 		this.setContent('score-right', '0', true);
 		this.show('net');
 
 		if (this.m_player2)
+		{
 			this.m_player2.updateHtml(this.m_user2);
+		}
 	}
 
-	public async startGame(gameId? : string ): Promise<void>
+	public async startGame(gameId? : string): Promise<void>
 	{
 		if (!gameId)
 		{
-			console.log(this.playerSide);
 			if (!this.m_user) return;
-			
+
+			console.log("token: ", MainUser.Instance?.token);
+
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ userId: this.m_user.id })
+				body: JSON.stringify({ token: MainUser.Instance?.token })
 			});
 
 			if (!response.ok)
@@ -256,16 +303,16 @@ export class GameClient extends Utils
 				console.error('Failed to start game:', response.status, response.statusText);
 				return ;
 			}
-			
+
 			const buffer = await response.arrayBuffer();
 			if (buffer.byteLength > 0)
 			{
 				this.updateGameState(buffer);
 			}
-
 		}
 
-		this.socket = new WebSocket(`wss://${window.location.host}/api/game/${this.gameId}/${this.playerSide}`);
+		const wsUrl = `wss://${window.location.host}/api/game/${this.gameId}/${this.playerSide}`;
+		this.socket = new WebSocket(wsUrl);
 		this.socket.binaryType = 'arraybuffer';
 
 		this.socket.onopen = () =>
@@ -286,7 +333,7 @@ export class GameClient extends Utils
 
 		this.socket.onerror = (error) =>
 		{
-			console.error('WebSocket error:', error);
+			console.error('[GameClient] WebSocket error:', error);
 			this.stopGameLoop();
 		};
 	}
@@ -303,7 +350,15 @@ export class GameClient extends Utils
 
 		if (event.key === Keys.PLAY_AGAIN && this.end)
 		{
-			this.m_router.navigateTo("home", "")
+			const targetElement = event.target as HTMLElement;
+			if (targetElement)
+			{
+				const tagName = targetElement.tagName.toLowerCase();
+				if (tagName && tagName !== 'input' && tagName !== 'textarea')
+				{
+					this.m_router.navigateTo('game', this.mode);
+				}
+			}
 		}
 	}
 
@@ -377,8 +432,8 @@ export class GameClient extends Utils
 		{
 			try
 			{
-
-				this.updateDisplay(new GameState(data));
+				const gameState = new GameState(data);
+				this.updateDisplay(gameState);
 			}
 			catch (error)
 			{
@@ -390,7 +445,6 @@ export class GameClient extends Utils
 
 	private updateDisplay(gameState: any): void
 	{
-		this.HTMLelements.get('paddle-left')!.style.top = gameState.leftPaddleY + '%';
 		this.setTop('paddle-left', gameState.leftPaddleY + '%');
 		this.setTop('paddle-right', gameState.rightPaddleY + '%');
 		this.setLeft('ball', gameState.ballX + '%');
@@ -425,25 +479,47 @@ export class GameClient extends Utils
 	private async showWinner(winner: number)
 	{
 		var winnerName = "Player2";
-		if (winner >= 1) // db id start at 1
+		if (winner >= 1)
 		{
 			const usr = await getUserFromId(winner);
 			if (usr)
+			{
 				winnerName = usr.name;
+			}
 		}
+
 		this.hide('net');
 		this.hide('ball');
 		this.hide('paddle-left');
 		this.hide('paddle-right');
+		
 		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
 		
 		if (this.mode === 'online')
 		{
-			this.m_endTimeout = setTimeout(() =>
+			const isWinner = this.m_user && winner === this.m_user.id;
+			if (isWinner)
 			{
-				this.m_router.navigateTo('tournament-lobby', '');
-			}, 3000);
+				this.m_endTimeout = setTimeout(() =>
+				{
+					this.setInnerHTML('winner-msg', `${winnerName}<br>wins the tournament!`);
+					this.setColor('winner-msg', Params.COLOR, undefined, true);
+					
+					setTimeout(() =>
+					{
+						this.m_router.navigateTo('tournament-menu', '');
+					}, 5000);
+
+				}, 5000);
+			}
+			else
+			{
+				this.m_endTimeout = setTimeout(() =>
+				{
+					this.m_router.navigateTo('tournament-menu', '');
+				}, 3000);
+			}
 		}
 		else
 		{

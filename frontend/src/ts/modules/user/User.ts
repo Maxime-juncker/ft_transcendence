@@ -1,6 +1,6 @@
 import { setCookie, getCookie} from 'modules/utils/utils.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
-import { GameRouter } from 'router';
+import { GameRouter } from 'modules/game/GameRouter';
 import { Router } from 'modules/router/Router.js';
 
 export enum UserStatus {
@@ -96,7 +96,7 @@ export class User
 		this.m_id = -1;
 		this.name = "";
 		this.m_email = "";
-		this.m_avatarPath = "/public/avatars/default.png";
+		this.m_avatarPath = "/public/avatars/default.webp";
 		this.m_status = UserStatus.UNKNOW;
 		this.m_source = 0;
 		this.m_created_at = "";
@@ -189,6 +189,8 @@ export class User
 
 
 	public async logoutDB() {
+		if (this.m_id === -1)
+			return;
 		const response = await fetch("/api/user/logout", {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
@@ -196,7 +198,6 @@ export class User
 				token: this.m_token,
 			})
 		});
-		this.setUser(-1, "Guest", "", "", UserStatus.UNKNOW);
 		return response;
 	}
 
@@ -480,8 +481,8 @@ export class MainUser extends User
 
 		this.m_onLogoutCb.forEach(cb => cb(this));
 
-		setCookie("jwt_session", "", 0);
 		this.reset();
+		setCookie("jwt_session", "", 0);
 	}
 
 	public async refreshSelf()

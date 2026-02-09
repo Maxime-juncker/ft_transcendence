@@ -2,7 +2,7 @@ import { GameState } from './GameState.js';
 import { GameInstance } from './GameInstance.js';
 import WebSocket from 'ws';
 import { getUserByName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
+import { core } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 
 enum Keys
@@ -13,7 +13,6 @@ enum Keys
 
 export class Bot
 {
-	private static readonly PLAYER_ID: string = '2';
 	private static readonly IPS: number = 100;
 	private static readonly INTERVAL_TIME: number = 1000 / Bot.IPS;
 
@@ -21,9 +20,11 @@ export class Bot
 	private interval: NodeJS.Timeout | null = null;
 	private gameInstance: GameInstance | null = null;
 	private keysPressed: Set<string> = new Set();
+	private playerSide: string;
 
-	constructor (gameId: string, gameState: ArrayBuffer)
+	constructor (gameId: string, gameState: ArrayBuffer, playerSide: number = 2)
 	{
+		this.playerSide = String(playerSide);
 		this.init(gameState);
 		this.start(gameId);
 	}
@@ -34,6 +35,8 @@ export class Bot
 
 		this.gameInstance = new GameInstance('dev', res.data.id, -1);
 		this.gameInstance.state = new GameState(gameState);
+		this.gameInstance.p1Ready = true;
+		this.gameInstance.p2Ready = true;
 		this.gameInstance.running = true;
 	}
 
@@ -41,7 +44,13 @@ export class Bot
 	{
 		await new Promise(r => setTimeout(r, 500));
 
-		this.socket = new WebSocket(`ws://localhost:3000/api/game/${gameId}/${Bot.PLAYER_ID}`);
+		if (!gameId || (this.playerSide !== '1' && this.playerSide !== '2'))
+		{
+			Logger.error(`Invalid gameId or playerSide: gameId=${gameId}, playerSide=${this.playerSide}`);
+			return ;
+		}
+
+		this.socket = new WebSocket(`ws://localhost:3000/api/game/${gameId}/${this.playerSide}`);
 		this.socket.binaryType = 'arraybuffer';
 		
 		this.socket.onopen = () =>
