@@ -185,7 +185,12 @@ impl Game {
 	// }
 	async fn start_game(&mut self) -> Result<()> {
 		let url = format!("https://{}/api/start-game/{}", self.context.location, self.game_id);
-		self.context.client.post(url).send().await?;
+		eprintln!("{} and token: {}", self.game_id, self.auth.borrow().token.clone());
+		eprintln!("Start game sending");
+		let mut body = HashMap::new();
+		body.insert("token", self.auth.borrow().token.clone());
+		let response = self.context.client.post(url).json(&body).send().await?;
+		eprintln!("response: {:?}", response);
 		let request = format!("wss://{}/api/game/{}/{}", self.context.location, self.game_id, self.player_side).into_client_request()?;
 		let connector = Connector::NativeTls(
 			native_tls::TlsConnector::builder()

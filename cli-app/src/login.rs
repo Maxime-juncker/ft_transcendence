@@ -25,7 +25,7 @@ pub enum Field {
 #[derive(Default)]
 pub struct Auth {
     context: Rc<Context>,
-    token: String,
+    pub(crate) token: String,
     email: String,
     password: String,
     username: String,
