@@ -262,7 +262,7 @@ export async function createUser(email: string, passw: string, username: string,
 
 export async function resetUser(user_id: number)
 {
-	var sql = "UPDATE users SET elo = 1000, wins = 0, games_played = 0 WHERE id = ?";
+	var sql = "UPDATE users SET elo = 420, wins = 0, games_played = 0 WHERE id = ?";
 	try
 	{
 		await core.db.run(sql, user_id);

@@ -2,7 +2,6 @@ import { setCookie, setPlaceHolderText, getUrlVar } from 'modules/utils/utils.js
 import { ViewComponent } from 'modules/router/ViewComponent.js';
 import { Router } from 'modules/router/Router.js';
 import { MainUser } from 'modules/user/User.js';
-import { Utils } from 'pages/Utils';
 
 export class LoginView extends ViewComponent
 {

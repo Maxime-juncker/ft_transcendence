@@ -1,5 +1,5 @@
 import { User } from 'modules/user/User.js';
-import { GameRouter } from '../router.js';
+import { GameRouter } from 'modules/game/GameRouter.js';
 import { Router } from 'modules/router/Router.js';
 
 export class TournamentCreate

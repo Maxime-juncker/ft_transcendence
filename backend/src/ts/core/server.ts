@@ -2,6 +2,7 @@ import { initFastify } from 'core/init.js';
 import { Core } from './core.js';
 import { ServerSideRendering } from 'modules/ssr/ServerSideRendering.js';
 import { GameServer } from 'modules/game/GameServer.js';
+import { TournamentServer } from 'modules/tournament/TournamentServer.js';
 import { initVault } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
 import { Chat } from 'modules/chat/chat.js';
@@ -58,6 +59,9 @@ const routes = [
 new ServerSideRendering(core.fastify, routes);
 const gameServer = new GameServer(core.fastify);
 await gameServer.init();
+const tournamentServer = new TournamentServer(core.fastify);
+tournamentServer.setActiveGamesMap(gameServer.activeGames);
+await tournamentServer.init();
 
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {

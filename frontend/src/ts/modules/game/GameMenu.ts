@@ -1,4 +1,4 @@
-import { GameRouter } from '../router.js';
+import { GameRouter } from 'modules/game/GameRouter.js';
 
 export class GameMenu
 {

@@ -58,7 +58,7 @@ export class ProfileView extends ViewComponent
 		(<HTMLElement>this.querySelector("#game-played")).innerText		= `${stats.gamePlayed}`;
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
 		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? this.m_user.winrate + "%" : "n/a" }`;
-		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${stats.currElo}p`;
+		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${Math.ceil(stats.currElo)}p`;
 
 		window.dispatchEvent(new CustomEvent('pageChanged'));
 	}
@@ -209,7 +209,7 @@ export class ProfileView extends ViewComponent
 	private async addMatch(user: User)
 	{
 		const eloData = new Map<string, number>()
-		eloData.set(user.created_at, 1000);
+		eloData.set(user.created_at, 420);
 
 		const histContainer = this.querySelector("#history-container");
 		if (!histContainer)
@@ -288,7 +288,7 @@ export class ProfileView extends ViewComponent
 			}
 		});
 
-		(<HTMLElement>this.querySelector("#max-elo")).innerText = `${max}p`;
+		(<HTMLElement>this.querySelector("#max-elo")).innerText = `${Math.ceil(max)}p`;
 	}
 
 	private async addMatchItem(user: User, json: any, eloData: Map<string, number>): Promise<HTMLElement>
@@ -319,8 +319,8 @@ export class ProfileView extends ViewComponent
 		}
 		const elo = user.id < user2.id ? json.user1_elo : json.user2_elo;
 		const otherElo = user.id < user2.id ? json.user2_elo : json.user1_elo;
-		player1.innerText = `${user.name} (${elo})`;
-		player2.innerText = `${user2.name} (${otherElo})`;
+		player1.innerText = `${user.name} (${Math.ceil(elo)})`;
+		player2.innerText = `${user2.name} (${Math.ceil(otherElo)})`;
 		player1.addEventListener("click", () => Router.Instance?.navigateTo(`/profile?username=${user.name}`))
 		player2.addEventListener("click", () => Router.Instance?.navigateTo(`/profile?username=${user2.name}`))
 		status.innerText = `${player1Score > player2Score ? "won" : "lost" }`;

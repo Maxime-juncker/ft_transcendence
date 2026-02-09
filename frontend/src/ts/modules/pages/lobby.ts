@@ -1,7 +1,7 @@
 import { MainUser, User, UserStatus } from "modules/user/User.js";
 import { UserElement, UserElementType } from "modules/user/UserElement.js";
 import { Chat } from "modules/chat/chat.js";
-import { GameRouter } from "router.js";
+import { GameRouter } from "modules/game/GameRouter.js";
 import { Router } from "modules/router/Router.js";
 import { HeaderSmall } from "./HeaderSmall.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";

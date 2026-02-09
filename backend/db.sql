@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 	is_login		INTEGER NOT NULL DEFAULT 0, -- if false => override status
 	status			INTEGER NOT NULL DEFAULT 0, -- (un)avalaible - buzy - silent
 
-	elo				INTEGER NOT NULL DEFAULT 1000,
+	elo				INTEGER NOT NULL DEFAULT 420,
 	wins			INTEGER NOT NULL DEFAULT 0,
 	games_played	INTEGER NOT NULL DEFAULT 0,
 
@@ -79,8 +79,20 @@ CREATE TABLE IF NOT EXISTS tournament_matches (
 	score2			INTEGER DEFAULT 0,
 	played_at		DATE,
 
-	user1_elo		INTEGER NOT NULL DEFAULT 1000,
-	user2_elo		INTEGER NOT NULL DEFAULT 1000,
+	user1_elo		INTEGER NOT NULL DEFAULT 420,
+	user2_elo		INTEGER NOT NULL DEFAULT 420,
 	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
 );
 
+CREATE TABLE IF NOT EXISTS game_parameters (
+	paddle_speed REAL NOT NULL DEFAULT 1.5,
+	paddle_height REAL NOT NULL DEFAULT 15,
+	paddle_width REAL NOT NULL DEFAULT 2,
+	paddle_padding REAL NOT NULL DEFAULT 2,
+	ball_size REAL NOT NULL DEFAULT 2,
+	max_angle REAL NOT NULL DEFAULT 1.5,
+	speed REAL NOT NULL DEFAULT 1.0,
+	speed_increment REAL NOT NULL DEFAULT 0.1,
+	points_to_win INTEGER NOT NULL DEFAULT 3,
+	fps INTEGER NOT NULL DEFAULT 60
+);
