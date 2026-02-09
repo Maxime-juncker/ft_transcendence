@@ -1,10 +1,9 @@
 import { Utils } from './Utils.js';
 import { GameState } from './GameState.js';
-import { User, getUserFromId } from 'modules/user/User.js';
+import { MainUser, User, getUserFromId } from 'modules/user/User.js';
 import { Chat } from 'modules/chat/chat.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
-import { Router } from 'modules/router/Router.js';
 
 enum Params
 {
@@ -14,7 +13,7 @@ enum Params
 	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = 'var(--color-white)',
-	COUNTDOWN_START = 1,
+	COUNTDOWN_START = 3,
 	IPS = 60,
 }
 
@@ -197,7 +196,7 @@ export class GameClient extends Utils
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, playerName: this.m_user!.id }),
+				body: JSON.stringify({ mode: this.mode, playerName: this.m_user!.id, token: MainUser.Instance?.token }),
 			});
 
 			if (response.status == 202)
@@ -206,6 +205,11 @@ export class GameClient extends Utils
 			}
 
 			const data = await response.json();
+			if (!response.ok)
+			{
+				console.error('Failed to create game:', response.status, data);
+				return ;
+			}
 			this.gameId = data.gameId;
 			this.playerSide = data.playerSide;
 
@@ -279,17 +283,19 @@ export class GameClient extends Utils
 		}
 	}
 
-	public async startGame(gameId? : string ): Promise<void>
+	public async startGame(gameId? : string): Promise<void>
 	{
 		if (!gameId)
 		{
 			if (!this.m_user) return;
-			
+
+			console.log("token: ", MainUser.Instance?.token);
+
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ userId: this.m_user.id })
+				body: JSON.stringify({ token: MainUser.Instance?.token })
 			});
 
 			if (!response.ok)
@@ -297,13 +303,12 @@ export class GameClient extends Utils
 				console.error('Failed to start game:', response.status, response.statusText);
 				return ;
 			}
-			
+
 			const buffer = await response.arrayBuffer();
 			if (buffer.byteLength > 0)
 			{
 				this.updateGameState(buffer);
 			}
-
 		}
 
 		const wsUrl = `wss://${window.location.host}/api/game/${this.gameId}/${this.playerSide}`;
@@ -343,11 +348,17 @@ export class GameClient extends Utils
 	{
 		this.keysPressed.add(event.key);
 
-		if (event.key === Keys.PLAY_AGAIN && this.end
-			&& (this.mode === 'local' || this.mode === 'online'
-				|| this.mode === 'bot' || this.mode === 'duel'))
+		if (event.key === Keys.PLAY_AGAIN && this.end)
 		{
-			this.m_router.navigateTo('game', this.mode);
+			const targetElement = event.target as HTMLElement;
+			if (targetElement)
+			{
+				const tagName = targetElement.tagName.toLowerCase();
+				if (tagName && tagName !== 'input' && tagName !== 'textarea')
+				{
+					this.m_router.navigateTo('game', this.mode);
+				}
+			}
 		}
 	}
 

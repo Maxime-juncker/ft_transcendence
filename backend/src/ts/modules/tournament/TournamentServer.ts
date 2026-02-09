@@ -1,10 +1,11 @@
 import { GameInstance } from 'modules/game/GameInstance.js';
 import { Bot } from 'modules/game/Bot.js';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { core, chat } from 'core/server.js';
 import { Tournament } from '../tournament/Tournament.js';
 import { Logger } from 'modules/logger.js';
 import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
+import { jwtVerif } from 'modules/jwt/jwt.js';
 
 export class TournamentServer
 {
@@ -38,7 +39,6 @@ export class TournamentServer
 
 	public async init(): Promise<void>
 	{
-		// Initialiser l'ID du bot
 		try
 		{
 			const botRow = await core.db.get("SELECT id FROM users WHERE name = ?", ["bot"]);
@@ -160,12 +160,37 @@ export class TournamentServer
 
 	private createTournament(): void
 	{
-		this.server.post('/api/create-tournament', async (request, reply) =>
+		this.server.post('/api/create-tournament',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						token:	{ type: "string" },
+						type:	{ type: "string" },
+					},
+					required: ["token", "type"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
-				const body = request.body as { userId: number, type: string };
-				const { userId, type } = body;
+				const body = request.body as { token: string, type: string };
+				const { token, type } = body;
+
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
+				{
+					Logger.error(`invalid token ${data}`);
+					return { code: 400, data: { message: "jwt token invalid" }};
+				}
+
+				const userId = data.id;
 				const name = await this.getUserName(userId);
 
 				if (name === "Unknown")
@@ -181,16 +206,16 @@ export class TournamentServer
 				}
 
 				let blockchainTournamentId: number = 18;
-				// try
-				// {
-				// 	Logger.log('BlockchainId before: ', blockchainTournamentId);
-				// 	blockchainTournamentId = await this.contractAddress.createTournament();
-				// 	Logger.log('BlockchainId after: ', blockchainTournamentId);
-				// }
-				// catch (error)
-				// {
-				// 	Logger.log('error creating tournament', error); 
-				// }
+				try
+				{
+					Logger.log('BlockchainId before: ', blockchainTournamentId);
+					blockchainTournamentId = await this.contractAddress.createTournament();
+					Logger.log('BlockchainId after: ', blockchainTournamentId);
+				}
+				catch (error)
+				{
+					Logger.log('error creating tournament', error); 
+				}
 
 				const tournamentId = crypto.randomUUID();
 				const lobby =
@@ -242,12 +267,37 @@ export class TournamentServer
 
 	private joinTournament(): void
 	{
-		this.server.post('/api/join-tournament', async (request, reply) =>
+		this.server.post('/api/join-tournament',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						tournamentId:	{ type: "string" },
+						token:			{ type: "string" },
+					},
+					required: ["tournamentId", "token"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
-				const body = request.body as { tournamentId: string; userId: number };
-				const { tournamentId, userId } = body;
+				const body = request.body as { tournamentId: string; token: string };
+				const { tournamentId, token } = body;
+
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
+				{
+					Logger.error(`invalid token ${data}`);
+					return { code: 400, data: { message: "jwt token invalid" }};
+				}
+
+				const userId = data.id;
 				const name = await this.getUserName(userId);
 
 				if (name === "Unknown")
@@ -285,12 +335,37 @@ export class TournamentServer
 
 	private leaveTournament(): void
 	{
-		this.server.post('/api/leave-tournament', async (request, reply) =>
+		this.server.post('/api/leave-tournament',
 		{
-			const body = request.body as { tournamentId: string, userId: number };
-			const { tournamentId, userId } = body;
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						tournamentId:	{ type: "string" },
+						token:			{ type: "number" },
+					},
+					required: ["tournamentId", "userId"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
+		{
+			const body = request.body as { tournamentId: string, token: string };
+			const { tournamentId, token } = body;
+
+			const data: any = await jwtVerif(token, core.sessionKey);
+			if (!data)
+			{
+				Logger.error(`invalid token ${data}`);
+				return { code: 400, data: { message: "jwt token invalid" }};
+			}
+
+			const userId = data.id;
 			const lobby = this.lobbies.get(tournamentId);
-			
+
 			if (lobby)
 			{
 				if (lobby.ownerId == userId)
@@ -309,7 +384,22 @@ export class TournamentServer
 
 	private startTournament(): void
 	{
-		this.server.post('/api/start-tournament', async (request, reply) =>
+		this.server.post('/api/start-tournament',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						tournamentId:	{ type: "string" },
+					},
+					required: ["tournamentId"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{

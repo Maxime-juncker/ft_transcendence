@@ -2,6 +2,7 @@ import { User } from 'modules/user/User.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
 import { Router } from 'modules/router/Router.js';
 import type { Chat } from 'modules/chat/chat.js';
+import { MainUser } from 'modules/user/User.js';
 
 export class TournamentLobby
 {
@@ -186,7 +187,7 @@ export class TournamentLobby
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tournamentId: this.tournamentId, userId: this.user.id })
+				body: JSON.stringify({ tournamentId: this.tournamentId, token: MainUser.Instance?.token })
 			});
 
 			if (res.ok)
