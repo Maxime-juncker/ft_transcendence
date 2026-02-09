@@ -1,14 +1,17 @@
+import { get } from 'http';
+import { getBot } from 'modules/users/userManagment.js';
+
 class Match
 {
-	constructor(public readonly _player1: string,
-		public readonly _player2: string,
+	constructor(public readonly _player1: number,
+		public readonly _player2: number,
 		public _score1: number = 0,
 		public _score2: number = 0,
-		private _winner: string | null = null) {}
+		private _winner: number | null = null) {}
 
-	public static isBot(player: string): boolean
+	public static isBot(player: number): boolean
 	{
-		return player.startsWith('Bot_');
+		return (player === 1);
 	}
 
 	public isBotVsBot(): boolean
@@ -21,23 +24,23 @@ class Match
 		return Match.isBot(this._player1) !== Match.isBot(this._player2);
 	}
 
-	public getBotPlayer(): string | null
+	public getBotPlayer(): number | null
 	{
 		if (Match.isBot(this._player1)) return this._player1;
 		if (Match.isBot(this._player2)) return this._player2;
 		return null;
 	}
 
-	public getHumanPlayer(): string | null
+	public getHumanPlayer(): number | null
 	{
 		if (!Match.isBot(this._player1)) return this._player1;
 		if (!Match.isBot(this._player2)) return this._player2;
 		return null;
 	}
 
-	get winner(): string | null { return (this._winner); }
+	get winner(): number | null { return (this._winner); }
 
-	set winner(winner: string)
+	set winner(winner: number)
 	{
 		if (this._winner !== null)
 		{
@@ -54,40 +57,43 @@ class Match
 
 export class Tournament
 {
-	private _players: Array<string> = [];
+	private _players: Array<number> = [];
 	private _matches: Array<Match> = [];
 	private _next: Tournament | null = null;
 	public isFinished: boolean = false;
 
-	constructor(inputs: Set<string>, public readonly _depth: number = 0)
+	private constructor(players: Array<number>, public readonly _depth: number = 0)
 	{
-		if (_depth === 0)
-		{
-			this.init(inputs);
-		}
-		else
-		{
-			this._players = Array.from(inputs);
-		}
-
+		this._players = players;
 		if (this._players.length > 1)
 		{
 			this.generateMatches();
 		}
 	}
 
-	private init(inputs: Set<string>): void
+	public static async create(inputs: Set<number>, depth: number = 0): Promise<Tournament>
 	{
-		const nbBot = (inputs.size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(inputs.size))) - inputs.size;
-		for (let i = 0; i < nbBot; i++)
+		let players: Array<number>;
+		
+		if (depth === 0)
 		{
-			inputs.add(`Bot_${i + 1}`);
+			const nbBot = (inputs.size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(inputs.size))) - inputs.size;
+			const bot = await getBot();
+			for (let i = 0; i < nbBot; i++)
+			{
+				inputs.add(bot);
+			}
+			players = Tournament.shuffleArray(Array.from(inputs));
+		}
+		else
+		{
+			players = Array.from(inputs);
 		}
 
-		this._players = this.shuffleArray(Array.from(inputs));
+		return new Tournament(players, depth);
 	}
 
-	private shuffleArray<T>(array: T[]): T[]
+	private static shuffleArray<T>(array: T[]): T[]
 	{
 		for (let i = array.length - 1; i > 0; i--)
 		{
@@ -95,7 +101,7 @@ export class Tournament
 			[array[i], array[j]] = [array[j], array[i]];
 		}
 
-		return (array);
+		return array;
 	}
 
 	private generateMatches(): void
@@ -106,7 +112,7 @@ export class Tournament
 		}
 	}
 
-	get players(): Array<string>	{ return (this._players); }
+	get players(): Array<number>	{ return (this._players); }
 	get matches(): Array<Match>		{ return (this._matches); }
 	get next(): Tournament | null	{ return (this._next); }
 

@@ -23,7 +23,7 @@ export class TournamentServer
 		matchDbIds: Map<any, number>,
 		savingMatches: Set<any>,
 		rounds: Array<Array<any>>,
-		initialParticipants: Array<{ id: string, name: string }>
+		initialParticipants: Array<{ id: number, name: string }>
 	}> = new Map();
 
 	private contractAddress: BlockchainContract = new BlockchainContract();
@@ -60,7 +60,7 @@ export class TournamentServer
 		try
 		{
 			this.contractAddress.init();
-			Logger.log('smart contract deployyyyyed');
+			Logger.log('smart contract deployed');
 		}
 		catch (error)
 		{
@@ -208,9 +208,7 @@ export class TournamentServer
 				let blockchainTournamentId: number = 18;
 				try
 				{
-					Logger.log('BlockchainId before: ', blockchainTournamentId);
 					blockchainTournamentId = await this.contractAddress.createTournament();
-					Logger.log('BlockchainId after: ', blockchainTournamentId);
 				}
 				catch (error)
 				{
@@ -230,10 +228,7 @@ export class TournamentServer
 					status: 'pending'
 				};
 	
-				Logger.log('lobby blockchainId: ', lobby.blockchainId);
 				this.lobbies.set(tournamentId, lobby);
-				Logger.log(`Tournament ${tournamentId} created by ${name}`);
-
 				reply.status(201).send({ tournamentId });
 			}
 			catch (error)
@@ -345,9 +340,9 @@ export class TournamentServer
 					properties:
 					{
 						tournamentId:	{ type: "string" },
-						token:			{ type: "number" },
+						token:			{ type: "string" },
 					},
-					required: ["tournamentId", "userId"]
+					required: ["tournamentId", "token"]
 				}
 			}
 		},
@@ -405,6 +400,13 @@ export class TournamentServer
 			{
 				const body = request.body as { tournamentId: string };
 				const { tournamentId } = body;
+				
+				if (this.activeTournaments.has(tournamentId))
+				{
+					reply.status(200).send({ message: 'Tournament already started' });
+					return ;
+				}
+				
 				const lobby = this.lobbies.get(tournamentId);
 
 				if (!lobby)
@@ -413,11 +415,19 @@ export class TournamentServer
 					return ;
 				}
 				
+				if (lobby.status === 'starting')
+				{
+					reply.status(200).send({ message: 'Tournament is starting' });
+					return ;
+				}
+				
+				lobby.status = 'starting';
+				
 				const playerMap = new Map<number, string>();
 				lobby.players.forEach((p: any) => playerMap.set(p.id, p.name));
 
-				const playerIdsSet: Set<string> = new Set(lobby.players.map((p: any) => String(p.id)));
-				const tournament = new Tournament(playerIdsSet);
+				const playerIdsSet: Set<number> = new Set(lobby.players.map((p: any) => Number(p.id)));
+				const tournament = await Tournament.create(playerIdsSet);
 				
 				this.activeTournaments.set(tournamentId, tournament);
 
@@ -454,8 +464,8 @@ export class TournamentServer
 				const matchDbIds = new Map<any, number>();
 				for (const m of tournament.matches)
 				{
-					let p1 = m._player1.startsWith('Bot') ? this.botId : Number(m._player1);
-					let p2 = m._player2.startsWith('Bot') ? this.botId : Number(m._player2);
+					let p1 = m._player1;
+					let p2 = m._player2;
 
 					try
 					{
@@ -478,12 +488,12 @@ export class TournamentServer
 
 				const initialParticipants = tournament.players.map(pId =>
 				{
-					if (pId.startsWith('Bot'))
+					if (pId === this.botId)
 					{
-						return { id: pId, name: pId };
+						return { id: pId, name: 'Bot' };
 					}
 
-					return { id: pId, name: playerMap.get(Number(pId)) || 'Unknown' };
+					return { id: pId, name: playerMap.get(pId) || 'Unknown' };
 				});
 
 				this.tournamentData.set(tournamentId,
@@ -572,7 +582,6 @@ export class TournamentServer
 				{
 					const bot = new Bot(gameId, game.reversedBuffer, botPlayerSide);
 					this.activeBots.set(gameId, bot);
-					Logger.log(`[Tournament ${tournamentId}] Bot created for game ${gameId} as player ${botPlayerSide}`);
 				}
 				else
 				{
@@ -625,26 +634,26 @@ export class TournamentServer
 					}
 				}
 				
-				let winnerPlayerString: string;
+				let winnerPlayerId: number;
 				const winnerId = Number(game.winnerName);
 				
 				if (match.isHumanVsBot())
 				{
 					if (winnerId === this.botId)
 					{
-						winnerPlayerString = match.getBotPlayer()!;
+						winnerPlayerId = match.getBotPlayer()!;
 					}
 					else
 					{
-						winnerPlayerString = match.getHumanPlayer()!;
+						winnerPlayerId = match.getHumanPlayer()!;
 					}
 				}
 				else
 				{
-					winnerPlayerString = String(winnerId);
+					winnerPlayerId = winnerId;
 				}
 				
-				this.onTournamentMatchEnd(tournamentId, tournament, match, winnerPlayerString);
+				this.onTournamentMatchEnd(tournamentId, tournament, match, winnerPlayerId);
 			}
 		}, 1000);
 	}
@@ -675,7 +684,7 @@ export class TournamentServer
 		}, 2000);
 	}
 
-	private onTournamentMatchEnd(tournamentId: string, tournament: Tournament, match: any, winnerPlayerString: string): void
+	private onTournamentMatchEnd(tournamentId: string, tournament: Tournament, match: any, winnerPlayerId: number): void
 	{
 		const data = this.tournamentData.get(tournamentId);
 		if (!data)
@@ -686,7 +695,7 @@ export class TournamentServer
 
 		try
 		{
-			match.winner = winnerPlayerString;
+			match.winner = winnerPlayerId;
 		}
 		catch (e)
 		{
@@ -697,7 +706,7 @@ export class TournamentServer
 		const allMatchesFinished = tournament.matches.every(m => m.winner !== null);
 		if (allMatchesFinished)
 		{
-			const winners = new Set<string>();
+			const winners = new Set<number>();
 			for (const m of tournament.matches)
 			{
 				if (m.winner)
@@ -712,9 +721,11 @@ export class TournamentServer
 				return ;
 			}
 
-			const nextTournament = new Tournament(winners, tournament._depth + 1);
-			tournament.next = nextTournament;
-			this.startTournamentRound(tournamentId, nextTournament);
+			Tournament.create(winners, tournament._depth + 1).then(nextTournament =>
+			{
+				tournament.next = nextTournament;
+				this.startTournamentRound(tournamentId, nextTournament);
+			});
 		}
 	}
 }
