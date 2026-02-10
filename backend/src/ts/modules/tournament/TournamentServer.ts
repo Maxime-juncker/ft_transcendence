@@ -6,6 +6,8 @@ import { Tournament } from '../tournament/Tournament.js';
 import { Logger } from 'modules/logger.js';
 import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
+import { getBot } from 'modules/users/userManagment.js';
+import { getUserName } from 'modules/users/user.js';
 
 export class TournamentServer
 {
@@ -20,10 +22,10 @@ export class TournamentServer
 	{
 		players: Map<number, string>,
 		matchGames: Map<any, string>,
-		matchDbIds: Map<any, number>,
 		savingMatches: Set<any>,
 		rounds: Array<Array<any>>,
-		initialParticipants: Array<{ id: number, name: string }>
+		initialParticipants: Array<{ id: number, name: string }>,
+		blockchainId?: number
 	}> = new Map();
 
 	private contractAddress: BlockchainContract = new BlockchainContract();
@@ -39,23 +41,7 @@ export class TournamentServer
 
 	public async init(): Promise<void>
 	{
-		try
-		{
-			const botRow = await core.db.get("SELECT id FROM users WHERE name = ?", ["bot"]);
-			if (botRow)
-			{
-				this.botId = botRow.id;
-				Logger.log(`Bot user ID: ${this.botId}`);
-			}
-			else
-			{
-				Logger.error('Bot user not found in database');
-			}
-		}
-		catch (error)
-		{
-			Logger.error('Error getting bot ID:', error);
-		}
+		this.botId = await getBot();
 
 		try
 		{
@@ -191,7 +177,7 @@ export class TournamentServer
 				}
 
 				const userId = data.id;
-				const name = await this.getUserName(userId);
+				const name = await getUserName(userId);
 
 				if (name === "Unknown")
 				{
@@ -212,7 +198,7 @@ export class TournamentServer
 				}
 				catch (error)
 				{
-					Logger.log('error creating tournament', error); 
+					Logger.error('error creating tournament', error); 
 				}
 
 				const tournamentId = crypto.randomUUID();
@@ -237,27 +223,6 @@ export class TournamentServer
 				reply.status(500).send({ error });
 			}
 		});
-	}
-
-	private async getUserName(id: number): Promise<string>
-	{
-		try
-		{
-			const numId = Number(id);
-			if (isNaN(numId))
-			{
-				console.error(`Invalid User ID in getUserName: ${id}`);
-				return ("Unknown");
-			}
-
-			const row = await core.db.get("SELECT name FROM users WHERE id = ?", [numId]);
-			return (row ? row.name : "Unknown");
-		}
-		catch (e)
-		{
-			console.error('Error getting username:', e);
-			return ("Unknown");
-		}
 	}
 
 	private joinTournament(): void
@@ -293,7 +258,7 @@ export class TournamentServer
 				}
 
 				const userId = data.id;
-				const name = await this.getUserName(userId);
+				const name = await getUserName(userId);
 
 				if (name === "Unknown")
 				{
@@ -432,59 +397,6 @@ export class TournamentServer
 				this.activeTournaments.set(tournamentId, tournament);
 
 				const now = new Date().toISOString();
-				try
-				{
-					await core.db.run
-					(
-						"INSERT INTO tournaments (id, name, owner_id, status, created_at) VALUES (?, ?, ?, ?, ?)", 
-						[tournamentId, "Tournament " + tournamentId.substring(0, 8), lobby.ownerId, 'started', now]
-					);
-
-					for (const p of lobby.players)
-					{
-						await core.db.run
-						(
-							"INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)",
-							[tournamentId, p.id]
-						);
-					}
-				}
-				catch (e: any)
-				{ 
-					if (e.code === 'SQLITE_CONSTRAINT')
-					{
-						console.error("Tournament already exists or constraint failed:", e.message);
-					}
-					else
-					{
-						console.error("Error saving tournament info:", e);
-					}
-				}
-
-				const matchDbIds = new Map<any, number>();
-				for (const m of tournament.matches)
-				{
-					let p1 = m._player1;
-					let p2 = m._player2;
-
-					try
-					{
-						const res = await core.db.run
-						(
-							"INSERT INTO tournament_matches (tournament_id, player1_id, player2_id, played_at) VALUES (?, ?, ?, ?)",
-							[tournamentId, p1, p2, now]
-						);
-
-						if (res && res.lastID)
-						{
-							matchDbIds.set(m, res.lastID);
-						}
-					}
-					catch(e)
-					{
-						console.error("Error saving match:", e);
-					}
-				}
 
 				const initialParticipants = tournament.players.map(pId =>
 				{
@@ -500,15 +412,15 @@ export class TournamentServer
 				{
 					players: playerMap,
 					matchGames: new Map(),
-					matchDbIds: matchDbIds,
 					savingMatches: new Set(),
 					rounds: [],
-					initialParticipants: initialParticipants
+					initialParticipants: initialParticipants,
+					blockchainId: lobby.blockchainId
 				});
-
+				
 				this.lobbies.delete(tournamentId);
 				this.startTournamentRound(tournamentId, tournament);
-				reply.status(200).send({ message: 'Tournament started successfully' });
+				reply.status(200).send({ message: 'Tournament started' });
 			}
 			catch (error)
 			{
@@ -630,7 +542,6 @@ export class TournamentServer
 					{
 						bot.destroy();
 						this.activeBots.delete(gameId);
-						Logger.log(`[Tournament ${tournamentId}] Bot cleaned up for game ${gameId}`);
 					}
 				}
 				
@@ -684,7 +595,7 @@ export class TournamentServer
 		}, 2000);
 	}
 
-	private onTournamentMatchEnd(tournamentId: string, tournament: Tournament, match: any, winnerPlayerId: number): void
+	private async onTournamentMatchEnd(tournamentId: string, tournament: Tournament, match: any, winnerPlayerId: number): Promise<void>
 	{
 		const data = this.tournamentData.get(tournamentId);
 		if (!data)
@@ -703,29 +614,56 @@ export class TournamentServer
 			return ;
 		}
 
-		const allMatchesFinished = tournament.matches.every(m => m.winner !== null);
+		const allMatchesFinished = tournament.matches.every(m => m.winner);
 		if (allMatchesFinished)
 		{
 			const winners = new Set<number>();
-			for (const m of tournament.matches)
+			for (const matches of tournament.matches)
 			{
-				if (m.winner)
+				if (matches.winner)
 				{
-					winners.add(m.winner);
+					try
+					{
+						await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
+					}
+					catch (error)
+					{
+						Logger.error('Error adding match result to blockchain:', error);
+					}
+
+					winners.add(matches.winner);
 				}
 			}
 
 			if (winners.size === 1)
 			{
 				tournament.isFinished = true;
+
+				const winnerId = Array.from(winners)[0];
+				const winnerName = data.players.get(winnerId) || 'Bot';
+				const blockchainId = data.blockchainId;
+
+				if (typeof blockchainId === 'number' && winnerName)
+				{
+					try
+					{
+						await this.contractAddress.finishTournament(blockchainId, winnerName);
+					}
+					catch (error)
+					{
+						Logger.error(`[Tournament ${tournamentId}] Error finishing tournament on blockchain:`, error);
+					}
+				}
+
+				this.activeTournaments.delete(tournamentId);
+				this.tournamentData.delete(tournamentId);
 				return ;
 			}
 
-			Tournament.create(winners, tournament._depth + 1).then(nextTournament =>
-			{
-				tournament.next = nextTournament;
-				this.startTournamentRound(tournamentId, nextTournament);
-			});
+			const nextTournament = await Tournament.create(winners, tournament._depth + 1);
+			tournament.next = nextTournament;
+			this.activeTournaments.set(tournamentId, nextTournament);
+			this.startTournamentRound(tournamentId, nextTournament);
 		}
 	}
 }

@@ -100,7 +100,9 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 		return { code: 500, data: { message: "Database Error" }};
 	}
 
-	const [newElo1, newElo2] = await calculateElo(oldElo1.elo, oldElo2.elo, game.user1_score, game.user2_score);
+	const elo = await calculateElo(oldElo1.elo, oldElo2.elo, game.user1_score, game.user2_score);
+	const newElo1 = Math.max(oldElo1.elo + elo, 0);
+	const newElo2 = Math.max(oldElo2.elo - elo, 0);
 
 	const sql_elo = "UPDATE users SET elo = ? WHERE id = ? RETURNING elo";
 	try {
@@ -124,7 +126,7 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 	}
 }
 
-async function calculateElo(elo1: number, elo2: number, score1: number, score2: number): Promise<[number, number]>
+async function calculateElo(elo1: number, elo2: number, score1: number, score2: number): Promise<number>
 {
 	let maxPoint = 11;
 	try
@@ -147,9 +149,7 @@ async function calculateElo(elo1: number, elo2: number, score1: number, score2: 
 	const diffScore = Math.abs(score1 - score2);
 	const gap = 0.5 + (diffScore - 1) * (1.0 / (maxPoint - 1));
 	const S1 = (score1 > score2) ? 1 : 0;
-	const diff = K * gap * (S1 - expectedScore);
-
-	return [Math.max(0, elo1 + diff), Math.max(0, elo2 - diff)];
+	return (K * gap * (S1 - expectedScore));
 }
 
 export async function getUserStats(username: string, db: Database) : Promise<[ number, any ]>

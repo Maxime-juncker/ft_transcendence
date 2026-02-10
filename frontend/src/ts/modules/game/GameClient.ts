@@ -52,7 +52,6 @@ enum Msgs
 {
 	SEARCHING = 'Searching for opponent...',
 	WIN = 'wins !',
-	PLAY_AGAIN = `Press ${Keys.PLAY_AGAIN} to play again`,
 }
 
 export class GameClient extends Utils
@@ -493,10 +492,10 @@ export class GameClient extends Utils
 		this.hide('ball');
 		this.hide('paddle-left');
 		this.hide('paddle-right');
-		
+
 		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
-		
+
 		if (this.mode === 'online')
 		{
 			const isWinner = this.m_user && winner === this.m_user.id;
@@ -521,11 +520,6 @@ export class GameClient extends Utils
 					this.m_router.navigateTo('tournament-menu', '');
 				}, 3000);
 			}
-		}
-		else
-		{
-			this.setContent('play-again-msg', Msgs.PLAY_AGAIN);
-			this.setColor('play-again-msg', Params.COLOR, undefined, true);
 		}
 	}
 
