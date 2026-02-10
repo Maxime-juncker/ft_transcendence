@@ -32,13 +32,21 @@ export class LoginView extends ViewComponent
 		this.m_fortytwoBtn = this.querySelector("#forty_two_log_btn");
 		this.m_githubBtn = this.querySelector("#github_log_btn");
 		this.m_guestBtn = this.querySelector("#guest_log_btn");
+	}
 
-		this.m_createBtn?.addEventListener("click", () => this.submitNewUser());
-		this.m_loginBtn?.addEventListener("click", () => this.login());
-		this.m_fortytwoBtn?.addEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-		this.m_githubBtn?.addEventListener("click", () => oauthLogin("/api/oauth2/github"));
-		this.m_guestBtn?.addEventListener("click", () => this.logAsGuest());
+	public setBtn()
+	{
+		this.addTrackListener(this.m_createBtn, "click", () => this.submitNewUser());
+		this.addTrackListener(this.m_loginBtn, "click", () => this.login());
+		this.addTrackListener(this.m_fortytwoBtn, "click", () => oauthLogin("/api/oauth2/forty_two"));
+		this.addTrackListener(this.m_githubBtn, "click", () => oauthLogin("/api/oauth2/github"));
+		this.addTrackListener(this.m_guestBtn, "click", () => this.logAsGuest());
 
+		this.m_createBtn?.classList.remove("btn-disable");
+		this.m_loginBtn?.classList.remove("btn-disable");
+		this.m_fortytwoBtn?.classList.remove("btn-disable");
+		this.m_githubBtn?.classList.remove("btn-disable");
+		this.m_guestBtn?.classList.remove("btn-disable");
 	}
 
 	public async enable()
@@ -61,6 +69,8 @@ export class LoginView extends ViewComponent
 
 		if (MainUser.Instance?.id != -1)
 			this.disableBtns();
+		else
+			this.setBtn();
 	}
 
 	private disableBtn(elt: HTMLElement): HTMLElement
@@ -88,11 +98,11 @@ export class LoginView extends ViewComponent
 		if (this.m_guestBtn)
 			this.m_guestBtn = this.disableBtn(this.m_guestBtn) as HTMLButtonElement;
 
-		this.m_createBtn?.removeEventListener("click", () => this.submitNewUser());
-		this.m_loginBtn?.removeEventListener("click", () => this.login());
-		this.m_fortytwoBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-		this.m_githubBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/github"));
-		this.m_guestBtn?.removeEventListener("click", () => this.logAsGuest());
+		// this.m_createBtn?.removeEventListener("click", () => this.submitNewUser());
+		// this.m_loginBtn?.removeEventListener("click", () => this.login());
+		// this.m_fortytwoBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
+		// this.m_githubBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/github"));
+		// this.m_guestBtn?.removeEventListener("click", () => this.logAsGuest());
 
 		setPlaceHolderText("you already are login");
 	}
