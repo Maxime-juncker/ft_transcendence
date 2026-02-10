@@ -31,7 +31,8 @@
 		"2fa": "código totp",
 		"chat": "ingrese un mensaje...",
 		"search": "investigar",
-		"type_confirm": "escriba confirmar para continuar"
+		"type_confirm": "escriba confirmar para continuar",
+		"max_num": "número máximo de resultados"
   	},
 	"guest_button": "continuar como invitado",
 	"confirm": "confirmar",
@@ -85,6 +86,7 @@
 	"usr_not_found": "usuario no encontrado :(",
 	"profile_friend_btn": "agregar amigo",
 	"profile_block_btn": "bloquear",
+	"refresh": "actualizar",
 
 	"tut": {
 		"chat": "usa el chat para hablar con otras personas",
