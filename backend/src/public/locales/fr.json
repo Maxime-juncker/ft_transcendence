@@ -31,7 +31,8 @@
 		"2fa": "code totp",
 		"chat": "entrez un message...",
 		"search": "rechercher",
-		"type_confirm": "écrivez confirmer pour continuer"
+		"type_confirm": "écrivez confirmer pour continuer",
+		"max_num": "nombre maximum de résultats"
   	},
 	"guest_button": "continuer en tant qu'invité",
 	"confirm": "confirmer",
