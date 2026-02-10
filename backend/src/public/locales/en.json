@@ -31,7 +31,8 @@
 		"2fa": "totp code",
 		"chat": "enter message...",
 		"search": "search",
-		"type_confirm": "type confirm to continue"
+		"type_confirm": "type confirm to continue",
+		"max_num": "max number of result"
   	},
 	"guest_button": "continue as guest",
 	"confirm": "confirm",
@@ -85,6 +86,7 @@
 	"usr_not_found": "user not found :(",
 	"profile_friend_btn": "add friend",
 	"profile_block_btn": "block",
+	"refresh": "refresh",
 
 	"tut": {
 		"chat": "use the chatbox to talk to other peoples",
