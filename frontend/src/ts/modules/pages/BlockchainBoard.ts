@@ -16,7 +16,6 @@ export class BlockchainBoard
 			console.warn("board is null");
 			return;
 		}
-		console.log("before call");
 		let tournaments = await fetch('/api/blockchain/tournaments');
 		let json = await tournaments.text();
 		console.log("tournaments called with ", tournaments, " as a result");

@@ -129,7 +129,7 @@ export class BlockchainContract {
         console.log("Tournament finished : ", receipt);
     }
 
-    async getTournaments() : Promise<[Hex, string][]> {
+    async getTournaments() : Promise<Map<Hex, string>> {
         const Tournaments = await this.publicClient!.readContract({
             address: this.factoryAddress!,
             abi: this.abi!,
@@ -138,7 +138,7 @@ export class BlockchainContract {
         // console.log(Tournaments);
         // Tournaments = Tournaments as string[];
         // console.log(Tournaments.length);
-        let returnValue: [Hex, string][] = [];
+        let returnValue: Map<Hex, string> = new Map();
         for (let i = 0; i < Tournaments.length; i++) {
             let address: Hex = Tournaments[i] as Hex;
             let winner = await this.publicClient!.readContract({
@@ -147,9 +147,13 @@ export class BlockchainContract {
                 functionName: 'get_winner',
             }) as string;
             // console.log("winner: ", winner);
-            let value: [Hex, string] = [address, winner];
-            returnValue.push(value);
+            // let value: [Hex, string] = [address, winner];
+            //this is the final commit
+            returnValue.set(address, winner);
         }
         return (returnValue);
+        //ok
+        //ok2
+        //ok3
     }
 }

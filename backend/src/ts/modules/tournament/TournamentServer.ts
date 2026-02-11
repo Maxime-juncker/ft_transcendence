@@ -73,8 +73,9 @@ export class TournamentServer
 		this.server.get('/api/blockchain/tournaments', async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			let tournaments = await this.contractAddress.getTournaments();
-			reply.send(tournaments);
-			// Logger.log("voici les tournaments", tournaments);
+			let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
+			reply.send(array);
+			Logger.log("voici les tournaments", array);
 		})
 	}
 
