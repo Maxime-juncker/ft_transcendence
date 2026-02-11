@@ -284,6 +284,23 @@ services:
     depends_on:
       - logstash
 
+<<<<<<<<< Temporary merge branch 1
+  sqlite-web:
+    restart: always
+    image: coleifer/sqlite-web
+    container_name: sqlite-web
+    environment:
+      - SQLITE_WEB_PASSWORD=testtest
+    entrypoint: ["sqlite_web", "-H", "0.0.0.0", "-x", "/data/app.sqlite"]
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - sqlite:/data:rw
+    networks:
+      - backend_net
+
+=========
+>>>>>>>>> Temporary merge branch 2
 networks:
   export_net:
     ipam:

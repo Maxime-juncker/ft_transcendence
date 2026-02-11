@@ -64,3 +64,16 @@ CREATE TABLE IF NOT EXISTS matches (
 	user2_elo		INTEGER NOT NULL DEFAULT 500,
 	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
 );
+
+CREATE TABLE IF NOT EXISTS game_parameters (
+	paddle_speed REAL NOT NULL DEFAULT 1.5,
+	paddle_height REAL NOT NULL DEFAULT 15,
+	paddle_width REAL NOT NULL DEFAULT 2,
+	paddle_padding REAL NOT NULL DEFAULT 2,
+	ball_size REAL NOT NULL DEFAULT 1.5,
+	max_angle REAL NOT NULL DEFAULT 1.5,
+	speed REAL NOT NULL DEFAULT 1.0,
+	speed_increment REAL NOT NULL DEFAULT 0.1,
+	points_to_win INTEGER NOT NULL DEFAULT 3,
+	fps INTEGER NOT NULL DEFAULT 60
+);
