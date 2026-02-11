@@ -69,7 +69,7 @@ export class User
 	protected m_token:		string = "";
 
 	private m_email:		string	= "";
-	private m_avatarPath:	string = "";
+	private m_avatarPath:	string = "/public/avatars/default.webp";
 	private m_status:		UserStatus = UserStatus.UNKNOW;
 	private m_created_at:	string = "";
 	private m_stats:		Stats = { gamePlayed: 0, gameWon: 0, currElo: 0, maxElo: 0, avrTime: "", shortTime: "" };
@@ -119,7 +119,7 @@ export class User
 		this.m_status = json.is_login ? json.status : UserStatus.UNAVAILABLE;
 		this.m_source = json.source;
 		this.m_created_at = json.created_at;
-		this.m_stats.currElo = json.elo;
+		this.m_stats.currElo = Math.ceil(json.elo);
 		this.m_stats.gameWon = json.wins;
 		this.m_stats.gamePlayed = json.games_played;
 		this.m_finishedTutorial = json.show_tutorial ? true : false;

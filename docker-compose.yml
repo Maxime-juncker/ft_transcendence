@@ -288,6 +288,8 @@ services:
     restart: always
     image: coleifer/sqlite-web
     container_name: sqlite-web
+    environment:
+      - SQLITE_WEB_PASSWORD=testtest
     entrypoint: ["sqlite_web", "-H", "0.0.0.0", "-x", "/data/app.sqlite"]
     ports:
       - "127.0.0.1:8090:8080"

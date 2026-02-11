@@ -3,6 +3,7 @@ import { GameState } from './GameState.js';
 import { Logger } from 'modules/logger.js';
 import { getUserName } from 'modules/users/user.js';
 import { core } from 'core/server.js';
+import { clearInterval } from 'timers';
 
 enum Keys
 {
@@ -81,6 +82,7 @@ export class GameInstance
 	private _scoreUpdated: boolean = false;
 	public p1Ready: boolean = false;
 	public p2Ready: boolean = false;
+	public bounceInterval: NodeJS.Timeout | null = null;
 
 	constructor(gameMode: string, player1Id: number, player2Id: number)
 	{
@@ -228,10 +230,20 @@ export class GameInstance
 
 	private bounce(paddleY: number, newX: number): void
 	{
+		if (this.bounceInterval != null)
+		{
+			return ;
+		}
+
 		this._speed += Parameters.SPEED_INCREMENT;
 		this._gameState.speedX = -this._gameState.speedX;
 		this._gameState.speedY = (this._gameState.ballY - paddleY) / Parameters.MIN_Y_PADDLE * Parameters.MAX_ANGLE;
-		this._gameState.ballX = newX;
+		this.bounceInterval = setInterval(() => {
+			if (!this.bounceInterval)
+				return;
+			clearInterval(this.bounceInterval);
+			this.bounceInterval = null;
+		}, 200);
 		this.normalizeSpeed();
 	}
 

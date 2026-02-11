@@ -47,13 +47,35 @@
 		</div>
 	</template>
 
+		<template id="tournament-request-template">
+			<div class="flex justify-between items-center text-white bg-dark p-2 rounded">
+				<span class="request-name"></span>
+				<div class="flex gap-2">
+					<button class="accept-btn btn-small bg-green text-xs px-2 py-1 rounded">✓</button>
+					<button class="reject-btn btn-small bg-red text-xs px-2 py-1 rounded">✗</button>
+				</div>
+			</div>
+		</template>
+		<template id="tournament-match-template">
+			<div class="match-box bg-darker border-2 border-dark p-3 w-48 text-center flex flex-col gap-2 shadow-lg relative z-10 rounded-none">
+				<div class="player1-container border-b border-dark pb-1 flex justify-between items-center gap-2">
+					<span class="player1-name text-left truncate text-sm max-w-[70%]"></span>
+					<span class="player1-score font-mono text-sm"></span>
+				</div>
+				<div class="player2-container flex justify-between items-center gap-2">
+					<span class="player2-name text-left truncate text-sm max-w-[70%]"></span>
+					<span class="player2-score font-mono text-sm"></span>
+				</div>
+			</div>
+		</template>
+
 	<template id="tournament-item-template">
-		<div class="flex justify-between items-center bg-darker p-3 rounded border border-gray-700 hover:border-blue-500 transition-colors">
+		<div class="flex justify-between items-center bg-darker p-3 border-dark transition-colors">
 			<div class="flex flex-col">
 				<span class="tournament-owner-name font-bold text-white text-lg"></span>
-				<span class="tournament-info text-sm text-gray-400 capitalize"></span>
+				<span class="tournament-info text-sm text-white brightness-75 capitalize"></span>
 			</div>
-			<button class="join-btn btn bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-4 text-sm"></button>
+			<button class="join-btn btn bg-green hover:brightness-110 text-white font-bold py-1 px-4 text-sm"></button>
 		</div>
 	</template>
 
@@ -154,24 +176,24 @@
 					<section id="game" class="relative game page bg-darkest w-full box-sizing: content-box overflow-hidden flex justify-center align-middle items-center">
 						<div id="paddle-left" class="absolute h-[15%]">
 							<div class="relative h-full -top-[50%]">
-								<div class="absolute inset-0 bg-blue w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+								<div class="absolute inset-0 bg-blue w-[2%] h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
 								<div class="relative bg-blue w-2 h-full">
 								</div>
 							</div>
 						</div>
 						<div id="paddle-right" class="absolute h-[15%]">
 							<div class="relative h-full -top-[50%]">
-								<div class="absolute inset-0 bg-blue w-8 h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
+								<div class="absolute inset-0 bg-blue w-[2%] h-[150%] -top-[25%] -left-full opacity-30 blur-md rounded-xl"></div>
 								<div class="relative bg-blue w-2 h-full">
 								</div>
 							</div>
 						</div>
 
 						<div id="net" class="absolute left-1/2 top-0 -translate-x-1/2 h-full border-l-[0.35vw] border-dashed border-yellow"></div>
-						<div id="ball" class="absolute">
+						<div id="ball" class="absolute w-[1.5%] h-[1.5%]">
 							<div class="relative">
 								<div class="absolute inset-0 aspect-square bg-red w-[30px] h-[30px] opacity-40 -left-[50%] -top-[50%] blur-md rounded-xl"></div>
-								<div class="relative bg-red aspect-square w-[15px] h-[15px]">
+								<div class="relative bg-red aspect-square w-full h-full">
 								</div>
 							</div>
 						</div>
