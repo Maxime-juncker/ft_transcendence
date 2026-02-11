@@ -1,7 +1,7 @@
 import { GameInstance } from 'modules/game/GameInstance.js';
 import { Bot } from 'modules/game/Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { core, chat } from 'core/server.js';
+import { core, chat, rateLimitHard } from 'core/server.js';
 import { Tournament } from '../tournament/Tournament.js';
 import { Logger } from 'modules/logger.js';
 import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
@@ -29,7 +29,7 @@ export class TournamentServer
 	}> = new Map();
 
 	private contractAddress: BlockchainContract = new BlockchainContract();
-	private botId: number = 0;
+	private botId: number = 1;
 	private activeBots: Map<string, Bot> = new Map();
 
 	constructor(private server: FastifyInstance) { TournamentServer.m_instance = this; }
@@ -70,7 +70,7 @@ export class TournamentServer
 
 	private listTournaments(): void
 	{
-		this.server.get('/api/tournaments', async (request, reply) =>
+		this.server.get('/api/tournaments', async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			const list = Array.from(this.lobbies.values()).map(l => (
 			{
@@ -123,7 +123,8 @@ export class TournamentServer
 							id: tournamentId,
 							status: 'started',
 							players: data.initialParticipants,
-							matches: tournament.matches.map(m => ({
+							matches: tournament.matches.map(m =>
+							({
 								player1: m._player1,
 								player2: m._player2,
 								winner: m.winner
@@ -160,7 +161,11 @@ export class TournamentServer
 					},
 					required: ["token", "type"]
 				}
-			}
+			},
+			config:
+			{
+				rateLimit: rateLimitHard
+			},
 		},
 		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
@@ -177,7 +182,7 @@ export class TournamentServer
 				}
 
 				const userId = data.id;
-				const name = await getUserName(userId);
+				const name = await getUserName(userId) || "Unknown";
 
 				if (name === "Unknown")
 				{
@@ -191,7 +196,7 @@ export class TournamentServer
 					return ;
 				}
 
-				let blockchainTournamentId: number = 18;
+				let blockchainTournamentId = -1;
 				try
 				{
 					blockchainTournamentId = await this.contractAddress.createTournament();
@@ -199,6 +204,7 @@ export class TournamentServer
 				catch (error)
 				{
 					Logger.error('error creating tournament', error); 
+					return ;
 				}
 
 				const tournamentId = crypto.randomUUID();
@@ -258,8 +264,7 @@ export class TournamentServer
 				}
 
 				const userId = data.id;
-				const name = await getUserName(userId);
-
+				const name = await getUserName(userId) || "Unknown";
 				if (name === "Unknown")
 				{
 					console.error(`joinTournament: User ${userId} not found`);
@@ -622,13 +627,16 @@ export class TournamentServer
 			{
 				if (matches.winner)
 				{
-					try
+					if (data.blockchainId !== -1)
 					{
-						await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
-					}
-					catch (error)
-					{
-						Logger.error('Error adding match result to blockchain:', error);
+						try
+						{
+							await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
+						}
+						catch (error)
+						{
+							Logger.error('Error adding match result to blockchain:', error);
+						}
 					}
 
 					winners.add(matches.winner);
@@ -643,7 +651,7 @@ export class TournamentServer
 				const winnerName = data.players.get(winnerId) || 'Bot';
 				const blockchainId = data.blockchainId;
 
-				if (typeof blockchainId === 'number' && winnerName)
+				if (typeof blockchainId === 'number' && winnerName && blockchainId != -1)
 				{
 					try
 					{

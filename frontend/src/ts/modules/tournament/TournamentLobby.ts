@@ -156,7 +156,7 @@ export class TournamentLobby
 		if (this.startBtn)
 		{
 			console.log('[TournamentLobby] Adding click listener to start button');
-			Router.addEventListener(this.startBtn, 'click', this.handleStart);
+			this.startBtn.addEventListener('click', this.handleStart);
 		}
 		else
 		{
@@ -167,7 +167,7 @@ export class TournamentLobby
 		{
 
 			console.log('[TournamentLobby] Adding click listener to leave button');
-			Router.addEventListener(this.leaveBtn, 'click', this.handleLeave);
+			this.leaveBtn.addEventListener('click', this.handleLeave);
 		}
 		else
 		{
@@ -240,12 +240,12 @@ export class TournamentLobby
 
 		if (this.startBtn)
 		{
-			Router.removeEventListener(this.startBtn, 'click', this.handleStart);
+			this.startBtn.removeEventListener('click', this.handleStart);
 		}
 		
 		if (this.leaveBtn)
 		{
-			Router.removeEventListener(this.leaveBtn, 'click', this.handleLeave);
+			this.leaveBtn.removeEventListener( 'click', this.handleLeave);
 		}
 	}
 }

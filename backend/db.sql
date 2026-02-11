@@ -49,3 +49,18 @@ CREATE TABLE IF NOT EXISTS friends (
 
 	CHECK(user1_id < user2_id)
 );
+
+CREATE TABLE IF NOT EXISTS matches (
+	id				INTEGER PRIMARY KEY AUTOINCREMENT,
+	tournament_id	TEXT NOT NULL,
+	player1_id		INTEGER,
+	player2_id		INTEGER,
+	winner_id		INTEGER,
+	score1			INTEGER DEFAULT 0,
+	score2			INTEGER DEFAULT 0,
+	played_at		DATE,
+
+	user1_elo		INTEGER NOT NULL DEFAULT 500,
+	user2_elo		INTEGER NOT NULL DEFAULT 500,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
+);

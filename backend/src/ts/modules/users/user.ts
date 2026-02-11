@@ -3,6 +3,7 @@ import { Database } from 'sqlite'
 import { core, DbResponse, getDateFormated } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { AuthSource } from 'modules/oauth2/routes.js';
+import { Parameters } from 'modules/game/GameInstance.js'
 
 export interface GameRes {
 	user1_id:		number;
@@ -109,7 +110,7 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 		const user1Elo = await db.get(sql_elo, [newElo1, id1]);
 		const user2Elo = await db.get(sql_elo, [newElo2, id2]);
 
-		const sql = "INSERT INTO tournament_matches (tournament_id, player1_id, player2_id, played_at, user1_elo, user2_elo, score1, score2, winner_id) VALUES (-1, ?, ?, ?, ?, ?, ?, ?, ?)"
+		const sql = "INSERT INTO matches (tournament_id, player1_id, player2_id, played_at, user1_elo, user2_elo, score1, score2, winner_id) VALUES (-1, ?, ?, ?, ?, ?, ?, ?, ?)"
 		const winnerId = game.user1_score > game.user2_score ? id1 : id2;
 		const response = await db.run(sql, [id1, id2, getDateFormated(), user1Elo.elo, user2Elo.elo, game.user1_score, game.user2_score, winnerId]);
 
@@ -128,20 +129,7 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 
 async function calculateElo(elo1: number, elo2: number, score1: number, score2: number): Promise<number>
 {
-	let maxPoint = 11;
-	try
-	{
-		const sql = "SELECT points_to_win FROM game_parameters";
-		const row = await core.db.get(sql);
-		if (row)
-		{
-			maxPoint = row.points_to_win;
-		}
-	}
-	catch (err)
-	{
-		Logger.error(`database err: ${err}`);
-	}
+	let maxPoint = Parameters.POINTS_TO_WIN;
 
 	const K = 20;
 	const scaleFactor = 420;
@@ -172,7 +160,7 @@ export async function getUserHistByName(request: FastifyRequest, reply: FastifyR
 	const { username } = request.params as { username: string };
 	const res = await getUserByName(username, db);
 	const id = res.data.id;
-	const sql = "SELECT * FROM tournament_matches WHERE player1_id = ? OR player2_id = ?"
+	const sql = "SELECT * FROM matches WHERE player1_id = ? OR player2_id = ?"
 	try {
 		const rows = await db.all(sql, [id, id]);
 		if (!rows || rows.length === 0) {
@@ -376,7 +364,7 @@ export async function getUserCount(): Promise<DbResponse>
 
 export async function getGameCount(): Promise<DbResponse>
 {
-	const sql = "SELECT COUNT(*) FROM tournament_matches";
+	const sql = "SELECT COUNT(*) FROM matches";
 	try
 	{
 		const row = await core.db.get(sql);

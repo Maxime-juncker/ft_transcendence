@@ -12,7 +12,7 @@ enum Keys
 	PLAYER2_DOWN = '2D',
 }
 
-class Parameters
+export class Parameters
 {
 	static PADDLE_SPEED: number = 1.5;
 	static PADDLE_HEIGHT: number = 15;
