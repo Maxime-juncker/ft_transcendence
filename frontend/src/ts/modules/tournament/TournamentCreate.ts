@@ -5,7 +5,6 @@ import { Router } from 'modules/router/Router.js';
 export class TournamentCreate
 {
 	private createBtn = document.getElementById('tournament-confirm-create') as HTMLButtonElement;
-	private cancelBtn = document.getElementById('tournament-cancel-create') as HTMLButtonElement;
 
 	constructor(private router: GameRouter, private user: User)
 	{
@@ -16,6 +15,7 @@ export class TournamentCreate
 	{
 		const typeInput = document.querySelector('input[name="tournament-type"]:checked') as HTMLInputElement;
 		const type = typeInput ? typeInput.value : 'public';
+		this.destroy();
 
 		try
 		{
@@ -42,20 +42,13 @@ export class TournamentCreate
 		}
 	}
 
-	private cancel = () =>
-	{
-		this.router.navigateTo('tournament-menu', '');
-	}
-
 	private setUpDocumentEventListeners(): void
 	{
 		Router.addEventListener(this.createBtn, 'click', this.createTournament);
-		Router.addEventListener(this.cancelBtn, 'click', this.cancel);
 	}
 
 	public destroy(): void
 	{
 		Router.removeEventListener(this.createBtn, 'click', this.createTournament);
-		Router.removeEventListener(this.cancelBtn, 'click', this.cancel);
 	}
 }
