@@ -100,6 +100,7 @@ export class TournamentMenu
 			if (joinBtn)
 			{
 				joinBtn.textContent = t.type === 'public' ? 'Join' : 'Request';
+				joinBtn.setAttribute('data-i18n', t.type === 'public' ? 'Join' : 'Request');
 				joinBtn.dataset.id = t.id;
 				joinBtn.dataset.type = t.type;
 
@@ -118,6 +119,8 @@ export class TournamentMenu
 			{
 				this.listContainer.appendChild(clone);
 			}
+
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 		});
 	}
 
