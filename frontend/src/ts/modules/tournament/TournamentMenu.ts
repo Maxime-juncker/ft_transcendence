@@ -155,6 +155,14 @@ export class TournamentMenu
 
 	private createTournamentClickHandler = async () =>
 	{
+		if (!this.createBtn)
+		{
+			return;
+		}
+
+		this.createBtn.classList.add("btn-disable");
+		this.createBtn.disabled = true;
+
 		try
 		{
 			// show loading indicator
@@ -167,6 +175,9 @@ export class TournamentMenu
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
 			lobbyView.stopLoading();
+
+			this.createBtn.classList.remove("btn-disable");
+			this.createBtn.disabled = false;
 
 			const data = await res.json();
 			if (res.ok)

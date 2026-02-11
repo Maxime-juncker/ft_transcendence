@@ -1,6 +1,5 @@
 import { User } from 'modules/user/User.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
-import { Router } from 'modules/router/Router.js';
 import { getUserFromId } from 'modules/user/User.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import type { Chat } from 'modules/chat/chat.js';
@@ -146,22 +145,30 @@ export class TournamentLobby
 				const json: any = data.players[i];
 				const user = await getUserFromId(json.id);
 				if (!user)
-					continue;
+				{
+					continue ;
+				}
 
 				this.m_players.push(user);
 			}
+
 			this.m_players.sort((a: User, b: User) => { return Number(utils.levenshteinDistance(a.name, b.name)) })
 
 			this.playerList.innerHTML = '';
-			this.m_players.forEach((user: User) => {
+			this.m_players.forEach((user: User) =>
+			{
 
 				if (!this.playerList)
+				{
 					return ;
+				}
 
 				const elt = new UserElement(user, this.playerList, UserElementType.STANDARD, 'user-game-template');
 				const stats = elt.getElement("#stats");
 				if (stats)
+				{
 					stats.style.display = "none";
+				}
 			})
 		}
 
