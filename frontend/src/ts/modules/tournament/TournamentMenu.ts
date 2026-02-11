@@ -1,5 +1,6 @@
 import { GameRouter } from 'modules/game/GameRouter.js';
 import { Router } from 'modules/router/Router.js';
+import { MainUser } from 'modules/user/User.js';
 
 export class TournamentMenu
 {
@@ -130,7 +131,7 @@ export class TournamentMenu
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tournamentId: id, userId: this.router.m_user!.id })
+				body: JSON.stringify({ tournamentId: id, token: MainUser.Instance?.token })
 			});
 
 			if (res.ok)
@@ -158,7 +159,7 @@ export class TournamentMenu
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
-				body: JSON.stringify({ userId: this.router.m_user!.id, type: 'public' }),
+				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
 
 			if (res.ok)

@@ -280,7 +280,7 @@ export async function createUser(email: string, passw: string, username: string,
 
 export async function resetUser(user_id: number)
 {
-	var sql = "UPDATE users SET elo = 420, wins = 0, games_played = 0 WHERE id = ?";
+	var sql = "UPDATE users SET elo = 500, wins = 0, games_played = 0 WHERE id = ?";
 	try
 	{
 		await core.db.run(sql, user_id);
@@ -487,4 +487,22 @@ export async function updateEmail(user_id: number, email: string): Promise<DbRes
 			return { code: 500, data: { message: "email already taken" }};
 		return { code: 500, data: { message: "Database Error" }};
 	}
+}
+
+export async function getBot(): Promise<number>
+{
+    try
+    {
+        const sql = 'SELECT id FROM users WHERE source = ?';
+        const row = await core.db.get(sql, AuthSource.BOT);
+        if (!row)
+            return -1;
+        return row.id;
+
+    }
+    catch (err)
+    {
+        Logger.error(`database err: ${err}`);
+        return -1;
+    }
 }

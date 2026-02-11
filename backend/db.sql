@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 	is_login		INTEGER NOT NULL DEFAULT 0, -- if false => override status
 	status			INTEGER NOT NULL DEFAULT 0, -- (un)avalaible - buzy - silent
 
-	elo				INTEGER NOT NULL DEFAULT 420,
+	elo				REAL NOT NULL DEFAULT 500,
 	wins			INTEGER NOT NULL DEFAULT 0,
 	games_played	INTEGER NOT NULL DEFAULT 0,
 
@@ -50,26 +50,7 @@ CREATE TABLE IF NOT EXISTS friends (
 	CHECK(user1_id < user2_id)
 );
 
-CREATE TABLE IF NOT EXISTS tournaments (
-	id				TEXT PRIMARY KEY,
-	name			TEXT NOT NULL,
-	owner_id		INTEGER NOT NULL,
-	status			TEXT NOT NULL,
-	winner_id		INTEGER,
-	created_at		DATE NOT NULL,
-	FOREIGN KEY (owner_id) REFERENCES users(id),
-	FOREIGN KEY (winner_id) REFERENCES users(id)
-);
-
-CREATE TABLE IF NOT EXISTS tournament_participants (
-	tournament_id	TEXT NOT NULL,
-	user_id			INTEGER NOT NULL,
-	FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
-	FOREIGN KEY (user_id) REFERENCES users(id),
-	PRIMARY KEY (tournament_id, user_id)
-);
-
-CREATE TABLE IF NOT EXISTS tournament_matches (
+CREATE TABLE IF NOT EXISTS matches (
 	id				INTEGER PRIMARY KEY AUTOINCREMENT,
 	tournament_id	TEXT NOT NULL,
 	player1_id		INTEGER,
@@ -79,8 +60,8 @@ CREATE TABLE IF NOT EXISTS tournament_matches (
 	score2			INTEGER DEFAULT 0,
 	played_at		DATE,
 
-	user1_elo		INTEGER NOT NULL DEFAULT 420,
-	user2_elo		INTEGER NOT NULL DEFAULT 420,
+	user1_elo		INTEGER NOT NULL DEFAULT 500,
+	user2_elo		INTEGER NOT NULL DEFAULT 500,
 	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
 );
 

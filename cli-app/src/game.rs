@@ -104,7 +104,9 @@ impl Game {
             "https://{}/api/start-game/{}",
             self.context.location, self.game_id
         );
-        self.context.client.post(url).send().await?;
+		let mut body = std::collections::HashMap::new();
+		body.insert("token", self.auth.borrow().token.clone());
+        self.context.client.post(url).json(&body).send().await?;
         let request = format!(
             "wss://{}/api/game/{}/{}",
             self.context.location, self.game_id, self.player_side

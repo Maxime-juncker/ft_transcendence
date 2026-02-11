@@ -1,4 +1,4 @@
-import { User } from 'modules/user/User.js';
+import { MainUser, User } from 'modules/user/User.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
 import { Router } from 'modules/router/Router.js';
 
@@ -23,7 +23,7 @@ export class TournamentCreate
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
-				body: JSON.stringify({ userId: this.user.id, type: type }),
+				body: JSON.stringify({ token: MainUser.Instance?.token, type: type }),
 			});
 
 			if (res.ok)
