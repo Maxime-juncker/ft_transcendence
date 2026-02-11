@@ -209,7 +209,7 @@ export class GameInstance
 				return;
 			clearInterval(this.bounceInterval);
 			this.bounceInterval = null;
-		}, 200);
+		}, 50);
 		this.normalizeSpeed();
 	}
 
