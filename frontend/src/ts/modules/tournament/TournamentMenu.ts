@@ -67,7 +67,9 @@ export class TournamentMenu
 			const emptyMsg = document.createElement('div');
 			emptyMsg.className = 'text-center text-gray-500';
 			emptyMsg.textContent = 'No active tournaments';
+			emptyMsg.setAttribute('data-i18n', 'No_tournaments');
 			this.listContainer.appendChild(emptyMsg);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 			return ;
 		}
 
