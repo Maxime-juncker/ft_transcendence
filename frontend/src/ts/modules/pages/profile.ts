@@ -209,7 +209,7 @@ export class ProfileView extends ViewComponent
 	private async addMatch(user: User)
 	{
 		const eloData = new Map<string, number>()
-		eloData.set(user.created_at, 420);
+		eloData.set(user.created_at, 500);
 
 		const histContainer = this.querySelector("#history-container");
 		if (!histContainer)

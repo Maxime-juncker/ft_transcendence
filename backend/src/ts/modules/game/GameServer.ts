@@ -1,10 +1,10 @@
 import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
 import { core, chat } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
-import { TournamentServer } from 'modules/tournament/TournamentServer.js';
+import { jwtVerif } from 'modules/jwt/jwt.js';
 
 export class GameServer
 {
@@ -71,7 +71,23 @@ export class GameServer
 
 	private createGame(): void
 	{
-		this.server.post('/api/create-game', async (request, reply) =>
+		this.server.post('/api/create-game',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						mode:		{ type: "string" },
+						playerName:	{ type: "number" },
+					},
+					required: ["mode", "playerName"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
@@ -136,22 +152,50 @@ export class GameServer
 
 	private startGame(): void
 	{
-		this.server.post('/api/start-game/:gameId', (request, reply) =>
+		this.server.post('/api/start-game/:gameId',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						token: { type: "string" },
+					},
+					required: ["token"]
+				},
+				params:
+				{
+					type: "object",
+					properties:
+					{
+						gameId: { type: "string" },
+					},
+					required: ["gameId"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
-				const body = request.body as { userId: number };
-				const userId = body ? Number(body.userId) : null;
-				
+				const body = request.body as { token: string };
+				const token = body.token;
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
+					return reply.status(400).send({ error: 'Invalid token' });
+
+				const userId = data.id;
 				const game = this.activeGames.get(gameId);
 
 				if (game)
 				{
 					let playerIdentified = false;
 					
-					if (game.mode === 'online' || game.mode === 'bot') {
-						
+					if (game.mode === 'online' || game.mode === 'bot')
+					{
 						if (userId)
 						{
 							if (userId == game.player1Id)
@@ -180,7 +224,7 @@ export class GameServer
 								}
 							}
 						}
-						
+
 						if (game.mode === 'bot')
 						{
 							if (game.player1Id === this.botId) game.p1Ready = true;
@@ -224,7 +268,9 @@ export class GameServer
 
 	private sendGameState(): void
 	{
-		this.server.get('/api/game/:gameId/:playerId', { websocket: true }, (connection, request) =>
+		const gameConnections = new Map<string, Map<string, any>>();
+
+		this.server.get('/api/game/:gameId/:playerId', { websocket: true }, (connection: any, request: FastifyRequest) =>
 		{
 			try
 			{
@@ -235,6 +281,12 @@ export class GameServer
 				{
 					throw new Error(`Game ${gameId} not found`);
 				}
+
+				if (!gameConnections.has(gameId))
+				{
+					gameConnections.set(gameId, new Map());
+				}
+				gameConnections.get(gameId)!.set(playerId, connection);
 
 				let time = Date.now();
 				const send = () =>
@@ -277,8 +329,13 @@ export class GameServer
 				const intervalTime = GameServer.FPS_INTERVAL;
 				const interval = setInterval(send, intervalTime);
 
-				connection.on('message', (message) =>
+				connection.on('message', (message: BinaryType) =>
 				{
+					if (!message)
+					{
+						return ;
+					}
+
 					let keysPressed: Set<string>;
 					const msg = message.toString();
 
@@ -301,19 +358,52 @@ export class GameServer
 				const closeConnection = (): void =>
 				{
 					clearInterval(interval);
-					game.destroy();
-					this.activeGames.delete(gameId);
 
-					if (game.mode === 'bot')
+					if (game.mode === 'online' || game.mode === 'duel')
 					{
-						const bot = this.bots.get(gameId);
-						if (!bot)
+						const connections = gameConnections.get(gameId);
+						if (connections && game.winnerName === null)
 						{
-							Logger.error(`Bot not found for game ${gameId}`);
-						}
+							const otherPlayerId = playerId === '1' ? '2' : '1';
+							const otherConnection = connections.get(otherPlayerId);
 
-						bot?.destroy();
-						this.bots.delete(gameId);
+							if (otherConnection)
+							{
+								const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
+								game.winnerName = winnerId;
+
+								Logger.log(`Player ${playerId} disconnected from game ${gameId}, declaring player ${otherPlayerId} (id: ${winnerId}) as winner`);
+
+								try
+								{
+									otherConnection.send(JSON.stringify({ type: 'winner', winner: winnerId }));
+								}
+								catch (err)
+								{
+									Logger.error('Failed to send winner notification:', err);
+								}
+							}
+						}
+					}
+
+					gameConnections.get(gameId)?.delete(playerId);
+					if (gameConnections.get(gameId)?.size === 0)
+					{
+						gameConnections.delete(gameId);
+						game.destroy();
+						this.activeGames.delete(gameId);
+
+						if (game.mode === 'bot')
+						{
+							const bot = this.bots.get(gameId);
+							if (!bot)
+							{
+								Logger.error(`Bot not found for game ${gameId}`);
+							}
+
+							bot?.destroy();
+							this.bots.delete(gameId);
+						}
 					}
 				};
 

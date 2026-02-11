@@ -44,6 +44,12 @@ export class Bot
 	{
 		await new Promise(r => setTimeout(r, 500));
 
+		if (!gameId || (this.playerSide !== '1' && this.playerSide !== '2'))
+		{
+			Logger.error(`Invalid gameId or playerSide: gameId=${gameId}, playerSide=${this.playerSide}`);
+			return ;
+		}
+
 		this.socket = new WebSocket(`ws://localhost:3000/api/game/${gameId}/${this.playerSide}`);
 		this.socket.binaryType = 'arraybuffer';
 		

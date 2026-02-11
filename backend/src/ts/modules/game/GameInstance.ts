@@ -13,7 +13,7 @@ enum Keys
 	PLAYER2_DOWN = '2D',
 }
 
-class Parameters
+export class Parameters
 {
 	static PADDLE_SPEED: number = 1.5;
 	static PADDLE_HEIGHT: number = 15;
@@ -33,39 +33,6 @@ class Parameters
 	static MIN_X_BALL: number = Parameters.PADDLE_PADDING + Parameters.PADDLE_WIDTH + Parameters.MIN_Y_BALL;
 	static MAX_X_BALL: number = 100 - Parameters.MIN_X_BALL;
 	static FRAME_TIME: number = 1000 / Parameters.FPS;
-
-	static async load(): Promise<void>
-	{
-		try
-		{
-			const row = await core.db.get("SELECT * FROM game_parameters LIMIT 1");
-			if (row)
-			{
-				Parameters.PADDLE_SPEED = row.paddle_speed;
-				Parameters.PADDLE_HEIGHT = row.paddle_height;
-				Parameters.PADDLE_WIDTH = row.paddle_width;
-				Parameters.PADDLE_PADDING = row.paddle_padding;
-				Parameters.BALL_SIZE = row.ball_size;
-				Parameters.MAX_ANGLE = row.max_angle;
-				Parameters.SPEED = row.speed;
-				Parameters.SPEED_INCREMENT = row.speed_increment;
-				Parameters.POINTS_TO_WIN = row.points_to_win;
-				Parameters.FPS = row.fps;
-
-				Parameters.MIN_Y_PADDLE = Parameters.PADDLE_HEIGHT / 2;
-				Parameters.MAX_Y_PADDLE = 100 - Parameters.MIN_Y_PADDLE;
-				Parameters.MIN_Y_BALL = Parameters.BALL_SIZE / 2;
-				Parameters.MAX_Y_BALL = 100 - Parameters.MIN_Y_BALL;
-				Parameters.MIN_X_BALL = Parameters.PADDLE_PADDING + Parameters.PADDLE_WIDTH + Parameters.MIN_Y_BALL;
-				Parameters.MAX_X_BALL = 100 - Parameters.MIN_X_BALL;
-				Parameters.FRAME_TIME = 1000 / Parameters.FPS;
-			}
-		}
-		catch (err)
-		{
-			Logger.log("Failed to load game parameters from DB, using defaults");
-		}
-	}
 }
 
 export class GameInstance
@@ -94,7 +61,6 @@ export class GameInstance
 
 	private async initAndStart(): Promise<void>
 	{
-		await Parameters.load();
 		this.normalizeSpeed();
 		this.gameLoop();
 	}
