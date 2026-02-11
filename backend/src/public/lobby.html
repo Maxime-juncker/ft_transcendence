@@ -160,6 +160,7 @@
 				</div>
 			</div>
 
+
 			<div class="border-4 flex flex-col border-red w-[70%]">
 				<div class="w-full flex-1">
 					<section id="home" class="page px-[30%] bg-darkest ">
@@ -202,6 +203,7 @@
 						<p id="countdown" class="text-[3vw] text-darker bg-white rounded-none p-1 px-5"></p>
 						<p id="winner-msg" class="text-[3vw] text-white bg-darker rounded-none p-1 px-5"></p>
 						<p id="searching-msg" class="text-[3vw] text-white bg-[--darker) rounded-none p-1 px-5"></p>
+
 					</section>
 
 					<section id="tournament-menu" class="w-full h-full flex flex-col gap-5 px-[10%] bg-darkest py-10">
@@ -264,9 +266,21 @@
 					</section>
 
 				</div>
-				<div id="player-container" class="h-32 w-full bg-dark border-t-4 border-t-red
+
+				<div id="bottom-part" class="relative h-32 w-full bg-dark border-t-4 border-t-red
 					flex flex-row-reverse justify-around items-center align-middle">
+					<div id="loading-indicator" class="flex gap-4 absolute left-[1.5%] top-[3%]">
+						<p class="font-bold text-[1vw]" id="loading-wheel">.</p>
+						<p class="text-[1vw]" data-i18n="loading-tournament">creating tournament...</p>
+					</div>
+
+					<div id="player-container" class="h-full w-full
+							 flex flex-row-reverse justify-around items-center align-middle">
+
+					</div>
 				</div>
 
+
+			<p id="placeholder-text" class="mb-5 ml-5 py-1 px-4 text-white bg-dark w-fit absolute right-0 bottom-0 hide">placeholder</p>
 			</div>
 </template>

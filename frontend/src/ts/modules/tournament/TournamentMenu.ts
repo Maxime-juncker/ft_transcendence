@@ -1,6 +1,8 @@
 import { GameRouter } from 'modules/game/GameRouter.js';
+import { LobbyView } from 'modules/pages/lobby.js';
 import { Router } from 'modules/router/Router.js';
 import { MainUser } from 'modules/user/User.js';
+import { setPlaceHolderText } from 'modules/utils/utils.js';
 
 export class TournamentMenu
 {
@@ -163,31 +165,35 @@ export class TournamentMenu
 
 		try
 		{
+			// show loading indicator
+			const lobbyView = Router.Instance?.activeView as LobbyView;
+			lobbyView.StartLoading();
 			const res = await fetch('/api/create-tournament',
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
+			lobbyView.stopLoading();
 
 			this.createBtn.classList.remove("btn-disable");
 			this.createBtn.disabled = false;
 
+			const data = await res.json();
 			if (res.ok)
 			{
-				const data = await res.json();
 				this.router.navigateTo('tournament-lobby', data.tournamentId);
 			}
 			else
 			{
+				setPlaceHolderText(data.message);
 				console.error('Failed to create tournament');
-				alert('Failed to create tournament');
 			}
 		}
 		catch (e)
 		{
 			console.error(e);
-			alert('Error creating tournament');
+			setPlaceHolderText("failed to create tournament");
 		}
 	}
 

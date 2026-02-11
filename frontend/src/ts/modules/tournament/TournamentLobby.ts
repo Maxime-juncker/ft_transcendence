@@ -3,8 +3,8 @@ import { GameRouter } from 'modules/game/GameRouter.js';
 import { getUserFromId } from 'modules/user/User.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import type { Chat } from 'modules/chat/chat.js';
-import * as utils from 'modules/utils/utils.js'
 import { MainUser } from 'modules/user/User.js';
+import * as utils from 'modules/utils/utils.js'
 
 export class TournamentLobby
 {
