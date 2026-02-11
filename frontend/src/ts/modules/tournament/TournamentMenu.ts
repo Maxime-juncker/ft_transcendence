@@ -153,6 +153,14 @@ export class TournamentMenu
 
 	private createTournamentClickHandler = async () =>
 	{
+		if (!this.createBtn)
+		{
+			return;
+		}
+
+		this.createBtn.classList.add("btn-disable");
+		this.createBtn.disabled = true;
+
 		try
 		{
 			const res = await fetch('/api/create-tournament',
@@ -161,6 +169,9 @@ export class TournamentMenu
 				headers: { 'Content-Type': 'application/json', },
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
+
+			this.createBtn.classList.remove("btn-disable");
+			this.createBtn.disabled = false;
 
 			if (res.ok)
 			{

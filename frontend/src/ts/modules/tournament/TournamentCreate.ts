@@ -15,7 +15,8 @@ export class TournamentCreate
 	{
 		const typeInput = document.querySelector('input[name="tournament-type"]:checked') as HTMLInputElement;
 		const type = typeInput ? typeInput.value : 'public';
-		this.destroy();
+		
+			console.log("Creating tournament with type:", type);
 
 		try
 		{
@@ -26,6 +27,8 @@ export class TournamentCreate
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: type }),
 			});
 
+					this.createBtn.classList.remove("btn-disable");
+		this.createBtn.disabled = false;
 			if (res.ok)
 			{
 				const data = await res.json();
@@ -44,6 +47,8 @@ export class TournamentCreate
 
 	private setUpDocumentEventListeners(): void
 	{
+
+
 		Router.addEventListener(this.createBtn, 'click', this.createTournament);
 	}
 
