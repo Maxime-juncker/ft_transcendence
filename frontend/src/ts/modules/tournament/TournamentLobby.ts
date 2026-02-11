@@ -1,8 +1,10 @@
 import { User } from 'modules/user/User.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
 import { Router } from 'modules/router/Router.js';
+import { getUserFromId } from 'modules/user/User.js';
+import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import type { Chat } from 'modules/chat/chat.js';
-import { MainUser } from 'modules/user/User.js';
+import * as utils from 'modules/utils/utils.js'
 
 export class TournamentLobby
 {
@@ -19,6 +21,8 @@ export class TournamentLobby
 
 	get id(): string | null { return this.tournamentId; }
 
+	private m_players: User[] = [];
+
 	constructor(private router: GameRouter, private user: User, private mode: string, private chat: Chat)
 	{
 		this.tournamentId = mode;
@@ -26,6 +30,7 @@ export class TournamentLobby
 		this.init();
 		this.setUpEventListeners();
 		this.setupMatchListener();
+		this.m_players = [];
 	}
 
 	private setupMatchListener()
@@ -123,7 +128,7 @@ export class TournamentLobby
 		}
 	}
 
-	private render(data: any)
+	private async render(data: any)
 	{
 		this.isOwner = data.ownerId === this.user.id;
 		
@@ -134,14 +139,29 @@ export class TournamentLobby
 
 		if (this.playerList)
 		{
-			this.playerList.innerHTML = '';
-			data.players?.forEach((p: any) =>
+			this.m_players = [];
+			for (let i = 0; i < data.players.length; i++)
 			{
-				const playerDiv = document.createElement('div');
-				playerDiv.className = 'text-white bg-dark p-2 rounded';
-				playerDiv.textContent = p.name;
-				this.playerList!.appendChild(playerDiv);
-			});
+				const json: any = data.players[i];
+				const user = await getUserFromId(json.id);
+				if (!user)
+					continue;
+
+				this.m_players.push(user);
+			}
+			this.m_players.sort((a: User, b: User) => { return Number(utils.levenshteinDistance(a.name, b.name)) })
+
+			this.playerList.innerHTML = '';
+			this.m_players.forEach((user: User) => {
+
+				if (!this.playerList)
+					return ;
+
+				const elt = new UserElement(user, this.playerList, UserElementType.STANDARD, 'user-game-template');
+				const stats = elt.getElement("#stats");
+				if (stats)
+					stats.style.display = "none";
+			})
 		}
 
 		if (this.startBtn)

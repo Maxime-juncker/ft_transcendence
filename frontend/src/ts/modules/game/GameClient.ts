@@ -95,7 +95,6 @@ export class GameClient extends Utils
 		this.createPlayerHtml();
 		if (chat)
 		{
-			console.log("adding listener");
 			chat.onGameCreated((json) => this.createGameFeedback(json));
 		}
 
@@ -123,7 +122,10 @@ export class GameClient extends Utils
 	private createPlayerHtml()
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
+		{
+			console.warn("missing html in createPlayerHtml()");
 			return ;
+		}
 		this.m_playerContainer.innerHTML = "";
 		this.m_player1 = this.initPlayerHtml(this.m_user);
 		this.m_player2 = this.initPlayerHtml(this.m_user2);
@@ -173,7 +175,7 @@ export class GameClient extends Utils
 		{
 			this.m_user2 = new User();
 			const name = this.mode === 'bot' ? 'Bot' : 'Player 2';
-			this.m_user2.setUser(0, name, '', '/avatars/default.png', 0);
+			this.m_user2.setUser(0, name, '', '/public/avatars/default.webp', 0);
 		}
 		else
 		{
@@ -216,7 +218,7 @@ export class GameClient extends Utils
 			{
 				this.m_user2 = new User();
 				const name = this.mode === 'bot' ? 'Bot' : 'Player 2';
-				this.m_user2.setUser(0, name, '', '/avatars/default.png', 0);
+				this.m_user2.setUser(0, name, '', '/public/avatars/default.webp', 0);
 			}
 			else
 			{
@@ -487,6 +489,10 @@ export class GameClient extends Utils
 				winnerName = usr.name;
 			}
 		}
+		await this.m_user?.updateSelf();
+		await this.m_user2?.updateSelf();
+		this.createPlayerHtml();
+		this.m_player2?.updateHtml(this.m_user2);
 
 		this.hide('net');
 		this.hide('ball');

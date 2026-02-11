@@ -1,9 +1,10 @@
-FROM alpine:3.20
+FROM alpine:3.21
 
 RUN apk --update --no-cache add bash	\
 								nodejs	\
 								npm		\
 								make
+RUN apk update && apk upgrade
 
 COPY src /var/www/app
 

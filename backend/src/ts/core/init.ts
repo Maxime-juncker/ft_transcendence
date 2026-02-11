@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { createUser } from 'modules/users/userManagment.js';
+import { createUser, getBot } from 'modules/users/userManagment.js';
 import { Database } from 'sqlite';
 import fastifyStatic from '@fastify/static';
 import { FastifyRequest } from 'fastify';
@@ -75,6 +75,7 @@ export async function initFastify()
 
 	// create account for bot
 	await createUser("", "", "bot", AuthSource.BOT, core.db);
+	await getBot();
 	await loadConfig("/config.json", core.db); // create default_users
 
 	await getUserCount().then((value: DbResponse) => { core.userCount = value.data.message['COUNT(*)']});
