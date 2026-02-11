@@ -128,4 +128,28 @@ export class BlockchainContract {
         const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
         console.log("Tournament finished : ", receipt);
     }
+
+    async getTournaments() : Promise<[Hex, string][]> {
+        const Tournaments = await this.publicClient!.readContract({
+            address: this.factoryAddress!,
+            abi: this.abi!,
+            functionName: 'getAllTournaments',
+        }) as `0x${string}[]`;
+        // console.log(Tournaments);
+        // Tournaments = Tournaments as string[];
+        // console.log(Tournaments.length);
+        let returnValue: [Hex, string][] = [];
+        for (let i = 0; i < Tournaments.length; i++) {
+            let address: Hex = Tournaments[i] as Hex;
+            let winner = await this.publicClient!.readContract({
+                address: address,
+                abi: this.tournamentAbi!,
+                functionName: 'get_winner',
+            }) as string;
+            // console.log("winner: ", winner);
+            let value: [Hex, string] = [address, winner];
+            returnValue.push(value);
+        }
+        return (returnValue);
+    }
 }

@@ -16,11 +16,15 @@ export class BlockchainBoard
 			console.warn("board is null");
 			return;
 		}
-
+		console.log("before call");
+		let tournaments = await fetch('/api/blockchain/tournaments');
+		let json = await tournaments.text();
+		console.log("tournaments called with ", tournaments, " as a result");
+		console.log("after call");
 		this.m_board.innerHTML = "";
 
 		const test = document.createElement("h1");
-		test.innerText = "hello";
+		test.innerText = json;
 
 		this.m_board.append(test);
 	}
