@@ -8,7 +8,7 @@ if (!process.env.RUN_BENCHMARK || process.env.RUN_BENCHMARK != "1")
 }
 
 
-const maxConnRetry = 5;
+const maxConnRetry = 7;
 
 function sleep(ms: number)
 {
@@ -28,7 +28,7 @@ for (var i = 0; i < maxConnRetry; i++)
 	{
 		Logger.error(`failed to connect to backend (${maxConnRetry - i} retry left)`);
 	}
-	await sleep(5000);
+	await sleep(7000);
 
 }
 

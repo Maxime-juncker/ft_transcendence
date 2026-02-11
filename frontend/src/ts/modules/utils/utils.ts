@@ -103,3 +103,8 @@ export function toggleCrtEffect(state: boolean)
 
 	setCookie("crt_state", state, 9999);
 }
+
+export function sleep(ms: number)
+{
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
