@@ -102,8 +102,8 @@ export class LobbyView extends ViewComponent
 		{
 			this.m_gameRouter = new GameRouter(MainUser.Instance, this.m_chat, this);
 			this.m_gameRouter.assignListener();
-			this.m_gameRouter.navigateTo('home', '');
 		}
+		this.m_gameRouter.navigateTo('home', '');
 
 		MainUser.Instance.gameRouter = this.m_gameRouter;
 
@@ -123,6 +123,7 @@ export class LobbyView extends ViewComponent
 		});
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
+		utils.setPlaceHolderText("");
 	}
 
 
