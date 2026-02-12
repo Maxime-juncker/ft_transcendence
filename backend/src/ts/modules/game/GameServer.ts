@@ -110,7 +110,7 @@ export class GameServer
 					{
 						if (game.mode === 'online')
 						{
-							if ((game.player1Id == name || game.player2Id == name) && game.winnerName === null)
+							if ((game.player1Id == name || game.player2Id == name) && game.winner === null)
 							{
 								const opponentId = (game.player1Id == name) ? game.player2Id : game.player1Id;
 								const playerSide = (game.player1Id == name) ? '1' : '2';
@@ -318,7 +318,7 @@ export class GameServer
 							throw new Error('Invalid player ID');
 					}
 
-					const winner = game?.winnerName;
+					const winner = game?.winner;
 					if (winner !== null)
 					{
 						connection.send(JSON.stringify({ type: 'winner', winner }));
@@ -362,7 +362,7 @@ export class GameServer
 					if (game.mode === 'online' || game.mode === 'duel')
 					{
 						const connections = gameConnections.get(gameId);
-						if (connections && game.winnerName === null)
+						if (connections && game.winner === null)
 						{
 							const otherPlayerId = playerId === '1' ? '2' : '1';
 							const otherConnection = connections.get(otherPlayerId);
@@ -370,7 +370,7 @@ export class GameServer
 							if (otherConnection)
 							{
 								const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
-								game.winnerName = winnerId;
+								game.winner = winnerId;
 
 								Logger.log(`Player ${playerId} disconnected from game ${gameId}, declaring player ${otherPlayerId} (id: ${winnerId}) as winner`);
 
@@ -406,7 +406,6 @@ export class GameServer
 						}
 					}
 				};
-
 				connection.on('close', () =>
 				{
 					closeConnection();
