@@ -15,7 +15,8 @@ export class BlockchainBoard
 
 	public async refresh()
 	{
-		if (!this.m_board || !this.m_template)
+		const title = Router.getElementById("blockchain-ranking-title") as HTMLElement;
+		if (!this.m_board || !this.m_template || !title)
 		{
 			console.warn("board or template is null");
 			return;
@@ -26,8 +27,6 @@ export class BlockchainBoard
 		let json = await tournaments.json();
 		console.log("tournaments called with ", tournaments, " as a result");
 		console.log("after call");
-		this.m_board.innerHTML = "";
-
 		json.forEach((data: any) => {
 			if (!this.m_board || !this.m_template)
 			{
@@ -43,9 +42,12 @@ export class BlockchainBoard
 			const winner = clone.querySelector("#winner-name") as HTMLElement;
 			if (winner)
 				winner.innerText = data.winner;
-			this.m_board.append(clone);
+			if (clone)
+				this.m_board.append(clone);
 			// this.m_board.append(winner);
 		});
+		this.m_board.append(title);
+
 
 
 			
