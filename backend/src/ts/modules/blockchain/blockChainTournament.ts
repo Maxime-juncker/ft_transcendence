@@ -135,9 +135,6 @@ export class BlockchainContract {
             abi: this.abi!,
             functionName: 'getAllTournaments',
         }) as `0x${string}[]`;
-        // console.log(Tournaments);
-        // Tournaments = Tournaments as string[];
-        // console.log(Tournaments.length);
         let returnValue: Map<Hex, string> = new Map();
         for (let i = 0; i < Tournaments.length; i++) {
             let address: Hex = Tournaments[i] as Hex;
@@ -146,14 +143,9 @@ export class BlockchainContract {
                 abi: this.tournamentAbi!,
                 functionName: 'get_winner',
             }) as string;
-            // console.log("winner: ", winner);
-            // let value: [Hex, string] = [address, winner];
-            //this is the final commit
-            returnValue.set(address, winner);
+            if (winner)
+                returnValue.set(address, winner);
         }
         return (returnValue);
-        //ok
-        //ok2
-        //ok3
     }
 }

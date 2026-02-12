@@ -74,8 +74,10 @@ export class TournamentServer
 		{
 			let tournaments = await this.contractAddress.getTournaments();
 			let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
-			reply.send(array);
-			Logger.log("voici les tournaments", array);
+			// let json = JSON.stringify(Object.fromEntries(tournaments));
+
+			Logger.log("fetching finished tournaments from blockchain", array);
+			return reply.send(array);
 		})
 	}
 
