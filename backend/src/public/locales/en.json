@@ -46,6 +46,8 @@
 	"logout": "logout",
 	"game": "game",
 	"tournament": "tournament",
+	"tournament_of": "Tournament of",
+	"players": "player(s)",
 	"local": "local",
 	"online": "online",
 	"bot": "bot",
