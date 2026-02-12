@@ -15,13 +15,13 @@ export class BlockchainBoard
 
 	public async refresh()
 	{
-		const title = Router.getElementById("blockchain-ranking-title") as HTMLElement;
-		if (!this.m_board || !this.m_template || !title)
+		if (!this.m_board || !this.m_template)
 		{
 			console.warn("board or template is null");
 			return;
 		}
 
+		this.m_board.innerHTML = "";
 
 		let tournaments = await fetch('/api/blockchain/tournaments');
 		let json = await tournaments.json();
@@ -41,19 +41,9 @@ export class BlockchainBoard
 			}
 			const winner = clone.querySelector("#winner-name") as HTMLElement;
 			if (winner)
-				winner.innerText = data.winner;
+				winner.innerText = "winner: " + data.winner;
 			if (clone)
 				this.m_board.append(clone);
-			// this.m_board.append(winner);
 		});
-		this.m_board.append(title);
-
-
-
-			
-
-		// const test = document.createElement("h1");
-		// test.innerText = json;
-
 	}
 }
