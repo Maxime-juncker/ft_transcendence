@@ -67,7 +67,9 @@ export class TournamentMenu
 			const emptyMsg = document.createElement('div');
 			emptyMsg.className = 'text-center text-gray-500';
 			emptyMsg.textContent = 'No active tournaments';
+			emptyMsg.setAttribute('data-i18n', 'No_tournaments');
 			this.listContainer.appendChild(emptyMsg);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 			return ;
 		}
 
@@ -98,6 +100,7 @@ export class TournamentMenu
 			if (joinBtn)
 			{
 				joinBtn.textContent = t.type === 'public' ? 'Join' : 'Request';
+				joinBtn.setAttribute('data-i18n', t.type === 'public' ? 'Join' : 'Request');
 				joinBtn.dataset.id = t.id;
 				joinBtn.dataset.type = t.type;
 
@@ -116,6 +119,8 @@ export class TournamentMenu
 			{
 				this.listContainer.appendChild(clone);
 			}
+
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 		});
 	}
 

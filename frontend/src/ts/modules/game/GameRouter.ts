@@ -1,7 +1,6 @@
 import { GameMenu } from 'modules/game/GameMenu.js';
 import { GameClient } from 'modules/game/GameClient.js';
 import { TournamentMenu } from 'modules/tournament/TournamentMenu.js';
-import { TournamentCreate } from 'modules/tournament/TournamentCreate.js';
 import { TournamentLobby } from 'modules/tournament/TournamentLobby.js';
 import { User } from "modules/user/User.js";
 import { Chat } from 'modules/chat/chat';
@@ -207,9 +206,6 @@ export class GameRouter
 			case 'tournament-menu':
 				this.m_tournamentMenu = new TournamentMenu(this);
 				return (this.m_tournamentMenu);
-			case 'tournament-create':
-				if (this.m_user)
-					return (new TournamentCreate(this, this.m_user));
 			case 'tournament-lobby':
 				if (this.m_user)
 				{
