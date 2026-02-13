@@ -3,6 +3,7 @@ import { Abi } from 'abitype';
 import { privateKeyToAccount, PrivateKeyAccount } from 'viem/accounts';
 import { avalancheFuji } from 'viem/chains';
 import { promises as fs } from 'fs';
+import { createSecret, readSecret } from 'modules/vault/vault.js';
 
 const TOURNAMENT_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Tournament.sol/Tournament.json";
 const FACTORY_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Factory.sol/Factory.json";
@@ -42,9 +43,10 @@ export class BlockchainContract {
     }
 
     async deployFactory() {
-        if (process.env.FACTORY_CONTRACT) {
-            this.factoryAddress = process.env.FACTORY_CONTRACT as `0x${string}`;
-            console.log("factory address found in vault: ", this.factoryAddress)
+        const factoryAddress = await readSecret('factoryAddress');
+        if (factoryAddress) {
+            this.factoryAddress = factoryAddress.value as Hex;
+            console.log("factory address found in vault: ", this.factoryAddress);
         } else {
             const hash = await this.walletClient!.deployContract({
                 abi: this.abi!,
@@ -61,7 +63,7 @@ export class BlockchainContract {
             }
             console.log("receipt: ", receipt);
             this.factoryAddress = receipt.contractAddress;
-
+            createSecret('factoryAddress', {value: receipt.contractAddress});
             console.log("factory deployed to: ", this.factoryAddress);
         }
     }
@@ -127,5 +129,25 @@ export class BlockchainContract {
         let hash = await this.walletClient!.writeContract(request);
         const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
         console.log("Tournament finished : ", receipt);
+    }
+
+    async getTournaments() : Promise<Map<Hex, string>> {
+        const Tournaments = await this.publicClient!.readContract({
+            address: this.factoryAddress!,
+            abi: this.abi!,
+            functionName: 'getAllTournaments',
+        }) as `0x${string}[]`;
+        let returnValue: Map<Hex, string> = new Map();
+        for (let i = 0; i < Tournaments.length; i++) {
+            let address: Hex = Tournaments[i] as Hex;
+            let winner = await this.publicClient!.readContract({
+                address: address,
+                abi: this.tournamentAbi!,
+                functionName: 'get_winner',
+            }) as string;
+            if (winner)
+                returnValue.set(address, winner);
+        }
+        return (returnValue);
     }
 }

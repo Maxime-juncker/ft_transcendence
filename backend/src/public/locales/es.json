@@ -16,6 +16,7 @@
 	"homepage": "página principal",
 	"404": "404 no encontrado",
 	"loading-tournament": "creando torneo...",
+	"loading": "cargando",
 	"text": {
 		"guest": "*todos los datos se perderán al desconectarse",
 		"tournament": {

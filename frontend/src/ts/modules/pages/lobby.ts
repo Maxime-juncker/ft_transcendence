@@ -5,7 +5,7 @@ import { GameRouter } from "modules/game/GameRouter.js";
 import { Router } from "modules/router/Router.js";
 import { HeaderSmall } from "./HeaderSmall.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
-import * as utils from 'modules/utils/utils.js';
+import { LoadingIndicator } from "modules/utils/Loading.js";
 
 	enum ListState
 	{
@@ -19,8 +19,9 @@ export class LobbyView extends ViewComponent
 	private m_chat:	Chat;
 	private state:	ListState = ListState.HIDDEN;
 	private	m_gameRouter:	GameRouter | null = null;
-	private m_loadingIndicator: HTMLElement | null = null;
-	private m_isLoading = false;
+	private m_loading: LoadingIndicator | null = null;
+
+	get loadingIndicator(): LoadingIndicator | null { return this.m_loading; }
 
 	constructor()
 	{
@@ -28,51 +29,17 @@ export class LobbyView extends ViewComponent
 		this.m_chat = new Chat();
 	}
 
-	public async StartLoading()
-	{
-		this.m_isLoading = true;
-		if (!this.m_loadingIndicator)
-		{
-			return;
-		}
-
-		this.m_loadingIndicator.style.display = "flex";
-		const frames = ['⠁', '⠂', '⠄', '⡀', '⢀', '⠠', '⠐', '⠈'];
-		var currFrame = 0;
-		const wheel = this.m_loadingIndicator.querySelector("#loading-wheel") as HTMLElement;
-		if (!wheel)
-			return;
-
-		while (this.m_isLoading)
-		{
-			wheel.innerText = frames[currFrame % (frames.length)];
-			currFrame++;
-			await utils.sleep(60);
-		}
-	}
-
-	public stopLoading()
-	{
-		this.m_isLoading = false;
-		if (!this.m_loadingIndicator)
-		{
-			return;
-		}
-
-		this.m_loadingIndicator.style.display = "none";
-	}
-
 	public async init()
 	{
 		const chatInput: HTMLInputElement = this.querySelector("#chat-in") as HTMLInputElement;
 		const chatOutput: HTMLInputElement = this.querySelector("#chat-out") as HTMLInputElement;
-		this.m_loadingIndicator = this.querySelector("#loading-indicator") as HTMLInputElement;
+		this.m_loading = new LoadingIndicator(this);
 
 		if (!chatInput || !chatOutput || !MainUser.Instance)
 			return ;
 	    
+		this.m_loading.stopLoading();
 		this.m_chat.Init(chatOutput, chatInput);
-		this.stopLoading();
 	}
 
 	public async enable()

@@ -3,6 +3,7 @@ import { Router } from 'modules/router/Router.js';
 import { Leaderboard } from 'modules/user/Leaderboard.js';
 import { ViewComponent } from 'modules/router/ViewComponent.js';
 import { BlockchainBoard } from './BlockchainBoard.js';
+import { LoadingIndicator } from 'modules/utils/Loading.js';
 
 export class StartView extends ViewComponent
 {
@@ -14,6 +15,9 @@ export class StartView extends ViewComponent
 	private m_blockChainBoard:	BlockchainBoard | null = null;
 	private m_board:			HTMLElement | null = null;
 	private m_boardTitle:		HTMLElement | null = null;
+	private m_loading:			LoadingIndicator | null = null;
+
+	get loadingIndicator(): LoadingIndicator | null { return this.m_loading; }
 
 	constructor()
 	{
@@ -28,10 +32,11 @@ export class StartView extends ViewComponent
 		this.m_historyRadio = this.querySelector("#history-input");
 		this.m_board = this.querySelector("#leaderboard-container");
 		this.m_boardTitle = this.querySelector("#board-title");
+		this.m_loading = new LoadingIndicator(this);
 
 		this.m_blockChainBoard = new BlockchainBoard();
 		this.m_leaderboard = new Leaderboard();
-		await this.m_blockChainBoard.init(this.m_board);
+		await this.m_blockChainBoard.init(this, this.m_board);
 
 		if (!this.m_playBtn)
 			throw new Error("play btn not found"); 
