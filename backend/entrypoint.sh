@@ -9,6 +9,7 @@ cp /avatars/* /var/www/server/public/avatars/.
 
 cd /var/www/server
 npm install
+npx hardhat compile
 npm run build
 
 echo "building css"

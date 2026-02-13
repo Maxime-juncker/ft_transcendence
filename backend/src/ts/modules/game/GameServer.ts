@@ -1,12 +1,10 @@
 import { GameInstance } from './GameInstance.js';
 import { Bot } from './Bot.js';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import * as core from 'core/core.js';
-import { addPlayerToQueue } from 'modules/chat/chat.js';
-import { Tournament } from './Tournament.js';
-import { notifyMatch } from 'modules/chat/chat.js';
+import { core, chat } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
+import { jwtVerif } from 'modules/jwt/jwt.js';
 
 export class GameServer
 {
@@ -17,19 +15,14 @@ export class GameServer
 	private static readonly BOT_FPS: number = 1;
 	private static readonly BOT_FPS_INTERVAL: number = 1000 / GameServer.BOT_FPS;
 
-	private server!: FastifyInstance;
 	public activeGames: Map<string, GameInstance> = new Map();
 	private bots: Map<string, Bot> = new Map();
-	private pendingTournaments: Map<string, Set<[string, string]> > = new Map();
-	private activeTournaments: Map<string, Tournament> = new Map();
+	private botId: number = 0;
 
-
-	constructor(server: FastifyInstance)
+	constructor(private server: FastifyInstance)
 	{
-		if (GameServer.m_instance == null)
+		if (!GameServer.Instance)
 			GameServer.m_instance = this;
-
-		this.server = server;
 	}
 
 	static get Instance(): GameServer | null { return GameServer.m_instance; }
@@ -38,13 +31,15 @@ export class GameServer
 	{
 		try
 		{
+			const botUser = await getUserByName("bot", core.db);
+			if (botUser.code === 200)
+			{
+				this.botId = botUser.data.id;
+			}
+
 			this.createGame();
 			this.startGame();
 			this.sendGameState();
-			this.createTournament();
-			this.joinTournament();
-			this.getTournamentInfo();
-			this.startTournament();
 		}
 		catch (error)
 		{
@@ -65,8 +60,8 @@ export class GameServer
 
 		const gameId = crypto.randomUUID();
 
-		await notifyMatch(player1, player2, gameId, 1);
-		await notifyMatch(player2, player1, gameId, 2);
+		await chat.notifyMatch(player1, player2, gameId, 1);
+		await chat.notifyMatch(player2, player1, gameId, 2);
 
 		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
 
@@ -76,13 +71,29 @@ export class GameServer
 
 	private createGame(): void
 	{
-		this.server.post('/api/create-game', async (request, reply) =>
+		this.server.post('/api/create-game',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						mode:		{ type: "string" },
+						playerName:	{ type: "number" },
+					},
+					required: ["mode", "playerName"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
 				const body = request.body as { mode: string; playerName: number};
 				const mode = body.mode;
-				const name = body.playerName;
+				const name = Number(body.playerName);
 
 				if (mode === 'local')
 				{
@@ -95,11 +106,27 @@ export class GameServer
 				}
 				else if (mode === 'online')
 				{
-					await addPlayerToQueue(Number(name), this);
+					for (const [id, game] of this.activeGames)
+					{
+						if (game.mode === 'online')
+						{
+							if ((game.player1Id == name || game.player2Id == name) && game.winner === null)
+							{
+								const opponentId = (game.player1Id == name) ? game.player2Id : game.player1Id;
+								const playerSide = (game.player1Id == name) ? '1' : '2';
+								reply.status(200).send({ gameId: id, opponentId: opponentId, playerSide: playerSide });
+								return ;
+							}
+						}
+					}
+
+					await chat.addPlayerToQueue(Number(name), this);
 					reply.status(202).send({ message: "added to queue" });
 				}
 				else if (mode === 'duel')
-						return reply.status(202).send({ message: "waiting for opponent" });
+				{
+					return (reply.status(202).send({ message: "waiting for opponent" }));
+				}
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();
@@ -125,19 +152,102 @@ export class GameServer
 
 	private startGame(): void
 	{
-		this.server.post('/api/start-game/:gameId', (request, reply) =>
+		this.server.post('/api/start-game/:gameId',
+		{
+			schema:
+			{
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						token: { type: "string" },
+					},
+					required: ["token"]
+				},
+				params:
+				{
+					type: "object",
+					properties:
+					{
+						gameId: { type: "string" },
+					},
+					required: ["gameId"]
+				}
+			}
+		},
+		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
+				const body = request.body as { token: string };
+				const token = body.token;
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
+					return reply.status(400).send({ error: 'Invalid token' });
+
+				const userId = data.id;
 				const game = this.activeGames.get(gameId);
 
 				if (game)
 				{
-					game.running = true;
+					let playerIdentified = false;
+					
+					if (game.mode === 'online' || game.mode === 'bot')
+					{
+						if (userId)
+						{
+							if (userId == game.player1Id)
+							{
+								game.p1Ready = true;
+								playerIdentified = true;
+							}
+							else if (userId == game.player2Id)
+							{
+								game.p2Ready = true;
+								playerIdentified = true;
+							}
+						}
+
+						if (!playerIdentified)
+						{
+							if (game.mode !== 'online') 
+							{
+								if (!game.p1Ready)
+								{
+									game.p1Ready = true;
+								}
+								else if (!game.p2Ready)
+								{
+									game.p2Ready = true;
+								}
+							}
+						}
+
+						if (game.mode === 'bot')
+						{
+							if (game.player1Id === this.botId) game.p1Ready = true;
+							if (game.player2Id === this.botId) game.p2Ready = true;
+						}
+
+						console.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
+						if (game.p1Ready && game.p2Ready)
+						{
+							console.log(`Game ${gameId} is now RUNNING`);
+							game.running = true;
+						}
+					}
+					else
+					{
+						game.p1Ready = true;
+						game.p2Ready = true;
+						game.running = true;
+					}
+					
 					reply.status(200).send(game.state);
 
-					if (game.mode === 'bot')
+					if (game.mode === 'bot' && game.reversedBuffer)
 					{
 						if (game.reversedBuffer)
 							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
@@ -158,7 +268,9 @@ export class GameServer
 
 	private sendGameState(): void
 	{
-		this.server.get('/api/game/:gameId/:playerId', { websocket: true }, (connection, request) =>
+		const gameConnections = new Map<string, Map<string, any>>();
+
+		this.server.get('/api/game/:gameId/:playerId', { websocket: true }, (connection: any, request: FastifyRequest) =>
 		{
 			try
 			{
@@ -169,6 +281,12 @@ export class GameServer
 				{
 					throw new Error(`Game ${gameId} not found`);
 				}
+
+				if (!gameConnections.has(gameId))
+				{
+					gameConnections.set(gameId, new Map());
+				}
+				gameConnections.get(gameId)!.set(playerId, connection);
 
 				let time = Date.now();
 				const send = () =>
@@ -200,7 +318,7 @@ export class GameServer
 							throw new Error('Invalid player ID');
 					}
 
-					const winner = game?.winnerName;
+					const winner = game?.winner;
 					if (winner !== null)
 					{
 						connection.send(JSON.stringify({ type: 'winner', winner }));
@@ -211,8 +329,13 @@ export class GameServer
 				const intervalTime = GameServer.FPS_INTERVAL;
 				const interval = setInterval(send, intervalTime);
 
-				connection.on('message', (message) =>
+				connection.on('message', (message: BinaryType) =>
 				{
+					if (!message)
+					{
+						return ;
+					}
+
 					let keysPressed: Set<string>;
 					const msg = message.toString();
 
@@ -235,22 +358,54 @@ export class GameServer
 				const closeConnection = (): void =>
 				{
 					clearInterval(interval);
-					game.destroy();
-					this.activeGames.delete(gameId);
 
-					if (game.mode === 'bot')
+					if (game.mode === 'online' || game.mode === 'duel')
 					{
-						const bot = this.bots.get(gameId);
-						if (!bot)
+						const connections = gameConnections.get(gameId);
+						if (connections && game.winner === null)
 						{
-							Logger.error(`Bot not found for game ${gameId}`);
-						}
+							const otherPlayerId = playerId === '1' ? '2' : '1';
+							const otherConnection = connections.get(otherPlayerId);
 
-						bot?.destroy();
-						this.bots.delete(gameId);
+							if (otherConnection)
+							{
+								const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
+								game.winner = winnerId;
+
+								Logger.log(`Player ${playerId} disconnected from game ${gameId}, declaring player ${otherPlayerId} (id: ${winnerId}) as winner`);
+
+								try
+								{
+									otherConnection.send(JSON.stringify({ type: 'winner', winner: winnerId }));
+								}
+								catch (err)
+								{
+									Logger.error('Failed to send winner notification:', err);
+								}
+							}
+						}
+					}
+
+					gameConnections.get(gameId)?.delete(playerId);
+					if (gameConnections.get(gameId)?.size === 0)
+					{
+						gameConnections.delete(gameId);
+						game.destroy();
+						this.activeGames.delete(gameId);
+
+						if (game.mode === 'bot')
+						{
+							const bot = this.bots.get(gameId);
+							if (!bot)
+							{
+								Logger.error(`Bot not found for game ${gameId}`);
+							}
+
+							bot?.destroy();
+							this.bots.delete(gameId);
+						}
 					}
 				};
-
 				connection.on('close', () =>
 				{
 					closeConnection();
@@ -266,162 +421,6 @@ export class GameServer
 			{
 				Logger.error('Error in websocket connection:', error);
 				connection.close();
-			}
-		});
-	}
-
-	private createTournament(): void
-	{
-		this.server.post('/api/create-tournament', async (request, reply) =>
-		{
-			try
-			{
-				const body = request.body as { playerName: string, type: string };
-				const type = body.type;
-
-				if (type !== 'public' && type !== 'private' && type !== 'invitation')
-				{
-					reply.status(400).send({ error: 'Invalid tournament type' });
-					return ;
-				}
-
-				const playerName = body.playerName;
-				const tournamentId = type + '-' + crypto.randomUUID();
-				const participants: Set<[string, string]> = new Set();
-				participants.add([playerName, "president"]);
-				this.pendingTournaments.set(tournamentId, participants);
-
-				Logger.log(`Tournament ${tournamentId} created by ${playerName}`);
-				reply.status(201).send({ tournamentId });
-			}
-			catch (error)
-			{
-				Logger.error('Error creating tournament:', error);
-				reply.status(500).send({ error });
-			}
-		});
-	}
-
-	private joinTournament(): void
-	{
-		this.server.post('/api/join-tournament', async (request, reply) =>
-		{
-			try
-			{
-				const body = request.body as { tournamentId: string; playerName: string };
-				const tournamentId = body.tournamentId;
-				const participants = this.pendingTournaments.get(tournamentId);
-				const playerName = body.playerName;
-
-				if (!participants)
-				{
-					reply.status(404).send({ error: 'Tournament not found' });
-					return ;
-				}
-
-				if (tournamentId.startsWith('public-'))
-				{
-					participants.add([playerName, "member"]);
-					reply.status(200).send({ message: 'Tournament joined successfully' });
-				}
-				else if (tournamentId.startsWith('invitation-'))
-				{
-					reply.status(501).send({ error: 'Sorry working on it, coming soon..' });
-				}
-				else if (tournamentId.startsWith('private-'))
-				{
-					reply.status(403).send({ error: 'You are not allowed to join this tournament. How did you even get the id?' });
-				}
-				else
-				{
-					throw new Error('wtf its impossible');
-				}
-			}
-			catch (error)
-			{
-				Logger.error('Error joining tournament:', error);
-				reply.status(500).send({ error });
-			}
-		});
-	}
-
-	private getTournamentInfo(): void
-	{
-		this.server.get('/api/info-tournament', async (request, reply) =>
-		{
-			try
-			{
-				const body = request.body as { tournamentId: string; playerName: string };
-				const tournamentId = body.tournamentId;
-				const participants = this.pendingTournaments.get(tournamentId);
-
-				if (!participants)
-				{
-					reply.status(404).send({ error: 'Tournament not found' });
-					return ;
-				}
-
-				if (tournamentId.startsWith('public-'))
-				{
-					reply.status(200).send({ participants: Array.from(participants) });
-				}
-				else if (tournamentId.startsWith('invitation-'))
-				{
-					reply.status(200).send({ participants: Array.from(participants) });
-				}
-				else if (tournamentId.startsWith('private-'))
-				{
-					reply.status(403).send({ error: 'You are not allowed to get info about this tournament. How did you even get the id?' });
-				}
-				else
-				{
-					throw new Error('wtf its impossible');
-				}
-			}
-			catch (error)
-			{
-				Logger.error('Error joining tournament:', error);
-				reply.status(500).send({ error });
-			}
-		});
-	}
-
-	private startTournament(): void
-	{
-		this.server.post('/api/start-tournament', async (request, reply) =>
-		{
-			try
-			{
-				const body = request.body as { tournamentId: string; playerName: string };
-				const tournamentId = body.tournamentId;
-				const participants = this.pendingTournaments.get(tournamentId);
-				const playerName = body.playerName;
-
-				if (!participants)
-				{
-					reply.status(404).send({ error: 'Tournament not found' });
-					return ;
-				}
-
-				if (!Array.from(participants).some(([name, role]) => name === playerName && role === "president"))
-				{
-					reply.status(403).send({ error: 'Only the tournament creator can start the tournament' });
-					return ;
-				}
-
-				const playerNamesSet: Set<string> = new Set();
-				participants.forEach(([name, _role]) => { playerNamesSet.add(name); });
-
-				const tournament = new Tournament(playerNamesSet);
-				this.activeTournaments.set(tournamentId, tournament);
-				this.pendingTournaments.delete(tournamentId);
-
-				reply.status(200).send({ message: 'Tournament started successfully' });
-			}
-			catch (error)
-			{
-				Logger.error('Error joining tournament:', error);
-				reply.status(500).send({ error });
 			}
 		});
 	}

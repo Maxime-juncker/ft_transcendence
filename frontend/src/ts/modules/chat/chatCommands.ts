@@ -49,7 +49,6 @@ export function registerCmds(chat: Chat)
 		}
 		if (argv.length == 3)
 			message = argv[2];
-		console.log(argv);
 		const res = await fetch("/api/chat/dm", {
 			method: "POST",
 			headers: { "content-type": "application/json" },
@@ -83,27 +82,29 @@ export function registerCmds(chat: Chat)
 		chat.displayMessage(serverReply(themeStr));
 	});
 
-	cmd.register("listInvite", "\n\tlist all pending invite", async (chat: Chat, argv: Array<string>) => {
+	cmd.register("listInvite", "\n\tlist all pending invites", async (chat: Chat, argv: Array<string>) => {
 		if (!chat.user)
-			return ;
+			return;
 
 		if (argv.length != 1)
 		{
 			chat.displayMessage(serverReply("usage: /listInvite"));
-			return ;
+			return;
 		}
-		const res = await fetch("/api/duel/list", {
+		const res = await fetch("/api/chat/list", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ token: chat.user.token })
 		});
 		const json = await res.json();
-		var str = "+++ listing invite +++";
+		var str = "+++ listing invites +++";
 		for (let i = 0; i < json.length; i++) {
 			const el: any = json[i];
+			console.log(el);
 
 			const sender = await getUserFromId(el.senderId);
-			const receiver = await getUserFromId(el.id);
+			const receiver = await getUserFromId(el.userId);
+			console.log(sender, receiver);
 			if (!sender || !receiver || !chat.user)
 			{
 				return ;
@@ -117,13 +118,157 @@ export function registerCmds(chat: Chat)
 		chat.displayMessage(serverReply(str));
 	});
 
-	cmd.register("invite", "<username>\n\tsend invite to user for a duel", async (chat: Chat, argv: Array<string>) => {
+	cmd.register("invite", "<username>\n\tinvite <username> to lobby", async (chat: Chat, argv: Array<string>) => {
 		if (!chat.user)
 			return ;
 
 		if (argv.length != 2)
 		{
 			chat.displayMessage(serverReply("usage: /invite <username>"));
+			return ;
+		}
+
+		if (chat.user.gameRouter?.currentPage != "tournament-lobby")
+		{
+			chat.user.gameRouter?.navigateTo('tournament-create', '');
+			chat.displayMessage(serverReply("you need to create a tournament"))
+			return;
+		}
+		if (!chat.user.gameRouter.m_lobby || !chat.user.gameRouter.m_lobby.id)
+			return;
+
+		const username = argv[1];
+		var res = await fetch(`/api/user/get_profile_name?profile_name=${username}`);
+		if (res.status != 200)
+		{
+			displayResponse(chat, res);
+			return ;
+		}
+		const json = await res.json();
+		res = await fetch("/api/chat/invite", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				token: chat.user.token,
+				lobbyId: chat.user.gameRouter.m_lobby.id,
+				userId: json.id
+			})
+		});
+
+		displayResponse(chat, res);
+	});
+
+	cmd.register("accept", "<username>\n\taccept invite of <username>", async (chat: Chat, argv: Array<string>) => {
+		if (!chat.user)
+			return ;
+
+		if (argv.length != 2)
+		{
+			chat.displayMessage(serverReply("usage: /accept <username>"));
+			return ;
+		}
+		const username = argv[1];
+		var res = await fetch(`/api/user/get_profile_name?profile_name=${username}`);
+		if (res.status != 200)
+		{
+			displayResponse(chat, res);
+			return ;
+		}
+		var json = await res.json();
+		chat.user.gameRouter?.navigateTo("tournament-menu", "");
+
+		res = await fetch("/api/chat/accept", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				token: chat.user.token,
+				userId: json.id
+			})
+		});
+		if (res.status != 200)
+		{
+			displayResponse(chat, res);
+			return;
+		}
+
+		json = await res.json();
+		if (!chat.user.gameRouter || !chat.user.gameRouter.m_tournamentMenu)
+		{
+			console.error("err");
+			return;
+		}
+		chat.user.gameRouter.m_tournamentMenu.joinTournament(json.lobbyId);
+	});
+
+	cmd.register("decline", "<username>\n\tdecline invite of <username>", async (chat: Chat, argv: Array<string>) => {
+		if (!chat.user)
+			return ;
+
+		if (argv.length != 2)
+		{
+			chat.displayMessage(serverReply("usage: /decline <username>"));
+			return ;
+		}
+		const username = argv[1];
+		var res = await fetch(`/api/user/get_profile_name?profile_name=${username}`);
+		if (res.status != 200)
+		{
+			displayResponse(chat, res);
+			return ;
+		}
+		const json = await res.json();
+		res = await fetch("/api/chat/decline", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				token: chat.user.token,
+				userId: json.id
+			})
+		});
+		displayResponse(chat, res);
+	});
+
+	cmd.register("listDuels", "\n\tlist all pending duel", async (chat: Chat, argv: Array<string>) => {
+		if (!chat.user)
+			return ;
+
+		if (argv.length != 1)
+		{
+			chat.displayMessage(serverReply("usage: /listDuels"));
+			return ;
+		}
+		const res = await fetch("/api/duel/list", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ token: chat.user.token })
+		});
+		const json = await res.json();
+		var str = "+++ listing duels +++";
+		for (let i = 0; i < json.length; i++) {
+			const el: any = json[i];
+
+			const sender = await getUserFromId(el.senderId);
+			const receiver = await getUserFromId(el.id);
+			if (!sender || !receiver || !chat.user)
+			{
+				return ;
+			}
+			if (sender.id === chat.user.id)
+				str += `\n-${receiver.name} (awaiting confirmation)`;
+			else
+				str += `\n+${sender.name} (use /acceptDuel or /declineDuel)`;
+			
+		}
+		chat.displayMessage(serverReply(str));
+	});
+
+	cmd.register("duel", "<username>\n\tsend duel request to <username>", async (chat: Chat, argv: Array<string>) => {
+		if (!chat.user)
+			return ;
+
+		if (argv.length != 2)
+		{
+			chat.displayMessage(serverReply("usage: /duel <username>"));
 			return ;
 		}
 		const username = argv[1];
@@ -145,13 +290,13 @@ export function registerCmds(chat: Chat)
 		chat.user.gameRouter?.navigateTo("game", "duel");
 	});
 
-	cmd.register("accept", "<username>\n\taccept invite of <username>", async (chat: Chat, argv: Array<string>) => {
+	cmd.register("acceptDuel", "<username>\n\taccept duel of <username>", async (chat: Chat, argv: Array<string>) => {
 		if (!chat.user)
 			return ;
 
 		if (argv.length != 2)
 		{
-			chat.displayMessage(serverReply("usage: /accept <username>"));
+			chat.displayMessage(serverReply("usage: /acceptDuel <username>"));
 			return ;
 		}
 		const username = argv[1];
@@ -176,13 +321,13 @@ export function registerCmds(chat: Chat)
 		displayResponse(chat, res);
 	});
 
-	cmd.register("decline", "<username>\n\tdecline invite of <username>", async (chat: Chat, argv: Array<string>) => {
+	cmd.register("declineDuel", "<username>\n\tdecline duel of <username>", async (chat: Chat, argv: Array<string>) => {
 		if (!chat.user)
 			return ;
 
 		if (argv.length != 2)
 		{
-			chat.displayMessage(serverReply("usage: /decline <username>"));
+			chat.displayMessage(serverReply("usage: /declineDuel <username>"));
 			return ;
 		}
 		const username = argv[1];
@@ -367,6 +512,16 @@ export function registerCmds(chat: Chat)
 			})
 		});
 
+		displayResponse(chat, response);
+	});
+
+	cmd.register("getUsersCount", "\n\tshow the total amount of users register", async (chat: Chat) => {
+		const response = await fetch('/api/user/user_count');
+		displayResponse(chat, response);
+	});
+
+	cmd.register("getGameCount", "\n\tshow the total amount of games played", async (chat: Chat) => {
+		const response = await fetch('/api/user/game_count');
 		displayResponse(chat, response);
 	});
 }

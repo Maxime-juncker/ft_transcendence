@@ -2,7 +2,7 @@
 
 > pong but better :)
 
-ft_transcendence is the final project of the forty two common core, it involve making a full stack app in typescript, using a database, docker, nodejs, html / css \
+ft_transcendence is the final project of the forty two common core, it involves making a full stack app in typescript, using a database, docker, nodejs, html / css \
 the goal of this project is to recreate the famous pong game but with more features.
 
 ## Features
@@ -44,7 +44,7 @@ Server-Side Pong:
 
 ## Installation
 ### Prerequisites
-Before going further you will need theses tools:
+Before going further you will need these tools:
 - make
 - docker and docker compose plugin
 
@@ -58,8 +58,9 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 |variable|description|
 |----|----|
 | HOST | hostname or IP used for redirection (leave to localhost if unsure)|
-|RUN_BENCHMARK|if set to 1, benchamrk will run (create random user / games / etc...)|
+|RUN_BENCHMARK|if set to 1, benchmark will run (create random user / games / etc...)|
 | GITHUB_ID | ID of your github OAuth app |
+|PROTECTED_ROUTE_PASS| password for protected routes (e.g: /add_game)|
 | GITHUB_SECRET | secret of your github OAuth app |
 | FT_ID | ID of your 42 OAuth app |
 | FT_SECRET | secret of your 42 OAuth app |
@@ -80,7 +81,7 @@ run a benchamrk (will test user creation / login / game history)
 docker compose --profile benchmark up
 ```
 
-The first launch will take around ~3min.
+The first launch will last around ~3min.
 
 ### Access Services
 |service | link|

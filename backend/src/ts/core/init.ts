@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
-import { createUser } from 'modules/users/userManagment.js';
+import { createUser, getBot } from 'modules/users/userManagment.js';
 import { Database } from 'sqlite';
-import { hashString } from 'modules/sha256.js';
 import fastifyStatic from '@fastify/static';
 import { FastifyRequest } from 'fastify';
 
@@ -15,8 +14,9 @@ import { chatRoutes } from 'modules/chat/chat.route.js';
 import { totpRoutes } from 'modules/2fa/2fa.route.js';
 import { duelRoutes } from 'modules/users/duel.route.js';
 
-import * as core from 'core/core.js';
+import { core, DbResponse } from './server.js';
 import { Logger } from 'modules/logger.js';
+import { getUserCount, getGameCount } from 'modules/users/user.js';
 
 async function loadConfig(path: string, db: Database)
 {
@@ -27,8 +27,7 @@ async function loadConfig(path: string, db: Database)
 	for (let i = 0; i < users.length; i++)
 	{
 		const user = users[i];
-		const hash = await hashString(user.passw);
-		await createUser(user.email, hash, user.name, AuthSource.INTERNAL, db);
+		await createUser(user.email, user.passw, user.name, AuthSource.INTERNAL, db);
 	}
 }
 
@@ -62,20 +61,24 @@ export async function initFastify()
 	await core.fastify.register(userManagmentRoutes, { prefix: '/api/user'});
 	await core.fastify.register(friendsRoutes, { prefix: '/api/friends'});
 	await core.fastify.register(userRoutes, { prefix: '/api/user'});
+	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
 	await core.fastify.register(chatRoutes);
 	await core.fastify.register(totpRoutes);
-	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
 
 	registerCorsProvider(core.fastify);
 
 	/* root to access avatars */
 	core.fastify.register(fastifyStatic, {
-		root: core.uploadDir,
+		root: core.publicDir,
 		prefix: '/public/',
 	});
 
 	// create account for bot
 	await createUser("", "", "bot", AuthSource.BOT, core.db);
+	await getBot();
 	await loadConfig("/config.json", core.db); // create default_users
+
+	await getUserCount().then((value: DbResponse) => { core.userCount = value.data.message['COUNT(*)']});
+	await getGameCount().then((value: DbResponse) => { core.gameCount = value.data.message['COUNT(*)']});
 }
 

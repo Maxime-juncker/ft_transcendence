@@ -44,6 +44,8 @@ export function setPlaceHolderText(msg: string)
 		placeholder = document.getElementById("placeholder-text") as HTMLElement;
 	else
 		placeholder = Router.getElementById("placeholder-text") as HTMLElement;
+	if (!placeholder)
+		return;
 	placeholder.classList.remove("hide");
 	placeholder.innerText = msg;
 }
@@ -100,4 +102,9 @@ export function toggleCrtEffect(state: boolean)
 	}
 
 	setCookie("crt_state", state, 9999);
+}
+
+export function sleep(ms: number)
+{
+	return new Promise(resolve => setTimeout(resolve, ms));
 }

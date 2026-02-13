@@ -41,7 +41,7 @@
 
 @layer base {
 	html {
-		@apply pointer-events-auto;
+		@apply pointer-events-auto selection:bg-white selection:text-dark;
 	}
 
 	body {
@@ -143,11 +143,11 @@
 	}
 
 	.header-small {
-		@apply w-full h-25 bg-dark flex align-middle justify-between items-center fixed z-3;
+		@apply w-full h-25 bg-dark grid grid-cols-3 items-center fixed z-3;
 	}
 
 	.banner-small {
-		@apply h-full flex align-middle justify-center items-center
+		@apply h-full flex align-middle justify-start items-center
 	}
 	.banner-small h1 {
 		@apply bg-dark z-1 text-2xl py-1 px-3 font-bold;
@@ -162,7 +162,7 @@
 	}
 
 	.user-menu {
-		@apply relative py-3 flex h-full justify-center items-center mr-5 gap-3;
+		@apply relative py-3 flex h-full justify-end items-center mr-5 gap-3;
 	}
 
 	.user-menu #user-menu-container {
@@ -256,12 +256,21 @@
 	.pause-msg		{ @apply text-[3vw] top-[40%] w-[80vw] }
 	.continue-msg	{ @apply text-[2vw] top-[70%] w-[80vw] }
 	.winner-msg		{ @apply text-[3vw] top-[40%] w-[80vw] }
-	.play-again-msg	{ @apply text-[2vw] top-[70%] w-[80vw] }
 	.player1		{ @apply absolute top-0 left-0 text-[2vw] m-[1vw]; }
 	.player2		{ @apply absolute top-0 right-0 text-[2vw] m-[1vw]; }
 	.searching-msg	{ @apply text-[2vw] }
 
 	.credit-avatar {
 		@apply w-full px-3 py-2 flex gap-3 justify-end items-center hover:bg-white hover:text-darker hover:cursor-grab;
+	}
+
+	.btn-disable {
+		@apply grayscale-100;
+	}
+
+	.checkbox {
+		@apply	appearance-none aspect-square w-[30px] h-[30px] border-2 border-white bg-dark cursor-grab checked:bg-dark relative
+				before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
+				before:w-[75%] before:h-[75%] before:bg-white before:opacity-0 checked:before:opacity-100 focus:brightness-100;
 	}
 }

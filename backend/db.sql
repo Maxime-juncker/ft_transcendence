@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
 	id				INTEGER PRIMARY KEY AUTOINCREMENT,
 	name			STRING NOT NULL UNIQUE,
-	email			STRING UNIQUE,
+	email			STRING,
 	passw			STRING,
 
 	totp_enable		BOOLEAN NOT NULL DEFAULT false,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
 	is_login		INTEGER NOT NULL DEFAULT 0, -- if false => override status
 	status			INTEGER NOT NULL DEFAULT 0, -- (un)avalaible - buzy - silent
 
-	elo				INTEGER NOT NULL DEFAULT 1000,
+	elo				REAL NOT NULL DEFAULT 500,
 	wins			INTEGER NOT NULL DEFAULT 0,
 	games_played	INTEGER NOT NULL DEFAULT 0,
 
@@ -50,21 +50,30 @@ CREATE TABLE IF NOT EXISTS friends (
 	CHECK(user1_id < user2_id)
 );
 
-CREATE TABLE IF NOT EXISTS games (
+CREATE TABLE IF NOT EXISTS matches (
 	id				INTEGER PRIMARY KEY AUTOINCREMENT,
+	tournament_id	TEXT NOT NULL,
+	player1_id		INTEGER,
+	player2_id		INTEGER,
+	winner_id		INTEGER,
+	score1			INTEGER DEFAULT 0,
+	score2			INTEGER DEFAULT 0,
+	played_at		DATE,
 
-	user1_id		INTEGER NOT NULL,
-	user2_id		INTEGER NOT NULL,
-	user1_score		INTEGER NOT NULL,
-	user2_score		INTEGER NOT NULL,
+	user1_elo		INTEGER NOT NULL DEFAULT 500,
+	user2_elo		INTEGER NOT NULL DEFAULT 500,
+	FOREIGN KEY (tournament_id) REFERENCES tournaments(id)
+);
 
-	user1_elo		INTEGER NOT NULL,
-	user2_elo		INTEGER NOT NULL,
-
-	created_at		DATE NOT NULL,
-
-	FOREIGN KEY (user1_id) REFERENCES users(id),
-	FOREIGN KEY (user2_id) REFERENCES users(id),
-
-	CHECK(user1_id < user2_id)
+CREATE TABLE IF NOT EXISTS game_parameters (
+	paddle_speed REAL NOT NULL DEFAULT 1.5,
+	paddle_height REAL NOT NULL DEFAULT 15,
+	paddle_width REAL NOT NULL DEFAULT 2,
+	paddle_padding REAL NOT NULL DEFAULT 2,
+	ball_size REAL NOT NULL DEFAULT 1.5,
+	max_angle REAL NOT NULL DEFAULT 1.5,
+	speed REAL NOT NULL DEFAULT 1.0,
+	speed_increment REAL NOT NULL DEFAULT 0.1,
+	points_to_win INTEGER NOT NULL DEFAULT 3,
+	fps INTEGER NOT NULL DEFAULT 60
 );

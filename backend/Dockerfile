@@ -1,8 +1,11 @@
-FROM alpine:3.20
+FROM alpine:3.22
 
-RUN apk update && apk upgrade
-RUN apk add php-fpm nodejs npm
-RUN apk add sqlite bash make
+RUN apk add --update --no-cache php-fpm	\
+								nodejs	\
+								npm		\
+ 								sqlite	\
+								bash	\
+								make
 
 COPY ./db.sql /db.sql
 

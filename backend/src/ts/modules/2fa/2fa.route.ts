@@ -1,13 +1,13 @@
 import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp } from 'modules/2fa/totp.js'
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import * as core from 'core/core.js'
+import { core, rateLimitMed } from 'core/server.js';
 
 export async function totpRoutes(fastify: FastifyInstance)
 {
 	fastify.post('/api/totp/reset', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {
@@ -32,7 +32,7 @@ export async function totpRoutes(fastify: FastifyInstance)
 
 	fastify.post('/api/totp/remove', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {
@@ -56,7 +56,7 @@ export async function totpRoutes(fastify: FastifyInstance)
 
 	fastify.post('/api/totp/validate', {
 		config: { 
-			rateLimit: core.rateLimitMed
+			rateLimit: rateLimitMed
 		},
 		schema: {
 			body: {
