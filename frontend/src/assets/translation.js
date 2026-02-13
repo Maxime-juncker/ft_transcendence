@@ -6,7 +6,7 @@ const selectElement = document.getElementById('language-selector');
 // console.log(selectElement);
 
 i18n.use(Backend).use(LanguageDetector).init({
-	fallbackLng: 'en',
+	fallbackLng: 'en-GB',
 	backend: {
 	  loadPath: () => `/public/locales/{{lng}}.json`,
 	},
