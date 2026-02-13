@@ -16,6 +16,7 @@
 	"homepage": "accueil",
 	"404": "404 - introuvable",
 	"loading-tournament": "chargement du tournoi...",
+	"loading": "chargement",
 	"text": {
 		"guest": "*toutes les données seront perdues à la déconnexion",
 		"tournament": {
