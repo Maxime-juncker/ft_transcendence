@@ -1,4 +1,3 @@
-import { get } from 'http';
 import { getBot } from 'modules/users/userManagment.js';
 
 class Match
@@ -13,6 +12,9 @@ class Match
 	{
 		return (player === 1);
 	}
+
+	set score1(score: number) { this._score1 = score; }
+	set score2(score: number) { this._score2 = score; }
 
 	public isBotVsBot(): boolean
 	{

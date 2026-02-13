@@ -46,6 +46,8 @@
 	"logout": "déconnexion",
 	"game": "jouer",
 	"tournament": "tournoi",
+	"tournament_of": "Tournoi de",
+	"players": "joueur(s)",
 	"local": "locale",
 	"online": "en ligne",
 	"bot": "contre l'ia",

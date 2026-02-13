@@ -222,41 +222,17 @@
 					<section id="tournament-create" class="flex flex-col h-full gap-5 px-[20%] pt-20 bg-darkest items-center">
 						<h2 class="text-4xl font-bold text-white" data-i18n="Create_tournament">Create Tournament</h2>
 						<div class="flex flex-col gap-4 w-full">
-							<div class="flex flex-row gap-4 justify-center">
-
-								<label class="inline-flex items-center cursor-grab">
-									<input 
-										type="radio"
-										name="tournament-type" value="public" checked
-										class="checkbox"
-									/>
-									<span class="ml-2 font-bold select-none" data-i18n="Public">Public</span>
-								</label>
-
-								<label class="inline-flex items-center cursor-grab">
-									<input 
-										type="radio"
-										name="tournament-type" value="private"
-										class="checkbox"
-									/>
-									<span class="ml-2 font-bold select-none" data-i18n="Invitation_only">Invitation Only</span>
-								</label>
-							</div>
 							<button class="btn w-full text-4xl font-bold mt-5" id="tournament-confirm-create" data-i18n="Create">Create</button>
 							<button class="btn w-full text-2xl font-bold" id="tournament-cancel-create" data-i18n="Back">Back</button>
 						</div>
 					</section>
 
 					<section id="tournament-lobby" class="flex h-full flex-col gap-5 px-[10%] pt-10 bg-darkest items-center">
-						<h2 class="text-4xl font-bold text-white" id="lobby-title" data-i18n="Tournament_lobby">Tournament Lobby</h2>
+					<h2 class="text-4xl font-bold text-white" id="lobby-title"></h2>
 						<div class="flex flex-row w-full gap-5 h-[60vh]">
 							<div class="flex-1 bg-darker p-4 flex flex-col gap-2">
 								<h3 class="text-2xl font-bold border-b border-dark mb-2" data-i18n="Players">Players</h3>
 								<div id="lobby-player-list" class="flex flex-col gap-1 overflow-y-auto"></div>
-							</div>
-							<div class="flex-1 bg-darker p-4 flex flex-col gap-2" id="lobby-requests-container" style="display: none;">
-								<h3 class="text-2xl font-bold border-b border-dark mb-2" data-i18n="Join_requests">Join Requests</h3>
-								<div id="lobby-request-list" class="flex flex-col gap-1 overflow-y-auto"></div>
 							</div>
 						</div>
 						<div class="flex w-full gap-4">

@@ -491,7 +491,7 @@ export class TournamentServer
 				Logger.error(`[Tournament ${tournamentId}] activeGamesMap not set!`);
 				return;
 			}
-			
+
 			const botPlayerSide = botIsPlayer2 ? 2 : 1;
 			setTimeout(() =>
 			{
@@ -505,9 +505,9 @@ export class TournamentServer
 					Logger.error(`[Tournament ${tournamentId}] Cannot create bot: game state not ready`);
 				}
 			}, 500);
-			
+
 			this.monitorMatchEnd(tournamentId, tournament, match, gameId, game);
-			
+
 			const playerNum = botIsPlayer2 ? 1 : 2;
 			chat.notifyMatch(humanId, this.botId, gameId, playerNum);
 			return ;
@@ -536,10 +536,10 @@ export class TournamentServer
 	{
 		const checkInterval = setInterval(() =>
 		{
-			if (game.winnerName !== null)
+			if (game.winner !== null)
 			{
 				clearInterval(checkInterval);
-				
+
 				if (this.activeBots.has(gameId))
 				{
 					const bot = this.activeBots.get(gameId);
@@ -549,13 +549,15 @@ export class TournamentServer
 						this.activeBots.delete(gameId);
 					}
 				}
-				
+
+				match.score1 = game.p1Score;
+				match.score2 = game.p2Score;
+
 				let winnerPlayerId: number;
-				const winnerId = Number(game.winnerName);
-				
+
 				if (match.isHumanVsBot())
 				{
-					if (winnerId === this.botId)
+					if (game.winner === this.botId)
 					{
 						winnerPlayerId = match.getBotPlayer()!;
 					}
@@ -566,9 +568,9 @@ export class TournamentServer
 				}
 				else
 				{
-					winnerPlayerId = winnerId;
+					winnerPlayerId = game.winner;
 				}
-				
+
 				this.onTournamentMatchEnd(tournamentId, tournament, match, winnerPlayerId);
 			}
 		}, 1000);
@@ -631,6 +633,7 @@ export class TournamentServer
 					{
 						try
 						{
+							Logger
 							await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
 						}
 						catch (error)
