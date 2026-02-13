@@ -14,10 +14,9 @@
 	"leaderboard": "leaderboard",
 	"history": "history",
 	"homepage": "homepage",
-	"loading-tournament": "creating tournament...",
-	"loading": "loading",
 	"404": "404 - NOT FOUND",
 	"loading-tournament": "creating tournament...",
+	"loading": "loading",
 	"text": {
 		"guest": "*all data will be lost on logout",
 		"tournament": {
