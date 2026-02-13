@@ -25,6 +25,17 @@
 		</div>
 	</template>
 
+	<template id="tournament-table-template">
+		<div class="flex gap-4 items-center justify-between h-16 w-[90%] p-4 border-2 border-white">
+			<div class="w-1/2">
+				<a id="tournament-address" class="text-white truncate block w-full max-w-xs" href="" target="_blank"></a>
+			</div>
+			<div class="w-1/2">
+				<p id="winner-name" class="text-white truncate">Player Name</p>
+			</div>
+		</div>
+	</template>
+
 	<div class="h-full flex relative">
 		<header class="absolute top-[7%]">
 			<div class="banner">
@@ -55,11 +66,15 @@
 			<div class="play-menu">
 				<button class="btn" data-i18n="capital.play" id="play_btn">PLAY</button>
 			</div>
-			<div id="leaderboard" class="flex flex-col h-full justify-center items-center z-3 mr-5 mt-[10vh]">
+			<div id="leaderboard" class="relative flex flex-col h-full justify-center items-center z-3 mr-5 mt-[10vh]">
 
+				<div id="loading-indicator" class="flex gap-4 absolute left-[1.5%] top-[25%]">
+					<p class="font-bold text-[1vw]" id="loading-wheel">.</p>
+					<p class="text-[1vw]" data-i18n="loading">loading</p>
+				</div>
 				<h1 data-i18n="capital.leaderboard" class="text-[1.5vw] font-bold" id="board-title">LEADERBOARD</h1>
-				<div id="leaderboard-container" class="flex flex-col-reverse justify-end items-center w-full h-1/2 bg-dark
-					gap-3 py-5"></div>
+				<div id="leaderboard-container" class="flex flex-col items-center w-full h-1/2 bg-dark
+					overflow-y-auto gap-3 py-5"></div>
 
 				<div class="flex w-full justify-around mt-4">
 					<label class="inline-flex items-center cursor-grab">

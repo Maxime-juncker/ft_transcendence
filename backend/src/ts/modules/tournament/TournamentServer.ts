@@ -61,11 +61,24 @@ export class TournamentServer
 			this.joinTournament();
 			this.leaveTournament();
 			this.startTournament();
+			this.getTournamentOnChain();
 		}
 		catch (error)
 		{
 			Logger.error('Error starting tournament server:', error);
 		}
+	}
+
+	private getTournamentOnChain() {
+		this.server.get('/api/blockchain/tournaments', async (request: FastifyRequest, reply: FastifyReply) =>
+		{
+			let tournaments = await this.contractAddress.getTournaments();
+			let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
+			// let json = JSON.stringify(Object.fromEntries(tournaments));
+
+			Logger.log("fetching finished tournaments from blockchain", array);
+			return reply.send(array);
+		})
 	}
 
 	private listTournaments(): void

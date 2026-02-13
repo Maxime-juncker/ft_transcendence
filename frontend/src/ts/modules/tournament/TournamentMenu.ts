@@ -170,14 +170,15 @@ export class TournamentMenu
 		{
 			// show loading indicator
 			const lobbyView = Router.Instance?.activeView as LobbyView;
-			lobbyView.StartLoading();
+			lobbyView.loadingIndicator?.startLoading();
+			console.log(lobbyView.loadingIndicator);
 			const res = await fetch('/api/create-tournament',
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
-			lobbyView.stopLoading();
+			lobbyView.loadingIndicator?.stopLoading();
 
 			this.createBtn.classList.remove("btn-disable");
 			this.createBtn.disabled = false;
