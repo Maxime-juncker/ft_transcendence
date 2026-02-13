@@ -1,7 +1,7 @@
 services:
 
   backend:
-    restart: always
+    restart: no
     build: ./backend/
     container_name: backend
     environment:
@@ -35,9 +35,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   frontend:
-    restart: always
+    restart: no
     build: ./frontend/
     container_name: frontend
     environment:
@@ -58,6 +61,9 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   benchmark:
     build: ./benchmark/
@@ -71,7 +77,7 @@ services:
       - backend_net
 
   modsecurity:
-    restart: always
+    restart: no
     build: ./modsecurity/
     container_name: modsecurity
     volumes:
@@ -103,9 +109,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   vault:
-    restart: always
+    restart: no
     image: hashicorp/vault:1.21
     container_name: vault
     cap_add:
@@ -126,9 +135,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   prometheus:
-    restart: always
+    restart: no
     image: prom/prometheus:v3.9.1
     container_name: prometheus
     volumes:
@@ -145,9 +157,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   grafana:
-    restart: always
+    restart: no
     image: grafana/grafana:12.4.0-20836657505
     container_name: grafana
     volumes:
@@ -164,9 +179,12 @@ services:
     environment:
       - GF_LOG_MODE=file
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   nginx_prom_export:
-    restart: always
+    restart: no
     image: nginx/nginx-prometheus-exporter:1.5.1
     container_name: nginx_prom_export
     networks:
@@ -176,9 +194,12 @@ services:
       - prometheus
       - modsecurity
     command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   elasticsearch_exporter:
-    restart: always
+    restart: no
     image: prometheuscommunity/elasticsearch-exporter:v1.10.0
     container_name: elasticsearch_exporter
     environment:
@@ -193,9 +214,12 @@ services:
       - monitoring_net
     depends_on:
       - elasticsearch
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   elasticsearch:
-    restart: always
+    restart: no
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     container_name: elasticsearch
     environment:
@@ -210,9 +234,12 @@ services:
       - elastic-logs:/usr/share/elasticsearch/logs:rw
     networks:
       - elk_net
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   logstash:
-    restart: always
+    restart: no
     image: docker.elastic.co/logstash/logstash:8.12.0
     container_name: logstash
     volumes:
@@ -236,9 +263,12 @@ services:
       - LS_JAVA_OPTS=-Xms4g -Xmx4g
     networks:
       - elk_net
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   kibana:
-    restart: always
+    restart: no
     image: docker.elastic.co/kibana/kibana:8.12.0
     container_name: kibana
     volumes:
@@ -254,6 +284,9 @@ services:
     environment:
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_USERNAME=kibana_system
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   kibana-init:
     container_name: kibana-init
@@ -288,7 +321,7 @@ services:
       - elk_net
 
   node_exporter:
-    restart: always
+    restart: no
     image: quay.io/prometheus/node-exporter:v1.10.2
     container_name: node_exporter
     command:
@@ -300,9 +333,12 @@ services:
       - monitoring_net
     depends_on:
       - prometheus
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
   logstash-exporter:
-    restart: always
+    restart: no
     image: ghcr.io/kuskoman/logstash-exporter:v1.9.1
     container_name: logstash-exporter
     environment:
@@ -312,6 +348,9 @@ services:
       - monitoring_net
     depends_on:
       - logstash
+    labels:
+      - sablier.enable=true
+      - sablier.group=transcendence
 
 networks:
   export_net:
