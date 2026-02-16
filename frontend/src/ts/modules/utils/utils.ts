@@ -46,8 +46,11 @@ export function setPlaceHolderText(msg: string)
 		placeholder = Router.getElementById("placeholder-text") as HTMLElement;
 	if (!placeholder)
 		return;
-	placeholder.classList.remove("hide");
 	placeholder.innerText = msg;
+	if (msg == "")
+		placeholder.classList.add("hide");
+	else
+		placeholder.classList.remove("hide");
 }
 
 export function levenshteinDistance(s1: string, s2: string): number
