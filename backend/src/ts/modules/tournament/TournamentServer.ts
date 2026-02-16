@@ -74,7 +74,6 @@ export class TournamentServer
 		{
 			let tournaments = await this.contractAddress.getTournaments();
 			let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
-			// let json = JSON.stringify(Object.fromEntries(tournaments));
 
 			Logger.log("fetching finished tournaments from blockchain", array);
 			return reply.send(array);
@@ -664,14 +663,13 @@ export class TournamentServer
 				tournament.isFinished = true;
 
 				const winnerId = Array.from(winners)[0];
-				const winnerName = data.players.get(winnerId) || 'Bot';
 				const blockchainId = data.blockchainId;
 
-				if (typeof blockchainId === 'number' && winnerName && blockchainId != -1)
+				if (typeof blockchainId === 'number' && winnerId && blockchainId != -1)
 				{
 					try
 					{
-						await this.contractAddress.finishTournament(blockchainId, winnerName);
+						await this.contractAddress.finishTournament(blockchainId, winnerId);
 					}
 					catch (error)
 					{
