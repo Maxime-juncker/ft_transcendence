@@ -2,10 +2,11 @@ if [ ! -f /init_done ]; then
     echo "Waiting for Elasticsearch to be ready..."
     until curl -s -u elastic:${ELASTIC_PASSWORD} http://elasticsearch:9200 > /dev/null; do
         echo "Elasticsearch not ready yet... waiting 5 seconds"
-        sleep 5
+        sleep 20
     done
 
     echo "Elasticsearch is ready!"
+	sleep 20
 
     echo "Setting kibana_system password..."
     curl -s -u elastic:${ELASTIC_PASSWORD} -X POST "http://elasticsearch:9200/_security/user/kibana_system/_password" \
