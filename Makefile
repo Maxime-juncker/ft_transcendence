@@ -1,6 +1,5 @@
 .PHONY: all
 all:
-	$(MAKE) build;
 	$(MAKE) start;
 
 .PHONY: build
