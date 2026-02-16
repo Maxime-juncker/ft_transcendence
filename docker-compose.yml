@@ -168,6 +168,8 @@ services:
     environment:
       - GF_LOG_MODE=file
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_DOMAIN=${HOST}
+      - GF_ROOT_URL=https://${HOST}:8081/admin/grafana/
 
   nginx_prom_export:
     restart: always
