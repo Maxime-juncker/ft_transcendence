@@ -1,4 +1,3 @@
-import { GameMenu } from 'modules/game/GameMenu.js';
 import { GameClient } from 'modules/game/GameClient.js';
 import { TournamentMenu } from 'modules/tournament/TournamentMenu.js';
 import { TournamentLobby } from 'modules/tournament/TournamentLobby.js';
@@ -15,7 +14,7 @@ export class GameRouter
 	private static readonly GAME_ONLINE_KEY: string = 'o';
 	private static readonly GAME_LOCAL_KEY: string = 'l';
 	private static readonly GAME_BOT_KEY: string = 'b';
-	private static readonly TOURNAMENT_CREATE_KEY: string = 't';
+	private static readonly TOURNAMENT_KEY: string = 't';
 
 	private m_playerContainer:	HTMLElement | null = null;
 
@@ -26,7 +25,6 @@ export class GameRouter
 	m_user:			User | null = null;
 	m_player1:		UserElement | null = null;
 	m_chat:			Chat | null = null;
-	m_gameMenu:		GameMenu | null = null;
 	m_lobby:		TournamentLobby | null = null;
 	m_tournamentMenu: TournamentMenu | null = null;
 
@@ -150,8 +148,8 @@ export class GameRouter
 			case GameRouter.GAME_BOT_KEY:
 				this.navigateTo('game', 'bot');
 				break ;
-			case GameRouter.TOURNAMENT_CREATE_KEY:
-				this.navigateTo('tournament-create', '');
+			case GameRouter.TOURNAMENT_KEY:
+				this.navigateTo('tournament-menu', '');
 				break ;
 		}
 	}
@@ -192,9 +190,6 @@ export class GameRouter
 	{
 		switch (this.currentPage)
 		{
-			case 'game-menu':
-				this.m_gameMenu = new GameMenu(this)
-				return this.m_gameMenu;
 			case 'game':
 				if (this.m_chat && this.m_user)
 					this.gameInstance = new GameClient(this, mode!, this.m_user, this.m_chat);

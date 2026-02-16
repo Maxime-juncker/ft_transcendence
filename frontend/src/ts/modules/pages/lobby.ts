@@ -98,10 +98,6 @@ export class LobbyView extends ViewComponent
 	public async disable()
 	{
 		this.clearTrackListener();
-
-		if (this.m_gameRouter?.m_gameMenu)
-			this.m_gameRouter.m_gameMenu.destroy();
-
 	}
 
 	private hideUserList()
