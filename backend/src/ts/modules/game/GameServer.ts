@@ -231,10 +231,10 @@ export class GameServer
 							if (game.player2Id === this.botId) game.p2Ready = true;
 						}
 
-						console.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
+						Logger.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
 						if (game.p1Ready && game.p2Ready)
 						{
-							console.log(`Game ${gameId} is now RUNNING`);
+							Logger.log(`Game ${gameId} is now RUNNING`);
 							game.running = true;
 						}
 					}

@@ -84,7 +84,7 @@ export class ServerSideRendering
 		</script>
 		<script>var exports = {};</script>
 		<script type="module" src="/dist/app.js"></script>
-		<script type="module" src="/assets/translation.js"></script>
+		<script type="module" src="/assets/translation.ts"></script>
 	</body>
 </html>
 `

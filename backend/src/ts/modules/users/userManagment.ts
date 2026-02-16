@@ -240,7 +240,7 @@ export async function createUser(email: string, passw: string, username: string,
 		return { code: 409, data: { message: "user is already in database" }};
 	}
 
-	const hash = await hashString(passw)
+	const hash = await hashString(passw);
 
 	try
 	{

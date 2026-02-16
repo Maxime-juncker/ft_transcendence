@@ -4,7 +4,7 @@ import { privateKeyToAccount, PrivateKeyAccount } from 'viem/accounts';
 import { avalancheFuji } from 'viem/chains';
 import { promises as fs } from 'fs';
 import { createSecret, readSecret } from 'modules/vault/vault.js';
-import { Logger } from 'modules/logger';
+import { Logger } from 'modules/logger.js';
 
 const TOURNAMENT_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Tournament.sol/Tournament.json";
 const FACTORY_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Factory.sol/Factory.json";
@@ -59,7 +59,7 @@ export class BlockchainContract {
             Logger.log("Factory deployment transaction hash: ", hash);
             
             const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
-            if (receipt.contractAddress == undefined) {
+            if (!receipt.contractAddress) {
                 throw ("failed to instatiate factory")
             }
             this.factoryAddress = receipt.contractAddress;

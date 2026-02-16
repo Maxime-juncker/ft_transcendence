@@ -1,6 +1,5 @@
 import { GameState } from './GameState.js';
 import { GameInstance } from './GameInstance.js';
-import WebSocket from 'ws';
 import { getUserByName } from 'modules/users/user.js';
 import { core } from 'core/server.js';
 import { Logger } from 'modules/logger.js';

@@ -299,7 +299,7 @@ export class TournamentServer
 				}
 
 				lobby.players.push({ id: userId, name });
-				console.log(`User ${userId} (${name}) joined tournament ${tournamentId}. Total players: ${lobby.players.length}`);
+				Logger.log(`User ${userId} (${name}) joined tournament ${tournamentId}. Total players: ${lobby.players.length}`);
 				reply.status(200).send({ tournamentId });
 			}
 			catch (error)
