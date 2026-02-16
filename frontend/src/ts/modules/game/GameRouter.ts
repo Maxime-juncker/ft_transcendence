@@ -15,8 +15,7 @@ export class GameRouter
 	private static readonly GAME_ONLINE_KEY: string = 'o';
 	private static readonly GAME_LOCAL_KEY: string = 'l';
 	private static readonly GAME_BOT_KEY: string = 'b';
-	private static readonly TOURNAMENT_MENU_KEY: string = 't';
-	private static readonly TOURNAMENT_CREATE_KEY: string = 'c';
+	private static readonly TOURNAMENT_CREATE_KEY: string = 't';
 
 	private m_playerContainer:	HTMLElement | null = null;
 
@@ -150,9 +149,6 @@ export class GameRouter
 				break ;
 			case GameRouter.GAME_BOT_KEY:
 				this.navigateTo('game', 'bot');
-				break ;
-			case GameRouter.TOURNAMENT_MENU_KEY:
-				this.navigateTo('tournament-menu', '');
 				break ;
 			case GameRouter.TOURNAMENT_CREATE_KEY:
 				this.navigateTo('tournament-create', '');
