@@ -136,6 +136,7 @@ services:
       - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro,z
       - prometheus-logs:/prometheus/logs:rw
     command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.retention.time=90d'
       - '--storage.tsdb.retention.size=5GB'
     networks:
