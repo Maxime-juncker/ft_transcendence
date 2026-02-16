@@ -6,6 +6,7 @@ import { Router } from "modules/router/Router.js";
 import { HeaderSmall } from "./HeaderSmall.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
 import { LoadingIndicator } from "modules/utils/Loading.js";
+import { setPlaceHolderText } from "modules/utils/utils.js";
 
 	enum ListState
 	{
@@ -69,8 +70,8 @@ export class LobbyView extends ViewComponent
 		{
 			this.m_gameRouter = new GameRouter(MainUser.Instance, this.m_chat, this);
 			this.m_gameRouter.assignListener();
-			this.m_gameRouter.navigateTo('home', '');
 		}
+		this.m_gameRouter.navigateTo('home', '');
 
 		MainUser.Instance.gameRouter = this.m_gameRouter;
 
@@ -90,16 +91,13 @@ export class LobbyView extends ViewComponent
 		});
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
+		setPlaceHolderText("");
 	}
 
 
 	public async disable()
 	{
 		this.clearTrackListener();
-
-		if (this.m_gameRouter?.m_gameMenu)
-			this.m_gameRouter.m_gameMenu.destroy();
-
 	}
 
 	private hideUserList()

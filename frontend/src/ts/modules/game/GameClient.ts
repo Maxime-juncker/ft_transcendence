@@ -39,7 +39,6 @@ const scoreAnimation = [
 
 enum Keys
 {
-	PLAY_AGAIN = 'Enter',
 	DEFAULT_UP = 'ArrowUp',
 	DEFAULT_DOWN = 'ArrowDown',
 	PLAYER1_UP = 'w',
@@ -123,7 +122,6 @@ export class GameClient extends Utils
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 		{
-			console.warn("missing html in createPlayerHtml()");
 			return ;
 		}
 		this.m_playerContainer.innerHTML = "";
@@ -346,19 +344,6 @@ export class GameClient extends Utils
 	private keydownHandler = (event: KeyboardEvent): void =>
 	{
 		this.keysPressed.add(event.key);
-
-		if (event.key === Keys.PLAY_AGAIN && this.end)
-		{
-			const targetElement = event.target as HTMLElement;
-			if (targetElement)
-			{
-				const tagName = targetElement.tagName.toLowerCase();
-				if (tagName && tagName !== 'input' && tagName !== 'textarea')
-				{
-					this.m_router.navigateTo('game', this.mode);
-				}
-			}
-		}
 	}
 
 	private keyupHandler = (event: KeyboardEvent): void =>
