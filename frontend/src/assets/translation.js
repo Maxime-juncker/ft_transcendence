@@ -25,8 +25,12 @@ function translatePage() {
 }
 
 function updateLanguageSelector() {
-	if (selectElement)
-		selectElement.value = i18n.language;
+	if (selectElement) {
+		if (!(i18n.language == 'en-GB' || i18n.language == 'fr-FR' || i18n.language == 'es-ES'))
+			selectElement.value = 'en-GB';
+		else
+			selectElement.value = i18n.language;
+	}
 }
 
 i18n.on('initialized', () => {
