@@ -31,6 +31,7 @@
 		"password": "password...",
 		"confirm_password": "confirm password...",
 		"2fa": "totp code",
+		"confirm_2fa": "confirm totp code",
 		"chat": "enter message...",
 		"search": "search",
 		"type_confirm": "type confirm to continue",
