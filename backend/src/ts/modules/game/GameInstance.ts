@@ -246,7 +246,6 @@ export class GameInstance
 	get leftPaddleY(): number					{ return (this._gameState.leftPaddleY); }
 	get ballSpeedX(): number					{ return (this._gameState.speedX); }
 	get keysPressed(): Set<string>				{ return (this._keysPressed); }
-	get winnerName(): number | null				{ return (this._winner); }
 	get winner(): number | null					{ return (this._winner); }
 	get scoreUpdated(): boolean					{ return (this._scoreUpdated); }
 	get player1Id(): number						{ return (this._Player1Id!); }
@@ -258,7 +257,6 @@ export class GameInstance
 	set keysPressed(keys: Set<string>)			{ this._keysPressed = keys; }
 	set running(isRunning: boolean)				{ this._isRunning = isRunning; }
 	set state(value: GameState)					{ this._gameState = value; }
-	set winnerName(name: number | null)			{ this._winner = name; }
 	set scoreUpdated(value: boolean)			{ this._scoreUpdated = value; }
 	set winner(value: number | null)			{ this._winner = value; }
 

@@ -76,13 +76,13 @@
 		<div class="absolute left-[2%] bottom-[2%] flex flex-col items-start gap-3">
 			<div class="language-selector-div z-99">
 				<select id="language-selector" class="language-selector" onchange="changeLanguage(this.value)">
-					<option value="en" >🇬🇧 English</option>
-					<option value="fr">🇫🇷 Français</option>
-					<option value="es">🇪🇸 Español</option>
+					<option value="en-GB" >🇬🇧 English</option>
+					<option value="fr-FR">🇫🇷 Français</option>
+					<option value="es-ES">🇪🇸 Español</option>
 				</select>
 			</div>
 			<span class="px-5 py-3 bg-dark">
-				<h1>current theme: </h1>
+				<h1 data-i18n="current_theme">current theme: </h1>
 
 				<select id="theme-select">
 					<option value="onedark">ondark</option>
@@ -102,7 +102,7 @@
 					before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 
 					before:w-[75%] before:h-[75%] before:bg-white before:opacity-0 checked:before:opacity-100 focus:brightness-100"
 				/>
-				<span class="ml-2 font-bold select-none">disable crt effect</span>
+				<span class="ml-2 font-bold select-none" data-i18n="disable_crt">disable crt effect</span>
 			</label>
 
 		</div>

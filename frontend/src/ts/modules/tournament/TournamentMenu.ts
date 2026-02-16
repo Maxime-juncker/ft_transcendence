@@ -67,7 +67,9 @@ export class TournamentMenu
 			const emptyMsg = document.createElement('div');
 			emptyMsg.className = 'text-center text-gray-500';
 			emptyMsg.textContent = 'No active tournaments';
+			emptyMsg.setAttribute('data-i18n', 'No_tournaments');
 			this.listContainer.appendChild(emptyMsg);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 			return ;
 		}
 
@@ -87,35 +89,36 @@ export class TournamentMenu
 
 			if (ownerName)
 			{
-				ownerName.textContent = `${t.ownerName}'s Tournament`;
-			}
-
-			if (info)
-			{
-				info.textContent = `${t.type} • ${t.playerCount} players`;
-			}
-
-			if (joinBtn)
-			{
-				joinBtn.textContent = t.type === 'public' ? 'Join' : 'Request';
-				joinBtn.dataset.id = t.id;
-				joinBtn.dataset.type = t.type;
-
-				joinBtn.addEventListener('click', (e) =>
+				ownerName.innerHTML = `<span data-i18n="tournament_of"></span> <span>${t.ownerName}</span>`;
+				if (info)
 				{
-					const target = e.currentTarget as HTMLElement;
-					const id = target.dataset.id;
-					if (id)
+					info.innerHTML = `<span>${t.playerCount}</span> <span data-i18n="players"></span>`;
+					if (joinBtn)
 					{
-						this.joinTournament(id);
+						joinBtn.textContent = 'Join';
+						joinBtn.setAttribute('data-i18n', 'Join');
+						joinBtn.dataset.id = t.id;
+						joinBtn.dataset.type = t.type;
+
+						joinBtn.addEventListener('click', (e) =>
+						{
+							const target = e.currentTarget as HTMLElement;
+							const id = target.dataset.id;
+							if (id)
+							{
+								this.joinTournament(id);
+							}
+						});
 					}
-				});
+				}
 			}
 			
 			if (this.listContainer)
 			{
 				this.listContainer.appendChild(clone);
 			}
+
+			window.dispatchEvent(new CustomEvent('pageChanged'));
 		});
 	}
 
@@ -167,14 +170,15 @@ export class TournamentMenu
 		{
 			// show loading indicator
 			const lobbyView = Router.Instance?.activeView as LobbyView;
-			lobbyView.StartLoading();
+			lobbyView.loadingIndicator?.startLoading();
+			console.log(lobbyView.loadingIndicator);
 			const res = await fetch('/api/create-tournament',
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', },
 				body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
 			});
-			lobbyView.stopLoading();
+			lobbyView.loadingIndicator?.stopLoading();
 
 			this.createBtn.classList.remove("btn-disable");
 			this.createBtn.disabled = false;

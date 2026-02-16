@@ -122,7 +122,6 @@ export class GameClient extends Utils
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 		{
-			console.warn("missing html in createPlayerHtml()");
 			return ;
 		}
 		this.m_playerContainer.innerHTML = "";

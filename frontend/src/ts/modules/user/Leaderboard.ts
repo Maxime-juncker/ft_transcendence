@@ -117,7 +117,7 @@ export class Leaderboard
 			return ;
 		this.cleanContainer();
 		let max = this.m_users.length < this.m_LeaderboardSize ? this.m_users.length : this.m_LeaderboardSize;
-		for (let i = 0; i < max; i++)
+		for (let i = max - 1; i >= 0; i--)
 		{
 			await this.addUser(i);
 		}

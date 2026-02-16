@@ -67,13 +67,6 @@ export class TournamentLobby
 		this.startBtn = context.querySelector('#lobby-start-btn') as HTMLButtonElement;
 		this.leaveBtn = context.querySelector('#lobby-leave-btn') as HTMLButtonElement;
 		this.lobbyTitle = context.querySelector('#lobby-title') as HTMLElement;
-		
-		console.log('[TournamentLobby] Elements found:', {
-			playerList: !!this.playerList,
-			startBtn: !!this.startBtn,
-			leaveBtn: !!this.leaveBtn,
-			lobbyTitle: !!this.lobbyTitle
-		});
 	}
 
 	private async init()
@@ -131,10 +124,10 @@ export class TournamentLobby
 	private async render(data: any)
 	{
 		this.isOwner = data.ownerId === this.user.id;
-		
+
 		if (this.lobbyTitle)
 		{
-			this.lobbyTitle.innerText = data.ownerName + "'s Tournament";
+			this.lobbyTitle.innerHTML = `<span data-i18n="tournament_of"></span> <span>${data.ownerName}</span>`;
 		}
 
 		if (this.playerList)
