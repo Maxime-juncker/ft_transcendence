@@ -23,7 +23,7 @@ export class Parameters
 	static MAX_ANGLE: number = 1.5;
 	static SPEED: number = 1.0;
 	static SPEED_INCREMENT: number = 0.1;
-	static POINTS_TO_WIN: number = 3;
+	static POINTS_TO_WIN: number = 11;
 	static FPS: number = 60;
 
 	static MIN_Y_PADDLE: number = Parameters.PADDLE_HEIGHT / 2;
