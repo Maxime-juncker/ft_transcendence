@@ -140,9 +140,9 @@ export class Chat
 	/**
 	 * send dm to id for starting match
 	 */
-	public async notifyMatch(id: number, opponentId: number, gameId: string, playerSide: number)
+	public async notifyMatch(id: number, opponentId: number, gameId: string, playerSide: number, mode: string = "online")
 	{
-		const res = JSON.stringify({ username: "SERVER", message: "START", opponentId: opponentId, gameId: gameId, playerSide: playerSide});
+		const res = JSON.stringify({ username: "SERVER", message: "START", opponentId: opponentId, gameId: gameId, playerSide: playerSide, mode: mode});
 		this.sendTo(id, res)
 		this.sendTo(id, this.serverMsg(`you will play against: ${await this.getPlayerName(opponentId)}`));
 	}

@@ -434,23 +434,37 @@ export class MainUser extends User
 	public onLogin(cb: ((user: MainUser) => void)) { this.m_onLoginCb.push(cb); }
 	public onLogout(cb: ((user: MainUser) => void)) { this.m_onLogoutCb.push(cb); }
 
+	public async getUserFromToken(): Promise<number>
+	{
+		if (!this.m_token)
+		{
+			console.warn("token null");
+			return -1;
+		}
+
+		const response = await fetch("/api/user/get_session");
+		const data = await response.json();
+
+		if (response.status == 200)
+		{
+			this.setUserJson(data);
+			return 0;
+		}
+		this.m_id = -1;
+		return -1;
+	}
+
 	public async loginSession()
 	{
 		const token = getCookie("jwt_session");
 		if (!token)
 			return;
 
-		const response = await fetch("/api/user/get_session");
-		const data = await response.json();
 		this.m_token = token;
-
-		if (response.status == 200)
+		if (await this.getUserFromToken() != -1)
 		{
-			this.setUserJson(data);
 			this.m_onLoginCb.forEach(cb => cb(this));
 		}
-		else
-			this.m_id = -1;
 	}
 
 	public async login(email: string, passw: string, totp: string): Promise<{ status: number, data: any }> {
@@ -489,7 +503,7 @@ export class MainUser extends User
 	{
 		if (this.id == -1)
 			return;
-		await this.updateSelf();
+		await this.getUserFromToken();
 		if (this.m_userElement)
 			this.m_userElement.updateHtml(this);
 	}
@@ -635,7 +649,6 @@ export class MainUser extends User
 			})
 			
 		});
-
 		return response.status;
 	}
 
@@ -666,6 +679,8 @@ export class MainUser extends User
 
 	public async removeFromQueue(): Promise<number>
 	{
+		if (this.id == -1 || !this.m_token)
+			return -1;
 		const res = await fetch("/api/chat/removeQueue", { 
 			method: "DELETE",
 			headers: { 'content-type': 'application/json' },

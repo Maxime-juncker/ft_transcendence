@@ -202,6 +202,7 @@ export class Chat
 		const username = json.username;
 		const message = json.message;
 
+		console.log(json);
 		if ("connections" in json)
 		{
 			const connectionsId = json.connections;
@@ -220,8 +221,9 @@ export class Chat
 			return ;
 		}
 
-		if (message == "START" && json.gameId)
+		if (message == "START" && json.gameId && json.mode)
 		{
+			MainUser.Instance?.gameRouter?.navigateTo("game", json.mode);
 			this.startGameCb(json);
 			return ;
 		}

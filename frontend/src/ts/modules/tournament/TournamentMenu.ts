@@ -156,7 +156,7 @@ export class TournamentMenu
 		}
 	} 
 
-	private createTournamentClickHandler = async () =>
+	public createTournamentClickHandler = async () =>
 	{
 		if (!this.createBtn)
 		{
