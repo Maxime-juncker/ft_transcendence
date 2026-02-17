@@ -76,10 +76,6 @@ git clone https://github.com/Maxime-juncker/ft_transcendence.git
 cd ft_transcendence
 make
 ```
-run a benchamrk (will test user creation / login / game history)
-```bash
-docker compose --profile benchmark up
-```
 
 The first launch will last around ~3min.
 
