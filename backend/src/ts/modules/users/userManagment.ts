@@ -23,8 +23,11 @@ import { getUserName } from "./user.js";
 *	- at least 1 lower char
 *	- at least 1 number
 */
-function checkPasswPolicy(passw: string): DbResponse
+function validatePassw(passw: string): DbResponse
 {
+	if (passw.length > 75)
+		return { code: 403, data: { message: "password too long" }};
+
 	if (passw.length < 3)
 		return { code: 403, data: { message: "password must be at least 3 character" }};
 
@@ -42,31 +45,17 @@ function checkPasswPolicy(passw: string): DbResponse
 
 async function validateCreationInput(email: string, name: string, passw: string): Promise<DbResponse>
 {
-	const retval = checkPasswPolicy(passw);
+	var retval = validatePassw(passw);
 	if (retval.code != 200)
 		return retval;
 
-	if (!validate_email(email))
-		return { code: 403, data: { message: "email is invalid" }};
-	if (!validate_name(name))
-		return { code: 403, data: { message: "name is invalid" }};
+	retval = await validateName(name);
+	if (retval.code != 200)
+		return retval;
 
-	if (name.length <= 0)
-		return { code: 403, data: { message: `name is too short` }};
-	if (name.length > 35)
-		return { code: 403, data: { message: `name is too long` }};
-
-	if (await isUsernameTaken(name))
-	{
-		Logger.warn(`${name} is already in database`);
-		return { code: 403, data: { message: `this username is already taken` }};
-	}
-
-	if (await isEmailTaken(email))
-	{
-		Logger.warn(`${email} is already associated to an account`);
-		return { code: 403, data: { message: `this email is already taken` }};
-	}
+	retval = await validateEmail(email);
+	if (retval.code != 200)
+		return retval;
 
 	return { code: 200, data: { message: "ok" }};
 }
@@ -83,21 +72,45 @@ async function isUsernameTaken(name: string): Promise<boolean>
 	return res.code != 404;
 }
 
-function validate_email(email: string)
+async function validateEmail(email: string): Promise<DbResponse>
 {
-	return String(email)
-	.toLowerCase()
-	.match(
-		/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-	);
+	if (email.length <= 0)
+		return { code: 403, data: { message: "email empty" }};
+
+	if (email.length > 75)
+		return { code: 403, data: { message: "email too long" }};
+
+	if (!String(email).toLowerCase().match(
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+		return { code: 403, data: { message: "email is invalid" }};
+
+	if (await isEmailTaken(email))
+	{
+		Logger.warn(`${email} is already associated to an account`);
+		return { code: 403, data: { message: `this email is already taken` }};
+	}
+
+	return { code: 200, data: "ok" };
 }
 
-function validate_name(name: string): boolean
+async function validateName(name: string): Promise<DbResponse>
 {
 	const regex = /[\W]/g;
 	const match = name.match(regex)
 
-	return match ? false : true;
+	if (match)
+		return { code: 403, data: { message: "name has invalid characters" }};
+	if (name.length <= 0)
+		return { code: 403, data: { message: "name too short" }};
+	if (name.length > 35)
+		return { code: 403, data: { message: "name too long" }};
+	if (await isUsernameTaken(name))
+	{
+		Logger.warn(`${name} is already in database`);
+		return { code: 403, data: { message: `this username is already taken` }};
+	}
+
+	return { code: 200, data: "ok" };
 }
 
 export async function createGuest(): Promise<DbResponse>
@@ -422,6 +435,10 @@ export async function unBlockUser(userId: number, target: number, db: Database) 
 
 export async function updatePassw(user_id: number, oldPass: string, newPass: string): Promise<DbResponse>
 {
+	const retval = validatePassw(newPass);
+	if (retval.code != 200)
+		return retval;
+	
 	const sql = "UPDATE users SET passw = ? WHERE id = ? AND passw = ? RETURNING id";
 	try
 	{
@@ -439,6 +456,9 @@ export async function updatePassw(user_id: number, oldPass: string, newPass: str
 
 export async function updateName(user_id: number, name: string): Promise<DbResponse>
 {
+	const retval = await validateName(name);
+	if (retval.code != 200)
+		return retval;
 	const sql = "UPDATE users SET name = ? WHERE id = ?";
 	try
 	{
@@ -456,6 +476,10 @@ export async function updateName(user_id: number, name: string): Promise<DbRespo
 
 export async function updateEmail(user_id: number, email: string): Promise<DbResponse>
 {
+	const retval = await validateEmail(email);
+	if (retval.code != 200)
+		return retval;
+
 	const sql = "UPDATE users SET email = ? WHERE id = ?";
 	try
 	{

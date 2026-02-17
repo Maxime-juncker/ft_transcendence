@@ -97,7 +97,7 @@ export class ServerSideRendering
 		this.server = server;
 		this.setupRoutes();
 		this.constructSPA(routes);
-		Logger.log("spa ready");
+		Logger.success("spa ready");
 	}
 
 	/**
@@ -124,7 +124,6 @@ export class ServerSideRendering
 			{
 				return reply.code(404).send({ message: 'route not found' });
 			}
-			Logger.log("sending page");
 			reply.type('text/html').send(this.m_spaPage);
 		});
 

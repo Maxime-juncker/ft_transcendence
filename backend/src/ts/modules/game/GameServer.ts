@@ -60,8 +60,8 @@ export class GameServer
 
 		const gameId = crypto.randomUUID();
 
-		await chat.notifyMatch(player1, player2, gameId, 1);
-		await chat.notifyMatch(player2, player1, gameId, 2);
+		await chat.notifyMatch(player1, player2, gameId, 1, "duel");
+		await chat.notifyMatch(player2, player1, gameId, 2, "duel");
 
 		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
 

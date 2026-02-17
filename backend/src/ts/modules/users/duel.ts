@@ -1,7 +1,7 @@
 import { core, chat, DbResponse } from 'core/server.js';
 import { getUserById } from './user.js';
 import { GameServer } from 'modules/game/GameServer.js';
-import { getUserName } from './user.js';
+import { getUserName, getBlockUser } from './user.js';
 
 type Duel = {
 	senderId:	number,
@@ -36,11 +36,17 @@ export async function inviteDuel(senderId: number, id: number): Promise<DbRespon
 	if (res.code != 200)
 		return res;
 
+	const isBlock = await getBlockUser(id, senderId);
+	if (isBlock.code == 200) // user is blocked
+	{
+		return { code: 200, data: { message: "invite sent" }};
+	}
+
 	if (findDuel(senderId, id))
 		return { code: 200, data: { message: "awaiting user response" }};
 
 	duels.push({ senderId: senderId, id: id });
-	chat.sendTo(id, chat.serverMsg(`${await getUserName(senderId)} is inviting you for a duel\n(/accept | /decline)`));
+	chat.sendTo(id, chat.serverMsg(`${await getUserName(senderId)} is inviting you for a duel\n(/acceptDuel | /declineDuel)`));
 	return { code: 200, data: { message: "invite sent" }};
 }
 
@@ -65,7 +71,7 @@ export async function declineDuel(senderId: number, id: number): Promise<DbRespo
 	if (!duel)
 		return { code: 404, data: { message: "invite not found" }};
 	removeDuel(duel);
-	chat.sendTo(id, chat.serverMsg(`${await getUserName(senderId)} has declined the invite.`));
+	chat.sendTo(id, chat.serverMsg(`${await getUserName(senderId)} has declined the invite.`, "duelDeclined"));
 
 	return { code: 200, data: { message: "invite has been declined" }};
 }

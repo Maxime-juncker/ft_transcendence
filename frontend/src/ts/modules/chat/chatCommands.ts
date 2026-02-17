@@ -119,7 +119,7 @@ export function registerCmds(chat: Chat)
 	});
 
 	cmd.register("invite", "<username>\n\tinvite <username> to lobby", async (chat: Chat, argv: Array<string>) => {
-		if (!chat.user)
+		if (!chat.user || !chat.user.gameRouter)
 			return ;
 
 		if (argv.length != 2)
@@ -128,11 +128,12 @@ export function registerCmds(chat: Chat)
 			return ;
 		}
 
+		// user is not in a tournament, creating one for him
 		if (chat.user.gameRouter?.currentPage != "tournament-lobby")
 		{
-			chat.user.gameRouter?.navigateTo('tournament-create', '');
-			chat.displayMessage(serverReply("you need to create a tournament"))
-			return;
+			chat.user.gameRouter.navigateTo('tournament-menu', '');
+			chat.displayMessage(serverReply("creating a tournament, please wait..."));
+			await chat.user.gameRouter.m_tournamentMenu?.createTournamentClickHandler();
 		}
 		if (!chat.user.gameRouter.m_lobby || !chat.user.gameRouter.m_lobby.id)
 			return;
@@ -287,7 +288,7 @@ export function registerCmds(chat: Chat)
 				id: json.id
 			})
 		});
-		chat.user.gameRouter?.navigateTo("game", "duel");
+		displayResponse(chat, res);
 	});
 
 	cmd.register("acceptDuel", "<username>\n\taccept duel of <username>", async (chat: Chat, argv: Array<string>) => {
@@ -307,7 +308,6 @@ export function registerCmds(chat: Chat)
 			return ;
 		}
 		var json = await res.json();
-		chat.user.gameRouter?.navigateTo("game", "duel");
 
 		res = await fetch("/api/duel/accept", {
 			method: "POST",
@@ -317,8 +317,6 @@ export function registerCmds(chat: Chat)
 				id: json.id
 			})
 		});
-		
-		displayResponse(chat, res);
 	});
 
 	cmd.register("declineDuel", "<username>\n\tdecline duel of <username>", async (chat: Chat, argv: Array<string>) => {
