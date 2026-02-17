@@ -1,6 +1,20 @@
 import { Logger } from './Logger.js';
 import { runTests } from 'Test.js';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+export var host = "localhost:8081"
+export var routePassw = process.env.PROTECTED_ROUTE_PASS;
+
+if (process.argv.length >= 3)
+{
+	host = process.argv[2];
+}
+
+if (process.argv.length >= 4)
+{
+	routePassw = process.argv[3];
+}
+
 if (!process.env.RUN_BENCHMARK || process.env.RUN_BENCHMARK != "1")
 {
 	Logger.log("benchmark disable, exiting (set RUN_BENCHMARK=1 to enable)");
@@ -20,7 +34,7 @@ for (var i = 0; i < maxConnRetry; i++)
 {
 	try
 	{
-		await fetch(`http://backend:3000/api/chat/ping`);
+		await fetch(`https://${host}/api/chat/ping`);
 		Logger.success("connection to backend succesful");
 		break;
 	}
