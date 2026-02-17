@@ -29,7 +29,7 @@ pub(crate) type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 pub(crate) struct Game {
     auth: Rc<RefCell<Auth>>,
     context: Rc<Context>,
-    game_id: String,
+    pub(crate) game_id: String,
     pub(crate) opponent_name: String,
     player_side: u64,
     pub(crate) receiver: Option<watch::Receiver<(Option<Bytes>, Option<Utf8Bytes>)>>,
@@ -104,8 +104,8 @@ impl Game {
             "https://{}/api/start-game/{}",
             self.context.location, self.game_id
         );
-		let mut body = std::collections::HashMap::new();
-		body.insert("token", self.auth.borrow().token.clone());
+        let mut body = std::collections::HashMap::new();
+        body.insert("token", self.auth.borrow().token.clone());
         self.context.client.post(url).json(&body).send().await?;
         let request = format!(
             "wss://{}/api/game/{}/{}",

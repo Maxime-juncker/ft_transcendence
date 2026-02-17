@@ -87,7 +87,9 @@ impl ScreenDisplayer for Infos {
         print_block(instructions, layout[0], buf);
     }
     fn display_waiting_screen(&self, area: Rect, buf: &mut Buffer) {
-        let block = Block::bordered().title_bottom("Menu: ESC. Quit".bold().into_centered_line()).border_set(border::THICK);
+        let block = Block::bordered()
+            .title_bottom("Menu: ESC. Quit".bold().into_centered_line())
+            .border_set(border::THICK);
         Paragraph::new(Line::from("Searching for opponent".bold()))
             .centered()
             .block(block)
@@ -237,7 +239,12 @@ impl ScreenDisplayer for Infos {
             ]),
         ];
         Paragraph::new(content)
-            .block(Block::default().title("Signup").borders(Borders::ALL).title_bottom("Menu: ESC. Quit  Enter. Ok".bold().into_centered_line()))
+            .block(
+                Block::default()
+                    .title("Signup")
+                    .borders(Borders::ALL)
+                    .title_bottom("Menu: ESC. Quit  Enter. Ok".bold().into_centered_line()),
+            )
             .alignment(Alignment::Left)
             .render(area, buf);
     }
@@ -291,7 +298,7 @@ impl ScreenDisplayer for Infos {
                 Block::default()
                     .title("Signup".bold())
                     .borders(Borders::ALL)
-                    .title_bottom("Menu: Enter. Ok  ESC. Quit".bold().into_centered_line())
+                    .title_bottom("Menu: Enter. Ok  ESC. Quit".bold().into_centered_line()),
             )
             .alignment(Alignment::Left)
             .render(area, buf);
