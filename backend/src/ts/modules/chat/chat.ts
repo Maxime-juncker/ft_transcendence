@@ -50,7 +50,6 @@ export class Chat
 	private checkHealth()
 	{
 		this.m_connections.forEach(async (id: number, ws: WebSocket) => {
-			// Logger.log("checking health for:", await getUserName(id));
 			const idx = this.m_healthQueue.indexOf(id); 
 			if (idx == -1)
 			{
@@ -76,7 +75,6 @@ export class Chat
 		if (i == this.m_healthQueue.length)
 			return;
 
-		// Logger.success(await getUserName(id), "has confirm health check");
 		this.m_healthQueue = this.m_healthQueue.filter(num => num != Number(id));
 	}
 
@@ -84,9 +82,7 @@ export class Chat
 	{
 		this.m_connections.forEach(async (id: number, ws: WebSocket) => {
 			if (user_id == id)
-		{
-
-				// RESUME HERE
+			{
 				this.disconnectClient(ws);
 			}
 		});
@@ -276,7 +272,6 @@ export class Chat
 				const data = await getBlockUser(id, senderId);
 				if (data.code == 200) // user is blocked
 				{
-					Logger.log(`${await getUserName(senderId)} has block ${await getUserName(id)}`);
 					return;
 				}
 				conn.send(message);
@@ -301,6 +296,12 @@ export class Chat
 		if (senderId === userId)
 			return { code: 400, data: { message: "you can't invite yourself" }};
 	
+		const isBlock = await getBlockUser(userId, senderId);
+		if (isBlock.code == 200) // user is blocked
+		{
+			return { code: 200, data: { message: "invite sent" }};
+		}
+		
 		for (let i = 0; i < this.m_lobbyInvites.length; i++)
 		{
 			const invite = this.m_lobbyInvites[i];

@@ -1,7 +1,7 @@
 import { core, chat, DbResponse } from 'core/server.js';
 import { getUserById } from './user.js';
 import { GameServer } from 'modules/game/GameServer.js';
-import { getUserName } from './user.js';
+import { getUserName, getBlockUser } from './user.js';
 
 type Duel = {
 	senderId:	number,
@@ -35,6 +35,12 @@ export async function inviteDuel(senderId: number, id: number): Promise<DbRespon
 	var res = await getUserById(id, core.db);
 	if (res.code != 200)
 		return res;
+
+	const isBlock = await getBlockUser(id, senderId);
+	if (isBlock.code == 200) // user is blocked
+	{
+		return { code: 200, data: { message: "invite sent" }};
+	}
 
 	if (findDuel(senderId, id))
 		return { code: 200, data: { message: "awaiting user response" }};
