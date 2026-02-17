@@ -25,6 +25,9 @@ import { getUserName } from "./user.js";
 */
 function validatePassw(passw: string): DbResponse
 {
+	if (passw.length > 75)
+		return { code: 403, data: { message: "password too long" }};
+
 	if (passw.length < 3)
 		return { code: 403, data: { message: "password must be at least 3 character" }};
 
@@ -71,6 +74,12 @@ async function isUsernameTaken(name: string): Promise<boolean>
 
 async function validateEmail(email: string): Promise<DbResponse>
 {
+	if (email.length <= 0)
+		return { code: 403, data: { message: "email empty" }};
+
+	if (email.length > 75)
+		return { code: 403, data: { message: "email too long" }};
+
 	if (!String(email).toLowerCase().match(
 		/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
 		return { code: 403, data: { message: "email is invalid" }};
