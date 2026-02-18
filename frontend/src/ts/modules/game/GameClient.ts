@@ -4,7 +4,6 @@ import { MainUser, User, getUserFromId } from 'modules/user/User.js';
 import { Chat } from 'modules/chat/chat.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
-import { json } from 'stream/consumers';
 
 enum Params
 {
@@ -124,12 +123,14 @@ export class GameClient extends Utils
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 		{
-			console.warn("Cannot create player HTML: missing container or user data");
 			return ;
 		}
 		this.m_playerContainer.innerHTML = "";
 		this.m_player1 = this.initPlayerHtml(this.m_user);
 		this.m_player2 = this.initPlayerHtml(this.m_user2);
+		// if mode == local, then player2 has no real account
+		if (this.mode == 'local' && this.m_player2)
+			this.m_player2.shouldRedirect = false;
 	}
 
 	private isModeValid(): boolean

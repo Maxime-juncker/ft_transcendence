@@ -162,7 +162,6 @@ export class GameRouter
 
 	private async showPage(page: string, mode: string): Promise<void>
 	{
-		console.warn(this.currentClass)
 		if (this.currentClass && this.currentClass.destroy)
 		{
 			console.log('Destroying current class instance for page:', this.currentPage);
