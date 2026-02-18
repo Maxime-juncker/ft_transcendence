@@ -10,12 +10,12 @@ the goal of this project is to recreate the famous pong game but with more featu
 Web:
 - Blockchain
 - Framework to build the backend (fastify)
-- Framwork / toolkit to build the frontend (tailwindcss)
+- Framework / toolkit to build the frontend (tailwindcss)
 - Database for the backend (sqlite)
 
-User Managment:
-- Standard user managment, (authentication, user profile, friends, etc...)
-- Remote authentification using OAuth2 (support 42 and github OAuth2)
+User Management:
+- Standard user management, (authentication, user profile, friends, etc...)
+- Remote authentication using OAuth2 (support 42 and github OAuth2)
 
 Gameplay and user experience:
 - Remote player
@@ -31,7 +31,7 @@ Cybersecurity:
 - Two Factor Auth and JWT tokens
 
 Devops:
-- Log managment (Elasticsearch, Logstash, Kibana)
+- Log management (Elasticsearch, Logstash, Kibana)
 - Monitoring system (Prometheus and Grafana)
 
 Accessibility:
@@ -67,7 +67,7 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 | ELASTIC_PASSWORD | password of elastic webui (need to be >= 8 Length)|
 | GRAFANA_PASSWORD | password of grafana webui (need to be >= 8 Length)|
 | LOGSTASH_PASSWORD | password of logstash (need to be >= 8 Length) |
-| LOGSTASH_WRITER_PASSWORD | password of logstash writter (need to be >= 8 Length)|
+| LOGSTASH_WRITER_PASSWORD | password of logstash writer (need to be >= 8 Length)|
 
 
 ### Run the project
