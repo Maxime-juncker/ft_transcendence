@@ -251,7 +251,33 @@ export class TournamentLobby
 		}
 	}
 
-	public destroy(): void
+	private async leaveTournament(): Promise<void>
+	{
+		if (!this.tournamentId)
+		{
+			return;
+		}
+
+		try
+		{
+			await fetch('/api/leave-tournament',
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify
+				({
+					tournamentId: this.tournamentId,
+					token: MainUser.Instance?.token
+				})
+			});
+		}
+		catch (e)
+		{
+			console.error('Error leaving tournament:', e);
+		}
+	}
+
+	public async destroy(): Promise<void>
 	{
 		if (this.intervalId)
 		{
@@ -267,6 +293,11 @@ export class TournamentLobby
 		if (this.leaveBtn)
 		{
 			this.leaveBtn.removeEventListener( 'click', this.handleLeave);
+		}
+
+		if (this.router.currentPage !== 'tournament-menu')
+		{
+			await this.leaveTournament();
 		}
 	}
 }

@@ -4,13 +4,10 @@ import { MainUser, User, getUserFromId } from 'modules/user/User.js';
 import { Chat } from 'modules/chat/chat.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
+import { json } from 'stream/consumers';
 
 enum Params
 {
-	PADDLE_HEIGHT = 15,
-	PADDLE_WIDTH = 1,
-	PADDLE_PADDING = 2,
-	BALL_SIZE = 2,
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = 'var(--color-white)',
 	COUNTDOWN_START = 3,
@@ -76,6 +73,11 @@ export class GameClient extends Utils
 	private m_router:			GameRouter;
 	private m_endTimeout:		any | null = null;
 
+	private paddleHeight: number = 15;
+	private paddleWidth: number = 2;
+	private paddlePadding: number = 2;
+	private ballSize: number = 2;
+
 	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
 	{
 		super();
@@ -122,6 +124,7 @@ export class GameClient extends Utils
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 		{
+			console.warn("Cannot create player HTML: missing container or user data");
 			return ;
 		}
 		this.m_playerContainer.innerHTML = "";
@@ -159,6 +162,7 @@ export class GameClient extends Utils
 
 	private async createGameFeedback(json: any)
 	{
+		console.log('Received game creation feedback:', json);
 		if (this.m_endTimeout)
 		{
 			clearTimeout(this.m_endTimeout);
@@ -177,7 +181,7 @@ export class GameClient extends Utils
 		}
 		else
 		{
-			this.m_user2 = await getUserFromId(json.opponentId.toString());
+			this.m_user2 = await getUserFromId(json.opponentId);
 		}
 		
 		this.playerSide = json.playerSide;
@@ -209,15 +213,20 @@ export class GameClient extends Utils
 				console.error('Failed to create game:', response.status, data);
 				return ;
 			}
+
 			this.gameId = data.gameId;
 			this.playerSide = data.playerSide;
+			this.paddleHeight = data.paddleHeight;
+			this.paddleWidth = data.paddleWidth;
+			this.paddlePadding = data.paddlePadding;
+			this.ballSize = data.ballSize;
 
 			if (data.opponentId === 0)
 			{
 				this.m_user2 = new User();
 				const name = this.mode === 'bot' ? 'Bot' : 'Player 2';
 				this.m_user2.setUser(0, name, '', '/public/avatars/default.webp', 0);
-			}
+			}		
 			else
 			{
 				this.m_user2 = await getUserFromId(data.opponentId);
@@ -264,14 +273,14 @@ export class GameClient extends Utils
 	private showElements(): void
 	{
 		this.hide('countdown');
-		this.setHeight('paddle-left', Params.PADDLE_HEIGHT + '%', true);
-		this.setHeight('paddle-right', Params.PADDLE_HEIGHT + '%', true);
-		this.setWidth('paddle-left', Params.PADDLE_WIDTH + '%');
-		this.setWidth('paddle-right', Params.PADDLE_WIDTH + '%');
-		this.setLeft('paddle-left', Params.PADDLE_PADDING + '%');
-		this.setRight('paddle-right', Params.PADDLE_PADDING + '%');
-		this.setWidth('ball', Params.BALL_SIZE + '%', true);
-		this.setHeight('ball', Params.BALL_SIZE + '%');
+		this.setHeight('paddle-left', this.paddleHeight + '%', true);
+		this.setHeight('paddle-right', this.paddleHeight + '%', true);
+		this.setWidth('paddle-left', this.paddleWidth + '%');
+		this.setWidth('paddle-right', this.paddleWidth + '%');
+		this.setLeft('paddle-left', this.paddlePadding + '%');
+		this.setRight('paddle-right', this.paddlePadding + '%');
+		this.setWidth('ball', this.ballSize + '%', true);
+		this.setHeight('ball', this.ballSize + '%');
 		this.setContent('score-left', '0', true);
 		this.setContent('score-right', '0', true);
 		this.show('net');

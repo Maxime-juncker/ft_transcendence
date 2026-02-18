@@ -160,11 +160,13 @@ export class GameRouter
 		this.showPage(page, mode);
 	}
 
-	private showPage(page: string, mode: string): void
+	private async showPage(page: string, mode: string): Promise<void>
 	{
+		console.warn(this.currentClass)
 		if (this.currentClass && this.currentClass.destroy)
 		{
-			this.currentClass.destroy();
+			console.log('Destroying current class instance for page:', this.currentPage);
+			await this.currentClass.destroy();
 		}
 
 		const currentPageElement = this.pages.get(this.currentPage);
@@ -198,11 +200,11 @@ export class GameRouter
 				this.m_tournamentMenu = new TournamentMenu(this);
 				return (this.m_tournamentMenu);
 			case 'tournament-lobby':
-				if (this.m_user)
-				{
-					this.m_lobby = new TournamentLobby(this, this.m_user, mode, this.m_chat!);
-					return this.m_lobby;
-				}
+			if (this.m_user)
+			{
+				this.m_lobby = new TournamentLobby(this, this.m_user, mode, this.m_chat!);
+				return this.m_lobby;
+			}
 			default:
 				return (null);
 		}

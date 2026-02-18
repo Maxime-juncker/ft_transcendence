@@ -94,9 +94,13 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 		const oldEloSql = "SELECT elo FROM users WHERE id = ?";
 		oldElo1 = await db.get(oldEloSql, [id1]);
 		oldElo2 = await db.get(oldEloSql, [id2]);
+		if (!oldElo2 || !oldElo1)
+			return { code: 404, data: { message: "profile not found" } };
+
 	}
 	catch (err)
 	{
+		Logger.error('could not retrieve old elo for users', id1, id2);
 		Logger.error(`database err: ${err}`);
 		return { code: 500, data: { message: "Database Error" }};
 	}
@@ -135,7 +139,7 @@ async function calculateElo(elo1: number, elo2: number, score1: number, score2: 
 	const scaleFactor = 420;
 	const expectedScore = 1.0 / (1.0 + Math.pow(10, (elo2 - elo1) / scaleFactor));
 	const diffScore = Math.abs(score1 - score2);
-	const gap = 0.5 + (diffScore - 1) * (1.0 / (maxPoint - 1));
+	const gap = 0.5 + (diffScore - 1) * (1.0 / (Math.max(1, maxPoint - 1)));
 	const S1 = (score1 > score2) ? 1 : 0;
 	return (K * gap * (S1 - expectedScore));
 }

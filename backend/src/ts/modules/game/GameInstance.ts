@@ -15,15 +15,15 @@ enum Keys
 
 export class Parameters
 {
-	static PADDLE_SPEED: number = 1.5;
+	static PADDLE_SPEED: number = process.env.PADDE_SPEED ? parseFloat(process.env.PADDE_SPEED) : 1.5;
 	static PADDLE_HEIGHT: number = 15;
 	static PADDLE_WIDTH: number = 2;
 	static PADDLE_PADDING: number = 2;
 	static BALL_SIZE: number = 2;
 	static MAX_ANGLE: number = 1.5;
-	static SPEED: number = 1.0;
-	static SPEED_INCREMENT: number = 0.1;
-	static POINTS_TO_WIN: number = 11;
+	static BALL_SPEED: number = process.env.BALL_SPEED ? parseFloat(process.env.BALL_SPEED) : 1.0;
+	static BALL_SPEED_INCREMENT: number = process.env.BALL_SPEED_INCREMENT ? parseFloat(process.env.BALL_SPEED_INCREMENT) : 0.1;
+	static POINTS_TO_WIN: number = process.env.POINTS_TO_WIN ? parseFloat(process.env.POINTS_TO_WIN) : 11;
 	static FPS: number = 60;
 
 	static MIN_Y_PADDLE: number = Parameters.PADDLE_HEIGHT / 2;
@@ -39,7 +39,7 @@ export class GameInstance
 {
 	private _interval: any | null = null;
 	private _keysPressed: Set<string> = new Set();
-	private _speed: number = Parameters.SPEED;
+	private _speed: number = Parameters.BALL_SPEED;
 	private _isRunning: boolean = false;
 	private _gameState: GameState = new GameState();
 	private _Player1Id: number | null = null;
@@ -167,7 +167,7 @@ export class GameInstance
 
 	private resetBall(): void
 	{
-		this._speed = Parameters.SPEED;
+		this._speed = Parameters.BALL_SPEED;
 		this._gameState.speedY = (Math.random() - 0.5);
 		this.normalizeSpeed();
 		this._gameState.ballX = 50;
@@ -201,7 +201,7 @@ export class GameInstance
 			return ;
 		}
 
-		this._speed += Parameters.SPEED_INCREMENT;
+		this._speed += Parameters.BALL_SPEED_INCREMENT;
 		this._gameState.speedX = -this._gameState.speedX;
 		this._gameState.speedY = (this._gameState.ballY - paddleY) / Parameters.MIN_Y_PADDLE * Parameters.MAX_ANGLE;
 		this.bounceInterval = setInterval(() => {

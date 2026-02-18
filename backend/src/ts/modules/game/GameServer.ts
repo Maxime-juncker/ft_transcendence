@@ -1,10 +1,11 @@
-import { GameInstance } from './GameInstance.js';
+import { GameInstance, Parameters } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
 import { core, chat } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
+import { getBot } from 'modules/users/userManagment.js';
 
 export class GameServer
 {
@@ -80,10 +81,10 @@ export class GameServer
 					type: "object",
 					properties:
 					{
-						mode:		{ type: "string" },
-						playerName:	{ type: "number" },
+						mode:	{ type: "string" },
+						token:	{ type: "string" },
 					},
-					required: ["mode", "playerName"]
+					required: ["mode", "token"]
 				}
 			}
 		},
@@ -91,18 +92,26 @@ export class GameServer
 		{
 			try
 			{
-				const body = request.body as { mode: string; playerName: number};
+				const body = request.body as { mode: string; token: string};
 				const mode = body.mode;
-				const name = Number(body.playerName);
+				const token = body.token;
+
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
+				{
+					return reply.status(400).send({ error: 'Invalid token' });
+				}
 
 				if (mode === 'local')
 				{
 					const gameId = crypto.randomUUID();
 					const opponentId = 0;
-					const game = new GameInstance(mode, name, opponentId);
+					const game = new GameInstance(mode, data.id, opponentId);
 					this.activeGames.set(gameId, game);
-					Logger.log(`starting local game for: ${await getUserName(body.playerName)}`);
-					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
+					Logger.log(`starting local game for: ${await getUserName(data.id)}`);
+					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1',
+						paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
+						paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
 				}
 				else if (mode === 'online')
 				{
@@ -110,17 +119,19 @@ export class GameServer
 					{
 						if (game.mode === 'online')
 						{
-							if ((game.player1Id == name || game.player2Id == name) && game.winner === null)
+							if ((game.player1Id == data.id || game.player2Id == data.id) && game.winner === null)
 							{
-								const opponentId = (game.player1Id == name) ? game.player2Id : game.player1Id;
-								const playerSide = (game.player1Id == name) ? '1' : '2';
-								reply.status(200).send({ gameId: id, opponentId: opponentId, playerSide: playerSide });
+								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
+								const playerSide = (game.player1Id == data.id) ? '1' : '2';
+								reply.status(200).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
+									paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
+									paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
 								return ;
 							}
 						}
 					}
 
-					await chat.addPlayerToQueue(Number(name), this);
+					await chat.addPlayerToQueue(data.id, this);
 					reply.status(202).send({ message: "added to queue" });
 				}
 				else if (mode === 'duel')
@@ -130,12 +141,13 @@ export class GameServer
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();
-					const data = await getUserByName("bot", core.db);
-					const opponentId = data.data.id;
-					const game = new GameInstance(mode, name, opponentId);
+					const botId = await getBot();
+					const game = new GameInstance(mode, data.id, botId);
 					this.activeGames.set(gameId, game);
-					Logger.log(`starting bot game for: ${await getUserName(body.playerName)}`);
-					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1' });
+					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);
+					reply.status(201).send({ gameId, opponentId: botId, playerSide: '1',
+						paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
+						paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
 				}
 				else
 				{
