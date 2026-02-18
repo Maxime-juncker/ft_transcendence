@@ -65,9 +65,6 @@ export async function chatRoutes(fastify: FastifyInstance)
 	});
 
 	fastify.delete('/api/chat/removeQueue', {
-		config: { 
-			rateLimit: rateLimitMed
-		},
 		schema: {
 			body: {
 				type: "object",

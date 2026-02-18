@@ -175,6 +175,13 @@ export class Chat
 	 */
 	public async addPlayerToQueue(playerId: number, server: GameServer): Promise<string | null>
 	{
+		// check if player is already in queue
+		for (let i = 0; i < this.m_matchQueue.length; i++)
+		{
+			if (this.m_matchQueue[i] == playerId)
+				return null;
+		}
+
 		if (this.m_matchQueue.length + 1 >= 2) // run match
 		{
 			const id = await this.startGameMatchQueue(playerId, server);
