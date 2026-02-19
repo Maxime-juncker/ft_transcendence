@@ -292,7 +292,7 @@ export class User
 		return response.status;
 	}
 
-	public async uploadAvatar(file: FormData): Promise<any>
+	public async uploadAvatar(file: FormData): Promise<{ code: number, data: any }>
 	{
 		file.append('token', this.m_token);
 
@@ -304,7 +304,7 @@ export class User
 		var data = await response.json();
 		this.m_avatarPath = "/public/avatars/" + data.filename;
 
-		return response;
+		return { code: response.status, data: data };
 	}
 }
 
@@ -535,18 +535,23 @@ export class MainUser extends User
 		userHtml.updateHtml(user);
 	}
 
-	public async setAvatar(file: FormData): Promise<number>
+	public async setAvatar(file: FormData): Promise<{ code: number, data: any }>
 	{
 		if (this.id == -1)
-			return 1;
+			return { code: 1, data: "not login" };
 		if (!file)
-			return 2;
+			return { code: 2, data: "no file to upload" };
 
-		await this.uploadAvatar(file);
+		const res = await this.uploadAvatar(file);
+		if (res.code != 200)
+		{
+			return { code: res.code, data: res.data };
+		}
+
 		if (this.m_userElement)
 			this.m_userElement.updateHtml(this);
 
-		return 0;
+		return { code: 0, data: "ok" };
 	}
 
 	public async removeFriend(user: User): Promise<number> {

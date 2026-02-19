@@ -64,8 +64,6 @@ export class SettingsView extends ViewComponent
 
 		this.saveBtn = this.querySelector("#save-btn") as HTMLButtonElement;
 
-		this.usernameInput.placeholder = MainUser.Instance.name;
-		this.emailInput.placeholder = MainUser.Instance.email;
 
 		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
 		this.addTrackListener(this.logoutBtn, "click", () => MainUser.Instance?.logout());
@@ -110,7 +108,34 @@ export class SettingsView extends ViewComponent
 			});
 		}
 
+		this.updateFields();
 		this.hideForbiddenElement();
+	}
+
+	public updateFields()
+	{
+		if (!MainUser.Instance)
+			return;
+		if (this.avatarInput)
+			this.avatarInput.value = "";
+
+		if (this.usernameInput)
+		{
+			this.usernameInput.placeholder = MainUser.Instance.name;
+			this.usernameInput.value = "";
+
+		}
+		if (this.emailInput)
+		{
+			this.emailInput.placeholder = MainUser.Instance.email;
+			this.emailInput.value = "";
+		}
+		if (this.currPassInput)
+			this.currPassInput.value = "";
+		if (this.newPassInput)
+			this.newPassInput.value = "";
+		if (this.confirm2faInput)
+			this.confirm2faInput.value = "";
 	}
 
 
@@ -159,16 +184,16 @@ export class SettingsView extends ViewComponent
 			},
 			body: JSON.stringify({
 				token: MainUser.Instance.token,
-				oldPass: await hashString(oldPass),
-				newPass: await hashString(newPassw)
+				oldPass: oldPass,
+				newPass: newPassw
 			})
 		});
 		const data = await res.json();
 		if (res.status != 200)
 		{
-			return { code: 0, data: data.message };
+			return { code: 1, data: data.message };
 		}
-		return { code: 1, data: data.message };
+		return { code: 0, data: data.message };
 	}
 
 	private async confirmChange()
@@ -191,7 +216,9 @@ export class SettingsView extends ViewComponent
 			const file = this.avatarInput.files[0];
 			const formData = new FormData();
 			formData.append('avatar', file);
-			MainUser.Instance.setAvatar(formData);
+			const { code, data } = await MainUser.Instance.setAvatar(formData);
+			if (code != 0)
+				message += data.message + "\n";
 		}
 
 		if (this.newPassInput && this.currPassInput)
@@ -244,6 +271,7 @@ export class SettingsView extends ViewComponent
 			setPlaceHolderText(message);
 
 		await MainUser.Instance.refreshSelf();
+		this.updateFields();
 	}
 
 	private async new_totp()
