@@ -6,3 +6,4 @@ npm run build
 
 echo "launching benchmark"
 exec npm run start
+tail -f
