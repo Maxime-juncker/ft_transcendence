@@ -7,9 +7,28 @@ const selectElement = document.getElementById('language-selector');
 
 i18n.use(Backend).use(LanguageDetector).init({
 	fallbackLng: 'en-GB',
+	supportedLngs: ['en-GB', 'fr-FR', 'es-ES'],
+    nonExplicitSupportedLngs: false,
+	detection: {
+
+		order: ['navigator'],
+		caches: [],
+  
+
+		lookupFromNavigator: () => {
+		  let lng = navigator.language || (navigator.languages && navigator.languages[0]) || 'en-GB';
+  
+		  if (lng.startsWith('fr')) return 'fr-FR';
+		  if (lng.startsWith('es')) return 'es-ES';
+		  if (lng.startsWith('en')) return 'en-GB';
+  
+		  return lng;
+		}
+	  },
 	backend: {
 	  loadPath: () => `/public/locales/{{lng}}.json`,
 	},
+	debug: false,
 });
 
 function translatePage() {
