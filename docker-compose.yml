@@ -14,6 +14,14 @@ services:
       - HEALTH_CHECK_TIMER=${HEALTH_CHECK_TIMER:-60}
       - AVAX_INFURA=${AVAX_INFURA}
       - PRIVATE_KEY=${PRIVATE_KEY}
+      - PADDLE_SPEED=${PADDLE_SPEED:-1.0}
+      - BALL_SPEED=${BALL_SPEED:-1.0}
+      - BALL_SPEED_INCREMENT=${BALL_SPEED_INCREMENT:-0.1}
+      - POINTS_TO_WIN=${POINTS_TO_WIN:-11}
+      - PADDLE_HEIGHT=${PADDLE_HEIGHT:-15}
+      - PADDLE_WIDTH=${PADDLE_WIDTH:-2}
+      - PADDLE_PADDING=${PADDLE_PADDING:-2}
+      - BALL_SIZE=${BALL_SIZE:-2}
     volumes:
       - sqlite:/var/lib/sqlite:rw
       - avatars:/var/www/server/public/avatars:rw

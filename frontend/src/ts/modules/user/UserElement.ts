@@ -18,11 +18,16 @@ export class UserElement
 	private m_clone:			HTMLElement | null = null;
 	private	m_user:				User | null;
 	private m_type:				UserElementType;
+	private m_shouldRedirect:	boolean = true;
+
+	set shouldRedirect(value: boolean) { this.m_shouldRedirect = value; }
 
 	constructor(user: User | null, parent: HTMLElement, type: UserElementType, templateName: string = "user-profile-template", clickRedirect: boolean = true)
 	{
 		this.m_user = user;
 		this.m_type = type;
+		this.m_shouldRedirect = clickRedirect;
+
 
 		const template = document.getElementById(templateName) as HTMLTemplateElement;
 		if (!template)
@@ -45,9 +50,13 @@ export class UserElement
 		if (!this.m_htmlName)
 			console.warn("no btn username txt found");
 
-		if (user && clickRedirect)
+		if (user)
 		{
-			this.getElement("#profile")?.addEventListener("click", () => { Router.Instance?.navigateTo(`/profile?username=${user.name}`) });
+			this.getElement("#profile")?.addEventListener("click", () => {
+				if (!this.m_shouldRedirect)
+					return ;
+				Router.Instance?.navigateTo(`/profile?username=${user.name}`)
+			});
 		}
 
 		parent.prepend(this.m_clone);

@@ -51,7 +51,7 @@ export class Bot
 
 		this.socket = new WebSocket(`ws://localhost:3000/api/game/${gameId}/${this.playerSide}`);
 		this.socket.binaryType = 'arraybuffer';
-		
+
 		this.socket.onopen = () =>
 		{
 			this.interval = setInterval(() => { this.send(); }, Bot.INTERVAL_TIME);

@@ -11,6 +11,16 @@ export class ServerSideRendering
 	<html lang="en">
 	<head>
 	<meta charset="UTF-8">
+	<meta charset="UTF-8">
+	<meta name="description" content="ft_trancendence is a pong game created for the 42 school project of the same name. It features online multiplayer, matchmaking, a lobby system, and more.">
+	<meta name="keywords" content="game pong ft_trancendence 42">
+	<meta name="author" content="Alexis Bidolet--Foray Maxime Juncker Simon Thomas Yves Gille">
+
+	<meta property="og:title" content="ft_trancendence is a pong game created for the 42 school project of the same name. It features online multiplayer, matchmaking, a lobby system, and more.">
+	<meta property="og:description" content="Pong.">
+	<meta property="og:type" content="website">
+	<meta property="og:image" content="/public/preview.png">
+
 	<link rel="icon" type="image/x-icon" href="/public/favicon.ico">
 	<title>FT_transcendence</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
