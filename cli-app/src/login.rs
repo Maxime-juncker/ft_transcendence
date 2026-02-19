@@ -1,5 +1,6 @@
 use crate::Context;
 use crate::game::WsStream;
+use reqwest::{Client, header::HeaderMap};
 use anyhow::{Result, anyhow};
 use futures_util::StreamExt;
 use std::collections::HashMap;
@@ -218,7 +219,6 @@ pub(crate) async fn create_guest_session(
 ) -> Result<(String, u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/create_guest", context.location);
     let res = context.client.post(apiloc).send().await?;
-    // eprintln!("response {:?}", res);
     let body: serde_json::Value = res.json().await?;
     if let Some(token) = body["token"].as_str() {
         let (id, receiver) = get_id_and_launch_chat(context, token.to_string()).await?;
@@ -239,6 +239,7 @@ async fn enter_chat_room(
             .danger_accept_invalid_certs(true)
             .build()?,
     );
+    let (token_chat, location_chat) = (token.clone(), location.clone());
     let request = format!("wss://{}/api/chat?userid={}", location, token);
     let (ws_stream, _) =
         connect_async_tls_with_config(request, None, false, Some(connector)).await?;
@@ -247,15 +248,21 @@ async fn enter_chat_room(
         mpsc::Receiver<serde_json::Value>,
     ) = mpsc::channel(1024);
     tokio::spawn(async move {
-        if let Err(e) = chat(ws_stream, sender).await {
+        if let Err(e) = chat(ws_stream, sender, token_chat, location_chat).await {
             eprintln!("Error: {e}");
         }
     });
     Ok(receiver)
 }
 
-async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>) -> Result<()> {
-    while let Some(msg) = ws_stream.next().await {
+async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, token: String, location: String) -> Result<()> {
+        let client = Client::builder()
+                .danger_accept_invalid_certs(true)
+                .build()
+                .expect("Impossible to build new client, try again");
+        let mut body = HashMap::new();
+        body.insert("token", token);
+        while let Some(msg) = ws_stream.next().await {
         let last_message = match msg {
             Ok(Message::Text(result)) => result,
             _ => {
@@ -264,11 +271,21 @@ async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>) 
         };
         let message: serde_json::Value = serde_json::from_str(last_message.as_str())?;
         match message["gameId"].as_str() {
-            Some(_) => sender.send(message).await?,
-            _ => {
-                continue;
-            }
+            Some(_) => sender.send(message.clone()).await?,
+            _ => {},
         };
+        match message["flag"].as_str() {
+            Some(value) if value == "health" => {
+                let mut header = HeaderMap::new();
+                header.insert("content-type", "application/json".parse()?);
+                client.post(format!("https://{}/api/chat/healthCallback", &location))
+                    .headers(header)
+                    .json(&body)
+                    .send()
+                    .await?;
+            },
+            _ => {}
+        }
     }
     Ok(())
 }
