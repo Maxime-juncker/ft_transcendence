@@ -89,12 +89,16 @@ export class Chat
 	private m_onStartGame:		Array<(json: any) => void>;
 	private m_onConnRefresh:	Array<(conns: User[]) => void>;
 
+	private m_logs:				Array<string> = [];
+	private m_logIdx:			number = 0;
+
 	get chatCmd():	ChatCommand { return this.m_chatCmd; }
 
 	constructor()
 	{
 		this.m_onStartGame = [];
 		this.m_onConnRefresh = [];
+		this.m_logs = [];
 	}
 
 	public Init(chatbox: HTMLElement, chatInput: HTMLInputElement)
@@ -109,7 +113,7 @@ export class Chat
 		MainUser.Instance.onLogout(() => this.disconnect());
 		MainUser.Instance.onLogin(() => this.resetChat());
 
-		this.m_chatInput.addEventListener("keypress", (e) => this.sendMsgFromInput(e));
+		this.m_chatInput.addEventListener("keydown", (e) => this.sendMsgFromInput(e));
 		registerCmds(this);
 	}
 
@@ -166,9 +170,30 @@ export class Chat
 		if (!MainUser.Instance)
 			return ;
 
+		if (event.key == 'ArrowDown' && this.m_chatInput)
+		{
+			event.preventDefault();
+			if (this.m_logs.length == 0)
+				return;
+			this.m_chatInput.value = this.m_logs[this.m_logIdx];
+			if (this.m_logIdx + 1 < this.m_logs.length)
+				this.m_logIdx++;
+		}
+		else if (event.key == 'ArrowUp' && this.m_chatInput)
+		{
+			event.preventDefault();
+			if (this.m_logs.length == 0)
+				return;
+			this.m_chatInput.value = this.m_logs[this.m_logIdx];
+			if (this.m_logIdx - 1 >= 0)
+				this.m_logIdx--;
+		}
+
 		if (event.key == 'Enter' && this.m_chatInput && this.m_chatInput.value != "")
 		{
 			this.sendMsg(MainUser.Instance, this.m_chatInput.value);
+			this.m_logs.push(this.m_chatInput.value);
+			this.m_logIdx = this.m_logs.length - 1;
 			this.m_chatInput.value = "";
 		}
 	}

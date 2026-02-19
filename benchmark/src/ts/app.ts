@@ -2,7 +2,7 @@ import { Logger } from './Logger.js';
 import { runTests } from 'Test.js';
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-export var host = "localhost:8081"
+export var host = "http://backend:3000"
 export var routePassw = process.env.PROTECTED_ROUTE_PASS;
 
 if (process.argv.length >= 3)
@@ -34,13 +34,13 @@ for (var i = 0; i < maxConnRetry; i++)
 {
 	try
 	{
-		await fetch(`https://${host}/api/chat/ping`);
+		await fetch(`${host}/api/chat/ping`);
 		Logger.success("connection to backend succesful");
 		break;
 	}
 	catch (e)
 	{
-		Logger.error(`failed to connect to backend (${maxConnRetry - i} retry left)`);
+		Logger.error(`failed to connect to backend (${maxConnRetry - i} retry left) ${host}`);
 	}
 	await sleep(7000);
 
