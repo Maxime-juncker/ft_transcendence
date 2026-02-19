@@ -223,10 +223,10 @@ impl Friends {
                 }
             }
             404 => {
-                eprintln!("No friends found :(");
+                return Err(anyhow!("Error 404 from server"))
             }
             err => {
-                eprintln!("Error {} from server :(", err);
+                return Err(anyhow!("Error {} from server :(", err))
             }
         }
         Ok(result)
