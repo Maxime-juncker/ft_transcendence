@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
-import { Logger } from "Logger.js";
 import { Routine, TestResult } from "Routine.js";
 import { WebSocket } from 'undici'
+import { host, routePassw } from "app.js";
 
 type User = {
 	id:		number;
@@ -22,7 +22,7 @@ const users: Array<User> = [];
 async function createTest(i: number): Promise<TestResult>
 {
 	const body = randomLogin(i);
-	const res = await fetch("http://backend:3000/api/user/create", {
+	const res = await fetch(`https://${host}/api/user/create`, {
 		method: "POST",
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(body)
@@ -41,7 +41,7 @@ async function tokenExchange(i: number)
 
 	const user = users[i];
 
-	const res = await fetch("http://backend:3000/api/user/get_profile_token", {
+	const res = await fetch(`https://${host}/api/user/get_profile_token`, {
 		method: "POST",
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
@@ -66,7 +66,7 @@ async function loginTest(i: number): Promise<TestResult>
 
 	const user = users[i];
 
-	const res = await fetch("http://backend:3000/api/user/login", {
+	const res = await fetch(`https://${host}/api/user/login`, {
 		method: "POST",
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
@@ -102,11 +102,11 @@ async function histTest(i: number): Promise<TestResult>
 		const score1 = getRandom(100);
 		const score2 = getRandom(100);
 
-		const res = await fetch("http://backend:3000/api/user/add_game", {
+		const res = await fetch(`https://${host}/api/user/add_game`, {
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				pass: process.env.PROTECTED_ROUTE_PASS,
+				pass: routePassw,
 				user1_id: user.id,
 				user2_id: player.id,
 				user1_score: score1,
@@ -140,7 +140,7 @@ async function logout(i: number): Promise<TestResult>
 {
 	const user = users[i];
 
-	const res = await fetch("http://backend:3000/api/user/logout", {
+	const res = await fetch(`https://${host}/api/user/logout`, {
 		method: "POST",
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
@@ -166,7 +166,7 @@ async function addFriends(i: number)
 
 		const player = users[r];
 
-		await fetch("http://backend:3000/api/friends/send_request", {
+		await fetch(`https://${host}/api/friends/send_request`, {
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
@@ -183,7 +183,7 @@ async function acceptFriends(i: number)
 {
 	const user = users[i];
 
-	var response = await fetch(`http://backend:3000/api/friends/get?user_id=${user.id}`);
+	var response = await fetch(`https://${host}/api/friends/get?user_id=${user.id}`);
 	var json = await response.json();
 	if (response.status != 200)
 		return { code: response.status, data: json };
@@ -197,7 +197,7 @@ async function acceptFriends(i: number)
 
 		const friendId = data.sender_id;
 
-		var response = await fetch("http://backend:3000/api/friends/accept", {
+		var response = await fetch(`https://${host}/api/friends/accept`, {
 			method: "POST",
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
@@ -214,7 +214,7 @@ async function connectChat(i: number)
 {
 	const user = users[i];
 
-	user.ws = new WebSocket(`http://backend:3000/api/chat?userid=${user.token}`);
+	user.ws = new WebSocket(`https://${host}/api/chat?userid=${user.token}`);
 
 	return { code: 200, data: "Ok" };
 }
