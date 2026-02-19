@@ -108,6 +108,8 @@
 	"profile_block_btn": "block",
 	"refresh": "refresh",
 	"current_theme": "current theme:",
+	"current_password": "current pasword...",
+	"new_password": "new pasword...",
 
 	"tut": {
 		"chat": "use the chatbox to talk to other peoples",

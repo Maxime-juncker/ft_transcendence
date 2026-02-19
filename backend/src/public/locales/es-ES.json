@@ -108,6 +108,8 @@
 	"profile_block_btn": "bloquear",
 	"refresh": "actualizar",
 	"current_theme": "tema actual:",
+	"current_password": "contraseña actual...",
+	"new_password": "nueva contraseña...",
 
 	"tut": {
 		"chat": "usa el chat para hablar con otras personas",
