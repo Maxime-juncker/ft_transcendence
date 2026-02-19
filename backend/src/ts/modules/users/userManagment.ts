@@ -215,7 +215,8 @@ export async function loginOAuth2(id: string, source: number, db: Database) : Pr
 
 export async function createUserOAuth2(email: string, name: string, id: string, source: number, avatar: string, db: Database) : Promise<DbResponse>
 {
-	if (await isUsernameTaken(name))
+	const retval = await isUsernameTaken(name);
+	if (retval != -1)
 	{
 		const rBytes = randomBytes(4).toString('hex');
 		name = `${name}${rBytes}`;

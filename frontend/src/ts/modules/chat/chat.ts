@@ -202,7 +202,6 @@ export class Chat
 		const username = json.username;
 		const message = json.message;
 
-		console.log(json);
 		if ("connections" in json)
 		{
 			const connectionsId = json.connections;

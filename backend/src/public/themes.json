@@ -15,6 +15,21 @@
 		},
 
 		{
+			"name": "coolTheme",
+
+			"dark":		"#1e1e1e",
+			"darker":	"#0e0e0e",
+			"darkest":	"#0e0e0e",
+			"red":		"#EA6062",
+			"yellow":	"#E4BE42",
+			"blue":		"#2ab1b8",
+			"white":	"#ABB2BF",
+			"green":	"#51BD55",
+			"purple":	"#C755E9"
+
+		},
+
+		{
 			"name": "gruvbox",
 
 			"dark":		"#282828",
