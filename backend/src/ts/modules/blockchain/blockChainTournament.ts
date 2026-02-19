@@ -5,6 +5,7 @@ import { avalancheFuji } from 'viem/chains';
 import { promises as fs } from 'fs';
 import { createSecret, readSecret } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
+import { Mutex } from 'async-mutex';
 
 const TOURNAMENT_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Tournament.sol/Tournament.json";
 const FACTORY_PATH = "./ts/modules/blockchain/artifacts/blockchain/contracts/Factory.sol/Factory.json";
@@ -19,6 +20,8 @@ export class BlockchainContract {
     private walletClient: WalletClient | undefined;
     private publicClient: PublicClient | undefined;
     private factoryAddress: Hex | undefined;
+    private nonce: number = 0;
+    private mutex = new Mutex();
 
     constructor() {}
     
@@ -40,7 +43,11 @@ export class BlockchainContract {
                 chain: avalancheFuji,
                 transport: http(RPC_URL),
             });
-            this.deployFactory();
+            await this.deployFactory();
+            this.nonce = await this.publicClient.getTransactionCount({
+                address: this.account!.address,
+                blockTag: "pending"
+            });
     }
 
     async deployFactory() {
@@ -55,7 +62,6 @@ export class BlockchainContract {
                 bytecode: this.bytecode!,
                 chain: avalancheFuji,
             });
-            
             Logger.log("Factory deployment transaction hash: ", hash);
             
             const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
@@ -70,19 +76,32 @@ export class BlockchainContract {
 
     async createTournament(): Promise<number> {
         Logger.log("Creating tournament");
-        const { result , request } = await this.publicClient!.simulateContract({
-            account: this.account,
-            address: this.factoryAddress!,
-            abi: this.abi!,
-            functionName: 'createTournament',
+        let nonceToUse: number;
+        await this.mutex.runExclusive(async () => {
+            nonceToUse = this.nonce;
+            this.nonce++;
         })
-
-        let hash = await this.walletClient!.writeContract(request);
-        await this.publicClient!.waitForTransactionReceipt({ hash });
-
-        Logger.log("Tournament created at : ", result);
-
-        return (result);
+        try {
+            const { result , request } = await this.publicClient!.simulateContract({
+                account: this.account,
+                address: this.factoryAddress!,
+                abi: this.abi!,
+                functionName: 'createTournament',
+                nonce: nonceToUse!,
+            })
+            
+            let hash = await this.walletClient!.writeContract(request);
+            await this.publicClient!.waitForTransactionReceipt({ hash });
+            Logger.log("Tournament created at : ", result);
+            
+            return (result);
+        } catch (err) {
+            this.nonce = await this.publicClient!.getTransactionCount({
+                address: this.account!.address,
+                blockTag: "pending"
+            });
+            throw err;
+        }
     }
 
     async addMatchResult(tournamentId: number, player1: number, player2: number, player1score: number, player2score: number) {
@@ -92,18 +111,30 @@ export class BlockchainContract {
             functionName: 'getTournament',
             args: [tournamentId],
         })
-
-        const { request } = await this.publicClient!.simulateContract({
-            account: this.account,
-            address: tournamentAddress as Hex,
-            abi: this.tournamentAbi!,
-            functionName: 'addMatch',
-            args: [player1, player2, player1score, player2score],
+        let nonceToUse: number;
+        await this.mutex.runExclusive(async () => {
+            nonceToUse = this.nonce;
+            this.nonce++;
         })
-
-        let hash = await this.walletClient!.writeContract(request);
-        await this.publicClient!.waitForTransactionReceipt({ hash });
-        Logger.log("Match added on-chain : ", hash);
+        try {
+            const { request } = await this.publicClient!.simulateContract({
+                account: this.account,
+                address: tournamentAddress as Hex,
+                abi: this.tournamentAbi!,
+                functionName: 'addMatch',
+                args: [player1, player2, player1score, player2score],
+                nonce: nonceToUse!,
+            })
+            let hash = await this.walletClient!.writeContract(request);
+            await this.publicClient!.waitForTransactionReceipt({ hash });
+            Logger.log("Match added on-chain : ", hash);
+        } catch (err) {
+            this.nonce = await this.publicClient!.getTransactionCount({
+                address: this.account!.address,
+                blockTag: "pending"
+            });
+            throw err;
+        }
     }
 
     async finishTournament(tournamentId: number, winner: number) {
@@ -114,18 +145,30 @@ export class BlockchainContract {
             functionName: 'getTournament',
             args: [tournamentId],
         })
-
-        const { request } = await this.publicClient!.simulateContract({
-            account: this.account,
-            address: tournamentAddress as Hex,
-            abi: this.tournamentAbi!,
-            functionName: 'finish',
-            args: [winner],
+        let nonceToUse: number;
+        await this.mutex.runExclusive(async () => {
+            nonceToUse = this.nonce;
+            this.nonce++;
         })
-
-        let hash = await this.walletClient!.writeContract(request);
-        const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
-        Logger.log("Tournament finished : ", receipt);
+        try {
+            const { request } = await this.publicClient!.simulateContract({
+                account: this.account,
+                address: tournamentAddress as Hex,
+                abi: this.tournamentAbi!,
+                functionName: 'finish',
+                args: [winner],
+                nonce: nonceToUse!,
+            })
+            let hash = await this.walletClient!.writeContract(request);
+            const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
+            Logger.log("Tournament finished : ", receipt);
+        } catch (err) {
+            this.nonce = await this.publicClient!.getTransactionCount({
+                address: this.account!.address,
+                blockTag: "pending"
+            });
+            throw err;
+        }
     }
 
     async getTournaments() : Promise<Map<Hex, number>> {
