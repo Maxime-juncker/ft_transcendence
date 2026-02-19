@@ -286,8 +286,8 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
     map.insert("mode", mode);
-    let id: &str = &game_main.authent.borrow().id.to_string();
-    map.insert("playerName", id);
+    let token: &str = &game_main.authent.borrow().token.to_string();
+    map.insert("token", token);
     let mut url = game_main.context.location.clone();
     url = format!("https://{url}/api/create-game");
     let res = game_main
@@ -298,6 +298,7 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
         .json(&map)
         .send()
         .await?;
+
     if res.status() != 202 {
         return Err(anyhow!("Error creating game"));
     }
