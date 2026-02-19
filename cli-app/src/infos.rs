@@ -1,11 +1,3 @@
-use anyhow::{Result, anyhow};
-use crossterm::event::{self, Event, KeyCode, poll};
-use ratatui::{DefaultTerminal, Frame, buffer::Buffer, layout::Rect, widgets::Widget};
-use reqwest::header::HeaderMap;
-use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
-use std::rc::Rc;
-use tokio::time::Duration;
 use crate::CurrentScreen;
 use crate::context::Context;
 use crate::friends::Friends;
@@ -15,9 +7,17 @@ use crate::infos_events::EventHandler;
 use crate::login::Auth;
 use crate::screen_displays::ScreenDisplayer;
 use crate::utils::should_exit;
+use anyhow::{Result, anyhow};
+use crossterm::event::{self, Event, KeyCode, poll};
+use ratatui::{DefaultTerminal, Frame, buffer::Buffer, layout::Rect, widgets::Widget};
+use reqwest::header::HeaderMap;
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
+use std::rc::Rc;
+use tokio::time::Duration;
 
 #[derive(Default)]
-pub(crate)struct Infos {
+pub(crate) struct Infos {
     pub(crate) context: Rc<Context>,
     pub(crate) authent: Rc<RefCell<Auth>>,
     pub(crate) friend: Friends,
@@ -30,7 +30,7 @@ pub(crate)struct Infos {
 }
 
 impl Infos {
-    pub(crate)fn new(
+    pub(crate) fn new(
         context: Rc<Context>,
         auth: Rc<RefCell<Auth>>,
         screen: Rc<Cell<CurrentScreen>>,
@@ -170,6 +170,7 @@ impl Infos {
             .expect("empty receiver")
             .try_recv()?;
         let game = Game::new(self, response).await?;
+        self.send_start_game(&game.game_id).await?;
         self.game = game;
         self.screen.set(crate::CurrentScreen::StartGame);
         Ok(())
@@ -177,6 +178,27 @@ impl Infos {
     pub(crate) async fn launch_game(&mut self) -> Result<()> {
         self.game.start_game().await?;
         self.screen.set(crate::CurrentScreen::PlayGame);
+        Ok(())
+    }
+    async fn send_start_game(&mut self, game_id: &str) -> Result<()> {
+        let mut map = HashMap::new();
+        let mut headers = HeaderMap::new();
+        headers.insert("Content-Type", "application/json".parse()?);
+        let token: &str = &self.authent.borrow().token.clone();
+        map.insert("token", token);
+        let mut url = self.context.location.clone();
+        url = format!("https://{url}/api/start-game/{}", game_id);
+        let res = self
+            .context
+            .client
+            .post(url)
+            .headers(headers)
+            .json(&map)
+            .send()
+            .await?;
+        if res.status() != 200 {
+            return Err(anyhow!("Error starting game"));
+        }
         Ok(())
     }
     pub(crate) async fn handle_game_events(&mut self) -> Result<()> {
@@ -268,7 +290,7 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
     map.insert("playerName", id);
     let mut url = game_main.context.location.clone();
     url = format!("https://{url}/api/create-game");
-    game_main
+    let res = game_main
         .context
         .client
         .post(url)
@@ -276,5 +298,8 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
         .json(&map)
         .send()
         .await?;
+    if res.status() != 202 {
+        return Err(anyhow!("Error creating game"));
+    }
     Ok(())
 }
