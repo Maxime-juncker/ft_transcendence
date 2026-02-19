@@ -220,8 +220,9 @@ export class Chat
 			return ;
 		}
 
-		if (message == "START" && json.gameId)
+		if (message == "START" && json.gameId && json.mode)
 		{
+			MainUser.Instance?.gameRouter?.navigateTo("game", json.mode);
 			this.startGameCb(json);
 			return ;
 		}

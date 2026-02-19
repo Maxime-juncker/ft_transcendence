@@ -184,7 +184,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/upload/avatar', {
-		config: rateLimitHard,
+		config: { 
+			rateLimit: rateLimitHard
+		},
 		schema: {
 			headers: {
 				type: 'object',

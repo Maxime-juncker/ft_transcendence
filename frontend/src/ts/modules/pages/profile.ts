@@ -327,7 +327,7 @@ export class ProfileView extends ViewComponent
 		status.style.color = `${player1Score > player2Score ? "var(--color-green)" : "var(--color-red)" }`;
 		score.innerText = `${player1Score} - ${player2Score}`;
 		date.innerText = json.played_at;
-		eloData.set(json.played_at, elo);
+		eloData.set(json.played_at, Math.ceil(elo));
 
 		return clone;
 	}

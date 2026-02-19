@@ -1,4 +1,5 @@
 import { Router } from "modules/router/Router.js";
+import { getUserFromId } from "modules/user/User.js";
 import { StartView } from "./start.js";
 
 export class BlockchainBoard
@@ -32,7 +33,7 @@ export class BlockchainBoard
 		console.log("after call");
 		this.m_board.innerHTML = "";
 		this.m_view?.loadingIndicator?.stopLoading();
-		json.forEach((data: any) => {
+		json.forEach(async (data: any) => {
 			if (!this.m_board || !this.m_template)
 			{
 				console.warn("board or template is null");
@@ -44,9 +45,13 @@ export class BlockchainBoard
 				addr.href = "https://testnet.avascan.info/blockchain/c/address/" + data.address;
 				addr.innerText = data.address;
 			}
-			const winner = clone.querySelector("#winner-name") as HTMLElement;
-			if (winner)
-				winner.innerText = "winner: " + data.winner;
+			const winner = clone.querySelector("#winner-name") as HTMLLinkElement;
+			const user = await getUserFromId(data.winner);
+			const name = user?.name;
+			if (winner) {
+				winner.href = "/profile?username=" + name;
+				winner.innerText = "winner: " + name;
+			}
 			if (clone)
 				this.m_board.prepend(clone);
 		});

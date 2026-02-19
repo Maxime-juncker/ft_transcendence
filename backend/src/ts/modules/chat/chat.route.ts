@@ -1,6 +1,6 @@
 import { core, chat, rateLimitMed } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { getUserById, getUserByName } from 'modules/users/user.js';
+import { getUserById, getUserByName, getBlockUser } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
 
@@ -65,9 +65,6 @@ export async function chatRoutes(fastify: FastifyInstance)
 	});
 
 	fastify.delete('/api/chat/removeQueue', {
-		config: { 
-			rateLimit: rateLimitMed
-		},
 		schema: {
 			body: {
 				type: "object",
@@ -122,7 +119,11 @@ export async function chatRoutes(fastify: FastifyInstance)
 		if (res.code != 200)
 			return reply.code(404).send({ message: "user does not exist" });
 
-		Logger.log(res.data);
+		const isBlock = await getBlockUser(data.id, res.data.id);
+		if (isBlock.code == 200) // user is blocked
+		{
+			return reply.code(200).send({ message: "Success" });
+		}
 
 		var success = false;
 		for (var [key, value] of chat.connections)

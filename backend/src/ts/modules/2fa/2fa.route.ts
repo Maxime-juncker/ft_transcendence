@@ -74,6 +74,7 @@ export async function totpRoutes(fastify: FastifyInstance)
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send({ message: "token is invalid" });
-		return validateTotp(data.id, totp);
+		const res = await validateTotp(data.id, totp);
+		return reply.code(res.code).send(res.data);
 	})
 }

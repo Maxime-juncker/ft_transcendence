@@ -74,7 +74,6 @@ export class TournamentServer
 		{
 			let tournaments = await this.contractAddress.getTournaments();
 			let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
-			// let json = JSON.stringify(Object.fromEntries(tournaments));
 
 			Logger.log("fetching finished tournaments from blockchain", array);
 			return reply.send(array);
@@ -300,7 +299,7 @@ export class TournamentServer
 				}
 
 				lobby.players.push({ id: userId, name });
-				console.log(`User ${userId} (${name}) joined tournament ${tournamentId}. Total players: ${lobby.players.length}`);
+				Logger.log(`User ${userId} (${name}) joined tournament ${tournamentId}. Total players: ${lobby.players.length}`);
 				reply.status(200).send({ tournamentId });
 			}
 			catch (error)
@@ -409,7 +408,7 @@ export class TournamentServer
 				const playerMap = new Map<number, string>();
 				lobby.players.forEach((p: any) => playerMap.set(p.id, p.name));
 
-				const playerIdsSet: Set<number> = new Set(lobby.players.map((p: any) => Number(p.id)));
+				const playerIdsSet: Set<number> = new Set(lobby.players.map((p: any) => p.id));
 				const tournament = await Tournament.create(playerIdsSet);
 				
 				this.activeTournaments.set(tournamentId, tournament);
@@ -478,14 +477,14 @@ export class TournamentServer
 		{
 			const humanPlayer = match.getHumanPlayer();
 			const botPlayer = match.getBotPlayer();
-			const humanId = Number(humanPlayer);
-			
+			const humanId = humanPlayer;
+
 			const p1Id = match._player1 === humanPlayer ? humanId : this.botId;
 			const p2Id = match._player2 === humanPlayer ? humanId : this.botId;
 			const botIsPlayer2 = match._player2 === botPlayer;
-			
+
 			const game = new GameInstance('online', p1Id, p2Id);
-			
+
 			if (botIsPlayer2)
 			{
 				game.p2Ready = true;
@@ -528,7 +527,7 @@ export class TournamentServer
 
 		const p1Id = match._player1;
 		const p2Id = match._player2;
-		const game = new GameInstance('online', Number(p1Id), Number(p2Id));
+		const game = new GameInstance('online', p1Id, p2Id);
 		if (this.activeGamesMap)
 		{
 			this.activeGamesMap.set(gameId, game);
@@ -541,8 +540,8 @@ export class TournamentServer
 
 		this.monitorMatchEnd(tournamentId, tournament, match, gameId, game);
 		
-		chat.notifyMatch(Number(p1Id), Number(p2Id), gameId, 1);
-		chat.notifyMatch(Number(p2Id), Number(p1Id), gameId, 2);
+		chat.notifyMatch(p1Id, p2Id, gameId, 1);
+		chat.notifyMatch(p2Id, p1Id, gameId, 2);
 	}
 
 	private monitorMatchEnd(tournamentId: string, tournament: Tournament, match: any, gameId: string, game: GameInstance): void
@@ -664,14 +663,13 @@ export class TournamentServer
 				tournament.isFinished = true;
 
 				const winnerId = Array.from(winners)[0];
-				const winnerName = data.players.get(winnerId) || 'Bot';
 				const blockchainId = data.blockchainId;
 
-				if (typeof blockchainId === 'number' && winnerName && blockchainId != -1)
+				if (typeof blockchainId === 'number' && winnerId && blockchainId != -1)
 				{
 					try
 					{
-						await this.contractAddress.finishTournament(blockchainId, winnerName);
+						await this.contractAddress.finishTournament(blockchainId, winnerId);
 					}
 					catch (error)
 					{

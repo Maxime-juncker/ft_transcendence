@@ -14,6 +14,14 @@ services:
       - HEALTH_CHECK_TIMER=${HEALTH_CHECK_TIMER:-60}
       - AVAX_INFURA=${AVAX_INFURA}
       - PRIVATE_KEY=${PRIVATE_KEY}
+      - PADDLE_SPEED=${PADDLE_SPEED:-1.0}
+      - BALL_SPEED=${BALL_SPEED:-1.0}
+      - BALL_SPEED_INCREMENT=${BALL_SPEED_INCREMENT:-0.1}
+      - POINTS_TO_WIN=${POINTS_TO_WIN:-11}
+      - PADDLE_HEIGHT=${PADDLE_HEIGHT:-15}
+      - PADDLE_WIDTH=${PADDLE_WIDTH:-2}
+      - PADDLE_PADDING=${PADDLE_PADDING:-2}
+      - BALL_SIZE=${BALL_SIZE:-2}
     volumes:
       - sqlite:/var/lib/sqlite:rw
       - avatars:/var/www/server/public/avatars:rw
@@ -147,6 +155,10 @@ services:
       - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
       - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro,z
       - prometheus-logs:/prometheus/logs:rw
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=5GB'
     networks:
       - monitoring_net
       - export_net
@@ -179,6 +191,8 @@ services:
     environment:
       - GF_LOG_MODE=file
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_DOMAIN=${HOST}
+      - GF_ROOT_URL=https://${HOST}:8081/admin/grafana/
     labels:
       - sablier.enable=true
       - sablier.group=transcendence

@@ -1,8 +1,8 @@
 use crate::Auth;
 use crate::Context;
 use crate::CurrentScreen;
-use crate::utils::{get_name_from_id, get_id_from_name};
 use crate::utils::should_exit;
+use crate::utils::{get_id_from_name, get_name_from_id};
 use anyhow::{Result, anyhow};
 use crossterm::event::poll;
 use crossterm::event::{self, Event, KeyCode};
@@ -126,7 +126,9 @@ impl Friends {
         let mut map = HashMap::new();
         let token = self.auth.borrow().token.to_string();
         map.insert("token", &token);
-        let id = get_id_from_name(self.context.clone(), &self.friend_tmp).await?.to_string();
+        let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
+            .await?
+            .to_string();
         map.insert("friend_id", &id);
         let url = format!("https://{}/api/friends/send_request", self.context.location);
         let response = self
@@ -155,7 +157,9 @@ impl Friends {
         let mut map = HashMap::new();
         let token = self.auth.borrow().token.to_string();
         map.insert("token", &token);
-        let id = get_id_from_name(self.context.clone(), &self.friend_tmp).await?.to_string();
+        let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
+            .await?
+            .to_string();
         map.insert("friend_id", &id);
         let url = format!("https://{}/api/friends/remove", self.context.location);
         let response = self

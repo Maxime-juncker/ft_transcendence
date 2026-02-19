@@ -218,6 +218,7 @@ pub(crate) async fn create_guest_session(
 ) -> Result<(String, u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/create_guest", context.location);
     let res = context.client.post(apiloc).send().await?;
+    // eprintln!("response {:?}", res);
     let body: serde_json::Value = res.json().await?;
     if let Some(token) = body["token"].as_str() {
         let (id, receiver) = get_id_and_launch_chat(context, token.to_string()).await?;
@@ -229,7 +230,10 @@ pub(crate) async fn create_guest_session(
     }
 }
 
-async fn enter_chat_room(location: &String, token: &String) -> Result<mpsc::Receiver<serde_json::Value>> {
+async fn enter_chat_room(
+    location: &String,
+    token: &String,
+) -> Result<mpsc::Receiver<serde_json::Value>> {
     let connector = Connector::NativeTls(
         native_tls::TlsConnector::builder()
             .danger_accept_invalid_certs(true)

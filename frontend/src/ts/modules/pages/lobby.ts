@@ -97,6 +97,7 @@ export class LobbyView extends ViewComponent
 
 	public async disable()
 	{
+		MainUser.Instance?.removeFromQueue();
 		this.clearTrackListener();
 	}
 

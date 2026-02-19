@@ -64,8 +64,6 @@ export class SettingsView extends ViewComponent
 
 		this.saveBtn = this.querySelector("#save-btn") as HTMLButtonElement;
 
-		this.usernameInput.placeholder = MainUser.Instance.name;
-		this.emailInput.placeholder = MainUser.Instance.email;
 
 		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
 		this.addTrackListener(this.logoutBtn, "click", () => MainUser.Instance?.logout());
@@ -110,7 +108,34 @@ export class SettingsView extends ViewComponent
 			});
 		}
 
+		this.updateFields();
 		this.hideForbiddenElement();
+	}
+
+	public updateFields()
+	{
+		if (!MainUser.Instance)
+			return;
+		if (this.avatarInput)
+			this.avatarInput.value = "";
+
+		if (this.usernameInput)
+		{
+			this.usernameInput.placeholder = MainUser.Instance.name;
+			this.usernameInput.value = "";
+
+		}
+		if (this.emailInput)
+		{
+			this.emailInput.placeholder = MainUser.Instance.email;
+			this.emailInput.value = "";
+		}
+		if (this.currPassInput)
+			this.currPassInput.value = "";
+		if (this.newPassInput)
+			this.newPassInput.value = "";
+		if (this.confirm2faInput)
+			this.confirm2faInput.value = "";
 	}
 
 
@@ -143,14 +168,13 @@ export class SettingsView extends ViewComponent
 		}
 	}
 
-	private async updatePassw(newPassw: string, oldPass: string): Promise<number>
+	private async updatePassw(newPassw: string, oldPass: string): Promise<{ code: number, data: any }>
 	{
 		if (newPassw == "" && oldPass == "")
-			return 0;
+			return { code: 0, data: "ok" };
 		if (newPassw == "" || oldPass == "" || !MainUser.Instance)
 		{
-			setPlaceHolderText("error: password field empty");
-			return 1;
+			return { code: 1, data: "error: some password field is empty" };
 		}
 		console.log("updating password");
 		const res = await fetch("/api/user/update/passw", {
@@ -160,17 +184,16 @@ export class SettingsView extends ViewComponent
 			},
 			body: JSON.stringify({
 				token: MainUser.Instance.token,
-				oldPass: await hashString(oldPass),
-				newPass: await hashString(newPassw)
+				oldPass: oldPass,
+				newPass: newPassw
 			})
 		});
 		const data = await res.json();
 		if (res.status != 200)
 		{
-			setPlaceHolderText(`error: ${data.message}`);
-			return 1;
+			return { code: 1, data: data.message };
 		}
-		return 0;
+		return { code: 0, data: data.message };
 	}
 
 	private async confirmChange()
@@ -178,10 +201,14 @@ export class SettingsView extends ViewComponent
 		if (!MainUser.Instance)
 			return ;
 
-		var error: boolean = false;
+		var message = ""
 
 		if (this.confirm2faInput && this.confirm2faInput.value !== "")
-			this.validate_totp(MainUser.Instance);
+		{
+			const res = await this.validate_totp();
+			if (res == -1)
+				message += "2fa activation failed (check code)\n";
+		}
 
 		if (this.avatarInput && this.avatarInput.files && this.avatarInput.files[0])
 		{
@@ -189,19 +216,20 @@ export class SettingsView extends ViewComponent
 			const file = this.avatarInput.files[0];
 			const formData = new FormData();
 			formData.append('avatar', file);
-			MainUser.Instance.setAvatar(formData);
+			const { code, data } = await MainUser.Instance.setAvatar(formData);
+			if (code != 0)
+				message += data.message + "\n";
 		}
 
 		if (this.newPassInput && this.currPassInput)
 		{
 			const retval = await this.updatePassw(this.newPassInput.value, this.currPassInput.value);
-			if (retval != 0)
-				error = true;
+			if (retval.code != 0)
+				message += retval.data + '\n';
 		}
 
 		if (this.usernameInput && this.usernameInput.value !== "")
 		{
-			console.log("updating name");
 			const res = await fetch("/api/user/update/name", {
 				method: "POST",
 				headers: {
@@ -215,14 +243,12 @@ export class SettingsView extends ViewComponent
 			const data = await res.json();
 			if (res.status != 200)
 			{
-				error = true;
-				setPlaceHolderText(`error: ${data.message}`);
+				message += `${data.message}\n`;
 			}
 		}
 
 		if (this.emailInput && this.emailInput.value !== "")
 		{
-			console.log("updating email");
 			const res = await fetch("/api/user/update/email", {
 				method: "POST",
 				headers: {
@@ -236,15 +262,16 @@ export class SettingsView extends ViewComponent
 			const data = await res.json();
 			if (res.status != 200)
 			{
-				error = true;
-				setPlaceHolderText(`error: ${data.message}`);
+				message += `${data.message}\n`;
 			}
 		}
-
-		if (error === false)
-			setPlaceHolderText(`settings saved!`);
+		if (message == "")
+			setPlaceHolderText("settings saved!");
+		else
+			setPlaceHolderText(message);
 
 		await MainUser.Instance.refreshSelf();
+		this.updateFields();
 	}
 
 	private async new_totp()
@@ -259,6 +286,8 @@ export class SettingsView extends ViewComponent
 		const { status, data } = result;
 		void status;
 		this.holderParent.classList.remove("hide");
+		if (this.holderClose)
+			this.holderClose.style.display = "block";
 		var qrcode = data.qrcode;
 		if (!qrcode)
 			return ;
@@ -302,24 +331,29 @@ export class SettingsView extends ViewComponent
 		window.dispatchEvent(new CustomEvent('pageChanged'));
 	}
 
-	private async validate_totp(user: MainUser)
+	private async validate_totp(): Promise<number>
 	{
-		var totp = this.querySelector("#confirm-2fa-input") as HTMLInputElement;
+		if (!MainUser.Instance)
+			return -1;
 
-		const status = await user.validateTotp(totp.value);
+		var totp = this.querySelector("#confirm-2fa-input") as HTMLInputElement;
+		const status = await MainUser.Instance.validateTotp(totp.value);
 
 		switch(status)
 		{
 			case 200:
 				console.log("Totp validated");
+				if (this.holderClose)
+					this.holderClose.style.display = "none";
 				const img = this.querySelector("#qrcode_img");
 				if (img)
 					img.remove();
 				break;
 			default:
 				console.log("Unknow error");
-				break;
+				return -1;
 		}
+		return 0;
 	}
 }
 
