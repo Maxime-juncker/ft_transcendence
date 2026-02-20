@@ -1,8 +1,4 @@
 import { Database } from "sqlite";
-import { pipeline } from 'stream/promises';
-import { createWriteStream } from 'fs';
-import path from 'path';
-import { FastifyRequest } from 'fastify';
 import { randomBytes } from "crypto";
 
 import { core, DbResponse } from 'core/server.js';
@@ -14,6 +10,7 @@ import { getSqlDate } from "utils.js";
 import { jwtVerif } from "modules/jwt/jwt.js";
 import { Logger } from "modules/logger.js";
 import { getUserName } from "./user.js";
+import { updateAvatarPath } from "./avatars.js";
 
 /**
 * check if passw is valid
@@ -160,6 +157,19 @@ export async function loginSession(token: string) : Promise<DbResponse>
 	}
 }
 
+export async function setIsLogin(id: number, isLogin: number)
+{
+	var sql = 'UPDATE users SET is_login = ? WHERE id = ?';
+	try
+	{
+		await core.db.run(sql, [isLogin, id]);
+	}
+	catch (err)
+	{
+		Logger.error(`database err: ${err}`);
+	}
+}
+
 export async function login(email: string, passw: string, totp: string) : Promise<DbResponse>
 {
 	var sql = 'UPDATE users SET is_login = 1 WHERE email = ? AND passw = ? RETURNING *';
@@ -278,14 +288,27 @@ export async function createUser(email: string, passw: string, username: string,
 
 export async function resetUser(user_id: number)
 {
-	var sql = "UPDATE users SET elo = 500, wins = 0, games_played = 0 WHERE id = ?";
 	try
 	{
+		// reset games stats
+		var sql = "UPDATE users SET elo = 500, wins = 0, games_played = 0 WHERE id = ?";
 		await core.db.run(sql, user_id);
+
+		// reset friends
 		sql = "DELETE FROM friends WHERE user1_id = ? OR user2_id = ?";
 		await core.db.run(sql, [user_id, user_id]);
-		sql = "DELETE FROM games WHERE user1_id = ? OR user2_id = ?";
+
+		// reset blocked users
+		sql = "DELETE FROM blocked_usr WHERE user1_id = ? OR user2_id = ?";
 		await core.db.run(sql, [user_id, user_id]);
+
+		// reset history
+		sql = "DELETE FROM matches WHERE player1_id = ? OR player2_id = ?";
+		await core.db.run(sql, [user_id, user_id]);
+
+		// reset avatar
+		await updateAvatarPath(user_id, 'default.webp');
+
 		Logger.success(`user: ${await getUserName(user_id)} has reseted his account`);
 		return { code: 200, data: { message: "Success" }};
 	}
@@ -356,46 +379,6 @@ export async function setUserStatus(user_id: number, newStatus: number, db: Data
 	}
 }
 
-export async function updateAvatarPath(id: number, filename: string)
-{
-	const sql = "UPDATE users SET avatar = ? WHERE id = ?";
-	await core.db.run(sql, ["/public/avatars/" + filename , id]);
-}
-
-export async function uploadAvatar(request: FastifyRequest, reply: any, id: number)
-{
-	const data = await request.file();
-	if (!data)
-		return reply.code(400).send({ message: "no file uploaded" });
-
-	const res = await getUserById(id, core.db);
-	if (res.code != 200)
-		return reply.code(res.code).send(res.data);
-
-	const filename = await hashString(res.data.email) + await hashString(data.filename);
-	const filepath = path.join("/var/www/server/public/avatars/", filename);
-
-	try
-	{
-		await pipeline(data.file, createWriteStream(filepath));
-		await updateAvatarPath(Number(res.data.id), filename);
-
-		Logger.log(`${res.data.name} has changed is avatar. location=${filepath}`);
-
-		return {
-			Success:	true,
-			filename:	filename,
-			mimetype:	data.mimetype,
-			encoding:	data.encoding,
-			path:		filepath
-		};
-	}
-	catch (error)
-	{
-		Logger.error(`${error}`);
-		return reply.code(500).send({ error: "failed to upload file" });
-	}
-}
 
 export async function blockUser(userId: number, target: number, db: Database) : Promise<DbResponse>
 {

@@ -302,6 +302,8 @@ export class User
 			body: file
 		});
 		var data = await response.json();
+		console.log(data);
+		// if (response.status == 200)
 		this.m_avatarPath = "/public/avatars/" + data.filename;
 
 		return { code: response.status, data: data };
@@ -543,6 +545,9 @@ export class MainUser extends User
 			return { code: 2, data: "no file to upload" };
 
 		const res = await this.uploadAvatar(file);
+		console.log(res.code);
+		if (res.code == 413)
+			return { code: 413, data: "file is too large (max: 10mb)" };
 		if (res.code != 200)
 		{
 			return { code: res.code, data: res.data };

@@ -77,14 +77,19 @@ export class SettingsView extends ViewComponent
 				panel.innerHTML = "";
 		}));
 		this.addTrackListener(this.deleteBtn, "click", () => this.showConfirmPanel(() => MainUser.Instance?.deleteUser()));
-		this.addTrackListener(this.resetBtn, "click", () => this.showConfirmPanel(() => {
-			if (MainUser.Instance?.resetUser())
+		this.addTrackListener(this.resetBtn, "click", () => this.showConfirmPanel(async () => {
+			if (await MainUser.Instance?.resetUser() == 200)
+			{
 				setPlaceHolderText("all data has been reset");
+				this.updateFields();
+				await MainUser.Instance?.refreshSelf();
+			}
 			else
 				setPlaceHolderText("error");
 			const panel = this.querySelector("#panel-holder");
 			if (panel)
 				panel.innerHTML = "";
+
 		}));
 
 		const state = getCookie("crt_state");
@@ -213,12 +218,19 @@ export class SettingsView extends ViewComponent
 		if (this.avatarInput && this.avatarInput.files && this.avatarInput.files[0])
 		{
 			console.log("updating avatar");
-			const file = this.avatarInput.files[0];
-			const formData = new FormData();
-			formData.append('avatar', file);
-			const { code, data } = await MainUser.Instance.setAvatar(formData);
-			if (code != 0)
-				message += data.message + "\n";
+			try
+			{
+				const file = this.avatarInput.files[0];
+				const formData = new FormData();
+				formData.append('avatar', file);
+				const { code, data } = await MainUser.Instance.setAvatar(formData);
+				if (code != 0)
+					message += data.message + "\n";
+			}
+			catch
+			{
+				message += "file is too large max: 10mb\n";
+			}
 		}
 
 		if (this.newPassInput && this.currPassInput)
