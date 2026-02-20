@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { createUser, getBot } from 'modules/users/userManagment.js';
+import { createUser, getBot, setIsLogin, setUserStatus } from 'modules/users/userManagment.js';
 import { Database } from 'sqlite';
 import fastifyStatic from '@fastify/static';
 import { FastifyRequest } from 'fastify';
@@ -75,8 +75,13 @@ export async function initFastify()
 
 	// create account for bot
 	await createUser("", "", "bot", AuthSource.BOT, core.db);
-	await getBot();
 	await loadConfig("/config.json", core.db); // create default_users
+	const id = await getBot();
+	if (id != -1)
+	{
+		await setUserStatus(id, 0, core.db);
+		await setIsLogin(id, 1);
+	}
 
 	await getUserCount().then((value: DbResponse) => { core.userCount = value.data.message['COUNT(*)']});
 	await getGameCount().then((value: DbResponse) => { core.gameCount = value.data.message['COUNT(*)']});
