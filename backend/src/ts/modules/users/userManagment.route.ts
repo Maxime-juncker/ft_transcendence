@@ -3,6 +3,7 @@ import { core, chat, rateLimitMed, rateLimitHard } from 'core/server.js';
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
+import { uploadAvatar } from './avatars.js';
 
 //
 // User managment
@@ -196,13 +197,18 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 				required: ['token']
 			}
 		}
-	}, async (request, reply) => {
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
 			const { token } = request.headers as { token: string };
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "token is invalid" });
 
-			return mgmt.uploadAvatar(request, reply, data.id);
+			const file = await request.file();
+			if (!file)
+				return reply.code(400).send({ message: "no file uploaded" });
+
+			const res = await uploadAvatar(file, data.id);
+			return reply.code(res.code).send(res.data);
 		})
 
 	fastify.post('/update/passw', {

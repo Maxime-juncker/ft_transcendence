@@ -59,6 +59,7 @@ export class ProfileView extends ViewComponent
 		(<HTMLElement>this.querySelector("#game-won")).innerText		= `${stats.gameWon}`;
 		(<HTMLElement>this.querySelector("#winrate")).innerText			= `${stats.gamePlayed > 0 ? this.m_user.winrate + "%" : "n/a" }`;
 		(<HTMLElement>this.querySelector("#curr-elo")).innerText		= `${Math.ceil(stats.currElo)}p`;
+		(<HTMLElement>this.querySelector("#max-elo")).innerText		= `${Math.ceil(stats.currElo)}p`;
 
 		window.dispatchEvent(new CustomEvent('pageChanged'));
 	}

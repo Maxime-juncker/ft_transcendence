@@ -22,7 +22,8 @@ export class Message
 
 	public async sendToAll(chat: Chat)
 	{
-		const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: false };
+		// const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: false };
+		const packet = { token: this.m_sender.token, message: this.m_msg };
 		chat.ws?.send(JSON.stringify(packet));
 	}
 
@@ -226,6 +227,9 @@ export class Chat
 		const json = JSON.parse(event.data);
 		const username = json.username;
 		const message = json.message;
+
+		if (!username || !message)
+			return;
 
 		if ("connections" in json)
 		{

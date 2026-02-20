@@ -9,6 +9,8 @@ import { Logger } from "modules/logger.js";
 export class Core
 {
 	public readonly publicDir: string = "/var/www/server/public/"
+	public readonly maxUsernameLen: number = 32;
+	public readonly maxChatMsgLen: number = 512;
 
 	private m_db!:			Database;
 	private m_fastify!:		FastifyInstance;
@@ -48,9 +50,9 @@ export class Core
 		{
 			await this.m_fastify.listen({ port: 3000, host: '0.0.0.0' });
 			Logger.success("server ready!")
-			Logger.log(`pong access at: https://${process.env.HOST}:8081`);
-			Logger.log(`grafana access at: https://${process.env.HOST}:8081/admin/grafana/`);
-			Logger.log(`kibana access at: https://${process.env.HOST}:8081/admin/kibana/`);
+			Logger.log(`pong access at: https://${process.env.HOST}`);
+			Logger.log(`grafana access at: https://${process.env.HOST}/admin/grafana/`);
+			Logger.log(`kibana access at: https://${process.env.HOST}/admin/kibana/`);
 		}
 		catch (err)
 		{

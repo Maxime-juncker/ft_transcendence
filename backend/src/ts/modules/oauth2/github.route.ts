@@ -44,15 +44,15 @@ export function githubOAuth2Routes (
 			{
 				res = await createUserOAuth2(email, name, id, AuthSource.GITHUB, avatar, core.db);
 				if (res.code != 200)
-					return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
+					return reply.redirect(`https://${process.env.HOST}/login?error=${encodeURIComponent(res.data.message)}`);
 			}
 
 			res = await loginOAuth2(id, AuthSource.GITHUB, core.db);
 			if (res.code != 200)
-				return reply.redirect(`https://${process.env.HOST}:8081/login?error=${encodeURIComponent(res.data.message)}`);
+				return reply.redirect(`https://${process.env.HOST}/login?error=${encodeURIComponent(res.data.message)}`);
 
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
-			const url = `https://${process.env.HOST}:8081/login?oauth_token=${token}`;
+			const url = `https://${process.env.HOST}/login?oauth_token=${token}`;
 			return reply.redirect(url);
 		})
 	})
