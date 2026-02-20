@@ -192,16 +192,46 @@ export class Chat
 		return null;
 	}
 
+	private async validateMessage(json: any): Promise<DbResponse>
+	{
+		if (!json.token || !json.message)
+			return { code: 400, data: { message: "bad message, should be: { token: <token>, message: <message> }"}};
+
+		if (json.message.length > core.maxChatMsgLen)
+			return { code: 403, data: { message: `message too long (max: ${core.maxChatMsgLen})`}};
+		if (json.message.length == 0)
+			return { code: 403, data: { message: `cannot send empty message`}};
+
+		const data: any = await jwtVerif(json.token, core.sessionKey);
+		if (!data)
+			return { code: 400, data: { message: "bad token" }};
+
+		return { code: 200, data: { id: data.id }};
+	}
+
 	private async onMessage(message: any, connection: WebSocket)
 	{
 		try
 		{
-			const msg = message.toString();
+			const json = JSON.parse(message.toString());
+			const res = await this.validateMessage(json);
+			if (res.code != 200)
+			{
+				connection.send(this.serverMsg(res.data.message));
+				return;
+			}
+
+			const msg = JSON.stringify({
+				username: await getUserName(res.data.id),
+				message: json.message,
+				connections: this.m_connections.size
+			});
 			await this.broadcast(msg, connection);
 		}
 		catch (err)
 		{
 			Logger.log(`failed to process message: ${err}`);
+			connection.send(this.serverMsg(`failed to process message: ${err}`));
 		}
 	}
 
@@ -254,7 +284,7 @@ export class Chat
 				await this.disconnectClient(ws);
 			});
 
-			this.broadcast(this.serverMsg(`${login} has join the room`), ws);
+			this.broadcast(this.serverMsg(`${login} has joined the room`), ws);
 		}
 		catch (err)
 		{

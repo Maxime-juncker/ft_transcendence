@@ -9,6 +9,8 @@ import { Logger } from "modules/logger.js";
 export class Core
 {
 	public readonly publicDir: string = "/var/www/server/public/"
+	public readonly maxUsernameLen: number = 32;
+	public readonly maxChatMsgLen: number = 512;
 
 	private m_db!:			Database;
 	private m_fastify!:		FastifyInstance;

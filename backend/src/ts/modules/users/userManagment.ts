@@ -103,7 +103,7 @@ async function validateName(name: string): Promise<DbResponse>
 		return { code: 403, data: { message: "name has invalid characters" }};
 	if (name.length <= 0)
 		return { code: 403, data: { message: "name too short" }};
-	if (name.length > 35)
+	if (name.length > core.maxUsernameLen)
 		return { code: 403, data: { message: "name too long" }};
 	const id = await isUsernameTaken(name);
 	if (id != -1)
