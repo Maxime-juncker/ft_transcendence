@@ -9,7 +9,7 @@ build:
 
 .PHONY: start
 start:
-	docker compose up -d
+	docker compose up --build -d
 
 .PHONY: vclean
 vclean:
