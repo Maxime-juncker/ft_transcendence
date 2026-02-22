@@ -41,7 +41,7 @@
 	</template>
 
 	<template id="chat-item-template">
-		<div class="w-full flex gap-3 px-2 my-1">
+		<div class="w-[30vw] flex gap-3 px-2 my-1">
 			<h1 class="font-bold text-left" id="sender"></h1>
 			<pre class="font-medium text-left whitespace-pre-wrap break-all" id="message"></pre>
 		</div>
@@ -147,7 +147,7 @@
 					<div id="user-list-container" class="h-full flex flex-col items-center py-4 gap-2 overflow-y-scroll">
 					</div>
 				</div>
-				<div id="chat-out" class="flex h-[90%] overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-darker">
+				<div id="chat-out" class="flex h-[90%] w-full max-w-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-darker">
 				</div>
 				<div class="bg-dark w-full h-[10%] flex gap-2 border-t-2 border-blue">
 					<input id="chat-in" wrap="soft" data-i18n-placeholder="chat" placeholder="enter message..."
@@ -164,14 +164,14 @@
 			<div class="border-4 flex flex-col border-red w-[70%]">
 				<div class="w-full flex-1">
 					<section id="home" class="page px-[30%] bg-darkest ">
-						<button class="btn w-full text-6xl font-bold" data-i18n="game" id="game">game</button>
-						<button class="btn w-full text-6xl font-bold" data-i18n="tournament" id="tournament">tournament</button>
+						<button class="btn w-full text-[2.5vw] font-bold" data-i18n="game" id="game">game</button>
+						<button class="btn w-full text-[2.5vw] font-bold" data-i18n="tournament" id="tournament">tournament</button>
 					</section>
 
 					<section id="game-menu" class="flex page px-[30%] bg-darkest">
-						<button class="btn w-full text-6xl font-bold" data-i18n="local" id="local-game">local</button>
-						<button class="btn w-full text-6xl font-bold" data-i18n="online" id="online-game">online</button>
-						<button class="btn w-full text-6xl font-bold" data-i18n="bot" id="bot-game">bot</button>
+						<button class="btn w-full text-[2.5vw] font-bold" data-i18n="local" id="local-game">local</button>
+						<button class="btn w-full text-[2.5vw] font-bold" data-i18n="online" id="online-game">online</button>
+						<button class="btn w-full text-[2.5vw] font-bold" data-i18n="bot" id="bot-game">bot</button>
 					</section>
 
 					<section id="game" class="relative game page bg-darkest w-full box-sizing: content-box overflow-hidden flex justify-center align-middle items-center">
