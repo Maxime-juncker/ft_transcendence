@@ -41,7 +41,7 @@
 	</template>
 
 	<template id="chat-item-template">
-		<div class="w-full flex gap-3 px-2 my-1">
+		<div class="w-[30vw] flex gap-3 px-2 my-1">
 			<h1 class="font-bold text-left" id="sender"></h1>
 			<pre class="font-medium text-left whitespace-pre-wrap break-all" id="message"></pre>
 		</div>
@@ -147,7 +147,7 @@
 					<div id="user-list-container" class="h-full flex flex-col items-center py-4 gap-2 overflow-y-scroll">
 					</div>
 				</div>
-				<div id="chat-out" class="flex h-[90%] overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-darker">
+				<div id="chat-out" class="flex h-[90%] w-full max-w-full overflow-y-scroll flex-col-reverse align-bottom justify-start items-start bg-darker">
 				</div>
 				<div class="bg-dark w-full h-[10%] flex gap-2 border-t-2 border-blue">
 					<input id="chat-in" wrap="soft" data-i18n-placeholder="chat" placeholder="enter message..."
