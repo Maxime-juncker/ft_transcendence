@@ -1,16 +1,17 @@
+import { AuthSource } from 'modules/oauth2/routes.js';
 import { getBot } from 'modules/users/userManagment.js';
 
 class Match
 {
-	constructor(public readonly _player1: number,
-		public readonly _player2: number,
+	constructor(public readonly _player1Id: number,
+		public readonly _player2Id: number,
 		public _score1: number = 0,
 		public _score2: number = 0,
 		private _winner: number | null = null) {}
 
-	public static isBot(player: number): boolean
+	public static isBot(id: number): boolean
 	{
-		return (player === 1);
+		return (id === AuthSource.BOT);
 	}
 
 	set score1(score: number) { this._score1 = score; }
@@ -18,26 +19,39 @@ class Match
 
 	public isBotVsBot(): boolean
 	{
-		return Match.isBot(this._player1) && Match.isBot(this._player2);
+		return (Match.isBot(this._player1Id) && Match.isBot(this._player2Id));
 	}
 
 	public isHumanVsBot(): boolean
 	{
-		return Match.isBot(this._player1) !== Match.isBot(this._player2);
+		return (Match.isBot(this._player1Id) !== Match.isBot(this._player2Id));
 	}
 
 	public getBotPlayer(): number | null
 	{
-		if (Match.isBot(this._player1)) return this._player1;
-		if (Match.isBot(this._player2)) return this._player2;
-		return null;
+		if (Match.isBot(this._player1Id))
+		{
+			return (this._player1Id);
+		}
+		else if (Match.isBot(this._player2Id))
+		{
+			return (this._player2Id);
+		}
+
+		return (null);
 	}
 
 	public getHumanPlayer(): number | null
 	{
-		if (!Match.isBot(this._player1)) return this._player1;
-		if (!Match.isBot(this._player2)) return this._player2;
-		return null;
+		if (!Match.isBot(this._player1Id))
+		{
+			return (this._player1Id);
+		}
+		else if (!Match.isBot(this._player2Id))
+		{
+			return (this._player2Id);
+		}
+		return (null);
 	}
 
 	get winner(): number | null { return (this._winner); }
@@ -48,7 +62,7 @@ class Match
 		{
 			throw new Error('Winner has already been set for this match.');
 		}
-		else if (winner !== this._player1 && winner !== this._player2)
+		else if (winner !== this._player1Id && winner !== this._player2Id)
 		{
 			throw new Error('Winner must be one of the players in the match.');
 		}
@@ -73,13 +87,21 @@ export class Tournament
 		}
 	}
 
+	private generateMatches(): void
+	{
+		for (let i = 0; i < this._players.length; i += 2)
+		{
+			this._matches.push(new Match(this._players[i], this._players[i + 1]));
+		}
+	}
+
 	public static async create(inputs: Set<number>, depth: number = 0): Promise<Tournament>
 	{
 		let players: Array<number>;
-		
+
 		if (depth === 0)
 		{
-			const nbBot = (inputs.size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(inputs.size))) - inputs.size;
+			const nbBot = this.calculateNbBot(inputs.size);
 			const bot = await getBot();
 			for (let i = 0; i < nbBot; i++)
 			{
@@ -92,7 +114,12 @@ export class Tournament
 			players = Array.from(inputs);
 		}
 
-		return new Tournament(players, depth);
+		return (new Tournament(players, depth));
+	}
+
+	private static calculateNbBot(size: number): number
+	{
+		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
 	}
 
 	private static shuffleArray<T>(array: T[]): T[]
@@ -103,15 +130,7 @@ export class Tournament
 			[array[i], array[j]] = [array[j], array[i]];
 		}
 
-		return array;
-	}
-
-	private generateMatches(): void
-	{
-		for (let i = 0; i < this._players.length; i += 2)
-		{
-			this._matches.push(new Match(this._players[i], this._players[i + 1]));
-		}
+		return (array);
 	}
 
 	get players(): Array<number>	{ return (this._players); }
@@ -120,7 +139,7 @@ export class Tournament
 
 	set next(tournament: Tournament)
 	{
-		if (this._next !== null)
+		if (this._next)
 		{
 			throw new Error('Next tournament has already been set.');
 		}

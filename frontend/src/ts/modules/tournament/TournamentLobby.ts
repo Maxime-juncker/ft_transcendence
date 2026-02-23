@@ -188,7 +188,7 @@ export class TournamentLobby
 		{
 
 			console.log('[TournamentLobby] Adding click listener to leave button');
-			this.leaveBtn.addEventListener('click', this.handleLeave);
+			this.leaveBtn.addEventListener('click', this.leaveTournament);
 		}
 		else
 		{
@@ -198,7 +198,11 @@ export class TournamentLobby
 
 	private handleStart = async () =>
 	{
-		if (!this.isOwner || !this.tournamentId) return;
+		if (!this.tournamentId)
+		{
+			console.error('[TournamentLobby] No tournament ID set');
+			return ;
+		}
 
 		try
 		{
@@ -207,7 +211,7 @@ export class TournamentLobby
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tournamentId: this.tournamentId })
+				body: JSON.stringify({ tournamentId: this.tournamentId, token: MainUser.Instance?.token })
 			});
 
 			console.log('[TournamentLobby] Start tournament response status:', res.status);
@@ -224,30 +228,6 @@ export class TournamentLobby
 		catch (e)
 		{
 			console.error('Error starting tournament:', e);
-		}
-	}
-
-	private handleLeave = async () =>
-	{
-		console.log('[TournamentLobby] handleLeave called, tournamentId:', this.tournamentId);
-		
-		try
-		{
-			const res = await fetch('/api/leave-tournament',
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tournamentId: this.tournamentId, token: MainUser.Instance?.token })
-			});
-
-			if (res.ok)
-			{
-				this.router.navigateTo('tournament-menu', '');
-			}
-		}
-		catch (e)
-		{
-			console.error('Error leaving tournament:', e);
 		}
 	}
 
@@ -292,7 +272,7 @@ export class TournamentLobby
 		
 		if (this.leaveBtn)
 		{
-			this.leaveBtn.removeEventListener( 'click', this.handleLeave);
+			this.leaveBtn.removeEventListener( 'click', this.leaveTournament);
 		}
 
 		if (this.router.currentPage !== 'tournament-menu')
