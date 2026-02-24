@@ -22,6 +22,11 @@ export class BlockchainContract {
     private factoryAddress: Hex | undefined;
     private nonce: number = 0;
     private mutex = new Mutex();
+    private static readonly MAX_RETRIES = 3;
+
+    private isNonceTooLow(err: unknown): boolean {
+        return err instanceof Error && err.message.includes('nonce too low');
+    }
 
     constructor() {}
     
@@ -80,28 +85,33 @@ export class BlockchainContract {
         await this.mutex.runExclusive(async () => {
             nonceToUse = this.nonce;
             this.nonce++;
-        })
-        try {
-            const { result , request } = await this.publicClient!.simulateContract({
-                account: this.account,
-                address: this.factoryAddress!,
-                abi: this.abi!,
-                functionName: 'createTournament',
-                nonce: nonceToUse!,
-            })
-            
-            let hash = await this.walletClient!.writeContract(request);
-            await this.publicClient!.waitForTransactionReceipt({ hash });
-            Logger.log("Tournament created at : ", result);
-            
-            return (result);
-        } catch (err) {
-            this.nonce = await this.publicClient!.getTransactionCount({
-                address: this.account!.address,
-                blockTag: "pending"
-            });
-            throw err;
+        });
+        for (let attempt = 0; attempt < BlockchainContract.MAX_RETRIES; attempt++) {
+            try {
+                const { result, request } = await this.publicClient!.simulateContract({
+                    account: this.account,
+                    address: this.factoryAddress!,
+                    abi: this.abi!,
+                    functionName: 'createTournament',
+                    nonce: nonceToUse!,
+                });
+                const hash = await this.walletClient!.writeContract(request);
+                await this.publicClient!.waitForTransactionReceipt({ hash });
+                Logger.log("Tournament created at : ", result);
+                return result;
+            } catch (err) {
+                if (this.isNonceTooLow(err) && attempt < BlockchainContract.MAX_RETRIES - 1) {
+                    nonceToUse = await this.publicClient!.getTransactionCount({
+                        address: this.account!.address,
+                        blockTag: "pending"
+                    });
+                    Logger.log(`Nonce resynced to ${nonceToUse}, retrying (attempt ${attempt + 1})`);
+                } else {
+                    throw err;
+                }
+            }
         }
+        throw new Error('createTournament failed after max retries');
     }
 
     async addMatchResult(tournamentId: number, player1: number, player2: number, player1score: number, player2score: number) {
@@ -116,24 +126,31 @@ export class BlockchainContract {
             nonceToUse = this.nonce;
             this.nonce++;
         })
-        try {
-            const { request } = await this.publicClient!.simulateContract({
-                account: this.account,
-                address: tournamentAddress as Hex,
-                abi: this.tournamentAbi!,
-                functionName: 'addMatch',
-                args: [player1, player2, player1score, player2score],
-                nonce: nonceToUse!,
-            })
-            let hash = await this.walletClient!.writeContract(request);
-            await this.publicClient!.waitForTransactionReceipt({ hash });
-            Logger.log("Match added on-chain : ", hash);
-        } catch (err) {
-            this.nonce = await this.publicClient!.getTransactionCount({
-                address: this.account!.address,
-                blockTag: "pending"
-            });
-            throw err;
+        for (let attempt = 0; attempt < BlockchainContract.MAX_RETRIES; attempt++) {
+            try {
+                const { request } = await this.publicClient!.simulateContract({
+                    account: this.account,
+                    address: tournamentAddress as Hex,
+                    abi: this.tournamentAbi!,
+                    functionName: 'addMatch',
+                    args: [player1, player2, player1score, player2score],
+                    nonce: nonceToUse!,
+                });
+                const hash = await this.walletClient!.writeContract(request);
+                await this.publicClient!.waitForTransactionReceipt({ hash });
+                Logger.log("Match added on-chain : ", hash);
+                return;
+            } catch (err) {
+                if (this.isNonceTooLow(err) && attempt < BlockchainContract.MAX_RETRIES - 1) {
+                    nonceToUse = await this.publicClient!.getTransactionCount({
+                        address: this.account!.address,
+                        blockTag: "pending"
+                    });
+                    Logger.log(`Nonce resynced to ${nonceToUse}, retrying (attempt ${attempt + 1})`);
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
@@ -150,24 +167,31 @@ export class BlockchainContract {
             nonceToUse = this.nonce;
             this.nonce++;
         })
-        try {
-            const { request } = await this.publicClient!.simulateContract({
-                account: this.account,
-                address: tournamentAddress as Hex,
-                abi: this.tournamentAbi!,
-                functionName: 'finish',
-                args: [winner],
-                nonce: nonceToUse!,
-            })
-            let hash = await this.walletClient!.writeContract(request);
-            const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
-            Logger.log("Tournament finished : ", receipt);
-        } catch (err) {
-            this.nonce = await this.publicClient!.getTransactionCount({
-                address: this.account!.address,
-                blockTag: "pending"
-            });
-            throw err;
+        for (let attempt = 0; attempt < BlockchainContract.MAX_RETRIES; attempt++) {
+            try {
+                const { request } = await this.publicClient!.simulateContract({
+                    account: this.account,
+                    address: tournamentAddress as Hex,
+                    abi: this.tournamentAbi!,
+                    functionName: 'finish',
+                    args: [winner],
+                    nonce: nonceToUse!,
+                });
+                const hash = await this.walletClient!.writeContract(request);
+                const receipt = await this.publicClient!.waitForTransactionReceipt({ hash });
+                Logger.log("Tournament finished : ", receipt);
+                return;
+            } catch (err) {
+                if (this.isNonceTooLow(err) && attempt < BlockchainContract.MAX_RETRIES - 1) {
+                    nonceToUse = await this.publicClient!.getTransactionCount({
+                        address: this.account!.address,
+                        blockTag: "pending"
+                    });
+                    Logger.log(`Nonce resynced to ${nonceToUse}, retrying (attempt ${attempt + 1})`);
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
