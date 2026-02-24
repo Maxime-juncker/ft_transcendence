@@ -135,7 +135,7 @@ impl Infos {
                         .borrow_mut()
                         .receiver
                         .as_mut()
-                        .expect("empty receiver")
+                        .ok_or_else(|| anyhow!("receiver not initialized"))?
                         .is_empty()
                     {
                         break;
@@ -153,7 +153,7 @@ impl Infos {
                         .borrow_mut()
                         .receiver
                         .as_mut()
-                        .expect("empty receiver")
+                        .ok_or_else(|| anyhow!("receiver not initialized"))?
                         .is_empty()
                     {
                         break;
@@ -167,7 +167,7 @@ impl Infos {
             .borrow_mut()
             .receiver
             .as_mut()
-            .expect("empty receiver")
+            .ok_or_else(|| anyhow!("receiver not initialized"))?
             .try_recv()?;
         let game = Game::new(self, response).await?;
         self.send_start_game(&game.game_id).await?;
@@ -186,8 +186,7 @@ impl Infos {
         headers.insert("Content-Type", "application/json".parse()?);
         let token: &str = &self.authent.borrow().token.clone();
         map.insert("token", token);
-        let mut url = self.context.location.clone();
-        url = format!("https://{url}/api/start-game/{}", game_id);
+        let url = format!("https://{}/api/start-game/{}", self.context.location, game_id);
         let res = self
             .context
             .client
@@ -288,8 +287,7 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
     map.insert("mode", mode);
     let token: &str = &game_main.authent.borrow().token.to_string();
     map.insert("token", token);
-    let mut url = game_main.context.location.clone();
-    url = format!("https://{url}/api/create-game");
+    let url = format!("https://{}/api/create-game", game_main.context.location);
     let res = game_main
         .context
         .client
