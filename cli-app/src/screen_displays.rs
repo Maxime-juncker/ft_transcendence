@@ -149,14 +149,14 @@ impl ScreenDisplayer for Infos {
                 });
                 ctx.draw(&Rectangle {
                     x: self.game.parameters.paddle_padding,
-                    y: (95.0 - self.game.game_stats.left_y) as f64,
+                    y: (100.0 - self.game.game_stats.left_y as f64) - self.game.parameters.paddle_height / 2.0,
                     width: self.game.parameters.paddle_width,
                     height: self.game.parameters.paddle_height,
                     color: Color::Green,
                 });
                 ctx.draw(&Rectangle {
-                    x: 100.0 - self.game.parameters.paddle_padding,
-                    y: (95.0 - self.game.game_stats.right_y) as f64,
+                    x: 100.0 - self.game.parameters.paddle_padding - self.game.parameters.paddle_width,
+                    y: (100.0 - self.game.game_stats.right_y as f64) - self.game.parameters.paddle_height / 2.0,
                     width: self.game.parameters.paddle_width,
                     height: self.game.parameters.paddle_height,
                     color: Color::Green,

@@ -156,7 +156,7 @@ pub(crate) async fn signup(
     if body["token"].as_str().is_some() {
         login(context, (signup_infos.2, signup_infos.1, String::new())).await
     } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!(error.to_string()))
+        Err(anyhow!("Error signing up: {}", error))
     } else {
         Err(anyhow!("Error signing up"))
     }
@@ -185,7 +185,7 @@ pub(crate) async fn login(
         let (id, receiver) = get_id_and_launch_chat(context.clone(), token.to_string()).await?;
         Ok((token.to_string(), id, receiver))
     } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!(error.to_string()))
+        Err(anyhow!("Error logging in: {}", error))
     } else {
         Err(anyhow!("Error logging in"))
     }
@@ -224,9 +224,9 @@ pub(crate) async fn create_guest_session(
         let (id, receiver) = get_id_and_launch_chat(context, token.to_string()).await?;
         Ok((token.to_string(), id, receiver))
     } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!(error.to_string()))
+        Err(anyhow!("Error creating guest session: {}", error))
     } else {
-        Err(anyhow!("Error logging in"))
+        Err(anyhow!("Error creating guest session"))
     }
 }
 
@@ -248,9 +248,7 @@ async fn enter_chat_room(
         mpsc::Receiver<serde_json::Value>,
     ) = mpsc::channel(1024);
     tokio::spawn(async move {
-        if let Err(e) = chat(ws_stream, sender, token_chat, location_chat).await {
-            eprintln!("Error: {e}");
-        }
+        let _ = chat(ws_stream, sender, token_chat, location_chat).await;
     });
     Ok(receiver)
 }
@@ -265,9 +263,8 @@ async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, 
         while let Some(msg) = ws_stream.next().await {
         let last_message = match msg {
             Ok(Message::Text(result)) => result,
-            _ => {
-                continue;
-            }
+            Ok(_) => {continue},
+            Err(e) => return Err(anyhow!(e.to_string())),
         };
         let message: serde_json::Value = serde_json::from_str(last_message.as_str())?;
         match message["gameId"].as_str() {
