@@ -1,6 +1,7 @@
 use crate::Infos;
 use crate::utils::{get_name_from_id, should_exit};
 use crate::{Auth, Context};
+use crate::infos::GameParams;
 use anyhow::{Result, anyhow};
 use bytes::Bytes;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, poll};
@@ -36,6 +37,7 @@ pub(crate) struct Game {
     pub(crate) game_checker: Option<watch::Receiver<bool>>,
     pub(crate) game_stats: GameStats,
     pub(crate) game_sender: Option<mpsc::Sender<u8>>,
+    pub(crate) parameters: GameParams,
 }
 
 #[derive(Default)]
@@ -63,7 +65,7 @@ impl Game {
     /// Returns an error if no gameId, opponentId or playerSide found in request
     /// Returns an error if get_opponent_name returns an error
     ///
-    pub(crate) async fn new(info: &Infos, value: serde_json::Value) -> Result<Game> {
+    pub(crate) async fn new(info: &Infos, value: serde_json::Value, parameters: GameParams) -> Result<Game> {
         let game_id: String = match value["gameId"].as_str() {
             Some(id) => id.to_string(),
             _ => return Err(anyhow!("No game Id in response")),
@@ -83,6 +85,7 @@ impl Game {
             game_id,
             player_side,
             opponent_name,
+            parameters: parameters,
             ..Default::default()
         })
     }
