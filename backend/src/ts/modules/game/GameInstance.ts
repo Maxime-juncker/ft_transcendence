@@ -15,15 +15,15 @@ enum Keys
 
 export class Parameters
 {
-	static PADDLE_SPEED: number = process.env.PADDE_SPEED ? parseFloat(process.env.PADDE_SPEED) : 1.5;
-	static PADDLE_HEIGHT: number = 15;
-	static PADDLE_WIDTH: number = 2;
-	static PADDLE_PADDING: number = 2;
-	static BALL_SIZE: number = 2;
-	static MAX_ANGLE: number = 1.5;
+	static PADDLE_SPEED: number = process.env.PADDLE_SPEED ? parseFloat(process.env.PADDLE_SPEED) : 1.5;
+	static PADDLE_HEIGHT: number = process.env.PADDLE_HEIGHT ? parseFloat(process.env.PADDLE_HEIGHT) : 15;
+	static PADDLE_WIDTH: number = process.env.PADDLE_WIDTH ? parseFloat(process.env.PADDLE_WIDTH) : 2;
+	static PADDLE_PADDING: number = process.env.PADDLE_PADDING ? parseFloat(process.env.PADDLE_PADDING) : 2;
+	static BALL_SIZE: number = process.env.BALL_SIZE ? parseFloat(process.env.BALL_SIZE) : 1.5;
 	static BALL_SPEED: number = process.env.BALL_SPEED ? parseFloat(process.env.BALL_SPEED) : 1.0;
 	static BALL_SPEED_INCREMENT: number = process.env.BALL_SPEED_INCREMENT ? parseFloat(process.env.BALL_SPEED_INCREMENT) : 0.1;
 	static POINTS_TO_WIN: number = process.env.POINTS_TO_WIN ? parseFloat(process.env.POINTS_TO_WIN) : 11;
+	static MAX_ANGLE: number = 1.5;
 	static FPS: number = 60;
 
 	static MIN_Y_PADDLE: number = Parameters.PADDLE_HEIGHT / 2;
@@ -49,7 +49,6 @@ export class GameInstance
 	private _scoreUpdated: boolean = false;
 	public p1Ready: boolean = false;
 	public p2Ready: boolean = false;
-	public bounceInterval: NodeJS.Timeout | null = null;
 
 	constructor(gameMode: string, player1Id: number, player2Id: number)
 	{
@@ -91,19 +90,7 @@ export class GameInstance
 
 		if (this.goal())
 		{
-			if (this._gameMode === 'dev')
-			{
-				this._gameState.speedX = 0;
-				this._gameState.speedY = 0;
-				this._gameState.ballX = 50;
-				this._gameState.ballY = 50;
-			}
-			else
-			{
-				this.score((this._gameState.ballX > 100) ? 1 : 2);
-				this.resetBall();
-				this.scoreUpdated = true;
-			}
+			this.handleGoal();
 		}
 		else if (this.collideWall())
 		{
@@ -123,6 +110,23 @@ export class GameInstance
 	private goal(): boolean
 	{
 		return (this._gameState.ballX < 0 || this._gameState.ballX > 100);
+	}
+
+	private handleGoal(): void
+	{
+		if (this._gameMode === 'dev')
+		{
+			this._gameState.speedX = 0;
+			this._gameState.speedY = 0;
+			this._gameState.ballX = 50;
+			this._gameState.ballY = 50;
+		}
+		else
+		{
+			this.score((this._gameState.ballX > 100) ? 1 : 2);
+			this.resetBall();
+			this.scoreUpdated = true;
+		}
 	}
 
 	private score(player: number): void
@@ -168,7 +172,7 @@ export class GameInstance
 	private resetBall(): void
 	{
 		this._speed = Parameters.BALL_SPEED;
-		this._gameState.speedY = (Math.random() - 0.5);
+		this._gameState.speedY = (Math.random() - 0.5) * 0.4;
 		this.normalizeSpeed();
 		this._gameState.ballX = 50;
 		this._gameState.ballY = 50;
@@ -196,20 +200,12 @@ export class GameInstance
 
 	private bounce(paddleY: number, newX: number): void
 	{
-		if (this.bounceInterval != null)
-		{
-			return ;
-		}
-
 		this._speed += Parameters.BALL_SPEED_INCREMENT;
-		this._gameState.speedX = -this._gameState.speedX;
 		this._gameState.speedY = (this._gameState.ballY - paddleY) / Parameters.MIN_Y_PADDLE * Parameters.MAX_ANGLE;
-		this.bounceInterval = setInterval(() => {
-			if (!this.bounceInterval)
-				return;
-			clearInterval(this.bounceInterval);
-			this.bounceInterval = null;
-		}, 50);
+		if (this._gameState.ballX < 50) // ball is left size
+			this._gameState.speedX = Math.abs(this._gameState.speedX);
+		else 
+			this._gameState.speedX = Math.abs(this._gameState.speedX) * -1;
 		this.normalizeSpeed();
 	}
 

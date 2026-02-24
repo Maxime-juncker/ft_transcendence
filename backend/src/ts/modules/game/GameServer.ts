@@ -123,7 +123,7 @@ export class GameServer
 							{
 								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
 								const playerSide = (game.player1Id == data.id) ? '1' : '2';
-								reply.status(200).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
+								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
 									paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
 									paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
 								return ;
@@ -151,7 +151,7 @@ export class GameServer
 				}
 				else
 				{
-					reply.status(400).send({ error: 'Invalid game mode' });
+					reply.status(422).send({ error: 'Invalid game mode' });
 				}
 			}
 			catch (error)
@@ -195,9 +195,12 @@ export class GameServer
 				const { gameId } = request.params as { gameId: string };
 				const body = request.body as { token: string };
 				const token = body.token;
+
 				const data: any = await jwtVerif(token, core.sessionKey);
 				if (!data)
+				{
 					return reply.status(400).send({ error: 'Invalid token' });
+				}
 
 				const userId = data.id;
 				const game = this.activeGames.get(gameId);
@@ -262,7 +265,9 @@ export class GameServer
 					if (game.mode === 'bot' && game.reversedBuffer)
 					{
 						if (game.reversedBuffer)
+						{
 							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+						}
 					}
 				}
 				else
@@ -291,7 +296,10 @@ export class GameServer
 
 				if (!game)
 				{
-					throw new Error(`Game ${gameId} not found`);
+					Logger.error(`Game ${gameId} not found - WebSocket connection rejected`);
+					connection.send(JSON.stringify({ type: 'error', message: 'Game not found' }));
+					connection.close();
+					return ;
 				}
 
 				if (!gameConnections.has(gameId))
