@@ -6,6 +6,7 @@ services:
     container_name: backend
     environment:
       - HOST=${HOST:-localhost}
+      - PORT=${PORT:-8081}
       - GITHUB_ID=${GITHUB_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
       - FT_ID=${FT_ID}
@@ -53,6 +54,7 @@ services:
     container_name: frontend
     environment:
       - HOST=${HOST:-localhost}
+      - PORT=${PORT:-8081}
     depends_on:
       - backend
     networks:
@@ -93,7 +95,7 @@ services:
       - modsecurity_logs:/var/log/nginx/:rw
     ports:
       - "8080:80"
-      - "8081:443"
+      - "${PORT:-8081}:443"
     networks:
       - frontend_net
       - backend_net
@@ -192,7 +194,7 @@ services:
       - GF_LOG_MODE=file
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_DOMAIN=${HOST}
-      - GF_ROOT_URL=https://${HOST}:8081/admin/grafana/
+      - GF_ROOT_URL=https://${HOST:-localhost}:${PORT:-8081}/admin/grafana/
     labels:
       - sablier.enable=true
       - sablier.group=transcendence

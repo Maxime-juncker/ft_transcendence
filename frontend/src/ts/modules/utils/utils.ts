@@ -36,9 +36,17 @@ export function getCookie(name: string)
 	}
 }
 
+var placeholderTimeoutId: NodeJS.Timeout | null = null;
 export function setPlaceHolderText(msg: string)
 {
 	var placeholder: HTMLElement;
+
+	if (placeholderTimeoutId)
+		clearTimeout(placeholderTimeoutId);
+	placeholderTimeoutId = setTimeout(function() {
+		setPlaceHolderText("");
+		placeholderTimeoutId = null;
+	}, 5000);
 
 	if (Router.Instance === null)
 		placeholder = document.getElementById("placeholder-text") as HTMLElement;

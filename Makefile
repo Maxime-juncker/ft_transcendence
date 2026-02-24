@@ -5,7 +5,7 @@ all:
 .PHONY: build
 build:
 	docker compose build
-	(cd cli-app && ./build.sh)
+	docker build ./cli-app -t cli
 
 .PHONY: start
 start:

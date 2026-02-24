@@ -137,8 +137,8 @@ export class TournamentServer
 							players: data.initialParticipants,
 							matches: tournament.matches.map(m =>
 							({
-								player1: m._player1,
-								player2: m._player2,
+								player1: m._player1Id,
+								player2: m._player2Id,
 								winner: m.winner
 							}))
 						});
@@ -190,13 +190,13 @@ export class TournamentServer
 				if (!data)
 				{
 					Logger.error(`invalid token ${data}`);
-					return { code: 400, data: { message: "jwt token invalid" }};
+					return { code: 400, data: { error: "jwt token invalid" }};
 				}
 
 				const userId = data.id;
-				const name = await getUserName(userId) || "Unknown";
+				const name = await getUserName(userId);
 
-				if (name === "Unknown")
+				if (!name)
 				{
 					reply.status(404).send({ error: 'User not found' });
 					return ;
@@ -204,7 +204,7 @@ export class TournamentServer
 
 				if (type !== 'public')
 				{
-					reply.status(400).send({ error: 'Invalid tournament type' });
+					reply.status(422).send({ error: 'Invalid tournament type' });
 					return ;
 				}
 
@@ -272,7 +272,7 @@ export class TournamentServer
 				if (!data)
 				{
 					Logger.error(`invalid token ${data}`);
-					return { code: 400, data: { message: "jwt token invalid" }};
+					return { code: 400, data: { error: "jwt token invalid" }};
 				}
 
 				const userId = data.id;
@@ -330,32 +330,44 @@ export class TournamentServer
 		},
 		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
-			const body = request.body as { tournamentId: string, token: string };
-			const { tournamentId, token } = body;
-
-			const data: any = await jwtVerif(token, core.sessionKey);
-			if (!data)
+			try
 			{
-				Logger.error(`invalid token ${data}`);
-				return { code: 400, data: { message: "jwt token invalid" }};
-			}
+				const body = request.body as { tournamentId: string, token: string };
+				const { tournamentId, token } = body;
 
-			const userId = data.id;
-			const lobby = this.lobbies.get(tournamentId);
-
-			if (lobby)
-			{
-				if (lobby.ownerId == userId)
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
 				{
-					this.lobbies.delete(tournamentId);
+					Logger.error(`invalid token ${data}`);
+					return { code: 400, data: { error: "jwt token invalid" }};
+				}
+
+				const userId = data.id;
+				const lobby = this.lobbies.get(tournamentId);
+
+				if (lobby)
+				{
+					if (lobby.ownerId == userId)
+					{
+						this.lobbies.delete(tournamentId);
+					}
+					else
+					{
+						lobby.players = lobby.players.filter((p: any) => p.id != userId);
+						lobby.requests = lobby.requests.filter((r: any) => r.id != userId);
+					}
+					reply.status(200).send({ success: true });
 				}
 				else
 				{
-					lobby.players = lobby.players.filter((p: any) => p.id != userId);
-					lobby.requests = lobby.requests.filter((r: any) => r.id != userId);
+					reply.status(404).send({ error: 'Tournament not found' });
 				}
 			}
-			reply.send({ success: true });
+			catch (error)
+			{
+				Logger.error('Error leaving tournament:', error);
+				reply.status(500).send({ error });
+			}
 		});
 	}
 
@@ -371,8 +383,9 @@ export class TournamentServer
 					properties:
 					{
 						tournamentId:	{ type: "string" },
+						token:			{ type: "string" },
 					},
-					required: ["tournamentId"]
+					required: ["tournamentId", "token"]
 				}
 			}
 		},
@@ -380,31 +393,44 @@ export class TournamentServer
 		{
 			try
 			{
-				const body = request.body as { tournamentId: string };
-				const { tournamentId } = body;
-				
-				if (this.activeTournaments.has(tournamentId))
+				const body = request.body as { tournamentId: string; token: string };
+				const { tournamentId, token } = body;
+
+				const data: any = await jwtVerif(token, core.sessionKey);
+				if (!data)
 				{
-					reply.status(200).send({ message: 'Tournament already started' });
+					Logger.error(`invalid token ${data}`);
+					return { code: 400, data: { error: "jwt token invalid" }};
+				}
+
+				const userId = data.id;
+				if (userId != this.lobbies.get(tournamentId)?.ownerId)
+				{
+					reply.status(403).send({ error: 'You are not the owner of this tournament' });
 					return ;
 				}
-				
-				const lobby = this.lobbies.get(tournamentId);
 
+				if (this.activeTournaments.has(tournamentId))
+				{
+					reply.status(409).send({ message: 'Tournament already started' });
+					return ;
+				}
+
+				const lobby = this.lobbies.get(tournamentId);
 				if (!lobby)
 				{
 					reply.status(404).send({ error: 'Tournament not found' });
 					return ;
 				}
-				
+
 				if (lobby.status === 'starting')
 				{
 					reply.status(200).send({ message: 'Tournament is starting' });
 					return ;
 				}
-				
+
 				lobby.status = 'starting';
-				
+
 				const playerMap = new Map<number, string>();
 				lobby.players.forEach((p: any) => playerMap.set(p.id, p.name));
 
@@ -412,9 +438,6 @@ export class TournamentServer
 				const tournament = await Tournament.create(playerIdsSet);
 				
 				this.activeTournaments.set(tournamentId, tournament);
-
-				const now = new Date().toISOString();
-
 				const initialParticipants = tournament.players.map(pId =>
 				{
 					if (pId === this.botId)
@@ -434,7 +457,7 @@ export class TournamentServer
 					initialParticipants: initialParticipants,
 					blockchainId: lobby.blockchainId
 				});
-				
+
 				this.lobbies.delete(tournamentId);
 				this.startTournamentRound(tournamentId, tournament);
 				reply.status(200).send({ message: 'Tournament started' });
@@ -645,8 +668,8 @@ export class TournamentServer
 					{
 						try
 						{
-							Logger
-							await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
+							Logger.log(`Adding match result to blockchain: ${data.blockchainId} ${matches._player1Id} ${matches._player2Id} ${matches._score1} ${matches._score2}`);
+							await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1Id, matches._player2Id, matches._score1, matches._score2);
 						}
 						catch (error)
 						{

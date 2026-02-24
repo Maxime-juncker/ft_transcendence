@@ -35,7 +35,9 @@
 		"chat": "entrez un message...",
 		"search": "rechercher",
 		"type_confirm": "écrivez confirmer pour continuer",
-		"max_num": "nombre maximum de résultats"
+		"max_num": "nombre maximum de résultats",
+		"current_password": "mot de passe actuel...",
+		"new_password": "nouveau mot de passe..."
   	},
 	"guest_button": "continuer en tant qu'invité",
 	"confirm": "confirmer",
