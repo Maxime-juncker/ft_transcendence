@@ -1,4 +1,5 @@
-if [[ "$*" == *"--repeat"* ]]; then                                                        
+#!/bin/bash
+if [[ "$*" == *"--repeat"* ]]; then
     xset r rate 150 30                                                                     
 fi                                                                                         
                                                                                            
