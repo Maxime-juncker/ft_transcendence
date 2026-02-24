@@ -2,7 +2,7 @@ use crate::Infos;
 use crate::utils::{get_name_from_id, should_exit};
 use crate::{Auth, Context};
 use crate::infos::GameParams;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, Error};
 use bytes::Bytes;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, poll};
 use futures::stream::StreamExt;
@@ -35,6 +35,7 @@ pub(crate) struct Game {
     player_side: u64,
     pub(crate) receiver: Option<watch::Receiver<(Option<Bytes>, Option<Utf8Bytes>)>>,
     pub(crate) game_checker: Option<watch::Receiver<bool>>,
+    pub(crate) server_checker: Option<tokio::sync::oneshot::Receiver<Error>>,
     pub(crate) game_stats: GameStats,
     pub(crate) game_sender: Option<mpsc::Sender<u8>>,
     pub(crate) parameters: GameParams,
@@ -89,17 +90,11 @@ impl Game {
             ..Default::default()
         })
     }
-    // async fn launch_countdown(&self) -> Result<()> {
-    // 	//3...2....1....0 -->
-    // 	//Affiche le compte a rebours puis a 0 START GAME
-    // 	self.start_game().await?;
-    // 	Ok(())
-    // }
     /// Start a new game
-    pub(crate) async fn start_game(&mut self) -> Result<()> {
+    pub(crate) async fn start_game(&mut self) -> Result<tokio::sync::oneshot::Receiver<Error>> {
         let ws_stream = self.connect_wss().await?;
-        self.split_and_spawn_sockets(ws_stream).await?;
-        Ok(())
+        let checker = self.split_and_spawn_sockets(ws_stream).await?;
+        Ok(checker)
     }
     ///Initiate websocket connection with game server
     async fn connect_wss(&self) -> Result<WsStream> {
@@ -128,7 +123,7 @@ impl Game {
     ///
     /// #Parameters:
     /// ws_stream: websocket stream connected with game server
-    async fn split_and_spawn_sockets(&mut self, ws_stream: WsStream) -> Result<()> {
+    async fn split_and_spawn_sockets(&mut self, ws_stream: WsStream) -> Result<tokio::sync::oneshot::Receiver<Error>> {
         let (ws_write, ws_read) = ws_stream.split();
         let (sender, receiver): (mpsc::Sender<u8>, mpsc::Receiver<u8>) = mpsc::channel(1);
         let (state_sender, state_receiver): GameChannel = watch::channel((None, None));
@@ -137,16 +132,17 @@ impl Game {
             watch::channel(true);
         self.game_checker = Some(game_checker);
         let socket_checker = game_sender.subscribe();
+        let (err_tx, err_rx) = tokio::sync::oneshot::channel::<anyhow::Error>();
         tokio::task::spawn(async move {
-            if let Err(e) = Self::send_game(ws_write, receiver, game_sender).await {
-                eprintln!("Error: {}", e);
-            }
+            let _ = Self::send_game(ws_write, receiver, game_sender).await;
         });
         tokio::spawn(async move {
-            Self::read_socket(ws_read, state_sender, socket_checker).await;
+            if let Err(e) = Self::read_socket(ws_read, state_sender, socket_checker).await{
+                let _ = err_tx.send(e);
+            };
         });
         self.game_sender = Some(sender);
-        Ok(())
+        Ok(err_rx)
     }
     /// Get the winner's name and send shutdown signal to spawned task
     ///
@@ -270,28 +266,29 @@ impl Game {
         mut ws_read: SplitStream<WsStream>,
         state_sender: watch::Sender<(Option<Bytes>, Option<Utf8Bytes>)>,
         socket_checker: watch::Receiver<bool>,
-    ) {
+    ) -> Result<()> {
         loop {
-            if let Some(msg) = ws_read.next().await {
-                match msg {
-                    Ok(Message::Binary(b)) => {
-                        if state_sender.send((Some(b), None)).is_err() {
-                            break;
-                        }
+            match ws_read.next().await {
+                Some(Ok(Message::Binary(b))) => {
+                    if state_sender.send((Some(b), None)).is_err() {
+                        break;
                     }
-                    Ok(Message::Text(s)) => {
-                        if state_sender.send((None, Some(s))).is_err() {
-                            break;
-                        }
-                    }
-                    Ok(Message::Close(_)) => {}
-                    _ => {}
                 }
+                Some(Ok(Message::Text(s))) => {
+                    if state_sender.send((None, Some(s))).is_err() {
+                        break;
+                    }
+                }
+                Some(Ok(Message::Close(_))) => {break},
+                Some(Ok(_)) => {},
+                Some(Err(e)) => {return Err(anyhow!("{}", e))},
+                _ => {break},
             }
             match socket_checker.has_changed() {
                 Ok(false) => {}
                 _ => break,
             }
         }
+        Ok(())
     }
 }

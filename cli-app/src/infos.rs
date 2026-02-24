@@ -14,7 +14,7 @@ use reqwest::header::HeaderMap;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use tokio::time::Duration;
+use tokio::time::{timeout, Duration};
 
 #[derive(Default)]
 pub(crate) struct Infos {
@@ -111,7 +111,22 @@ impl Infos {
         Ok(())
     }
     pub(crate) fn error(&mut self, error: String) {
-        self.post_error_screen = self.screen.get();
+        self.post_error_screen = match self.screen.get() {
+            CurrentScreen::FirstScreen => CurrentScreen::FirstScreen,
+            CurrentScreen::SignUp => CurrentScreen::SignUp,
+            CurrentScreen::Login => CurrentScreen::Login,
+            CurrentScreen::Welcome => CurrentScreen::Welcome,
+            CurrentScreen::GameChoice => CurrentScreen::GameChoice,
+            CurrentScreen::SocialLife => CurrentScreen::SocialLife,
+            CurrentScreen::FriendsDisplay => CurrentScreen::FriendsDisplay,
+            CurrentScreen::StartGame => CurrentScreen::GameChoice,
+            CurrentScreen::EndGame => CurrentScreen::GameChoice,
+            CurrentScreen::CreateGame => CurrentScreen::GameChoice,
+            CurrentScreen::PlayGame => CurrentScreen::GameChoice,
+            CurrentScreen::ErrorScreen => CurrentScreen::ErrorScreen,
+            CurrentScreen::AddFriend => CurrentScreen::AddFriend,
+            CurrentScreen::DeleteFriend => CurrentScreen::DeleteFriend,
+        };
         self.error = error;
         self.screen.set(CurrentScreen::ErrorScreen);
     }
@@ -176,7 +191,8 @@ impl Infos {
         Ok(())
     }
     pub(crate) async fn launch_game(&mut self) -> Result<()> {
-        self.game.start_game().await?;
+        let checker = self.game.start_game().await?;
+        self.game.server_checker = Some(checker);
         self.screen.set(crate::CurrentScreen::PlayGame);
         Ok(())
     }
@@ -212,8 +228,11 @@ impl Infos {
         {
             self.screen.set(crate::CurrentScreen::GameChoice);
         };
+        if let Some(Ok(err)) = self.game.server_checker.as_mut().map(|r| r.try_recv()) {
+            return Err(anyhow!("{}", err));
+        }
         if let Some(sender) = &self.game.game_sender {
-            state_receiver.changed().await?;
+            let _ = timeout(Duration::from_millis(16), state_receiver.changed()).await;
             let (bytes, text) = state_receiver.borrow_and_update().clone();
             match (bytes, text) {
                 (Some(bytes), _none) => {
