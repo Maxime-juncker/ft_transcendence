@@ -38,7 +38,7 @@ customElements.define('notfound-view', NotFoundView);
 const user = new MainUser();
 await user.loginSession();
 
-var defaultTheme = "onedark";
+var defaultTheme = "coolTheme";
 const themeCookie = utils.getCookie("theme");
 if (themeCookie)
 	defaultTheme = themeCookie;
