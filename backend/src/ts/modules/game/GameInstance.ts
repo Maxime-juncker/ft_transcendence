@@ -201,8 +201,11 @@ export class GameInstance
 	private bounce(paddleY: number, newX: number): void
 	{
 		this._speed += Parameters.BALL_SPEED_INCREMENT;
-		this._gameState.speedX = -this._gameState.speedX;
 		this._gameState.speedY = (this._gameState.ballY - paddleY) / Parameters.MIN_Y_PADDLE * Parameters.MAX_ANGLE;
+		if (this._gameState.ballX < 50) // ball is left size
+			this._gameState.speedX = Math.abs(this._gameState.speedX);
+		else 
+			this._gameState.speedX = Math.abs(this._gameState.speedX) * -1;
 		this.normalizeSpeed();
 	}
 
