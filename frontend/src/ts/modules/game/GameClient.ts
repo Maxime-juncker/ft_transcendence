@@ -200,7 +200,7 @@ export class GameClient extends Utils
 			{
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, playerName: this.m_user!.id, token: MainUser.Instance?.token }),
+				body: JSON.stringify({ mode: this.mode, token: MainUser.Instance?.token }),
 			});
 
 			if (response.status == 202)
@@ -232,7 +232,7 @@ export class GameClient extends Utils
 			{
 				this.m_user2 = await getUserFromId(data.opponentId);
 			}
-			
+
 			this.createPlayerHtml();
 			this.m_player2?.updateHtml(this.m_user2);
 
