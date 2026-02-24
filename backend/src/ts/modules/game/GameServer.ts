@@ -95,6 +95,12 @@ export class GameServer
 				const body = request.body as { mode: string; token: string};
 				const mode = body.mode;
 				const token = body.token;
+				const params = new Parameters();
+
+				if (!params)
+				{
+					return reply.status(500).send({ error: 'Failed to load game parameters' });
+				}
 
 				const data: any = await jwtVerif(token, core.sessionKey);
 				if (!data)
@@ -110,8 +116,8 @@ export class GameServer
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting local game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1',
-						paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
-						paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
+						paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}
 				else if (mode === 'online')
 				{
@@ -124,19 +130,21 @@ export class GameServer
 								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
 								const playerSide = (game.player1Id == data.id) ? '1' : '2';
 								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
-									paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
-									paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
+									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 								return ;
 							}
 						}
 					}
 
 					await chat.addPlayerToQueue(data.id, this);
-					reply.status(202).send({ message: "added to queue" });
+					reply.status(202).send({ message: "added to queue", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}
 				else if (mode === 'duel')
 				{
-					return (reply.status(202).send({ message: "waiting for opponent" }));
+					return (reply.status(202).send({ message: "waiting for opponent", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE }));
 				}
 				else if (mode === 'bot')
 				{
@@ -146,8 +154,8 @@ export class GameServer
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: botId, playerSide: '1',
-						paddleHeight: Parameters.PADDLE_HEIGHT, paddleWidth: Parameters.PADDLE_WIDTH,
-						paddlePadding: Parameters.PADDLE_PADDING, ballSize: Parameters.BALL_SIZE });
+						paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}
 				else
 				{
