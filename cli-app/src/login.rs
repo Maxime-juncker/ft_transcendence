@@ -187,7 +187,7 @@ pub(crate) async fn login(
     } else if let Some(error) = body["message"].as_str() {
         Err(anyhow!(error.to_string()))
     } else {
-        Err(anyhow!("Error signing up"))
+        Err(anyhow!("Error logging in"))
     }
 }
 
@@ -226,7 +226,7 @@ pub(crate) async fn create_guest_session(
     } else if let Some(error) = body["message"].as_str() {
         Err(anyhow!(error.to_string()))
     } else {
-        Err(anyhow!("Error signing up"))
+        Err(anyhow!("Error logging in"))
     }
 }
 

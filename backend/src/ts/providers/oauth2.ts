@@ -26,7 +26,7 @@ export async function registerOAuth2Providers(fastify: FastifyInstance) {
 			auth: OAuth2.GITHUB_CONFIGURATION
 		},
 		startRedirectPath: '/api/oauth2/github',
-		callbackUri: `https://${process.env.HOST}/api/oauth2/github/callback`
+		callbackUri: `https://${process.env.HOST}:${process.env.PORT}/api/oauth2/github/callback`
 	};
 
 	const fortyTwoOAuth2Options : any = {
@@ -44,7 +44,7 @@ export async function registerOAuth2Providers(fastify: FastifyInstance) {
 			}
 		},
 		startRedirectPath: '/api/oauth2/forty_two',
-		callbackUri: `https://${process.env.HOST}/api/oauth2/forty_two/callback`,
+		callbackUri: `https://${process.env.HOST}:${process.env.PORT}/api/oauth2/forty_two/callback`,
 		scope: 'public'
 	};
 

@@ -98,12 +98,6 @@ export class LoginView extends ViewComponent
 		if (this.m_guestBtn)
 			this.m_guestBtn = this.disableBtn(this.m_guestBtn) as HTMLButtonElement;
 
-		// this.m_createBtn?.removeEventListener("click", () => this.submitNewUser());
-		// this.m_loginBtn?.removeEventListener("click", () => this.login());
-		// this.m_fortytwoBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/forty_two"));
-		// this.m_githubBtn?.removeEventListener("click", () => oauthLogin("/api/oauth2/github"));
-		// this.m_guestBtn?.removeEventListener("click", () => this.logAsGuest());
-
 		setPlaceHolderText("you already are login");
 	}
 

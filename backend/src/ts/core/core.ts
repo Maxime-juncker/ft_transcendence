@@ -50,9 +50,9 @@ export class Core
 		{
 			await this.m_fastify.listen({ port: 3000, host: '0.0.0.0' });
 			Logger.success("server ready!")
-			Logger.log(`pong access at: https://${process.env.HOST}`);
-			Logger.log(`grafana access at: https://${process.env.HOST}/admin/grafana/`);
-			Logger.log(`kibana access at: https://${process.env.HOST}/admin/kibana/`);
+			Logger.log(`pong access at: https://${process.env.HOST}:${process.env.PORT}`);
+			Logger.log(`grafana access at: https://${process.env.HOST}:${process.env.PORT}/admin/grafana/`);
+			Logger.log(`kibana access at: https://${process.env.HOST}:${process.env.PORT}/admin/kibana/`);
 		}
 		catch (err)
 		{
