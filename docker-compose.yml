@@ -89,7 +89,7 @@ services:
       - modsecurity_logs:/var/log/nginx/:rw
     ports:
       - "8080:80"
-      - "8081:443"
+      - "${PORT:-8081}:443"
     networks:
       - frontend_net
       - backend_net
@@ -179,7 +179,7 @@ services:
       - GF_LOG_MODE=file
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_DOMAIN=${HOST}
-      - GF_ROOT_URL=https://${HOST}:8081/admin/grafana/
+      - GF_ROOT_URL=https://${HOST:-localhost}:${PORT:-8081}/admin/grafana/
 
   nginx_prom_export:
     restart: always
