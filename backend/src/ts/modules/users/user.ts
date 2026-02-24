@@ -133,7 +133,7 @@ export async function addGameToHist(game: GameRes, db: Database) : Promise<DbRes
 
 async function calculateElo(elo1: number, elo2: number, score1: number, score2: number): Promise<number>
 {
-	let maxPoint = Parameters.POINTS_TO_WIN;
+	let maxPoint = new Parameters().POINTS_TO_WIN || 11;
 
 	const K = 20;
 	const scaleFactor = 420;
