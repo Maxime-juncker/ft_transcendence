@@ -3,7 +3,9 @@
 > pong but better :)
 
 ft_transcendence is the final project of the forty two common core, it involves making a full stack app in typescript, using a database, docker, nodejs, html / css \
-the goal of this project is to recreate the famous pong game but with more features.
+the goal of this project is to recreate the famous pong game but with more features.  
+
+test live [here](https://transcendence.flamby.ovh)
 
 ## Features
 
@@ -58,6 +60,7 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 |variable|description|
 |----|----|
 | HOST | hostname or IP used for redirection (leave to localhost if unsure)|
+| PORT | port (default: 8081)|
 |RUN_BENCHMARK|if set to 1, benchmark will run (create random user / games / etc...)|
 | GITHUB_ID | ID of your github OAuth app |
 |PROTECTED_ROUTE_PASS| password for protected routes (e.g: /add_game)|
@@ -68,7 +71,17 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 | GRAFANA_PASSWORD | password of grafana webui (need to be >= 8 Length)|
 | LOGSTASH_PASSWORD | password of logstash (need to be >= 8 Length) |
 | LOGSTASH_WRITER_PASSWORD | password of logstash writer (need to be >= 8 Length)|
-
+|AVAX_INFURA| blockchain endpoint |
+|PRIVATE_KEY| private key for avalanche|
+|PADDLE_SPEED| speed of the paddle in game (default: 1.5)|
+|BALL_SPEED| speed of the BALL in game (default: 1.5)|
+|BALL_SPEED_INCREMENT| amount of speed gain at each bounce (default: 0.1)|
+|POINTS_TO_WIN| amount of point to win a game (default: 11)|
+|MAX_ANGLE| max random angle the ball can go when starting round (default: 1.5)|
+|PADDLE_HEIGHT| height of the paddles in % of the game view (default: 15)|
+|PADDLE_WIDTH| width of the paddles in % of the game view (default: 2)|
+|PADDLE_PADDING| padding of the paddles in % of the game view (0 = paddle touch the border) (default: 2)|
+|BALL_SIZE| size of the ball in % of the game view (default: 2)|
 
 ### Run the project
 ```bash

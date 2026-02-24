@@ -6,6 +6,7 @@ services:
     container_name: backend
     environment:
       - HOST=${HOST:-localhost}
+      - PORT=${PORT:-8081}
       - GITHUB_ID=${GITHUB_ID}
       - GITHUB_SECRET=${GITHUB_SECRET}
       - FT_ID=${FT_ID}
@@ -50,6 +51,7 @@ services:
     container_name: frontend
     environment:
       - HOST=${HOST:-localhost}
+      - PORT=${PORT:-8081}
     depends_on:
       - backend
     networks:
