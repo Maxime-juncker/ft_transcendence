@@ -296,7 +296,7 @@ impl ScreenDisplayer for Infos {
         Paragraph::new(content)
             .block(
                 Block::default()
-                    .title("Signup".bold())
+                    .title("Login".bold())
                     .borders(Borders::ALL)
                     .title_bottom("Menu: Enter. Ok  ESC. Quit".bold().into_centered_line()),
             )
