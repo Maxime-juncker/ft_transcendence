@@ -126,7 +126,7 @@ impl Infos {
         Ok(())
     }
     pub(crate) async fn create_game(&mut self, mode: &str) -> Result<()> {
-        send_post_game_request(self, mode).await?;
+        let params = send_post_game_request(self, mode).await?;
         loop {
             match poll(Duration::from_millis(16)) {
                 Ok(true) => {
@@ -169,7 +169,7 @@ impl Infos {
             .as_mut()
             .ok_or_else(|| anyhow!("receiver not initialized"))?
             .try_recv()?;
-        let game = Game::new(self, response).await?;
+        let game = Game::new(self, response, params).await?;
         self.send_start_game(&game.game_id).await?;
         self.game = game;
         self.screen.set(crate::CurrentScreen::StartGame);
@@ -280,7 +280,45 @@ impl Widget for &Infos {
     }
 }
 
-async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
+#[derive(Default)]
+pub(crate) struct GameParams {
+    pub(crate) paddle_height: f64,
+    pub(crate) paddle_width: f64,
+    pub(crate) paddle_padding: f64,
+    pub(crate) ball_size: f64,
+}
+
+impl GameParams {
+    pub(crate) fn new(json: serde_json::Value) -> Result<Self> {
+        // for _ in 0..5 {
+        //     eprintln!("error json: {:?}", json);
+        // }
+        let paddle_height: f64 = match json["paddleHeight"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddleHeight in response")),
+        };
+        let paddle_width: f64 = match json["paddleWidth"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddleWidth in response")),
+        };
+        let paddle_padding: f64 = match json["paddlePadding"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddlePadding in response")),
+        };
+        let ball_size: f64 = match json["ballSize"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No ballSize in response")),
+        };
+        Ok(GameParams {
+            paddle_height,
+            paddle_width,
+            paddle_padding,
+            ball_size
+        })
+    }
+}
+
+async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<GameParams> {
     let mut map = HashMap::new();
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
@@ -297,8 +335,11 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
         .send()
         .await?;
 
-    if res.status() != 202 {
+    if res.status() != 201 && res.status() != 202 {
         return Err(anyhow!("Error creating game"));
     }
-    Ok(())
+    let params: serde_json::Value = res.json().await?;
+    let result = GameParams::new(params)?;
+    Ok(result)
 }
+
