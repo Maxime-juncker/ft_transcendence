@@ -80,10 +80,12 @@ export class GameInstance
 	public p1Ready: boolean = false;
 	public p2Ready: boolean = false;
 	private params: Parameters;
+	private time: number = 0;
 
 	constructor(gameMode: string, player1Id: number, player2Id: number)
 	{
 		this.params = new Parameters();
+		this._scoreUpdated = true;
 		this.params.reload();
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
@@ -95,6 +97,7 @@ export class GameInstance
 	{
 		this._speed = this.params.BALL_SPEED;
 		this.normalizeSpeed();
+		this.time = Date.now() + 1000;
 		this.gameLoop();
 	}
 
@@ -107,7 +110,7 @@ export class GameInstance
 
 	private gameLoop = (): void =>
 	{
-		this._interval = setInterval(() =>
+		this._interval = setInterval(async () =>
 		{
 			if (this._isRunning && this.p1Ready && this.p2Ready)
 			{
@@ -119,6 +122,11 @@ export class GameInstance
 
 	private moveBall(): void
 	{
+		if (Date.now() < this.time)
+		{
+			return ;
+		}
+
 		this._gameState.ballX += this._gameState.speedX;
 		this._gameState.ballY += this._gameState.speedY;
 
@@ -158,6 +166,11 @@ export class GameInstance
 			this.score((this._gameState.ballX > 100) ? 1 : 2);
 			this.resetBall();
 			this.scoreUpdated = true;
+
+			if (!this._winner)
+			{
+				this.time = Date.now() + 500;
+			}
 		}
 	}
 
@@ -206,8 +219,8 @@ export class GameInstance
 		this._speed = this.params.BALL_SPEED;
 		this._gameState.speedY = (Math.random() - 0.5) * 0.4;
 		this.normalizeSpeed();
-		this._gameState.ballX = 50;
-		this._gameState.ballY = 50;
+		this._gameState.ballX = 50 + this.params.BALL_SIZE / 2;
+		this._gameState.ballY = 50 + this.params.BALL_SIZE / 2;
 	}
 
 	private collideWall(): boolean

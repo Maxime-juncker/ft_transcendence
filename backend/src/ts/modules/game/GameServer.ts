@@ -265,7 +265,11 @@ export class GameServer
 					{
 						game.p1Ready = true;
 						game.p2Ready = true;
-						game.running = true;
+
+						if (!game.winner)
+						{
+							game.running = true;
+						}
 					}
 					
 					reply.status(200).send(game.state);
@@ -390,16 +394,16 @@ export class GameServer
 					if (game.mode === 'online' || game.mode === 'duel')
 					{
 						const connections = gameConnections.get(gameId);
-						if (connections && game.winner === null)
+						if (connections && !game.winner)
 						{
 							const otherPlayerId = playerId === '1' ? '2' : '1';
-							const otherConnection = connections.get(otherPlayerId);
+							const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
+							game.winner = winnerId;
+							game.running = false;
 
+							const otherConnection = connections.get(otherPlayerId);
 							if (otherConnection)
 							{
-								const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
-								game.winner = winnerId;
-
 								Logger.log(`Player ${playerId} disconnected from game ${gameId}, declaring player ${otherPlayerId} (id: ${winnerId}) as winner`);
 
 								try

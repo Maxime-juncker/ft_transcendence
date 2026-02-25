@@ -28,7 +28,6 @@ services:
       - avatars:/var/www/server/public/avatars:rw
       - vault_key:/vault/config:rw
       - backend-logs:/var/log/backend:rw
-      - ./.env:/var/www/server/.env:ro,z
     networks:
       - backend_net
       - vault_net
