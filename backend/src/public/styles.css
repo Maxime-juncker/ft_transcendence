@@ -40,6 +40,13 @@
 }
 
 @layer base {
+	* {
+	@apply [&::-webkit-scrollbar]:w-2
+		[&::-webkit-scrollbar-track]:bg-transparent
+		[&::-webkit-scrollbar-thumb]:bg-blue
+		dark:[&::-webkit-scrollbar-track]:bg-transparent
+		dark:[&::-webkit-scrollbar-thumb]:bg-blue;
+	 }
 	html {
 		@apply pointer-events-auto selection:bg-white selection:text-dark;
 	}
