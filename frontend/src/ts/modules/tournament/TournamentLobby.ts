@@ -268,13 +268,13 @@ export class TournamentLobby
 		{
 			this.startBtn.removeEventListener('click', this.handleStart);
 		}
-		
+
 		if (this.leaveBtn)
 		{
 			this.leaveBtn.removeEventListener( 'click', this.leaveTournament);
 		}
 
-		if (this.router.currentPage !== 'tournament-menu')
+		if (this.router.currentPage !== 'tournament-menu' && !this.tournamentId && !this.matchStarted)
 		{
 			await this.leaveTournament();
 		}
