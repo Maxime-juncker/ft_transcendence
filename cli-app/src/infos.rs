@@ -224,15 +224,22 @@ impl Infos {
             }
         };
         if let Some(checker) = &mut self.game.game_checker
-            && let Ok(true) = checker.has_changed()
+            && matches!(checker.has_changed(), Ok(true) | Err(_))
         {
             self.screen.set(crate::CurrentScreen::GameChoice);
+            return Ok(());
         };
         if let Some(Ok(err)) = self.game.server_checker.as_mut().map(|r| r.try_recv()) {
             return Err(anyhow!("{}", err));
         }
         if let Some(sender) = &self.game.game_sender {
-            let _ = timeout(Duration::from_millis(16), state_receiver.changed()).await;
+            match timeout(Duration::from_millis(16), state_receiver.changed()).await {
+                Ok(Err(_)) => {
+                    self.screen.set(crate::CurrentScreen::GameChoice);
+                    return Ok(());
+                }
+                _ => {}
+            }
             let (bytes, text) = state_receiver.borrow_and_update().clone();
             match (bytes, text) {
                 (Some(bytes), _none) => {
