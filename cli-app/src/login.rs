@@ -152,7 +152,7 @@ pub(crate) async fn signup(
         .json(&body)
         .send()
         .await?;
-    let body: serde_json::Value = response.json().await?;
+    let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
     if body["token"].as_str().is_some() {
         login(context, (signup_infos.2, signup_infos.1, String::new())).await
     } else if let Some(error) = body["message"].as_str() {
@@ -180,7 +180,7 @@ pub(crate) async fn login(
         .json(&body)
         .send()
         .await?;
-    let body: serde_json::Value = response.json().await?;
+    let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
     if let Some(token) = body["token"].as_str() {
         let (id, receiver) = get_id_and_launch_chat(context.clone(), token.to_string()).await?;
         Ok((token.to_string(), id, receiver))
@@ -219,7 +219,7 @@ pub(crate) async fn create_guest_session(
 ) -> Result<(String, u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/create_guest", context.location);
     let res = context.client.post(apiloc).send().await?;
-    let body: serde_json::Value = res.json().await?;
+    let body: serde_json::Value = res.json().await.map_err(|_| anyhow!("Server error"))?;
     if let Some(token) = body["token"].as_str() {
         let (id, receiver) = get_id_and_launch_chat(context, token.to_string()).await?;
         Ok((token.to_string(), id, receiver))

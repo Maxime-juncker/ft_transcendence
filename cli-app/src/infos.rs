@@ -309,25 +309,34 @@ pub(crate) struct GameParams {
 
 impl GameParams {
     pub(crate) fn new(json: serde_json::Value) -> Result<Self> {
-        // for _ in 0..5 {
-        //     eprintln!("error json: {:?}", json);
-        // }
-        let paddle_height: f64 = match json["paddleHeight"].as_f64() {
+        let mut paddle_height: f64 = match json["paddleHeight"].as_f64() {
             Some(id) => id,
             _ => return Err(anyhow!("No paddleHeight in response")),
         };
-        let paddle_width: f64 = match json["paddleWidth"].as_f64() {
+        if paddle_height >= 100.0 {
+            paddle_height = 100.0;
+        }
+        let mut paddle_width: f64 = match json["paddleWidth"].as_f64() {
             Some(id) => id,
             _ => return Err(anyhow!("No paddleWidth in response")),
         };
-        let paddle_padding: f64 = match json["paddlePadding"].as_f64() {
+        if paddle_width >= 100.0 {
+            paddle_width = 100.0;
+        }
+        let mut paddle_padding: f64 = match json["paddlePadding"].as_f64() {
             Some(id) => id,
             _ => return Err(anyhow!("No paddlePadding in response")),
         };
-        let ball_size: f64 = match json["ballSize"].as_f64() {
+        if paddle_padding >= 100.0 {
+            paddle_padding = 100.0;
+        }
+        let mut ball_size: f64 = match json["ballSize"].as_f64() {
             Some(id) => id,
             _ => return Err(anyhow!("No ballSize in response")),
         };
+        if ball_size >= 100.0 {
+            ball_size = 100.0;
+        }
         Ok(GameParams {
             paddle_height,
             paddle_width,

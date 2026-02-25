@@ -144,7 +144,7 @@ impl ScreenDisplayer for Infos {
                 ctx.draw(&Circle {
                     x: self.game.game_stats.ball_x as f64,
                     y: (100.0 - self.game.game_stats.ball_y) as f64,
-                    radius: self.game.parameters.ball_size,
+                    radius: self.game.parameters.ball_size / 2.0,
                     color: Color::Yellow,
                 });
                 ctx.draw(&Rectangle {
