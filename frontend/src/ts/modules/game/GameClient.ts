@@ -9,7 +9,7 @@ enum Params
 {
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = 'var(--color-white)',
-	COUNTDOWN_START = 3,
+	COUNTDOWN_START = 0,
 	IPS = 60,
 }
 
@@ -413,7 +413,7 @@ export class GameClient extends Utils
 		}
 	}
 
-	private updateGameState(data: string | ArrayBuffer): void
+	private async updateGameState(data: string | ArrayBuffer): Promise<void>
 	{
 		if (typeof data === 'string')
 		{
@@ -422,6 +422,8 @@ export class GameClient extends Utils
 			{
 				this.end = true;
 				this.showWinner(message.winner);
+				await new Promise(resolve => setTimeout(resolve, 5000));
+				this.m_router.navigateTo('home', '');
 			}
 		}
 		else
@@ -484,6 +486,7 @@ export class GameClient extends Utils
 				winnerName = usr.name;
 			}
 		}
+
 		await this.m_user?.updateSelf();
 		await this.m_user2?.updateSelf();
 		this.createPlayerHtml();
@@ -496,32 +499,6 @@ export class GameClient extends Utils
 
 		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
-
-		if (this.mode === 'online')
-		{
-			const isWinner = this.m_user && winner === this.m_user.id;
-			if (isWinner)
-			{
-				this.m_endTimeout = setTimeout(() =>
-				{
-					this.setInnerHTML('winner-msg', `${winnerName}<br>wins the tournament!`);
-					this.setColor('winner-msg', Params.COLOR, undefined, true);
-					
-					setTimeout(() =>
-					{
-						this.m_router.navigateTo('tournament-menu', '');
-					}, 5000);
-
-				}, 5000);
-			}
-			else
-			{
-				this.m_endTimeout = setTimeout(() =>
-				{
-					this.m_router.navigateTo('tournament-menu', '');
-				}, 3000);
-			}
-		}
 	}
 
 	private async removeQueue(): Promise<void>
