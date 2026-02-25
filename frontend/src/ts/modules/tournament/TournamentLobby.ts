@@ -193,6 +193,15 @@ export class TournamentLobby
 		{
 			console.error('[TournamentLobby] Leave button not found!');
 		}
+
+		window.addEventListener('beforeunload', () =>
+		{
+			const data = JSON.stringify({
+                tournamentId: this.tournamentId,
+                token: MainUser.Instance?.token
+            });
+            navigator.sendBeacon('/api/leave-tournament', new Blob([data], { type: 'application/json' }));
+		});
 	}
 
 	private handleStart = async (): Promise<void> =>
@@ -274,7 +283,7 @@ export class TournamentLobby
 			this.leaveBtn.removeEventListener( 'click', this.leaveTournament);
 		}
 
-		if (this.router.currentPage !== 'tournament-menu' && !this.tournamentId && !this.matchStarted)
+		if (this.tournamentId && !this.matchStarted)
 		{
 			await this.leaveTournament();
 		}

@@ -80,8 +80,6 @@ export class GameClient extends Utils
 	private paddlePadding: number = 2;
 	private ballSize: number = 2;
 
-	public flag = "";
-
 	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
 	{
 		super();
@@ -428,18 +426,7 @@ export class GameClient extends Utils
 				this.end = true;
 				this.showWinner(message.winner);
 				await new Promise(resolve => setTimeout(resolve, 5000));
-				console.warn(this.flag);
-				if (this.flag !== "tournament")
-				{
-					this.m_router.navigateTo('home', '');
-				}
-				else
-				{
-					const view = Router.Instance?.activeView as LobbyView;
-					if (view)
-						view.chat.displayMessage(serverReply("waiting for next round, you will be redirected, please wait..."));
-				}
-
+				this.m_router.navigateTo('home', '');
 			}
 		}
 		else

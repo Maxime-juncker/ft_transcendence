@@ -248,12 +248,6 @@ export class Chat
 			});
 			return ;
 		}
-		else if (json.flag && json.flag === "tournament")
-		{
-			if (MainUser.Instance?.gameRouter?.gameInstance)
-				MainUser.Instance.gameRouter.gameInstance.flag = "tournament";
-			return ;
-		}
 
 		if (message == "START" && json.gameId && json.mode)
 		{

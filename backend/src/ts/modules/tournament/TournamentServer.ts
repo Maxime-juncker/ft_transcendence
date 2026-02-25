@@ -593,14 +593,12 @@ export class TournamentServer
 
 				if (match.isHumanVsBot())
 				{
-					if (game.winner === this.botId)
-					{
-						winnerPlayerId = match.getBotPlayer()!;
-					}
-					else
-					{
-						winnerPlayerId = match.getHumanPlayer()!;
-					}
+					const humanPlayer = match.getHumanPlayer()!;
+					const botPlayer = match.getBotPlayer()!;
+					const humanIsP1 = match._player1 === humanPlayer;
+					const humanWon = humanIsP1 ? game.winner === 1 : game.winner === 2;
+
+					winnerPlayerId = humanWon ? humanPlayer : botPlayer;
 				}
 				else
 				{
