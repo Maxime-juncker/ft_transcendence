@@ -136,9 +136,9 @@ export class Chat
 	/**
 	 * send dm to id for starting match
 	 */
-	public async notifyMatch(id: number, opponentId: number, gameId: string, playerSide: number, mode: string = "online")
+	public async notifyMatch(id: number, opponentId: number, gameId: string, playerSide: number, mode: string = "online", flag: string = "")
 	{
-		const res = JSON.stringify({ username: "SERVER", message: "START", opponentId: opponentId, gameId: gameId, playerSide: playerSide, mode: mode});
+		const res = JSON.stringify({ username: "SERVER", message: "START", opponentId: opponentId, gameId: gameId, playerSide: playerSide, mode: mode, flag: flag});
 		this.sendTo(id, res)
 		this.sendTo(id, this.serverMsg(`you will play against: ${await this.getPlayerName(opponentId)}`));
 	}
@@ -290,6 +290,26 @@ export class Chat
 		{
 			Logger.log(`${err}`);
 		}
+	}
+
+	public async broadcastServer(message: any)
+	{
+		this.m_connections.forEach(async (id: number, conn: WebSocket) =>
+		{
+			if (conn.readyState !== conn.OPEN)
+			{
+				return ;
+			}
+			try
+			{
+				conn.send(message);
+			}
+			catch (err: any)
+			{
+				Logger.error(`Broadcast error: ${err}`);
+				this.m_connections.delete(conn);
+			}
+		})
 	}
 
 	private async broadcast(message: any, sender: WebSocket)

@@ -4,6 +4,9 @@ import { MainUser, User, getUserFromId } from 'modules/user/User.js';
 import { Chat } from 'modules/chat/chat.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'modules/game/GameRouter.js';
+import { LobbyView } from 'modules/pages/lobby.js';
+import { Router } from 'modules/router/Router.js';
+import { serverReply } from 'modules/chat/chat_utils.js';
 
 enum Params
 {
@@ -76,6 +79,8 @@ export class GameClient extends Utils
 	private paddleWidth: number = 2;
 	private paddlePadding: number = 2;
 	private ballSize: number = 2;
+
+	public flag = "";
 
 	constructor(router: GameRouter, private mode: string, user?: User, chat?: Chat)
 	{
@@ -423,7 +428,18 @@ export class GameClient extends Utils
 				this.end = true;
 				this.showWinner(message.winner);
 				await new Promise(resolve => setTimeout(resolve, 5000));
-				this.m_router.navigateTo('home', '');
+				console.warn(this.flag);
+				if (this.flag !== "tournament")
+				{
+					this.m_router.navigateTo('home', '');
+				}
+				else
+				{
+					const view = Router.Instance?.activeView as LobbyView;
+					if (view)
+						view.chat.displayMessage(serverReply("waiting for next round, you will be redirected, please wait..."));
+				}
+
 			}
 		}
 		else

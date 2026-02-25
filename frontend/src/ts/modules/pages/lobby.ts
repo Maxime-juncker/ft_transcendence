@@ -23,6 +23,7 @@ export class LobbyView extends ViewComponent
 	private m_loading: LoadingIndicator | null = null;
 
 	get loadingIndicator(): LoadingIndicator | null { return this.m_loading; }
+	get chat(): Chat { return this.m_chat; }
 
 	constructor()
 	{

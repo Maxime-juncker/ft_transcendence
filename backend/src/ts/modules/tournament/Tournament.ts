@@ -3,15 +3,15 @@ import { getBot } from 'modules/users/userManagment.js';
 
 class Match
 {
-	constructor(public readonly _player1Id: number,
-		public readonly _player2Id: number,
+	constructor(public readonly _player1: number,
+		public readonly _player2: number,
 		public _score1: number = 0,
 		public _score2: number = 0,
 		private _winner: number | null = null) {}
 
 	public static isBot(id: number): boolean
 	{
-		return (id === AuthSource.BOT);
+		return (id === 1);
 	}
 
 	set score1(score: number) { this._score1 = score; }
@@ -19,23 +19,23 @@ class Match
 
 	public isBotVsBot(): boolean
 	{
-		return (Match.isBot(this._player1Id) && Match.isBot(this._player2Id));
+		return (Match.isBot(this._player1) && Match.isBot(this._player2));
 	}
 
 	public isHumanVsBot(): boolean
 	{
-		return (Match.isBot(this._player1Id) !== Match.isBot(this._player2Id));
+		return (Match.isBot(this._player1) !== Match.isBot(this._player2));
 	}
 
 	public getBotPlayer(): number | null
 	{
-		if (Match.isBot(this._player1Id))
+		if (Match.isBot(this._player1))
 		{
-			return (this._player1Id);
+			return (this._player1);
 		}
-		else if (Match.isBot(this._player2Id))
+		else if (Match.isBot(this._player2))
 		{
-			return (this._player2Id);
+			return (this._player2);
 		}
 
 		return (null);
@@ -43,13 +43,13 @@ class Match
 
 	public getHumanPlayer(): number | null
 	{
-		if (!Match.isBot(this._player1Id))
+		if (!Match.isBot(this._player1))
 		{
-			return (this._player1Id);
+			return (this._player1);
 		}
-		else if (!Match.isBot(this._player2Id))
+		else if (!Match.isBot(this._player2))
 		{
-			return (this._player2Id);
+			return (this._player2);
 		}
 		return (null);
 	}
@@ -62,7 +62,7 @@ class Match
 		{
 			throw new Error('Winner has already been set for this match.');
 		}
-		else if (winner !== this._player1Id && winner !== this._player2Id)
+		else if (winner !== this._player1 && winner !== this._player2)
 		{
 			throw new Error('Winner must be one of the players in the match.');
 		}

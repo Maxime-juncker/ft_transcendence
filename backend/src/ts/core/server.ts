@@ -13,7 +13,7 @@ export interface DbResponse {
 }
 
 export const rateLimitHard = {
-	max: 3,
+	max: 10,
 	timeWindow: '1 minute'
 }
 
