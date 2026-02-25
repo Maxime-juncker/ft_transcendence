@@ -8,7 +8,6 @@ import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { getBot } from 'modules/users/userManagment.js';
 import { getUserName } from 'modules/users/user.js';
-import { get } from 'http';
 
 export class TournamentServer
 {
@@ -668,6 +667,9 @@ export class TournamentServer
 						try
 						{
 							Logger.log(`Adding match result to blockchain: ${data.blockchainId} ${matches._player1} ${matches._player2} ${matches._score1} ${matches._score2}`);
+							if (winners.size > 0)
+								chat.sendTo(matches.winner, chat.serverMsg("waiting for opponent, you will be redirected, please wait..."));
+
 							await this.contractAddress.addMatchResult(data.blockchainId!, matches._player1, matches._player2, matches._score1, matches._score2);
 						}
 						catch (error)
