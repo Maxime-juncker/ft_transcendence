@@ -103,11 +103,12 @@ export class Tournament
 		{
 			const nbBot = this.calculateNbBot(inputs.size);
 			const bot = await getBot();
+			players = Array.from(inputs);
 			for (let i = 0; i < nbBot; i++)
 			{
-				inputs.add(bot);
+				players.push(bot);
 			}
-			players = Tournament.shuffleArray(Array.from(inputs));
+			players = Tournament.shuffleArray(players);
 		}
 		else
 		{

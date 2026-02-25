@@ -594,10 +594,8 @@ export class TournamentServer
 				{
 					const humanPlayer = match.getHumanPlayer()!;
 					const botPlayer = match.getBotPlayer()!;
-					const humanIsP1 = match._player1 === humanPlayer;
-					const humanWon = humanIsP1 ? game.winner === 1 : game.winner === 2;
 
-					winnerPlayerId = humanWon ? humanPlayer : botPlayer;
+					winnerPlayerId = (game.winner === humanPlayer) ? humanPlayer : botPlayer;
 				}
 				else
 				{
@@ -652,6 +650,13 @@ export class TournamentServer
 		{
 			console.error(`Error setting match winner:`, e);
 			return ;
+		}
+
+		const gameId = data.matchGames.get(match);
+		if (gameId && this.activeGamesMap)
+		{
+			this.activeGamesMap.delete(gameId);
+			data.matchGames.delete(match);
 		}
 
 		const allMatchesFinished = tournament.matches.every(m => m.winner);
