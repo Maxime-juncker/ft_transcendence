@@ -14,7 +14,7 @@ use reqwest::header::HeaderMap;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use tokio::time::Duration;
+use tokio::time::{timeout, Duration};
 
 #[derive(Default)]
 pub(crate) struct Infos {
@@ -111,7 +111,22 @@ impl Infos {
         Ok(())
     }
     pub(crate) fn error(&mut self, error: String) {
-        self.post_error_screen = self.screen.get();
+        self.post_error_screen = match self.screen.get() {
+            CurrentScreen::FirstScreen => CurrentScreen::FirstScreen,
+            CurrentScreen::SignUp => CurrentScreen::SignUp,
+            CurrentScreen::Login => CurrentScreen::Login,
+            CurrentScreen::Welcome => CurrentScreen::Welcome,
+            CurrentScreen::GameChoice => CurrentScreen::GameChoice,
+            CurrentScreen::SocialLife => CurrentScreen::SocialLife,
+            CurrentScreen::FriendsDisplay => CurrentScreen::FriendsDisplay,
+            CurrentScreen::StartGame => CurrentScreen::GameChoice,
+            CurrentScreen::EndGame => CurrentScreen::GameChoice,
+            CurrentScreen::CreateGame => CurrentScreen::GameChoice,
+            CurrentScreen::PlayGame => CurrentScreen::GameChoice,
+            CurrentScreen::ErrorScreen => CurrentScreen::ErrorScreen,
+            CurrentScreen::AddFriend => CurrentScreen::AddFriend,
+            CurrentScreen::DeleteFriend => CurrentScreen::DeleteFriend,
+        };
         self.error = error;
         self.screen.set(CurrentScreen::ErrorScreen);
     }
@@ -126,7 +141,7 @@ impl Infos {
         Ok(())
     }
     pub(crate) async fn create_game(&mut self, mode: &str) -> Result<()> {
-        send_post_game_request(self, mode).await?;
+        let params = send_post_game_request(self, mode).await?;
         loop {
             match poll(Duration::from_millis(16)) {
                 Ok(true) => {
@@ -169,14 +184,15 @@ impl Infos {
             .as_mut()
             .ok_or_else(|| anyhow!("receiver not initialized"))?
             .try_recv()?;
-        let game = Game::new(self, response).await?;
+        let game = Game::new(self, response, params).await?;
         self.send_start_game(&game.game_id).await?;
         self.game = game;
         self.screen.set(crate::CurrentScreen::StartGame);
         Ok(())
     }
     pub(crate) async fn launch_game(&mut self) -> Result<()> {
-        self.game.start_game().await?;
+        let checker = self.game.start_game().await?;
+        self.game.server_checker = Some(checker);
         self.screen.set(crate::CurrentScreen::PlayGame);
         Ok(())
     }
@@ -212,8 +228,11 @@ impl Infos {
         {
             self.screen.set(crate::CurrentScreen::GameChoice);
         };
+        if let Some(Ok(err)) = self.game.server_checker.as_mut().map(|r| r.try_recv()) {
+            return Err(anyhow!("{}", err));
+        }
         if let Some(sender) = &self.game.game_sender {
-            state_receiver.changed().await?;
+            let _ = timeout(Duration::from_millis(16), state_receiver.changed()).await;
             let (bytes, text) = state_receiver.borrow_and_update().clone();
             match (bytes, text) {
                 (Some(bytes), _none) => {
@@ -280,7 +299,54 @@ impl Widget for &Infos {
     }
 }
 
-async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
+#[derive(Default)]
+pub(crate) struct GameParams {
+    pub(crate) paddle_height: f64,
+    pub(crate) paddle_width: f64,
+    pub(crate) paddle_padding: f64,
+    pub(crate) ball_size: f64,
+}
+
+impl GameParams {
+    pub(crate) fn new(json: serde_json::Value) -> Result<Self> {
+        let mut paddle_height: f64 = match json["paddleHeight"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddleHeight in response")),
+        };
+        if paddle_height >= 100.0 {
+            paddle_height = 100.0;
+        }
+        let mut paddle_width: f64 = match json["paddleWidth"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddleWidth in response")),
+        };
+        if paddle_width >= 100.0 {
+            paddle_width = 100.0;
+        }
+        let mut paddle_padding: f64 = match json["paddlePadding"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No paddlePadding in response")),
+        };
+        if paddle_padding >= 100.0 {
+            paddle_padding = 100.0;
+        }
+        let mut ball_size: f64 = match json["ballSize"].as_f64() {
+            Some(id) => id,
+            _ => return Err(anyhow!("No ballSize in response")),
+        };
+        if ball_size >= 100.0 {
+            ball_size = 100.0;
+        }
+        Ok(GameParams {
+            paddle_height,
+            paddle_width,
+            paddle_padding,
+            ball_size
+        })
+    }
+}
+
+async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<GameParams> {
     let mut map = HashMap::new();
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
@@ -297,8 +363,11 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<()> {
         .send()
         .await?;
 
-    if res.status() != 202 {
+    if res.status() != 201 && res.status() != 202 {
         return Err(anyhow!("Error creating game"));
     }
-    Ok(())
+    let params: serde_json::Value = res.json().await?;
+    let result = GameParams::new(params)?;
+    Ok(result)
 }
+

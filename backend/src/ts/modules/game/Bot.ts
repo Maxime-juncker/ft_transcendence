@@ -24,6 +24,7 @@ export class Bot
 	constructor (gameId: string, gameState: ArrayBuffer, playerSide: number = 2)
 	{
 		this.playerSide = String(playerSide);
+		Logger.log(`Bot initialized for game ${gameId} on side ${this.playerSide}`);
 		this.init(gameState);
 		this.start(gameId);
 	}
@@ -33,6 +34,12 @@ export class Bot
 		const res = await getUserByName("bot", core.db);
 
 		this.gameInstance = new GameInstance('dev', res.data.id, -1);
+		if (!this.gameInstance)
+		{
+			Logger.error('Failed to create GameInstance for Bot');
+			return ;
+		}
+
 		this.gameInstance.state = new GameState(gameState);
 		this.gameInstance.p1Ready = true;
 		this.gameInstance.p2Ready = true;
@@ -41,8 +48,6 @@ export class Bot
 
 	private async start(gameId: string): Promise<void>
 	{
-		await new Promise(r => setTimeout(r, 500));
-
 		if (!gameId || (this.playerSide !== '1' && this.playerSide !== '2'))
 		{
 			Logger.error(`Invalid gameId or playerSide: gameId=${gameId}, playerSide=${this.playerSide}`);
@@ -88,34 +93,28 @@ export class Bot
 		{
 			try
 			{
-				if (this.gameInstance)
-					this.gameInstance.state = new GameState(data);
+				this.gameInstance!.state = new GameState(data);
 			}
 			catch (error)
 			{
 				Logger.error(`Error updating game state: ${error}`);
+				this.destroy();
 			}
 		}
 	}
 
 	private send(): void
 	{
-		if (this.gameInstance)
-		{
-			this.keysPressed.clear();
-			this.calculateOutput();
-			this.socket?.send(Array.from(this.keysPressed).join(''));
-			this.keysPressed = new Set(Array.from(this.keysPressed).map(key => '1' + key));
-			this.gameInstance.keysPressed = new Set([...this.gameInstance.keysPressed, ...this.keysPressed]);
-		}
+		this.keysPressed.clear();
+		this.calculateOutput();
+		this.socket?.send(Array.from(this.keysPressed).join(''));
+		this.keysPressed = new Set(Array.from(this.keysPressed).map(key => '1' + key));
+		this.gameInstance!.keysPressed = new Set([...this.gameInstance!.keysPressed, ...this.keysPressed]);
 	}
 
 	private calculateOutput(): void
 	{
-		if (!this.gameInstance)
-			return ;
-
-		if (this.gameInstance.ballSpeedX > 0)
+		if (this.gameInstance!.ballSpeedX > 0 && this.gameInstance!.ballX > 50)
 		{
 			this.goToCenter();
 		}
@@ -127,17 +126,12 @@ export class Bot
 
 	private goToCenter(): void
 	{
-		if (!this.gameInstance)
-		{
-			return ;
-		}
-
 		const centerY = 50;
-		if (this.gameInstance.leftPaddleY > centerY)
+		if (this.gameInstance!.leftPaddleY > centerY + 1)
 		{
 			this.keysPressed.add(Keys.UP);
 		}
-		else if (this.gameInstance.leftPaddleY < centerY)
+		else if (this.gameInstance!.leftPaddleY < centerY - 1)
 		{
 			this.keysPressed.add(Keys.DOWN);
 		}
@@ -145,16 +139,11 @@ export class Bot
 
 	private goToBall(): void
 	{
-		if (!this.gameInstance)
-		{
-			return ;
-		}
-
-		if (this.gameInstance.ballY < this.gameInstance.leftPaddleY)
+		if (this.gameInstance!.ballY < this.gameInstance!.leftPaddleY - 1)
 		{
 			this.keysPressed.add(Keys.UP);
 		}
-		else if (this.gameInstance.ballY > this.gameInstance.leftPaddleY)
+		else if (this.gameInstance!.ballY > this.gameInstance!.leftPaddleY + 1)
 		{
 			this.keysPressed.add(Keys.DOWN);
 		}

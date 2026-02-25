@@ -186,7 +186,6 @@ export class TournamentLobby
 		
 		if (this.leaveBtn)
 		{
-
 			console.log('[TournamentLobby] Adding click listener to leave button');
 			this.leaveBtn.addEventListener('click', this.leaveTournament);
 		}
@@ -196,7 +195,7 @@ export class TournamentLobby
 		}
 	}
 
-	private handleStart = async () =>
+	private handleStart = async (): Promise<void> =>
 	{
 		if (!this.tournamentId)
 		{
@@ -231,7 +230,7 @@ export class TournamentLobby
 		}
 	}
 
-	private async leaveTournament(): Promise<void>
+	private leaveTournament = async (): Promise<void> =>
 	{
 		if (!this.tournamentId)
 		{

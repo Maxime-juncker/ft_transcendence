@@ -190,7 +190,7 @@ impl Friends {
             self.context.location,
             self.auth.borrow().id
         );
-        let response = self.context.client.get(url).send().await?;
+        let response = tokio::time::timeout(Duration::from_secs(5), self.context.client.get(url).send()).await??;
         let mut result: Vec<(String, bool)> = vec![];
         match response.status().as_u16() {
             200 => {

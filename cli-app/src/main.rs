@@ -16,9 +16,12 @@ use login::Auth;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use utils::{CurrentScreen, LOGO, get_location};
+use tokio::signal::unix::{signal, SignalKind};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let mut sigterm = signal(SignalKind::terminate())?;
+    let mut sighup = signal(SignalKind::hangup())?;
     let location = match get_location() {
         Ok(result) => result,
         Err(e) => {
@@ -31,7 +34,11 @@ async fn main() -> Result<()> {
     let friends = Friends::new(context.clone(), auth.clone(), screen.clone());
     let mut terminal = ratatui::init();
     let game_main = Infos::new(context, auth, screen, friends);
-    let app_result = game_main.run(&mut terminal).await;
+    tokio::select! {
+      result = game_main.run(&mut terminal) => result,
+      _ = sigterm.recv() => Ok(()),
+      _ = sighup.recv() => Ok(()),
+    }.map_err(|e| anyhow!("{}", e))?;
     ratatui::restore();
-    app_result
+    Ok(())
 }

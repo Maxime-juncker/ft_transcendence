@@ -144,21 +144,21 @@ impl ScreenDisplayer for Infos {
                 ctx.draw(&Circle {
                     x: self.game.game_stats.ball_x as f64,
                     y: (100.0 - self.game.game_stats.ball_y) as f64,
-                    radius: 0.5,
+                    radius: self.game.parameters.ball_size / 2.0,
                     color: Color::Yellow,
                 });
                 ctx.draw(&Rectangle {
-                    x: 1.5,
-                    y: (95.0 - self.game.game_stats.left_y) as f64,
-                    width: 2.0,
-                    height: 10.0,
+                    x: self.game.parameters.paddle_padding,
+                    y: (100.0 - self.game.game_stats.left_y as f64) - self.game.parameters.paddle_height / 2.0,
+                    width: self.game.parameters.paddle_width,
+                    height: self.game.parameters.paddle_height,
                     color: Color::Green,
                 });
                 ctx.draw(&Rectangle {
-                    x: 97.0,
-                    y: (95.0 - self.game.game_stats.right_y) as f64,
-                    width: 2.0,
-                    height: 10.0,
+                    x: 100.0 - self.game.parameters.paddle_padding - self.game.parameters.paddle_width,
+                    y: (100.0 - self.game.game_stats.right_y as f64) - self.game.parameters.paddle_height / 2.0,
+                    width: self.game.parameters.paddle_width,
+                    height: self.game.parameters.paddle_height,
                     color: Color::Green,
                 });
             })
