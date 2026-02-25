@@ -28,7 +28,7 @@ services:
       - avatars:/var/www/server/public/avatars:rw
       - vault_key:/vault/config:rw
       - backend-logs:/var/log/backend:rw
-      - ./.env:/var/www/server/.env:ro,z
+      # - ./.env:/var/www/server/.env:roz
     networks:
       - backend_net
       - vault_net
@@ -138,197 +138,197 @@ services:
       timeout: 10s
       retries: 5
 
-  prometheus:
-    restart: always
-    image: prom/prometheus:v3.9.1
-    container_name: prometheus
-    volumes:
-      - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
-      - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro,z
-      - prometheus-logs:/prometheus/logs:rw
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=90d'
-      - '--storage.tsdb.retention.size=5GB'
-    networks:
-      - monitoring_net
-      - export_net
-    user: root
-    healthcheck:
-      test: wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  grafana:
-    restart: always
-    image: grafana/grafana:12.4.0-20836657505
-    container_name: grafana
-    volumes:
-      - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini:ro,z
-      - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning:ro,z
-      - grafana:/var/lib/grafana:rw
-      - grafana-logs:/var/log/grafana:rw
-    networks:
-      monitoring_net: {}
-      redirect_net:
-          ipv4_address: 172.220.0.10
-    depends_on:
-      - prometheus
-    environment:
-      - GF_LOG_MODE=file
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-      - GF_DOMAIN=${HOST}
-      - GF_ROOT_URL=https://${HOST:-localhost}:${PORT:-8081}/admin/grafana/
-
-  nginx_prom_export:
-    restart: always
-    image: nginx/nginx-prometheus-exporter:1.5.1
-    container_name: nginx_prom_export
-    networks:
-      export_net:
-        ipv4_address: 172.200.0.10
-    depends_on:
-      - prometheus
-      - modsecurity
-    command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
-
-  elasticsearch_exporter:
-    restart: always
-    image: prometheuscommunity/elasticsearch-exporter:v1.10.0
-    container_name: elasticsearch_exporter
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    command:
-      - --es.uri=http://elastic:${ELASTIC_PASSWORD}@elasticsearch:9200
-      - --es.all
-      - --es.indices
-      - --es.shards
-    networks:
-      - elk_net
-      - monitoring_net
-    depends_on:
-      - elasticsearch
-
-  elasticsearch:
-    restart: always
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    mem_limit: 4g
-    volumes:
-      - es_data:/usr/share/elasticsearch/data:rw
-      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
-      - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro,z
-      - elastic-logs:/usr/share/elasticsearch/logs:rw
-    networks:
-      - elk_net
-
-  logstash:
-    restart: always
-    image: docker.elastic.co/logstash/logstash:8.12.0
-    container_name: logstash
-    volumes:
-      - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro,z
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,z
-      - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro,z
-      - modsecurity_logs:/var/log/nginx:ro
-      - grafana-logs:/var/log/grafana:ro
-      - elastic-logs:/var/log/elasticsearch:ro
-      - kibana-logs:/var/log/kibana:ro
-      - prometheus-logs:/var/log/prometheus:ro
-      - vault-logs:/var/log/vault:ro
-      - backend-logs:/var/log/backend:ro
-    mem_limit: 6g
-    depends_on:
-      elastic-init:
-        condition: service_completed_successfully
-    environment:
-      - ELASTICSEARCH_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
-      - ELASTICSEARCH_USERNAME=logstash_writer
-      - LS_JAVA_OPTS=-Xms4g -Xmx4g
-    networks:
-      - elk_net
-
-  kibana:
-    restart: always
-    image: docker.elastic.co/kibana/kibana:8.12.0
-    container_name: kibana
-    volumes:
-      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,z
-      - kibana-logs:/usr/share/kibana/logs:rw
-    depends_on:
-      elastic-init:
-        condition: service_completed_successfully
-    networks:
-      elk_net: {}
-      redirect_net:
-        ipv4_address: 172.220.0.20
-    environment:
-      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-      - ELASTICSEARCH_USERNAME=kibana_system
-
-  kibana-init:
-    container_name: kibana-init
-    image: curlimages/curl:8.18.0
-    user: root
-    depends_on:
-      - kibana
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    volumes:
-      - ./elk/kibana/init/export.ndjson:/export.ndjson:ro,z
-      - ./elk/kibana/init/script.sh:/script.sh:ro,z
-    command: sh /script.sh
-    networks:
-      - elk_net
-
-  elastic-init:
-    container_name: elastic-init
-    image: curlimages/curl:8.18.0
-    user: root
-    depends_on:
-      - elasticsearch
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
-      - LOGSTASH_PASSWORD=${LOGSTASH_PASSWORD}
-      - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
-    volumes:
-      - ./elk/elasticsearch/init/script.sh:/script.sh:ro,z
-    command: sh /script.sh
-    networks:
-      - elk_net
-
-  node_exporter:
-    restart: always
-    image: quay.io/prometheus/node-exporter:v1.10.2
-    container_name: node_exporter
-    command:
-      - '--path.rootfs=/host'
-    pid: host
-    volumes:
-      - '/:/host:ro,rslave'
-    networks:
-      - monitoring_net
-    depends_on:
-      - prometheus
-
-  logstash-exporter:
-    restart: always
-    image: ghcr.io/kuskoman/logstash-exporter:v1.9.1
-    container_name: logstash-exporter
-    environment:
-      - LOGSTASH_URL=http://logstash:9600
-    networks:
-      - elk_net
-      - monitoring_net
-    depends_on:
-      - logstash
+  # prometheus:
+  #   restart: always
+  #   image: prom/prometheus:v3.9.1
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./monitoring/conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+  #     - ./monitoring/conf/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro,z
+  #     - prometheus-logs:/prometheus/logs:rw
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.retention.time=90d'
+  #     - '--storage.tsdb.retention.size=5GB'
+  #   networks:
+  #     - monitoring_net
+  #     - export_net
+  #   user: root
+  #   healthcheck:
+  #     test: wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 60s
+  #
+  # grafana:
+  #   restart: always
+  #   image: grafana/grafana:12.4.0-20836657505
+  #   container_name: grafana
+  #   volumes:
+  #     - ./monitoring/conf/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini:ro,z
+  #     - ./monitoring/conf/grafana/grafana-provisioning:/etc/grafana/provisioning:ro,z
+  #     - grafana:/var/lib/grafana:rw
+  #     - grafana-logs:/var/log/grafana:rw
+  #   networks:
+  #     monitoring_net: {}
+  #     redirect_net:
+  #         ipv4_address: 172.220.0.10
+  #   depends_on:
+  #     - prometheus
+  #   environment:
+  #     - GF_LOG_MODE=file
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+  #     - GF_DOMAIN=${HOST}
+  #     - GF_ROOT_URL=https://${HOST:-localhost}:${PORT:-8081}/admin/grafana/
+  #
+  # nginx_prom_export:
+  #   restart: always
+  #   image: nginx/nginx-prometheus-exporter:1.5.1
+  #   container_name: nginx_prom_export
+  #   networks:
+  #     export_net:
+  #       ipv4_address: 172.200.0.10
+  #   depends_on:
+  #     - prometheus
+  #     - modsecurity
+  #   command: ["--nginx.scrape-uri=http://modsecurity:801/stub_status"]
+  #
+  # elasticsearch_exporter:
+  #   restart: always
+  #   image: prometheuscommunity/elasticsearch-exporter:v1.10.0
+  #   container_name: elasticsearch_exporter
+  #   environment:
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #   command:
+  #     - --es.uri=http://elastic:${ELASTIC_PASSWORD}@elasticsearch:9200
+  #     - --es.all
+  #     - --es.indices
+  #     - --es.shards
+  #   networks:
+  #     - elk_net
+  #     - monitoring_net
+  #   depends_on:
+  #     - elasticsearch
+  #
+  # elasticsearch:
+  #   restart: always
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+  #   container_name: elasticsearch
+  #   environment:
+  #     - discovery.type=single-node
+  #     - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #   mem_limit: 4g
+  #   volumes:
+  #     - es_data:/usr/share/elasticsearch/data:rw
+  #     - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
+  #     - ./elk/elasticsearch/config/log4j2.properties:/usr/share/elasticsearch/config/log4j2.properties:ro,z
+  #     - elastic-logs:/usr/share/elasticsearch/logs:rw
+  #   networks:
+  #     - elk_net
+  #
+  # logstash:
+  #   restart: always
+  #   image: docker.elastic.co/logstash/logstash:8.12.0
+  #   container_name: logstash
+  #   volumes:
+  #     - ./elk/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro,z
+  #     - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,z
+  #     - ./elk/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties:ro,z
+  #     - modsecurity_logs:/var/log/nginx:ro
+  #     - grafana-logs:/var/log/grafana:ro
+  #     - elastic-logs:/var/log/elasticsearch:ro
+  #     - kibana-logs:/var/log/kibana:ro
+  #     - prometheus-logs:/var/log/prometheus:ro
+  #     - vault-logs:/var/log/vault:ro
+  #     - backend-logs:/var/log/backend:ro
+  #   mem_limit: 6g
+  #   depends_on:
+  #     elastic-init:
+  #       condition: service_completed_successfully
+  #   environment:
+  #     - ELASTICSEARCH_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
+  #     - ELASTICSEARCH_USERNAME=logstash_writer
+  #     - LS_JAVA_OPTS=-Xms4g -Xmx4g
+  #   networks:
+  #     - elk_net
+  #
+  # kibana:
+  #   restart: always
+  #   image: docker.elastic.co/kibana/kibana:8.12.0
+  #   container_name: kibana
+  #   volumes:
+  #     - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,z
+  #     - kibana-logs:/usr/share/kibana/logs:rw
+  #   depends_on:
+  #     elastic-init:
+  #       condition: service_completed_successfully
+  #   networks:
+  #     elk_net: {}
+  #     redirect_net:
+  #       ipv4_address: 172.220.0.20
+  #   environment:
+  #     - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+  #     - ELASTICSEARCH_USERNAME=kibana_system
+  #
+  # kibana-init:
+  #   container_name: kibana-init
+  #   image: curlimages/curl:8.18.0
+  #   user: root
+  #   depends_on:
+  #     - kibana
+  #   environment:
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #   volumes:
+  #     - ./elk/kibana/init/export.ndjson:/export.ndjson:ro,z
+  #     - ./elk/kibana/init/script.sh:/script.sh:ro,z
+  #   command: sh /script.sh
+  #   networks:
+  #     - elk_net
+  #
+  # elastic-init:
+  #   container_name: elastic-init
+  #   image: curlimages/curl:8.18.0
+  #   user: root
+  #   depends_on:
+  #     - elasticsearch
+  #   environment:
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #     - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+  #     - LOGSTASH_PASSWORD=${LOGSTASH_PASSWORD}
+  #     - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD}
+  #   volumes:
+  #     - ./elk/elasticsearch/init/script.sh:/script.sh:ro,z
+  #   command: sh /script.sh
+  #   networks:
+  #     - elk_net
+  #
+  # node_exporter:
+  #   restart: always
+  #   image: quay.io/prometheus/node-exporter:v1.10.2
+  #   container_name: node_exporter
+  #   command:
+  #     - '--path.rootfs=/host'
+  #   pid: host
+  #   volumes:
+  #     - '/:/host:ro,rslave'
+  #   networks:
+  #     - monitoring_net
+  #   depends_on:
+  #     - prometheus
+  #
+  # logstash-exporter:
+  #   restart: always
+  #   image: ghcr.io/kuskoman/logstash-exporter:v1.9.1
+  #   container_name: logstash-exporter
+  #   environment:
+  #     - LOGSTASH_URL=http://logstash:9600
+  #   networks:
+  #     - elk_net
+  #     - monitoring_net
+  #   depends_on:
+  #     - logstash
 
 networks:
   export_net:
