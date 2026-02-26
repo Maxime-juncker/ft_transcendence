@@ -1,158 +1,157 @@
-import { AuthSource } from 'modules/oauth2/routes.js';
-import { getBot } from 'modules/users/userManagment.js';
+import { DbResponse } from "core/server.js";
+import { Logger } from "modules/logger.js";
+import { GameInstance } from "modules/game/GameInstance";
+import { getUserName } from "modules/users/user.js";
 
-class Match
+class Player
 {
-	constructor(public readonly _player1Id: number,
-		public readonly _player2Id: number,
-		public _score1: number = 0,
-		public _score2: number = 0,
-		private _winner: number | null = null) {}
+	private m_ws:	WebSocket;
+	private m_name:	string = "";
+	private m_id:	number = -1;
 
-	public static isBot(id: number): boolean
+	get ws(): WebSocket	{ return this.m_ws; }
+	get name(): string	{ return this.m_name; }
+	get id(): number	{ return this.m_id; }
+
+	constructor(ws: WebSocket)
 	{
-		return (id === AuthSource.BOT);
+		this.m_ws = ws;
 	}
 
-	set score1(score: number) { this._score1 = score; }
-	set score2(score: number) { this._score2 = score; }
-
-	public isBotVsBot(): boolean
+	public async init(id: number)
 	{
-		return (Match.isBot(this._player1Id) && Match.isBot(this._player2Id));
-	}
-
-	public isHumanVsBot(): boolean
-	{
-		return (Match.isBot(this._player1Id) !== Match.isBot(this._player2Id));
-	}
-
-	public getBotPlayer(): number | null
-	{
-		if (Match.isBot(this._player1Id))
-		{
-			return (this._player1Id);
-		}
-		else if (Match.isBot(this._player2Id))
-		{
-			return (this._player2Id);
-		}
-
-		return (null);
-	}
-
-	public getHumanPlayer(): number | null
-	{
-		if (!Match.isBot(this._player1Id))
-		{
-			return (this._player1Id);
-		}
-		else if (!Match.isBot(this._player2Id))
-		{
-			return (this._player2Id);
-		}
-		return (null);
-	}
-
-	get winner(): number | null { return (this._winner); }
-
-	set winner(winner: number)
-	{
-		if (this._winner !== null)
-		{
-			throw new Error('Winner has already been set for this match.');
-		}
-		else if (winner !== this._player1Id && winner !== this._player2Id)
-		{
-			throw new Error('Winner must be one of the players in the match.');
-		}
-
-		this._winner = winner;
+		this.m_id = id;
+		this.m_name = await getUserName(id);
 	}
 }
 
-export class Tournament
+export class TournamentManager
 {
-	private _players: Array<number> = [];
-	private _matches: Array<Match> = [];
-	private _next: Tournament | null = null;
-	public isFinished: boolean = false;
+	private m_lobbies: Lobby[] = [];
 
-	private constructor(players: Array<number>, public readonly _depth: number = 0)
+	constructor()
 	{
-		this._players = players;
-		if (this._players.length > 1)
-		{
-			this.generateMatches();
-		}
+		this.m_lobbies = [];
 	}
 
-	private generateMatches(): void
+	/**
+	* create a new lobby
+	* @param ownerId the owner id of the lobby
+	*/
+	public async createLobby(ownerId: number, ownerWs: WebSocket): Promise<DbResponse>
 	{
-		for (let i = 0; i < this._players.length; i += 2)
-		{
-			this._matches.push(new Match(this._players[i], this._players[i + 1]));
-		}
+		if (ownerWs.readyState != ownerWs.OPEN)
+			return { code: 400, data: { message: "invalid websocket" }};
+		const name = await getUserName(ownerId);
+		if (name == "")
+			return { code: 404, data: { message: "invalid user" }};
+
+		const id = crypto.randomUUID();
+		const lobby = new Lobby(id, ownerId, ownerWs);
+		this.m_lobbies.push(lobby);
+
+		return { code: 200, data: { message: "lobby created" }};
 	}
 
-	public static async create(inputs: Set<number>, depth: number = 0): Promise<Tournament>
+	public async addPlayerToLobby(ownerId: number, ownerWs: WebSocket, lobbyId: string): Promise<DbResponse>
 	{
-		let players: Array<number>;
-
-		if (depth === 0)
+		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			const nbBot = this.calculateNbBot(inputs.size);
-			const bot = await getBot();
-			for (let i = 0; i < nbBot; i++)
-			{
-				inputs.add(bot);
-			}
-			players = Tournament.shuffleArray(Array.from(inputs));
-		}
-		else
-		{
-			players = Array.from(inputs);
+			if (this.m_lobbies[i].id == lobbyId)
+				return this.m_lobbies[i].addPlayer(ownerId, ownerWs); //! COULD NEED AWAIT HERE
 		}
 
-		return (new Tournament(players, depth));
+		return { code: 404, data: { message: "lobby not found" }};
 	}
 
-	private static calculateNbBot(size: number): number
-	{
-		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
-	}
 
-	private static shuffleArray<T>(array: T[]): T[]
+	/**
+	* create a new lobby
+	* @param ownerId the owner id of the lobby
+	*/
+	public startLobby(id: number, lobbyId: string)
 	{
-		for (let i = array.length - 1; i > 0; i--)
+		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			const j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]];
+			if (this.m_lobbies[i].id == lobbyId)
+				return this.m_lobbies[i].start(id); //! COULD NEED AWAIT HERE
 		}
 
-		return (array);
+		return { code: 404, data: { message: "lobby not found" }};
+	}
+}
+
+enum LobbyState
+{
+	WAITING = 0,
+	STARTED,
+	FINISHED,
+}
+
+export class Lobby
+{
+	private m_id:			string = "";
+	private m_owner:		Player;
+	private m_players:		Player[] = [];
+	private m_playersLeft:	Player[] = [];
+	private m_instances:	GameInstance[] = [];
+	private m_state:		LobbyState = LobbyState.WAITING;
+
+	public get id(): string			{ return this.m_id; }
+	public get owner(): Player		{ return this.m_owner; }
+	public get players(): Player[]	{ return this.m_players; }
+
+	constructor(id: string, ownerId: number, ownerWs: WebSocket)
+	{
+		this.m_id = id;
+
+		this.m_owner = new Player(ownerWs);
+		this.m_owner.init(ownerId);
+
+		this.m_players = [];
+		this.m_instances = [];
+		this.m_state = LobbyState.WAITING;
 	}
 
-	get players(): Array<number>	{ return (this._players); }
-	get matches(): Array<Match>		{ return (this._matches); }
-	get next(): Tournament | null	{ return (this._next); }
-
-	set next(tournament: Tournament)
+	public async addPlayer(id: number, ws: WebSocket): Promise<DbResponse>
 	{
-		if (this._next)
-		{
-			throw new Error('Next tournament has already been set.');
-		}
+		if (this.m_state != LobbyState.WAITING)
+			return { code: 403, data: { message: "cannot add to lobby" }};
 
-		this._next = tournament;
+		const player = new Player(ws);
+		await player.init(id);
+		this.m_players.push(player);
+		return { code: 200, data: { message: "Success" }};
 	}
 
-	public destroy(): void
+	/**
+	* called once at the very start of the tournament
+	* if id != owner id then not starting
+	*/
+	public async start(id: number): Promise<DbResponse>
 	{
-		if (this._next)
-		{
-			this._next!.destroy();
-			this._next = null;
-		}
+		if (this.m_owner.id != id)
+			return { code: 403, data: { message: "you are not the owner of the lobby" }};
+		if (this.m_state == LobbyState.FINISHED)
+			return { code: 403, data: { message: "this tournament is ended" }};
+		if (this.m_state == LobbyState.STARTED)
+			return { code: 403, data: { message: "this tournament is already started" }};
+
+		this.m_playersLeft = this.m_players;
+		this.m_state = LobbyState.STARTED;
+		Logger.log(`${this.m_owner.name} tournament: STARTING`);
+
+		this.nextRound();
+		return { code: 200, data: { message: "Success" }};
+	}
+
+	public async nextRound()
+	{
+		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
+	}
+
+	public async tournamentEnd()
+	{
+		Logger.log(`${this.m_owner.name} tournament: TOURNAMENT END`);
 	}
 }

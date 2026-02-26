@@ -2,7 +2,7 @@ import { GameInstance } from 'modules/game/GameInstance.js';
 import { Bot } from 'modules/game/Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { core, chat, rateLimitHard } from 'core/server.js';
-import { Tournament } from '../tournament/Tournament.js';
+import { Tournament } from '../tournament/Tournament_old.js';
 import { Logger } from 'modules/logger.js';
 import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
