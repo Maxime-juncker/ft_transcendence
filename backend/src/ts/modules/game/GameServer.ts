@@ -271,7 +271,7 @@ export class GameServer
 							game.running = true;
 						}
 					}
-					
+
 					reply.status(200).send(game.state);
 
 					if (game.mode === 'bot' && game.reversedBuffer)

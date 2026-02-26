@@ -61,9 +61,6 @@ const routes = [
 new ServerSideRendering(core.fastify, routes);
 const gameServer = new GameServer(core.fastify);
 await gameServer.init();
-const tournamentServer = new TournamentServer(core.fastify);
-tournamentServer.setActiveGamesMap(gameServer.activeGames);
-await tournamentServer.init();
 
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {
