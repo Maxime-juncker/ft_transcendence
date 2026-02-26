@@ -161,7 +161,28 @@ export class Lobby
 		this.m_players.add(player);
 
 		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
+
+		const ids = this.getAllIds();
+		for (const p of this.m_players)
+		{
+			if (p.ws && p.ws.readyState === p.ws.OPEN)
+			{
+				p.ws.send(JSON.stringify({ ids: ids, message: "player joined" }));
+			}
+		}
+
 		return { code: 200, data: { message: "Success" }};
+	}
+
+	private getAllIds(): number[]
+	{
+		const ids: number[] = [];
+		for (const player of this.m_players)
+		{
+			ids.push(player.id);
+		}
+
+		return (ids);
 	}
 
 	public async registerWs(player: Player)
@@ -212,6 +233,11 @@ export class Lobby
 		this.m_state = LobbyState.STARTED;
 		Logger.log(`${this.m_owner.name} tournament: STARTING`);
 
+		for (const p of this.m_players)
+		{
+			chat.sendTo(p.id, chat.serverMsg(`The tournament is starting now, be ready to play!`));
+		}
+
 		this.nextRound();
 		return { code: 200, data: { message: "Success" }};
 	}
@@ -229,16 +255,18 @@ export class Lobby
 			return ;
 		}
 
-		this.generateMatches();
-		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
-	}
-
-	private generateMatches(): void
-	{
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
 		{
-			this.m_matches.add(new GameInstance("online", this.m_playersLeft[i].id, this.m_playersLeft[i + 1].id));
+			const gameId = crypto.randomUUID();
+			const p1 = this.m_playersLeft[i].id;
+			const p2 = this.m_playersLeft[i + 1].id;
+
+			chat.notifyMatch(p1, p2, gameId, 1);
+			chat.notifyMatch(p2, p1, gameId, 2);
+			this.m_matches.add(new GameInstance("online", p1, p2, gameId));
 		}
+
+		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
 	}
 
 	private async tournamentEnd()

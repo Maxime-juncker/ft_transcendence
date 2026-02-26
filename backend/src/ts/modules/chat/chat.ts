@@ -160,7 +160,7 @@ export class Chat
 		await this.notifyMatch(player1, player2, gameId, 1);
 		await this.notifyMatch(player2, player1, gameId, 2);
 
-		server.activeGames.set(gameId, new GameInstance('online', player1, player2));
+		server.activeGames.set(gameId, new GameInstance('online', player1, player2, gameId));
 
 
 		Logger.log(`${await getUserName(player1)} will play against ${await getUserName(player2)}`);

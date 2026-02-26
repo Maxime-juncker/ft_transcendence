@@ -64,7 +64,7 @@ export class GameServer
 		await chat.notifyMatch(player1, player2, gameId, 1, "duel");
 		await chat.notifyMatch(player2, player1, gameId, 2, "duel");
 
-		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
+		this.activeGames.set(gameId, new GameInstance('online', player1, player2, gameId));
 
 		Logger.log(`starting duel between: ${name1} and ${name2}`);
 		return gameId;
@@ -112,7 +112,7 @@ export class GameServer
 				{
 					const gameId = crypto.randomUUID();
 					const opponentId = 0;
-					const game = new GameInstance(mode, data.id, opponentId);
+					const game = new GameInstance(mode, data.id, opponentId, gameId);
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting local game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1',
@@ -150,7 +150,7 @@ export class GameServer
 				{
 					const gameId = crypto.randomUUID();
 					const botId = await getBot();
-					const game = new GameInstance(mode, data.id, botId);
+					const game = new GameInstance(mode, data.id, botId, gameId);
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: botId, playerSide: '1',

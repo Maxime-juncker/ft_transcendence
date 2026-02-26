@@ -81,11 +81,15 @@ export class GameInstance
 	public p2Ready: boolean = false;
 	private params: Parameters;
 	private time: number = 0;
+	private _gameId: string;
 
-	constructor(gameMode: string, player1Id: number, player2Id: number)
+	get gameId(): string { return this._gameId; }
+
+	constructor(gameMode: string, player1Id: number, player2Id: number, gameId: string)
 	{
 		this.params = new Parameters();
 		this._scoreUpdated = true;
+		this._gameId = gameId;
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;

@@ -506,7 +506,7 @@ export class TournamentServer
 			const p2Id = match._player2 === humanPlayer ? humanId : this.botId;
 			const botIsPlayer2 = match._player2 === botPlayer;
 
-			const game = new GameInstance('online', p1Id, p2Id);
+			const game = new GameInstance('online', p1Id, p2Id, gameId);
 
 			if (botIsPlayer2)
 			{
@@ -550,7 +550,7 @@ export class TournamentServer
 
 		const p1Id = match._player1;
 		const p2Id = match._player2;
-		const game = new GameInstance('online', p1Id, p2Id);
+		const game = new GameInstance('online', p1Id, p2Id, gameId);
 		if (this.activeGamesMap)
 		{
 			this.activeGamesMap.set(gameId, game);

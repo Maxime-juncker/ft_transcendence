@@ -33,7 +33,7 @@ export class Bot
 	{
 		const res = await getUserByName("bot", core.db);
 
-		this.gameInstance = new GameInstance('dev', res.data.id, -1);
+		this.gameInstance = new GameInstance('dev', res.data.id, -1, "");
 		if (!this.gameInstance)
 		{
 			Logger.error('Failed to create GameInstance for Bot');
