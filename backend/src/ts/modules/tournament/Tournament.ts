@@ -1,20 +1,22 @@
-import { DbResponse } from "core/server.js";
+import { chat, DbResponse } from "core/server.js";
 import { Logger } from "modules/logger.js";
 import { GameInstance } from "modules/game/GameInstance";
 import { getUserName } from "modules/users/user.js";
+import { getBot } from 'modules/users/userManagment.js';
+import { shuffle } from 'lodash'
 import { WebSocket } from '@fastify/websocket';
 
 class Player
 {
-	private m_ws:	WebSocket;
+	private m_ws:	WebSocket | null;
 	private m_name:	string = "";
 	private m_id:	number = -1;
 
-	get ws(): WebSocket	{ return this.m_ws; }
-	get name(): string	{ return this.m_name; }
-	get id(): number	{ return this.m_id; }
+	get ws(): WebSocket | null	{ return this.m_ws; }
+	get name(): string			{ return this.m_name; }
+	get id(): number			{ return this.m_id; }
 
-	constructor(ws: WebSocket)
+	constructor(ws: WebSocket | null)
 	{
 		this.m_ws = ws;
 	}
@@ -104,14 +106,16 @@ export class Lobby
 {
 	private m_id:			string = "";
 	private m_owner:		Player;
-	private m_players:		Player[] = [];
-	private m_playersLeft:	Player[] = [];
+	private m_players:		Set<Player> = new Set();
+	private m_playersLeft:	Array<Player> = new Array();
 	private m_instances:	GameInstance[] = [];
 	private m_state:		LobbyState = LobbyState.WAITING;
 
-	public get id(): string			{ return this.m_id; }
-	public get owner(): Player		{ return this.m_owner; }
-	public get players(): Player[]	{ return this.m_players; }
+	private m_matches:		Set<GameInstance> = new Set();
+
+	get id(): string			{ return this.m_id; }
+	get owner(): Player			{ return this.m_owner; }
+	get players(): Set<Player>	{ return this.m_players; }
 
 	constructor(id: string, ownerWs: WebSocket)
 	{
@@ -119,7 +123,6 @@ export class Lobby
 
 		this.m_owner = new Player(ownerWs);
 
-		this.m_players = [];
 		this.m_instances = [];
 		this.m_state = LobbyState.WAITING;
 	}
@@ -130,7 +133,7 @@ export class Lobby
 		await this.addPlayer(this.m_owner.id, this.m_owner.ws);
 	}
 
-	public async addPlayer(id: number, ws: WebSocket): Promise<DbResponse>
+	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
 		if (this.m_state != LobbyState.WAITING)
 			return { code: 403, data: { message: "cannot add to lobby" }};
@@ -139,7 +142,7 @@ export class Lobby
 		await player.init(id);
 		this.registerWs(player);
 
-		this.m_players.push(player);
+		this.m_players.add(player);
 
 		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
 		return { code: 200, data: { message: "Success" }};
@@ -147,6 +150,9 @@ export class Lobby
 
 	public async registerWs(player: Player)
 	{
+		if (!player.ws)
+			return;
+
 		try
 		{
 			player.ws.on('error', (error: any) => {
@@ -179,7 +185,14 @@ export class Lobby
 		if (this.m_state == LobbyState.STARTED)
 			return { code: 403, data: { message: "this tournament is already started" }};
 
-		this.m_playersLeft = this.m_players;
+		const nbBot = this.calculateNbBot(this.m_players.size);
+		const bot = await getBot();
+		for (let i = 0; i < nbBot; i++)
+		{
+			this.addPlayer(bot, null);
+		}
+
+		this.m_playersLeft = shuffle([...this.m_players]);
 		this.m_state = LobbyState.STARTED;
 		Logger.log(`${this.m_owner.name} tournament: STARTING`);
 
@@ -187,13 +200,34 @@ export class Lobby
 		return { code: 200, data: { message: "Success" }};
 	}
 
+	private calculateNbBot(size: number): number
+	{
+		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
+	}
+
 	public async nextRound()
 	{
+		if (this.m_playersLeft.length == 1)
+		{
+			this.tournamentEnd();
+			return ;
+		}
+
+		this.generateMatches();
 		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
 	}
 
-	public async tournamentEnd()
+	private generateMatches(): void
 	{
+		for (let i = 0; i < this.m_playersLeft.length; i += 2)
+		{
+			this.m_matches.add(new GameInstance("online", this.m_playersLeft[i].id, this.m_playersLeft[i + 1].id));
+		}
+	}
+
+	private async tournamentEnd()
+	{
+		this.m_state = LobbyState.FINISHED;
 		Logger.log(`${this.m_owner.name} tournament: TOURNAMENT END`);
 	}
 }
