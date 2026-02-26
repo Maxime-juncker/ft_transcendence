@@ -78,12 +78,14 @@ export class TournamentManager
 		return { code: 200, data: { message: "Success", ids: ids }};
 	}
 
-	public async addPlayerToLobby(ownerId: number, ownerWs: WebSocket, lobbyId: string): Promise<DbResponse>
+	public async addPlayerToLobby(id: number, ws: WebSocket, lobbyId: string): Promise<DbResponse>
 	{
 		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
 			if (this.m_lobbies[i].id == lobbyId)
-				return this.m_lobbies[i].addPlayer(ownerId, ownerWs); //! COULD NEED AWAIT HERE
+			{
+				return (this.m_lobbies[i].addPlayer(id, ws));
+			}
 		}
 
 		return { code: 404, data: { message: "lobby not found" }};
@@ -98,8 +100,21 @@ export class TournamentManager
 	{
 		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			if (this.m_lobbies[i].id == lobbyId)
-				return this.m_lobbies[i].start(id); //! COULD NEED AWAIT HERE
+			const lobby = this.m_lobbies[i];
+			if (lobby.id == lobbyId)
+			{
+				if (lobby.state != LobbyState.WAITING)
+				{
+					return { code: 409, data: { message: "lobby has already started" }};
+				}
+
+				if (lobby.owner.id != id)
+				{
+					return { code: 403, data: { message: "you are not the owner of the tournament" }};
+				}
+				
+				return (lobby.start(id)); //! COULD NEED AWAIT HERE
+			}
 		}
 
 		return { code: 404, data: { message: "lobby not found" }};
@@ -127,6 +142,7 @@ export class Lobby
 	get id(): string			{ return this.m_id; }
 	get owner(): Player			{ return this.m_owner; }
 	get players(): Set<Player>	{ return this.m_players; }
+	get state(): LobbyState		{ return this.m_state; }
 
 	constructor(id: string, ownerWs: WebSocket)
 	{
