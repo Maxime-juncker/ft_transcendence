@@ -86,7 +86,6 @@ export class GameInstance
 	{
 		this.params = new Parameters();
 		this._scoreUpdated = true;
-		this.params.reload();
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;
