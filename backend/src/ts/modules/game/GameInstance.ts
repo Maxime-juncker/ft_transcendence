@@ -218,8 +218,8 @@ export class GameInstance
 		this._speed = this.params.BALL_SPEED;
 		this._gameState.speedY = (Math.random() - 0.5) * 0.4;
 		this.normalizeSpeed();
-		this._gameState.ballX = 50 + this.params.BALL_SIZE / 2;
-		this._gameState.ballY = 50 + this.params.BALL_SIZE / 2;
+		this._gameState.ballX = 50 - this.params.BALL_SIZE / 2;
+		this._gameState.ballY = 50 - this.params.BALL_SIZE / 2;
 	}
 
 	private collideWall(): boolean

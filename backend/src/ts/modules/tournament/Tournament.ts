@@ -1,9 +1,9 @@
 import { chat, DbResponse } from "core/server.js";
 import { Logger } from "modules/logger.js";
-import { GameInstance } from "modules/game/GameInstance";
+import { GameInstance } from "modules/game/GameInstance.js";
 import { getUserName } from "modules/users/user.js";
 import { getBot } from 'modules/users/userManagment.js';
-import { shuffle } from 'lodash'
+import shuffle from 'lodash/shuffle.js';
 import { WebSocket } from '@fastify/websocket';
 
 class Player
