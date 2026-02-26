@@ -56,6 +56,17 @@ export class TournamentManager
 		return { code: 200, data: { message: "lobby created", id: id }};
 	}
 
+	public async leaveLobby(userId: number, lobbyId: string): Promise<DbResponse>
+	{
+		for (let i = 0; i < this.m_lobbies.length; i++)
+		{
+			if (this.m_lobbies[i].id == lobbyId)
+				return this.m_lobbies[i].leave(userId); //! COULD NEED AWAIT HERE
+		}
+
+		return { code: 404, data: { message: "lobby not found" }};
+	}
+
 	public getAllLobbyIds()
 	{
 		var ids: string[] = [];
@@ -159,30 +170,61 @@ export class Lobby
 		this.registerWs(player);
 
 		this.m_players.add(player);
-
 		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
 
-		const ids = this.getAllIds();
-		for (const p of this.m_players)
-		{
-			if (p.ws && p.ws.readyState === p.ws.OPEN)
-			{
-				p.ws.send(JSON.stringify({ ids: ids, message: "player joined" }));
-			}
-		}
-
+		const ids = this.getAllPlayerIds();
+		this.broadcast({ message: "UPDATE", ids: ids });
 		return { code: 200, data: { message: "Success" }};
 	}
 
-	private getAllIds(): number[]
+	public findPlayerById(id: number): Player | null
 	{
-		const ids: number[] = [];
-		for (const player of this.m_players)
+		for (const p of this.m_players)
 		{
-			ids.push(player.id);
+			if (p.id == id)
+				return p;
 		}
+		return null;
+	}
 
-		return (ids);
+	public getAllPlayerIds(): number[]
+	{
+		var ids: number[] = [];
+
+		for (const p of this.m_players)
+		{
+			ids.push(p.id);
+		}
+		return ids;
+	}
+
+	public async leave(id: number): Promise<DbResponse>
+	{
+		// find player
+		const player = this.findPlayerById(id);
+		if (!player)
+			return { code: 200, data: { message: "You are not part of the tournament" }};
+
+		player.ws?.close();
+		this.m_players.delete(player);
+
+		// notify other players
+		this.broadcast({ message: "UPDATE", ids: this.getAllPlayerIds() });
+
+		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
+		return { code: 200, data: { message: "Success" }};
+	}
+
+	public broadcast(json: any)
+	{
+		for (const p of this.m_players)
+		{
+			if (!p.ws)
+				continue;
+
+			if (p.ws.readyState == p.ws.OPEN)
+				p.ws.send(JSON.stringify(json));
+		}
 	}
 
 	public async registerWs(player: Player)
