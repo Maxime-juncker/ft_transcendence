@@ -158,7 +158,7 @@
 
 		public createTournamentClickHandler = async () =>
 		{
-			if (!this.createBtn)
+			if (!this.createBtn || !MainUser.Instance)
 			{
 				return;
 			}
@@ -170,27 +170,29 @@
 			{
 				const lobbyView = Router.Instance?.activeView as LobbyView;
 				lobbyView.loadingIndicator?.startLoading();
-				const res = await fetch('/api/create-tournament',
-				{
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json', },
-					body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
-				});
-				lobbyView.loadingIndicator?.stopLoading();
+				lobbyView.newTournament();
 
-				this.createBtn.classList.remove("btn-disable");
-				this.createBtn.disabled = false;
-
-				const data = await res.json();
-				if (res.ok)
-				{
-					this.router.navigateTo('tournament-lobby', data.tournamentId);
-				}
-				else
-				{
-					setPlaceHolderText(data.message);
-					console.error('Failed to create tournament');
-				}
+				// const res = await fetch('/api/create-tournament',
+				// {
+				// 	method: 'POST',
+				// 	headers: { 'Content-Type': 'application/json', },
+				// 	body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
+				// });
+				// lobbyView.loadingIndicator?.stopLoading();
+				//
+				// this.createBtn.classList.remove("btn-disable");
+				// this.createBtn.disabled = false;
+				//
+				// const data = await res.json();
+				// if (res.ok)
+				// {
+				// 	this.router.navigateTo('tournament-lobby', data.tournamentId);
+				// }
+				// else
+				// {
+				// 	setPlaceHolderText(data.message);
+				// 	console.error('Failed to create tournament');
+				// }
 			}
 			catch (e)
 			{

@@ -21,13 +21,28 @@ export class LobbyView extends ViewComponent
 	private state:	ListState = ListState.HIDDEN;
 	private	m_gameRouter:	GameRouter | null = null;
 	private m_loading: LoadingIndicator | null = null;
+	public gameWs: WebSocket | null = null;
 
 	get loadingIndicator(): LoadingIndicator | null { return this.m_loading; }
 
 	constructor()
 	{
 		super();
+		this.gameWs = null;
 		this.m_chat = new Chat();
+	}
+
+	public newTournament()
+	{
+		if (!MainUser.Instance)
+			return;
+
+		console.warn(`wss://${window.location.host}/api/tournament/create?token=${MainUser.Instance.token}`)
+		this.gameWs = new WebSocket(`wss://${window.location.host}/api/tournament/create?token=${MainUser.Instance.token}`);
+		this.gameWs.onmessage = (event: any) => {
+			const json = JSON.parse(event.data);
+			console.warn(json);
+		};
 	}
 
 	public async init()

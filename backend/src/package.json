@@ -44,7 +44,8 @@
 		"tailwindcss-cli": "^0.1.2",
 		"tsc-alias": "^1.8.16",
 		"typescript": "^5.9.3",
-		"undici": "^6.19.8"
+		"undici": "^6.19.8",
+		"ws": "^8.19.0"
 	},
 	"devDependencies": {
 		"@types/node": "^24.9.1",

@@ -13,6 +13,8 @@ import { userRoutes } from 'modules/users/user.route.js';
 import { chatRoutes } from 'modules/chat/chat.route.js';
 import { totpRoutes } from 'modules/2fa/2fa.route.js';
 import { duelRoutes } from 'modules/users/duel.route.js';
+import { tournamentRoutes } from 'modules/tournament/Tournament.route.js';
+
 
 import { core, DbResponse } from './server.js';
 import { Logger } from 'modules/logger.js';
@@ -62,6 +64,7 @@ export async function initFastify()
 	await core.fastify.register(friendsRoutes, { prefix: '/api/friends'});
 	await core.fastify.register(userRoutes, { prefix: '/api/user'});
 	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
+	await core.fastify.register(tournamentRoutes, { prefix: '/api/tournament' });
 	await core.fastify.register(chatRoutes);
 	await core.fastify.register(totpRoutes);
 

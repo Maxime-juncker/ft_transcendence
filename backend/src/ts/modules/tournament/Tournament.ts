@@ -2,6 +2,7 @@ import { DbResponse } from "core/server.js";
 import { Logger } from "modules/logger.js";
 import { GameInstance } from "modules/game/GameInstance";
 import { getUserName } from "modules/users/user.js";
+import { WebSocket } from '@fastify/websocket';
 
 class Player
 {
@@ -42,15 +43,26 @@ export class TournamentManager
 	{
 		if (ownerWs.readyState != ownerWs.OPEN)
 			return { code: 400, data: { message: "invalid websocket" }};
-		const name = await getUserName(ownerId);
-		if (name == "")
-			return { code: 404, data: { message: "invalid user" }};
 
 		const id = crypto.randomUUID();
-		const lobby = new Lobby(id, ownerId, ownerWs);
+		const lobby = new Lobby(id, ownerWs);
+		await lobby.init(ownerId);
 		this.m_lobbies.push(lobby);
 
-		return { code: 200, data: { message: "lobby created" }};
+		ownerWs.send(JSON.stringify({ message: "created", lobbyId: id}));
+		Logger.success(lobby.owner.name, "created tournament, id:", lobby.id);
+		return { code: 200, data: { message: "lobby created", id: id }};
+	}
+
+	public getAllLobbyIds()
+	{
+		var ids: string[] = [];
+
+		for (let i = 0; i < this.m_lobbies.length; i++)
+		{
+			ids.push(this.m_lobbies[i].id);
+		}
+		return { code: 200, data: { message: "Success", ids: ids }};
 	}
 
 	public async addPlayerToLobby(ownerId: number, ownerWs: WebSocket, lobbyId: string): Promise<DbResponse>
@@ -101,16 +113,21 @@ export class Lobby
 	public get owner(): Player		{ return this.m_owner; }
 	public get players(): Player[]	{ return this.m_players; }
 
-	constructor(id: string, ownerId: number, ownerWs: WebSocket)
+	constructor(id: string, ownerWs: WebSocket)
 	{
 		this.m_id = id;
 
 		this.m_owner = new Player(ownerWs);
-		this.m_owner.init(ownerId);
 
 		this.m_players = [];
 		this.m_instances = [];
 		this.m_state = LobbyState.WAITING;
+	}
+
+	public async init(ownerId: number)
+	{
+		await this.m_owner.init(ownerId)
+		await this.addPlayer(this.m_owner.id, this.m_owner.ws);
 	}
 
 	public async addPlayer(id: number, ws: WebSocket): Promise<DbResponse>
@@ -120,8 +137,33 @@ export class Lobby
 
 		const player = new Player(ws);
 		await player.init(id);
+		this.registerWs(player);
+
 		this.m_players.push(player);
+
+		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
 		return { code: 200, data: { message: "Success" }};
+	}
+
+	public async registerWs(player: Player)
+	{
+		try
+		{
+			player.ws.on('error', (error: any) => {
+				Logger.error(`${player.name}: websocket error: ${error}`);
+			})
+
+			player.ws.on('close', async (code: any, reason: any) =>
+			{
+				void reason;
+
+				Logger.log(`${player.name} has left the lobby (code: ${code})`);
+			});
+		}
+		catch (err)
+		{
+			Logger.error("Websocket error: ", err);
+		}
 	}
 
 	/**
