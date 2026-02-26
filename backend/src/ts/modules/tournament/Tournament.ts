@@ -134,7 +134,6 @@ export class Lobby
 	private m_owner:		Player;
 	private m_players:		Set<Player> = new Set();
 	private m_playersLeft:	Array<Player> = new Array();
-	private m_instances:	GameInstance[] = [];
 	private m_state:		LobbyState = LobbyState.WAITING;
 
 	private m_matches:		Set<GameInstance> = new Set();
@@ -147,10 +146,7 @@ export class Lobby
 	constructor(id: string, ownerWs: WebSocket)
 	{
 		this.m_id = id;
-
 		this.m_owner = new Player(ownerWs);
-
-		this.m_instances = [];
 		this.m_state = LobbyState.WAITING;
 	}
 
@@ -198,6 +194,17 @@ export class Lobby
 		return ids;
 	}
 
+	public getAllPlayerLeftIds(): number[]
+	{
+		var ids: number[] = [];
+
+		for (const p of this.m_playersLeft)
+		{
+			ids.push(p.id);
+		}
+		return ids;
+	}
+
 	public async leave(id: number): Promise<DbResponse>
 	{
 		// find player
@@ -211,7 +218,7 @@ export class Lobby
 		// notify other players
 		this.broadcast({ message: "UPDATE", ids: this.getAllPlayerIds() });
 
-		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
+		Logger.success(player.name, "was removed from", this.m_owner.name, "lobby");
 		return { code: 200, data: { message: "Success" }};
 	}
 
@@ -224,6 +231,14 @@ export class Lobby
 
 			if (p.ws.readyState == p.ws.OPEN)
 				p.ws.send(JSON.stringify(json));
+		}
+	}
+
+	public broadcastChat(msg: string)
+	{
+		for (const p of this.m_players)
+		{
+			chat.sendTo(p.id, chat.serverMsg(msg));
 		}
 	}
 
@@ -275,12 +290,9 @@ export class Lobby
 		this.m_state = LobbyState.STARTED;
 		Logger.log(`${this.m_owner.name} tournament: STARTING`);
 
-		for (const p of this.m_players)
-		{
-			chat.sendTo(p.id, chat.serverMsg(`The tournament is starting now, be ready to play!`));
-		}
-
+		this.broadcastChat("The tournament is starting! Get ready to fight!");
 		this.nextRound();
+
 		return { code: 200, data: { message: "Success" }};
 	}
 
@@ -296,6 +308,8 @@ export class Lobby
 			this.tournamentEnd();
 			return ;
 		}
+
+		this.broadcastChat("The next round is starting! Get ready to fight!");
 
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
 		{
@@ -315,5 +329,9 @@ export class Lobby
 	{
 		this.m_state = LobbyState.FINISHED;
 		Logger.log(`${this.m_owner.name} tournament: TOURNAMENT END`);
+
+		const ids = this.getAllPlayerIds();
+		const winner = await getUserName(ids[0]);
+		this.broadcastChat(`The tournament is over! The winner is ${winner}! Congratulations!`);
 	}
 }

@@ -18,6 +18,7 @@ export class TournamentLobby
 	private tournamentId: string | null = null;
 	private matchListener: ((json: any) => void) | null = null;
 	private matchStarted: boolean = false;
+	private wss: WebSocket | null = null;
 
 	get id(): string | null { return this.tournamentId; }
 
@@ -77,48 +78,65 @@ export class TournamentLobby
 			return ;
 		}
 
-		this.startPolling();
-	}
-
-	private startPolling()
-	{
-		this.fetchLobbyState();
-		this.intervalId = window.setInterval(() => this.fetchLobbyState(), 1000);
-	}
-
-	private async fetchLobbyState()
-	{
-		try
+		const token = MainUser.Instance?.token;
+		if (!token)
 		{
-			const res = await fetch(`/api/tournament/${this.tournamentId}`);
-			if (!res.ok)
+			console.error('[TournamentLobby] No token found for main user');
+			this.router.navigateTo('tournament-menu', '');
+			return ;
+		}
+
+		if (this.tournamentId != "")
+		{
+			this.wss = new WebSocket(`wss://${location.host}/api/tournament/create?token=${encodeURIComponent(token)}`);
+		}
+		else
+		{
+			this.wss = new WebSocket(`wss://${location.host}/api/tournament/join?token=${encodeURIComponent(token)}&lobbyId=${encodeURIComponent(this.tournamentId)}`);
+		}
+
+		this.wss.onopen = () =>
+		{
+			console.log('[TournamentLobby] WebSocket connection established');
+		};
+
+		this.wss.onmessage = async (event: MessageEvent) =>
+		{
+			console.log('[TournamentLobby] WebSocket message received:', event.data);
+			try
 			{
-				if (res.status === 404)
+				const data = JSON.parse(event.data);
+				if (data.error)
 				{
+					console.error('[TournamentLobby] Error from server:', data.error);
+					alert(`Error: ${data.error}`);
 					this.router.navigateTo('tournament-menu', '');
 				}
-
-				return ;
-			}
-
-			const data = await res.json();
-			if (data.status === 'started' || data.status === 'finished')
-			{
-				if (this.intervalId)
+				else
 				{
-					clearInterval(this.intervalId);
-					this.intervalId = null;
+					await this.render(data);
 				}
-
-				return ;
 			}
+			catch (e)
+			{
+				console.error('[TournamentLobby] Failed to parse WebSocket message:', e);
+			}
+		};
 
-			this.render(data);
-		}
-		catch (e)
+		this.wss.onerror = (event: Event) =>
 		{
-			console.error('Error fetching lobby state:', e);
-		}
+			console.error('[TournamentLobby] WebSocket error:', event);
+			this.router.navigateTo('tournament-menu', '');
+		};
+
+		this.wss.onclose = (event: CloseEvent) =>
+		{
+			console.log('[TournamentLobby] WebSocket connection closed:', event);
+			if (!this.matchStarted)
+			{
+				this.router.navigateTo('tournament-menu', '');
+			}
+		};
 	}
 
 	private async render(data: any)
@@ -206,11 +224,11 @@ export class TournamentLobby
 		try
 		{
 			console.log('[TournamentLobby] Starting tournament:', this.tournamentId);
-			const res = await fetch('/api/start-tournament',
+			const res = await fetch('/api/tournament/start',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ tournamentId: this.tournamentId, token: MainUser.Instance?.token })
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify({ lobbyId: this.tournamentId })
 			});
 
 			console.log('[TournamentLobby] Start tournament response status:', res.status);
@@ -239,15 +257,11 @@ export class TournamentLobby
 
 		try
 		{
-			await fetch('/api/leave-tournament',
+			await fetch('/api/tournament/leave',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify
-				({
-					tournamentId: this.tournamentId,
-					token: MainUser.Instance?.token
-				})
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify ({ lobbyId: this.tournamentId })
 			});
 		}
 		catch (e)
@@ -268,7 +282,7 @@ export class TournamentLobby
 		{
 			this.startBtn.removeEventListener('click', this.handleStart);
 		}
-		
+
 		if (this.leaveBtn)
 		{
 			this.leaveBtn.removeEventListener( 'click', this.leaveTournament);

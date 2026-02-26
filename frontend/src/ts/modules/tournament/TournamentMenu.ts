@@ -132,11 +132,11 @@
 
 			try
 			{
-				const res = await fetch('/api/join-tournament',
+				const res = await fetch('/api/tournament/join',
 				{
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ tournamentId: id, token: MainUser.Instance?.token })
+					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+					body: JSON.stringify({ tournamentId: id })
 				});
 
 				if (res.ok)
@@ -172,27 +172,26 @@
 				lobbyView.loadingIndicator?.startLoading();
 				lobbyView.newTournament();
 
-				// const res = await fetch('/api/create-tournament',
-				// {
-				// 	method: 'POST',
-				// 	headers: { 'Content-Type': 'application/json', },
-				// 	body: JSON.stringify({ token: MainUser.Instance?.token, type: 'public' }),
-				// });
-				// lobbyView.loadingIndicator?.stopLoading();
-				//
-				// this.createBtn.classList.remove("btn-disable");
-				// this.createBtn.disabled = false;
-				//
-				// const data = await res.json();
-				// if (res.ok)
-				// {
-				// 	this.router.navigateTo('tournament-lobby', data.tournamentId);
-				// }
-				// else
-				// {
-				// 	setPlaceHolderText(data.message);
-				// 	console.error('Failed to create tournament');
-				// }
+				const res = await fetch('/api/tournament/create',
+				{
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				});
+				lobbyView.loadingIndicator?.stopLoading();
+				
+				this.createBtn.classList.remove("btn-disable");
+				this.createBtn.disabled = false;
+				
+				const data = await res.json();
+				if (res.ok)
+				{
+					this.router.navigateTo('tournament-lobby', data.tournamentId);
+				}
+				else
+				{
+					setPlaceHolderText(data.message);
+					console.error('Failed to create tournament');
+				}
 			}
 			catch (e)
 			{

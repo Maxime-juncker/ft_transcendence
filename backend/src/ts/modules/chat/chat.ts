@@ -120,7 +120,7 @@ export class Chat
 	public sendTo(userId: number, msg: string)
 	{
 		this.m_connections.forEach(async (id: number, ws: WebSocket) => {
-			if (userId == id)
+			if (userId == id && ws.readyState === ws.OPEN)
 				ws.send(msg);
 		});
 	}
