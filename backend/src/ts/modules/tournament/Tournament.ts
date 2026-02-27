@@ -17,6 +17,7 @@ class Player
 	get ws(): WebSocket | null	{ return this.m_ws; }
 	get name(): string			{ return this.m_name; }
 	get id(): number			{ return this.m_id; }
+	get elo(): number			{ return this.m_elo; }
 
 	constructor(ws: WebSocket | null)
 	{
@@ -381,6 +382,32 @@ class PublicLobby extends Lobby
 		return { code: 200, data: { message: "Success" }};
 	}
 
+	private getClosestEloTo(player: Player): Player | null
+	{
+		if (this.players.size <= 1)
+			return null;
+
+		var closest: Player | null = null;
+		for (const p of this.players)
+		{
+			if (p.id == player.id)
+				continue;
+
+			if (closest == null)
+			{
+				closest = p;
+				continue;
+			}
+
+			if (Math.abs(player.elo - p.elo) < Math.abs(player.elo - closest.elo))
+			{
+				closest = p;
+			}
+		}
+
+		return closest;
+	}
+
 	public async nextRound()
 	{
 		if (this.m_players.size <= 1)
@@ -390,19 +417,12 @@ class PublicLobby extends Lobby
 		}
 
 		const gameId = crypto.randomUUID();
-		var p1: Player | null = null;
-		var p2: Player | null = null;
+		const it = this.players.values();
+		var p1: Player | undefined = it.next().value;
+		if (!p1)
+			return;
 
-		for (const p of this.m_players)
-		{
-			if (p1 == null)
-			{
-				p1 = p;
-				continue;
-			}
-			p2 = p;
-			break;
-		}
+		var p2: Player | null = this.getClosestEloTo(p1);
 		if (!p1 || !p2)
 		{
 			Logger.error("undefined player in queue:\n\tp1:", p1, "\n\tp2:", p2);
@@ -417,5 +437,7 @@ class PublicLobby extends Lobby
 		// this.m_matches.add(new GameInstance("online", p1.id, p2.id, gameId));
 
 		Logger.log(`PUB LOBBY (${this.id}): NEW ROUND (${p1.name} vs ${p2.name})`);
+		if (this.m_players.size > 1)
+			this.nextRound();
 	}
 }
