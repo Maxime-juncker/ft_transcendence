@@ -161,4 +161,37 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 			const res = await tournamentManager.startLobby(data.id, lobbyId);
 		});
 	});
+
+	fastify.post('/leave', {
+			schema:
+			{
+				headers:
+				{
+					type: "object",
+					properties:
+					{
+						authorization: { type: "string" }
+					},
+					required: ["authorization"]
+				},
+				body:
+				{
+					type: "object",
+					properties:
+					{
+						lobbyId: { type: "string" },
+					},
+					required: ["lobbyId"]
+				}
+			},
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const { token } = request.headers as { token: string };
+		const { lobbyId } = request.body as { lobbyId: string };
+		const data = await jwtVerif(token, core.sessionKey);
+		if (!data)
+			return reply.code(400).send({ message: "bad token" });
+
+		const res = await tournamentManager.leaveLobby(data.id, lobbyId);
+		return reply.code(res.code).send(res.data);
+	});
 }

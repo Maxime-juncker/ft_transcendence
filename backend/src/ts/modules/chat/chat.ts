@@ -16,20 +16,40 @@ export type LobbyInvite = {
 	lobbyId:	string
 }
 
+// class Connection
+// {
+// 	public ws:			WebSocket;
+// 	public id:			number;
+// 	public rateLimit:	number;
+//
+// 	constructor(ws: WebSocket, id: number)
+// 	{
+// 		this.ws = ws;
+// 		this.id = id;
+// 		this.rateLimit = 0;
+// 	}
+// }
+
 export class Chat
 {
 	private m_connections: Map<WebSocket, number>; // websocket <=> user login
+	// private m_connections: Set<Connection>
 
 	private m_healthQueue: number[];
 	private m_matchQueue: number[];
 	private m_timerId: NodeJS.Timeout | null;
 
 	private m_lobbyInvites: Array<LobbyInvite>
+
+	public readonly rateLimit = 100; // 100 msg before limit
+	public readonly rateLimitWindow = 1000; // in ms
+
 	get connections(): Map<WebSocket, number> { return this.m_connections; }
 
 	constructor()
 	{
 		this.m_connections = new Map<WebSocket, number>();
+		// this.m_connections = new Set<Connection>
 		this.m_lobbyInvites = [];
 		this.m_healthQueue = [];
 		this.m_matchQueue = [];

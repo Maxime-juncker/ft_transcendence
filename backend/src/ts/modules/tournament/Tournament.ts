@@ -1,16 +1,18 @@
-import { chat, DbResponse } from "core/server.js";
+import { core, chat, DbResponse } from "core/server.js";
 import { Logger } from "modules/logger.js";
 import { GameInstance } from "modules/game/GameInstance.js";
-import { getUserName } from "modules/users/user.js";
+import { getUserById, getUserName } from "modules/users/user.js";
 import { getBot } from 'modules/users/userManagment.js';
 import shuffle from 'lodash/shuffle.js';
 import { WebSocket } from '@fastify/websocket';
+import { GameServer } from "modules/game/GameServer.js";
 
 class Player
 {
 	private m_ws:	WebSocket | null;
 	private m_name:	string = "";
 	private m_id:	number = -1;
+	private m_elo:	number = -1; // use to match player with same skill level
 
 	get ws(): WebSocket | null	{ return this.m_ws; }
 	get name(): string			{ return this.m_name; }
@@ -24,17 +26,27 @@ class Player
 	public async init(id: number)
 	{
 		this.m_id = id;
-		this.m_name = await getUserName(id);
+		
+		const res = await getUserById(id, core.db);
+		if (res.code != 200)
+		{
+			Logger.error(res);
+			return;
+		}
+		
+		this.m_name = res.data.name;
+		this.m_elo = res.data.elo;
 	}
 }
 
 export class TournamentManager
 {
-	private m_lobbies: Lobby[] = [];
+	private m_lobbies:	Lobby[] = [];
 
 	constructor()
 	{
 		this.m_lobbies = [];
+		this.m_lobbies.push(new PublicLobby()); // default lobby for online games
 	}
 
 	/**
@@ -78,7 +90,7 @@ export class TournamentManager
 		return { code: 200, data: { message: "Success", ids: ids }};
 	}
 
-	public async addPlayerToLobby(id: number, ws: WebSocket, lobbyId: string): Promise<DbResponse>
+	public async addPlayerToLobby(id: number, ws: WebSocket | null, lobbyId: string): Promise<DbResponse>
 	{
 		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
@@ -132,18 +144,18 @@ export class Lobby
 {
 	private m_id:			string = "";
 	private m_owner:		Player;
-	private m_players:		Set<Player> = new Set();
-	private m_playersLeft:	Array<Player> = new Array();
-	private m_state:		LobbyState = LobbyState.WAITING;
 
-	private m_matches:		Set<GameInstance> = new Set();
+	protected m_players:		Set<Player> = new Set();
+	protected m_playersLeft:	Array<Player> = new Array();
+	protected m_state:			LobbyState = LobbyState.WAITING;
+	protected m_matches:		Set<GameInstance> = new Set();
 
 	get id(): string			{ return this.m_id; }
 	get owner(): Player			{ return this.m_owner; }
 	get players(): Set<Player>	{ return this.m_players; }
 	get state(): LobbyState		{ return this.m_state; }
 
-	constructor(id: string, ownerWs: WebSocket)
+	constructor(id: string, ownerWs: WebSocket | null)
 	{
 		this.m_id = id;
 		this.m_owner = new Player(ownerWs);
@@ -158,6 +170,7 @@ export class Lobby
 
 	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
+		Logger.debug("called from private lobby");
 		if (this.m_state != LobbyState.WAITING)
 			return { code: 403, data: { message: "cannot add to lobby" }};
 
@@ -250,13 +263,14 @@ export class Lobby
 		try
 		{
 			player.ws.on('error', (error: any) => {
+				this.leave(player.id);
 				Logger.error(`${player.name}: websocket error: ${error}`);
 			})
 
 			player.ws.on('close', async (code: any, reason: any) =>
 			{
 				void reason;
-
+				this.leave(player.id);
 				Logger.log(`${player.name} has left the lobby (code: ${code})`);
 			});
 		}
@@ -333,5 +347,75 @@ export class Lobby
 		const ids = this.getAllPlayerIds();
 		const winner = await getUserName(ids[0]);
 		this.broadcastChat(`The tournament is over! The winner is ${winner}! Congratulations!`);
+	}
+}
+
+class PublicLobby extends Lobby
+{
+	constructor()
+	{
+		super("0", null);
+	}
+
+	public async start(id: number): Promise<DbResponse>
+	{
+		if (this.m_state == LobbyState.FINISHED)
+			return { code: 403, data: { message: "this tournament is ended" }};
+		if (this.m_state == LobbyState.STARTED)
+			return { code: 403, data: { message: "this tournament is already started" }};
+
+		this.m_state = LobbyState.STARTED;
+		Logger.log(`public lobby ${this.id}: STARTING`);
+		return { code: 200, data: { message: "Success" }};
+	}
+
+	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
+	{
+
+		const p = new Player(null);
+		await p.init(id);
+		this.players.add(p);
+
+		Logger.log(`adding ${p.name} to public lobby`);
+		this.nextRound();
+		return { code: 200, data: { message: "Success" }};
+	}
+
+	public async nextRound()
+	{
+		if (this.m_players.size <= 1)
+		{
+			Logger.log("not enought player to start public game");
+			return ;
+		}
+
+		const gameId = crypto.randomUUID();
+		var p1: Player | null = null;
+		var p2: Player | null = null;
+
+		for (const p of this.m_players)
+		{
+			if (p1 == null)
+			{
+				p1 = p;
+				continue;
+			}
+			p2 = p;
+			break;
+		}
+		if (!p1 || !p2)
+		{
+			Logger.error("undefined player in queue:\n\tp1:", p1, "\n\tp2:", p2);
+			return;
+		}
+		this.m_players.delete(p1);
+		this.m_players.delete(p2);
+
+		chat.notifyMatch(p1.id, p2.id, gameId, 1);
+		chat.notifyMatch(p2.id, p1.id, gameId, 2);
+		GameServer.Instance?.activeGames.set(gameId, new GameInstance('online', p1.id, p2.id, gameId));
+		// this.m_matches.add(new GameInstance("online", p1.id, p2.id, gameId));
+
+		Logger.log(`PUB LOBBY (${this.id}): NEW ROUND (${p1.name} vs ${p2.name})`);
 	}
 }

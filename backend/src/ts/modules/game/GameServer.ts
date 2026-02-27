@@ -2,7 +2,7 @@ import { GameInstance, Parameters } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import { core, chat } from 'core/server.js';
+import { core, chat, tournamentManager } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { getBot } from 'modules/users/userManagment.js';
@@ -137,7 +137,8 @@ export class GameServer
 						}
 					}
 
-					await chat.addPlayerToQueue(data.id, this);
+					await tournamentManager.addPlayerToLobby(data.id, null, "0");
+					// await chat.addPlayerToQueue(data.id, this);
 					reply.status(202).send({ message: "added to queue", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
 						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}

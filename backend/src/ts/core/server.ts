@@ -2,11 +2,10 @@ import { initFastify } from 'core/init.js';
 import { Core } from './core.js';
 import { ServerSideRendering } from 'modules/ssr/ServerSideRendering.js';
 import { GameServer } from 'modules/game/GameServer.js';
-import { TournamentServer } from 'modules/tournament/TournamentServer_old.js';
 import { initVault } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
 import { Chat } from 'modules/chat/chat.js';
-import { Lobby, TournamentManager } from 'modules/tournament/Tournament.js';
+import { TournamentManager } from 'modules/tournament/Tournament.js';
 
 export interface DbResponse {
 	code:	number;
@@ -59,7 +58,7 @@ const routes = [
 ]
 
 new ServerSideRendering(core.fastify, routes);
-const gameServer = new GameServer(core.fastify);
+export const gameServer = new GameServer(core.fastify);
 await gameServer.init();
 
 const signals = ['SIGINT', 'SIGTERM'] as const;
