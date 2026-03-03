@@ -118,7 +118,7 @@ export class TournamentManager
 			}
 		}
 
-		return { code: 404, data: { message: "lobby not found" }};
+		return { code: 404, data: { message: "[leaveLobby] lobby not found" }};
 	}
 
 	public getAllLobbyIds()
@@ -171,7 +171,7 @@ export class TournamentManager
 			}
 		}
 
-		return { code: 404, data: { message: "lobby not found" }};
+		return { code: 404, data: { message: "[addPlayerToLobby] lobby not found" }};
 	}
 
 
@@ -195,12 +195,12 @@ export class TournamentManager
 				{
 					return { code: 403, data: { message: "you are not the owner of the tournament" }};
 				}
-				
+
 				return (lobby.start(id)); //! COULD NEED AWAIT HERE
 			}
 		}
 
-		return { code: 404, data: { message: "lobby not found" }};
+		return { code: 404, data: { message: "[startLobby] lobby not found" }};
 	}
 }
 
@@ -395,7 +395,7 @@ export class Lobby
 		const bot = await getBot();
 		for (let i = 0; i < nbBot; i++)
 		{
-			this.addPlayer(bot, null);
+			await this.addPlayer(bot, null);
 		}
 
 		this.m_playersLeft = shuffle([...this.m_players]);

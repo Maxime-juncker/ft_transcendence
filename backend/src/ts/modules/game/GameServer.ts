@@ -76,15 +76,23 @@ export class GameServer
 		{
 			schema:
 			{
+				headers:
+				{
+					type: "object",
+					properties:
+					{
+						authorization: { type: "string" }
+					},
+					required: ["authorization"]
+				},
 				body:
 				{
 					type: "object",
 					properties:
 					{
 						mode:	{ type: "string" },
-						token:	{ type: "string" },
 					},
-					required: ["mode", "token"]
+					required: ["mode"]
 				}
 			}
 		},
@@ -92,9 +100,17 @@ export class GameServer
 		{
 			try
 			{
+				const authorization = request.headers.authorization as string | undefined;
+				if (!authorization || !authorization.startsWith('Bearer '))
+				{
+					reply.status(400).send({ error: 'missing authorization header' });
+					Logger.error("missing authorization header");
+					return ;
+				}
+
+				const token = authorization.replace('Bearer ', '');
 				const body = request.body as { mode: string; token: string};
 				const mode = body.mode;
-				const token = body.token;
 				const params = new Parameters();
 
 				if (!params)

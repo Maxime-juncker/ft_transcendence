@@ -20,6 +20,7 @@ export class TournamentLobby
 	private matchStarted: boolean = false;
 	private wss: WebSocket | null = null;
 	private isLeaving: boolean = false;
+	private destroyed: boolean = false;
 
 	get id(): string | null { return this.tournamentId; }
 
@@ -108,6 +109,11 @@ export class TournamentLobby
 					alert(`Error: ${data.error}`);
 					this.isLeaving = true;
 					this.router.navigateTo('tournament-menu', '');
+				}
+				else if (data.message === "GAME_STARTING")
+				{
+					console.log('[TournamentLobby] Game is starting, setting matchStarted flag');
+					this.matchStarted = true;
 				}
 				else if (data.message === "LOBBY_CLOSED")
 				{
@@ -222,12 +228,17 @@ export class TournamentLobby
 		if (this.leaveBtn)
 		{
 			console.log('[TournamentLobby] Adding click listener to leave button');
-			this.leaveBtn.addEventListener('click', this.leaveTournament);
+			this.leaveBtn.addEventListener('click', this.leaveRedirect);
 		}
 		else
 		{
 			console.error('[TournamentLobby] Leave button not found!');
 		}
+	}
+
+	private calculateNbBot(size: number): number
+	{
+		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
 	}
 
 	private handleStart = async (): Promise<void> =>
@@ -236,6 +247,16 @@ export class TournamentLobby
 		{
 			console.error('[TournamentLobby] No tournament ID set');
 			return ;
+		}
+
+		const nbBot = this.calculateNbBot(this.m_players.length);
+		if (nbBot > 0)
+		{
+			const confirmed = confirm(`${nbBot} bot(s) will be added to fill the bracket. Start anyway?`);
+			if (!confirmed)
+			{
+				return;
+			}
 		}
 
 		try
@@ -265,6 +286,12 @@ export class TournamentLobby
 		}
 	}
 
+	private leaveRedirect = async (): Promise<void> =>
+	{
+		await this.leaveTournament();
+		this.router.navigateTo('tournament-menu', '');
+	}
+
 	private leaveTournament = async (): Promise<void> =>
 	{
 		if (!this.tournamentId || this.tournamentId === "" || this.isLeaving)
@@ -283,25 +310,37 @@ export class TournamentLobby
 				body: JSON.stringify ({ lobbyId: this.tournamentId })
 			});
 
-			if (res.ok)
-			{
-				this.router.navigateTo('tournament-menu', '');
-			}
-			else
+			if (!res.ok)
 			{
 				console.error('Failed to leave tournament:', await res.text());
-				this.router.navigateTo('tournament-menu', '');
 			}
 		}
 		catch (e)
 		{
 			console.error('Error leaving tournament:', e);
-			this.router.navigateTo('tournament-menu', '');
 		}
 	}
 
 	public async destroy(): Promise<void>
 	{
+		if (this.destroyed)
+		{
+			return ;
+		}
+		this.destroyed = true;
+
+		if (this.wss)
+		{
+			this.wss.onmessage = null;
+			this.wss.onclose = null;
+			this.wss.onerror = null;
+			if (this.wss.readyState === WebSocket.OPEN)
+			{
+				this.wss.close();
+			}
+			this.wss = null;
+		}
+
 		if (this.intervalId)
 		{
 			clearInterval(this.intervalId);
@@ -315,17 +354,12 @@ export class TournamentLobby
 
 		if (this.leaveBtn)
 		{
-			this.leaveBtn.removeEventListener( 'click', this.leaveTournament);
+			this.leaveBtn.removeEventListener('click', this.leaveRedirect);
 		}
 
-		if (!this.isLeaving && !this.matchStarted && this.tournamentId && this.tournamentId !== "")
+		if (!this.isLeaving && !this.matchStarted)
 		{
 			await this.leaveTournament();
-		}
-
-		if (this.wss && this.wss.readyState === WebSocket.OPEN)
-		{
-			this.wss.close();
 		}
 	}
 }

@@ -199,8 +199,8 @@ export class GameClient extends Utils
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, token: MainUser.Instance?.token }),
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify({ mode: this.mode }),
 			});
 
 			if (response.status == 202)
