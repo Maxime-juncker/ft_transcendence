@@ -71,6 +71,8 @@ export class GameClient extends Utils
 	private	m_prevP2Score:		number | null = null;
 	private m_router:			GameRouter;
 	private m_endTimeout:		any | null = null;
+	private m_chat:				Chat | null = null;
+	private m_gameFeedbackCb:	((json: any) => void) | null = null;
 
 	private paddleHeight: number = 15;
 	private paddleWidth: number = 2;
@@ -95,7 +97,9 @@ export class GameClient extends Utils
 		this.createPlayerHtml();
 		if (chat)
 		{
-			chat.onGameCreated((json) => this.createGameFeedback(json));
+			this.m_chat = chat;
+			this.m_gameFeedbackCb = (json: any) => this.createGameFeedback(json);
+			chat.onGameCreated(this.m_gameFeedbackCb);
 		}
 
 		if (this.isModeValid() && this.m_user)
@@ -516,6 +520,23 @@ export class GameClient extends Utils
 		});
 	}
 
+	private async leaveTournament(): Promise<void>
+	{
+		try
+		{
+			await fetch('/api/tournament/leave',
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify({ lobbyId: this.m_router.currentTournamentId })
+			});
+		}
+		catch (e)
+		{
+			console.error('Failed to leave tournament:', e);
+		}
+	}
+
 	public async destroy(): Promise<void>
 	{
 		if (this.countdownInterval)
@@ -535,5 +556,13 @@ export class GameClient extends Utils
 		document.removeEventListener('keydown', this.keydownHandler);
 		document.removeEventListener('keyup', this.keyupHandler);
 		this.keysPressed.clear();
+		if (this.m_chat && this.m_gameFeedbackCb)
+			this.m_chat.removeOnGameCreated(this.m_gameFeedbackCb);
+
+		if (!this.end && this.m_router.currentTournamentId)
+		{
+			this.leaveTournament();
+			this.m_router.currentTournamentId = null;
+		}
 	}
 }

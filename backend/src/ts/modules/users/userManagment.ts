@@ -500,7 +500,7 @@ export async function updateEmail(user_id: number, email: string): Promise<DbRes
 	}
 }
 
-export async function getBot(): Promise<number>
+export async function getBotId(): Promise<number>
 {
     try
     {

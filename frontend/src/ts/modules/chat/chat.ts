@@ -129,6 +129,7 @@ export class Chat
 	}
 
 	public onGameCreated(cb: ((json: any) => void)) { this.m_onStartGame.push(cb); }
+	public removeOnGameCreated(cb: ((json: any) => void)) { this.m_onStartGame = this.m_onStartGame.filter(c => c !== cb); }
 	public onConnRefresh(cb: ((conns: User[]) => void)) { this.m_onConnRefresh.push(cb); }
 
 	get chatbox(): HTMLElement | null 	{ return this.m_chatbox; }

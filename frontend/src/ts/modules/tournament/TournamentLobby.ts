@@ -21,6 +21,7 @@ export class TournamentLobby
 	private wss: WebSocket | null = null;
 	private isLeaving: boolean = false;
 	private destroyed: boolean = false;
+	private ownerName: string = '';
 
 	get id(): string | null { return this.tournamentId; }
 
@@ -44,16 +45,10 @@ export class TournamentLobby
 			this.matchListener = (json: any) =>
 			{
 				console.log('[TournamentLobby] Match notification received:', json);
-				if (this.matchStarted)
-				{
-					console.log('[TournamentLobby] Match already started, ignoring duplicate notification');
-					return;
-				}
-
 				this.matchStarted = true;
-				console.log('[TournamentLobby] Navigating to game with mode: online');
-				this.router.navigateTo('game', 'online');
+				this.router.currentTournamentId = this.tournamentId;
 			};
+
 			this.chat.onGameCreated(this.matchListener);
 			console.log('[TournamentLobby] Match listener registered');
 		}
@@ -165,10 +160,11 @@ export class TournamentLobby
 		}
 
 		this.isOwner = data.ownerId === this.user.id;
+		this.ownerName = data.ownerName;
 
 		if (this.lobbyTitle)
 		{
-			this.lobbyTitle.innerHTML = `<span data-i18n="tournament_of"></span> <span>${data.ownerName}</span>`;
+			this.lobbyTitle.innerHTML = `<span data-i18n="tournament_of"></span> <span id="lobby-owner-name">${this.ownerName}</span>`;
 		}
 
 		if (this.playerList)
@@ -355,6 +351,11 @@ export class TournamentLobby
 		if (this.leaveBtn)
 		{
 			this.leaveBtn.removeEventListener('click', this.leaveRedirect);
+		}
+
+		if (this.matchListener && this.chat)
+		{
+			this.chat.removeOnGameCreated(this.matchListener);
 		}
 
 		if (!this.isLeaving && !this.matchStarted)

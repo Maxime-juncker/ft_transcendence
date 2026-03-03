@@ -2,10 +2,11 @@ import { core, chat, DbResponse } from 'core/server.js'
 import { Logger } from 'modules/logger.js';
 import { GameInstance } from "modules/game/GameInstance.js";
 import { getUserById, getUserName } from "modules/users/user.js";
-import { getBot } from 'modules/users/userManagment.js';
+import { getBotId } from 'modules/users/userManagment.js';
 import { GameServer } from "modules/game/GameServer.js";
 import shuffle from 'lodash/shuffle.js';
 import { WebSocket } from '@fastify/websocket';
+import { get } from 'lodash';
 
 export enum LobbyState
 {
@@ -83,7 +84,6 @@ export class Lobby
 
 	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
-		Logger.debug("called from private lobby");
 		if (this.m_state != LobbyState.WAITING)
 			return { code: 403, data: { message: "cannot add to lobby" }};
 
@@ -231,7 +231,7 @@ export class Lobby
 			return { code: 403, data: { message: "this tournament is already started" }};
 
 		const nbBot = this.calculateNbBot(this.m_players.size);
-		const bot = await getBot();
+		const bot = await getBotId();
 		for (let i = 0; i < nbBot; i++)
 		{
 			await this.addPlayer(bot, null);
@@ -264,19 +264,52 @@ export class Lobby
 
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
 		{
-			const gameId = crypto.randomUUID();
+			const botId = await getBotId();
 			const p1 = this.m_playersLeft[i].id;
 			const p2 = this.m_playersLeft[i + 1].id;
 
-			const gameInstance = new GameInstance("online", p1, p2, gameId);
-			this.m_matches.add(gameInstance);
-			GameServer.Instance?.activeGames.set(gameId, gameInstance);
-
-			chat.notifyMatch(p1, p2, gameId, 1);
-			chat.notifyMatch(p2, p1, gameId, 2);
+			if (p1 == botId && p2 == botId)
+			{
+				this.botVsBot(p1, p2);
+			}
+			else if (p1 == botId || p2 == botId)
+			{
+				this.humanVsBot(p1 != botId ? p1 : p2, botId);
+			}
+			else
+			{
+				this.humanVsHuman(p1, p2);
+			}
 		}
 
 		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
+	}
+
+	private botVsBot(p1: number, p2: number)
+	{
+		const loser = Math.random() < 0.5 ? p1 : p2;
+		this.m_playersLeft = this.m_playersLeft.filter(p => p.id != loser);
+	}
+
+	private humanVsBot(playerId: number, botId: number)
+	{
+		const gameId = crypto.randomUUID();
+		const gameInstance = new GameInstance("bot", playerId, botId, gameId);
+		this.m_matches.add(gameInstance);
+		GameServer.Instance?.activeGames.set(gameId, gameInstance);
+
+		chat.notifyMatch(playerId, botId, gameId, 1, "bot");
+	}
+
+	private humanVsHuman(player1Id: number, player2Id: number)
+	{
+		const gameId = crypto.randomUUID();
+		const gameInstance = new GameInstance("online", player1Id, player2Id, gameId);
+		this.m_matches.add(gameInstance);
+		GameServer.Instance?.activeGames.set(gameId, gameInstance);
+
+		chat.notifyMatch(player1Id, player2Id, gameId, 1);
+		chat.notifyMatch(player2Id, player1Id, gameId, 2);
 	}
 
 	private async tournamentEnd()

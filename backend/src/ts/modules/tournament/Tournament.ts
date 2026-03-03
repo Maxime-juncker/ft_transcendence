@@ -3,6 +3,7 @@ import { Logger } from "modules/logger.js";
 import { WebSocket } from '@fastify/websocket';
 import { PublicLobby } from "./PublicLobby.js";
 import { Lobby, LobbyState } from 'modules/tournament/Lobby.js';
+import { log } from "console";
 
 
 export class TournamentManager
@@ -21,7 +22,6 @@ export class TournamentManager
 	*/
 	public async createLobby(ownerId: number, ownerWs: WebSocket): Promise<DbResponse>
 	{
-		Logger.debug("Creating lobby for user id:", ownerId);
 		if (this.findPlayerInLobbies(ownerId))
 		{
 			return { code: 409, data: { message: "you can't create a lobby while in another one" }};
@@ -64,16 +64,19 @@ export class TournamentManager
 			const lobby = this.m_lobbies[i];
 			if (lobby.id == lobbyId)
 			{
+				Logger.debug("User id:", userId, "is leaving lobby with id:", lobbyId);
 				const result = await this.m_lobbies[i].leave(userId);
 
 				if (lobby.players.size == 0)
 				{
+					Logger.debug("Deleting lobby with id:", lobby.id);
 					this.m_lobbies.splice(i, 1);
 				}
 				else if (userId == lobby.owner.id)
 				{
-					const player = Array.from(lobby.players)[0];
-					this.m_lobbies[i].owner = player;
+					Logger.debug("Owner left lobby with id:", lobby.id, "assigning new owner");
+					const newOwner = Array.from(lobby.players)[0];
+					this.m_lobbies[i].owner = newOwner;
 				}
 
 				return (result);

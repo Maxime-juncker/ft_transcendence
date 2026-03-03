@@ -5,7 +5,7 @@ import { getUserByName, getUserName } from 'modules/users/user.js';
 import { core, chat, tournamentManager } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import { getBot } from 'modules/users/userManagment.js';
+import { getBotId } from 'modules/users/userManagment.js';
 
 export class GameServer
 {
@@ -167,7 +167,7 @@ export class GameServer
 				else if (mode === 'bot')
 				{
 					const gameId = crypto.randomUUID();
-					const botId = await getBot();
+					const botId = await getBotId();
 					const game = new GameInstance(mode, data.id, botId, gameId);
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);

@@ -37,6 +37,16 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 			}
 
 			const res = await tournamentManager.createLobby(data.id, socket);
+
+			const lobbyId = res.data?.id as string | undefined;
+			if (lobbyId)
+			{
+				socket.on('close', async () =>
+				{
+					Logger.log(`[tournament/create] socket closed for owner ${data.id}, leaving lobby ${lobbyId}`);
+					await tournamentManager.leaveLobby(data.id, lobbyId);
+				});
+			}
 		});
 	});
 
@@ -85,6 +95,12 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 			const { lobbyId } = request.query as { lobbyId: string };
 
 			const res = await tournamentManager.addPlayerToLobby(data.id, socket, lobbyId);
+
+			socket.on('close', async () =>
+			{
+				Logger.log(`[tournament/join] socket closed for user ${data.id}, leaving lobby ${lobbyId}`);
+				await tournamentManager.leaveLobby(data.id, lobbyId);
+			});
 		});
 	});
 

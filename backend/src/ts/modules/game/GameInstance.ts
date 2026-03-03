@@ -212,7 +212,7 @@ export class GameInstance
 					user1_score: this._gameState.player1Score,
 					user2_score: this._gameState.player2Score
 				};
-				addGameToHist(res, core.db);
+				await addGameToHist(res, core.db);
 			}
 		}
 	}

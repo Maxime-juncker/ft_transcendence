@@ -22,6 +22,7 @@ export class GameRouter
 	currentClass: any = null;
 	pages: Map<string, HTMLDivElement> = new Map();
 	gameInstance: GameClient | null = null;
+	currentTournamentId: string | null = null;
 	m_user:			User | null = null;
 	m_player1:		UserElement | null = null;
 	m_chat:			Chat | null = null;
