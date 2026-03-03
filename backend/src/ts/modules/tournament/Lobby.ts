@@ -21,6 +21,8 @@ export class Player
 	private m_id:	number = -1;
 	private m_elo:	number = -1; // use to match player with same skill level
 
+	public matchmakingRetry = 0; // number of time player tried to find a match
+
 	get ws(): WebSocket | null	{ return this.m_ws; }
 	get name(): string			{ return this.m_name; }
 	get id(): number			{ return this.m_id; }

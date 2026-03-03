@@ -223,7 +223,7 @@ export class Chat
 			if (res.code === 200)
 				login = res.data.name;
 
-			Logger.log(`${login} as connected to lobby`);
+			Logger.log(`${login} has connected to chat`);
 			this.m_connections.set(ws, data.id);
 
 			if (this.m_connections.size == 1)

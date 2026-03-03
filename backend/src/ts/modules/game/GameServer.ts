@@ -155,7 +155,10 @@ export class GameServer
 
 					const res = await tournamentManager.addPlayerToLobby(data.id, null, "0");
 					if (res.code != 200)
+					{
+						Logger.error(`could not create online game for player: ${data.id} cause: ${JSON.stringify(res, null, 2)}`);
 						return reply.code(res.code).send(res.data);
+					}
 					reply.status(202).send({ message: "added to queue", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
 						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}

@@ -8,6 +8,9 @@ import { WebSocket } from '@fastify/websocket';
 export class PublicLobby extends Lobby
 {
 	public static readonly maxEloDiff		= process.env.MAX_ELO_DIFF ? Number(process.env.MAX_ELO_DIFF) : -1;
+	public static readonly checkMatchTimer	= 5 * 1000; // matchming every 5sec
+	public static readonly retryEloBoost	= 10;
+
 	private m_timerId: NodeJS.Timeout | null; // used to launch match every 10sec
 
 	constructor()
@@ -15,6 +18,11 @@ export class PublicLobby extends Lobby
 		super("0", null);
 		this.m_timerId = null;
 		this.owner.name = "public";
+
+		Logger.log("creating public lobby:");
+		Logger.log("\tmax elo diff:", PublicLobby.maxEloDiff);
+		Logger.log("\trunning matchmaking every", PublicLobby.checkMatchTimer / 1000, "sec");
+		Logger.log("\tretry elo boost:", PublicLobby.retryEloBoost);
 	}
 
 	public async start(id: number): Promise<DbResponse>
@@ -29,6 +37,19 @@ export class PublicLobby extends Lobby
 		return { code: 200, data: { message: "Success" }};
 	}
 
+	public async leave(id: number): Promise<DbResponse>
+	{
+		const res = await super.leave(id);
+		if (this.players.size < 2 && this.m_timerId)
+		{
+			Logger.log(`${this.players.size} in ${this.owner.name} ${this.id}, stopping matchmaking`);
+			clearInterval(this.m_timerId);
+			this.m_timerId = null;
+		}
+
+		return res;
+	}
+
 	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
 		if (!chat.isUserConnected(id))
@@ -40,16 +61,18 @@ export class PublicLobby extends Lobby
 		const p = new Player(null);
 		await p.init(id);
 		this.players.add(p);
-		this.toggleMatchLaunch();
+
+		Logger.debug(this.players.size);
+		if (this.players.size >= 2)
+		{
+			Logger.success(`${this.players.size} in ${this.owner.name} ${this.id}, starting matchmaking`);
+			this.m_timerId = setInterval(() => this.nextRound(), PublicLobby.checkMatchTimer);
+		}
 
 		Logger.log(`adding ${p.name} to public lobby`);
 		return { code: 200, data: { message: "Success" }};
 	}
 
-	private toggleMatchLaunch()
-	{
-
-	}
 
 	private getClosestEloTo(player: Player): Player | null
 	{
@@ -77,43 +100,72 @@ export class PublicLobby extends Lobby
 		return closest;
 	}
 
-	public async nextRound()
+	private findPlayer(p: Player): number
 	{
 		if (this.m_players.size <= 1)
 		{
 			Logger.log("not enought player to start public game");
-			return ;
+			return -2;
 		}
 
 		const gameId = crypto.randomUUID();
-		const it = this.players.values();
-		var p1: Player | undefined = it.next().value;
-		if (!p1)
-			return;
 
-		var p2: Player | null = this.getClosestEloTo(p1);
-		if (!p1 || !p2)
+		var p2: Player | null = this.getClosestEloTo(p);
+		if (!p2)
 		{
-			Logger.error("undefined player in queue:\n\tp1:", p1, "\n\tp2:", p2);
-			return;
+			Logger.error("undefined player in queue:\n\tp1:", p, "\n\tp2:", p2);
+			return -1;
 		}
 
-		// const diff = Math.abs(p1.elo - p2.elo);
-		// if (diff > PublicLobby.maxEloDiff)
-		// {
-		// 	Logger.warn(`can't start match ${p1.name} vs ${p2.name}, elo diff too big (${diff})`);
-		// 	return ;
-		// }
+		var diff = Math.abs(p.elo - p2.elo);
+		Logger.debug(diff, p.elo, p2.elo);
+		// matchmaking become more lenient the more time player wait
+		diff = Math.max(0, diff - (PublicLobby.retryEloBoost * p.matchmakingRetry));
 
-		this.m_players.delete(p1);
+		if (diff > PublicLobby.maxEloDiff && PublicLobby.maxEloDiff > 0)
+		{
+			Logger.warn(`can't start match for ${p.name}, min elo diff too big (${diff})`);
+			p.matchmakingRetry++;
+			return 0;
+		}
+
+		this.m_players.delete(p);
 		this.m_players.delete(p2);
 
-		chat.notifyMatch(p1.id, p2.id, gameId, 1);
-		chat.notifyMatch(p2.id, p1.id, gameId, 2);
-		GameServer.Instance?.activeGames.set(gameId, new GameInstance('online', p1.id, p2.id, gameId));
+		chat.notifyMatch(p.id, p2.id, gameId, 1);
+		chat.notifyMatch(p2.id, p.id, gameId, 2);
 
-		Logger.log(`PUB LOBBY (${this.id}): NEW ROUND (${p1.name} vs ${p2.name})`);
-		if (this.m_players.size > 1)
-			this.nextRound();
+		GameServer.Instance?.activeGames.set(gameId, new GameInstance('online', p.id, p2.id, gameId));
+		Logger.log(`PUB LOBBY (${this.id}): NEW ROUND (${p.name} vs ${p2.name})`);
+		return 1;
+	}
+
+	public async nextRound()
+	{
+		for (const player of this.players)
+		{
+			const retval = this.findPlayer(player);
+			if (retval == 1)
+			{
+
+				if (this.players.size < 2 && this.m_timerId)
+				{
+					Logger.log(`${this.players.size} in ${this.owner.name} ${this.id}, stopping matchmaking`);
+					clearInterval(this.m_timerId);
+					this.m_timerId = null;
+					return;
+				}
+				this.nextRound();
+				return;
+			}
+			else if (retval < 0)
+			{
+				Logger.error(`error when starting matchmaking for ${player.name}, code: ${retval}`);
+				return;
+			}
+
+
+		}
+
 	}
 }

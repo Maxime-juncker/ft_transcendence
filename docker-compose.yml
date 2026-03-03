@@ -23,6 +23,7 @@ services:
       - PADDLE_WIDTH=${PADDLE_WIDTH:-2}
       - PADDLE_PADDING=${PADDLE_PADDING:-2}
       - BALL_SIZE=${BALL_SIZE:-2}
+      - MAX_ELO_DIFF=${MAX_ELO_DIFF:-10}
     volumes:
       - sqlite:/var/lib/sqlite:rw
       - avatars:/var/www/server/public/avatars:rw

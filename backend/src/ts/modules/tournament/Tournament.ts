@@ -66,11 +66,11 @@ export class TournamentManager
 			{
 				const result = await this.m_lobbies[i].leave(userId);
 
-				if (lobby.players.size == 0)
+				if (lobby.players.size == 0 && !(lobby instanceof PublicLobby))
 				{
 					this.m_lobbies.splice(i, 1);
 				}
-				else if (userId == lobby.owner.id)
+				else if (userId == lobby.owner.id && !(lobby instanceof PublicLobby))
 				{
 					const player = Array.from(lobby.players)[0];
 					this.m_lobbies[i].owner = player;
@@ -125,8 +125,10 @@ export class TournamentManager
 			return { code: 409, data: { message: "you are already in a lobby" }};
 		}
 
+		Logger.debug("size", this.m_lobbies.length);
 		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
+			Logger.debug(this.m_lobbies[i].id)
 			if (this.m_lobbies[i].id == lobbyId)
 			{
 				return (this.m_lobbies[i].addPlayer(id, ws));
