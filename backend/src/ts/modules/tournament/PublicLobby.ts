@@ -4,6 +4,7 @@ import { DbResponse, chat } from 'core/server.js';
 import { GameServer } from 'modules/game/GameServer.js'
 import { GameInstance } from "modules/game/GameInstance.js";
 import { WebSocket } from '@fastify/websocket';
+import { getBlockUser } from 'modules/users/user.js';
 
 export class PublicLobby extends Lobby
 {
@@ -62,11 +63,11 @@ export class PublicLobby extends Lobby
 		await p.init(id);
 		this.players.add(p);
 
-		Logger.debug(this.players.size);
-		if (this.players.size >= 2)
+		if (this.players.size >= 2 && this.m_timerId == null)
 		{
 			Logger.success(`${this.players.size} in ${this.owner.name} ${this.id}, starting matchmaking`);
 			this.m_timerId = setInterval(() => this.nextRound(), PublicLobby.checkMatchTimer);
+			this.nextRound();
 		}
 
 		Logger.log(`adding ${p.name} to public lobby`);
@@ -100,7 +101,7 @@ export class PublicLobby extends Lobby
 		return closest;
 	}
 
-	private findPlayer(p: Player): number
+	private async findPlayer(p: Player): Promise<number>
 	{
 		if (this.m_players.size <= 1)
 		{
@@ -117,8 +118,14 @@ export class PublicLobby extends Lobby
 			return -1;
 		}
 
+		const res = await getBlockUser(p.id, p2.id);
+		if (res.code == 200)
+		{
+			Logger.debug(p.name, "block or is blocked by", p2.name);
+			return 0;
+		}
+
 		var diff = Math.abs(p.elo - p2.elo);
-		Logger.debug(diff, p.elo, p2.elo);
 		// matchmaking become more lenient the more time player wait
 		diff = Math.max(0, diff - (PublicLobby.retryEloBoost * p.matchmakingRetry));
 
@@ -129,8 +136,8 @@ export class PublicLobby extends Lobby
 			return 0;
 		}
 
-		this.m_players.delete(p);
-		this.m_players.delete(p2);
+		this.leave(p.id);
+		this.leave(p2.id);
 
 		chat.notifyMatch(p.id, p2.id, gameId, 1);
 		chat.notifyMatch(p2.id, p.id, gameId, 2);
@@ -144,10 +151,9 @@ export class PublicLobby extends Lobby
 	{
 		for (const player of this.players)
 		{
-			const retval = this.findPlayer(player);
+			const retval = await this.findPlayer(player);
 			if (retval == 1)
 			{
-
 				if (this.players.size < 2 && this.m_timerId)
 				{
 					Logger.log(`${this.players.size} in ${this.owner.name} ${this.id}, stopping matchmaking`);
@@ -163,9 +169,6 @@ export class PublicLobby extends Lobby
 				Logger.error(`error when starting matchmaking for ${player.name}, code: ${retval}`);
 				return;
 			}
-
-
 		}
-
 	}
 }

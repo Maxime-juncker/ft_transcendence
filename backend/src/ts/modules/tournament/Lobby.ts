@@ -6,7 +6,6 @@ import { getBotId } from 'modules/users/userManagment.js';
 import { GameServer } from "modules/game/GameServer.js";
 import shuffle from 'lodash/shuffle.js';
 import { WebSocket } from '@fastify/websocket';
-import { get } from 'lodash';
 
 export enum LobbyState
 {
@@ -256,6 +255,7 @@ export class Lobby
 
 	public async nextRound()
 	{
+		Logger.debug(this.m_playersLeft.length == 1);
 		if (this.m_playersLeft.length == 1)
 		{
 			this.tournamentEnd();
@@ -317,7 +317,7 @@ export class Lobby
 	private async tournamentEnd()
 	{
 		this.m_state = LobbyState.FINISHED;
-		Logger.log(`${this.m_owner.name} tournament: TOURNAMENT END`);
+		Logger.success(`${this.m_owner.name} tournament: TOURNAMENT END`);
 
 		const ids = this.getAllPlayerIds();
 		const winner = await getUserName(ids[0]);

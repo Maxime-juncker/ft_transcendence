@@ -64,17 +64,16 @@ export class TournamentManager
 			const lobby = this.m_lobbies[i];
 			if (lobby.id == lobbyId)
 			{
-				Logger.debug("User id:", userId, "is leaving lobby with id:", lobbyId);
 				const result = await this.m_lobbies[i].leave(userId);
 
 				if (lobby.players.size == 0 && !(lobby instanceof PublicLobby))
 				{
-					Logger.debug("Deleting lobby with id:", lobby.id);
+					Logger.log("Deleting lobby with id:", lobby.id);
 					this.m_lobbies.splice(i, 1);
 				}
 				else if (userId == lobby.owner.id && !(lobby instanceof PublicLobby))
 				{
-					Logger.debug("Owner left lobby with id:", lobby.id, "assigning new owner");
+					Logger.log("Owner left lobby with id:", lobby.id, "assigning new owner");
 					const newOwner = Array.from(lobby.players)[0];
 					this.m_lobbies[i].owner = newOwner;
 				}
@@ -128,10 +127,8 @@ export class TournamentManager
 			return { code: 409, data: { message: "you are already in a lobby" }};
 		}
 
-		Logger.debug("size", this.m_lobbies.length);
 		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			Logger.debug(this.m_lobbies[i].id)
 			if (this.m_lobbies[i].id == lobbyId)
 			{
 				return (this.m_lobbies[i].addPlayer(id, ws));
