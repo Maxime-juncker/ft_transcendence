@@ -5,6 +5,7 @@ import { GameServer } from 'modules/game/GameServer.js'
 import { GameInstance } from "modules/game/GameInstance.js";
 import { WebSocket } from '@fastify/websocket';
 import { getBlockUser } from 'modules/users/user.js';
+import { BlockchainContract } from 'modules/blockchain/blockChainTournament.js';
 
 export class PublicLobby extends Lobby
 {
@@ -16,7 +17,7 @@ export class PublicLobby extends Lobby
 
 	constructor()
 	{
-		super("0", null);
+		super("0", null, 0, new BlockchainContract());
 		this.m_timerId = null;
 		this.owner.name = "public";
 

@@ -82,10 +82,11 @@ export class GameInstance
 	private params: Parameters;
 	private time: number = 0;
 	private _gameId: string;
+	public onGameEndCallback?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void;
 
 	get gameId(): string { return this._gameId; }
 
-	constructor(gameMode: string, player1Id: number, player2Id: number, gameId: string)
+	constructor(gameMode: string, player1Id: number, player2Id: number, gameId: string, onGameEnd?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void)
 	{
 		this.params = new Parameters();
 		this._scoreUpdated = true;
@@ -93,6 +94,7 @@ export class GameInstance
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;
+		this.onGameEndCallback = onGameEnd;
 		this.initAndStart();
 	}
 
@@ -195,11 +197,21 @@ export class GameInstance
 
 	private async getWinner(score: number, player: number | null): Promise<void>
 	{
-		if (score >= this.params.POINTS_TO_WIN)
+		if (score >= this.params.POINTS_TO_WIN && !this._winner)
 		{
 			this._winner = player ? player : 0;
 			this._isRunning = false;
 			Logger.log(`${await getUserName(this._winner)} won the game (mode: ${this.mode})`);
+			
+			if (this.onGameEndCallback && this._Player1Id && this._Player2Id)
+			{
+				const loserId = this._winner === this._Player1Id ? this._Player2Id : this._Player1Id;
+				const winnerScore = this._winner === this._Player1Id ? this._gameState.player1Score : this._gameState.player2Score;
+				const loserScore = this._winner === this._Player1Id ? this._gameState.player2Score : this._gameState.player1Score;
+				this.onGameEndCallback(this._winner, loserId, winnerScore, loserScore);
+				this.onGameEndCallback = undefined;
+			}
+			
 			if (this.mode == 'duel' || this.mode == 'online' || this.mode == 'bot')
 			{
 				if (!this._Player1Id || !this._Player2Id)

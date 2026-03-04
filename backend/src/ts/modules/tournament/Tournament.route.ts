@@ -207,4 +207,15 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		const res = tournamentManager.getActiveTournaments();
 		return (reply.code(res.code).send(res.data));
 	});
+
+	fastify.get('/api/blockchain/tournaments',
+	async (request: FastifyRequest, reply: FastifyReply) =>
+	{
+		const contractAddress = tournamentManager.getContractAddress();
+		let tournaments = await contractAddress.getTournaments();
+		let array = Array.from(tournaments, ([address, winner ]) => ({address, winner}));
+
+		Logger.log("fetching finished tournaments from blockchain", array);
+		return reply.send(array);
+	});
 }

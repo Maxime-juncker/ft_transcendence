@@ -6,6 +6,7 @@ import { getBotId } from 'modules/users/userManagment.js';
 import { GameServer } from "modules/game/GameServer.js";
 import shuffle from 'lodash/shuffle.js';
 import { WebSocket } from '@fastify/websocket';
+import { BlockchainContract } from 'modules/blockchain/blockChainTournament';
 
 export enum LobbyState
 {
@@ -51,7 +52,6 @@ export class Player
 	}
 }
 
-
 export class Lobby
 {
 	private m_id:			string = "";
@@ -61,6 +61,8 @@ export class Lobby
 	protected m_playersLeft:	Array<Player> = new Array();
 	protected m_state:			LobbyState = LobbyState.WAITING;
 	protected m_matches:		Set<GameInstance> = new Set();
+	protected m_blockchainId: number = -1;
+	protected m_contractAddress: BlockchainContract;
 
 	get id(): string			{ return this.m_id; }
 	get owner(): Player			{ return this.m_owner; }
@@ -69,11 +71,13 @@ export class Lobby
 
 	set owner(value: Player) { this.m_owner = value; }
 
-	constructor(id: string, ownerWs: WebSocket | null)
+	constructor(id: string, ownerWs: WebSocket | null, blockchainTournamentId: number, private contractAddress: BlockchainContract)
 	{
 		this.m_id = id;
 		this.m_owner = new Player(ownerWs);
 		this.m_state = LobbyState.WAITING;
+		this.m_blockchainId = blockchainTournamentId;
+		this.m_contractAddress = contractAddress;
 	}
 
 	public async init(ownerId: number)
@@ -157,20 +161,23 @@ export class Lobby
 		{
 			return { code: 200, data: { message: "You are not part of the tournament" }};
 		}
-
-		if (player.ws)
-		{
-			player.ws.removeAllListeners();
-			if (player.ws.readyState === player.ws.OPEN)
-			{
-				player.ws.close();
-			}
-		}
 		
-		this.m_players.delete(player);
-		this.broadcast(this.getLobbyState());
+		if (this.m_state === LobbyState.WAITING)
+		{
+			if (player.ws)
+			{
+				player.ws.removeAllListeners();
+				if (player.ws.readyState === player.ws.OPEN)
+				{
+					player.ws.close();
+				}
+			}
+			
+			this.m_players.delete(player);
+			this.broadcast(this.getLobbyState());
+			Logger.success(player.name, "was removed from", this.m_owner.name, "lobby");
+		}
 
-		Logger.success(player.name, "was removed from", this.m_owner.name, "lobby");
 		return { code: 200, data: { message: "Success" }};
 	}
 
@@ -196,7 +203,9 @@ export class Lobby
 	public async registerWs(player: Player)
 	{
 		if (!player.ws)
-			return;
+		{
+			return ;
+		}
 
 		try
 		{
@@ -255,7 +264,6 @@ export class Lobby
 
 	public async nextRound()
 	{
-		Logger.debug(this.m_playersLeft.length == 1);
 		if (this.m_playersLeft.length == 1)
 		{
 			this.tournamentEnd();
@@ -264,39 +272,93 @@ export class Lobby
 
 		this.broadcastChat("The next round is starting! Get ready to fight!");
 
+		const botsToRemove: number[] = [];
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
 		{
 			const botId = await getBotId();
-			const p1 = this.m_playersLeft[i].id;
-			const p2 = this.m_playersLeft[i + 1].id;
+			const p1 = this.m_playersLeft[i];
+			const p2 = this.m_playersLeft[i + 1];
 
-			if (p1 == botId && p2 == botId)
+			if (p1.id == botId && p2.id == botId)
 			{
-				this.botVsBot(p1, p2);
+				const loserIndex = Math.random() < 0.5 ? i : i + 1;
+				botsToRemove.push(loserIndex);
+				Logger.log(`Bot vs Bot: winner at index ${loserIndex === i ? i + 1 : i}, loser at index ${loserIndex}`);
 			}
-			else if (p1 == botId || p2 == botId)
+			else if (p1.id == botId || p2.id == botId)
 			{
-				this.humanVsBot(p1 != botId ? p1 : p2, botId);
+				this.humanVsBot(p1.id != botId ? p1.id : p2.id, botId);
 			}
 			else
 			{
-				this.humanVsHuman(p1, p2);
+				this.humanVsHuman(p1.id, p2.id);
 			}
+		}
+
+		for (let i = botsToRemove.length - 1; i >= 0; i--)
+		{
+			this.m_playersLeft.splice(botsToRemove[i], 1);
+		}
+
+		if (this.m_playersLeft.length == 1)
+		{
+			this.tournamentEnd();
+			return ;
 		}
 
 		Logger.log(`${this.m_owner.name} tournament: NEW ROUND (${this.m_playersLeft.length} players left)`);
 	}
 
-	private botVsBot(p1: number, p2: number)
+	public async onMatchEnd(winnerId: number, loserId: number, winnerScore: number, loserScore: number, gameId: string)
 	{
-		const loser = Math.random() < 0.5 ? p1 : p2;
-		this.m_playersLeft = this.m_playersLeft.filter(p => p.id != loser);
+		for (const match of this.m_matches)
+		{
+			if (match.gameId === gameId)
+			{
+				this.m_matches.delete(match);
+				break;
+			}
+		}
+
+		const loserIndex = this.m_playersLeft.findIndex(p => p.id === loserId);
+		if (loserIndex !== -1)
+		{
+			this.m_playersLeft.splice(loserIndex, 1);
+		}
+
+		Logger.log(`Match ${gameId} ended: winner=${winnerId}, loser=${loserId}`);
+		Logger.log(`Matches left: ${this.m_matches.size}, Players left: ${this.m_playersLeft.length}`);
+
+		if (this.m_blockchainId !== undefined)
+		{
+			try
+			{
+				Logger.log(`Adding match result to blockchain: tournamentId=${this.m_blockchainId} player1=${winnerId} player2=${loserId} score1=${winnerScore} score2=${loserScore}`);
+				await this.m_contractAddress.addMatchResult(this.m_blockchainId, winnerId, loserId, winnerScore, loserScore);
+			}
+			catch (err)
+			{
+				Logger.error(`Failed to add match result to blockchain:`, err);
+			}
+		}
+
+		if (this.m_matches.size === 0 && this.m_playersLeft.length > 0)
+		{
+			Logger.log(`All matches completed, next round will start in 5 seconds...`);
+			this.broadcastChat("Round finished! Next round starting in 5 seconds...");
+			setTimeout(() => 
+			{
+				this.nextRound();
+			}, 5000);
+		}
 	}
 
 	private humanVsBot(playerId: number, botId: number)
 	{
 		const gameId = crypto.randomUUID();
-		const gameInstance = new GameInstance("bot", playerId, botId, gameId);
+		const gameInstance = new GameInstance("bot", playerId, botId, gameId,
+			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId)
+		);
 		this.m_matches.add(gameInstance);
 		GameServer.Instance?.activeGames.set(gameId, gameInstance);
 
@@ -306,7 +368,9 @@ export class Lobby
 	private humanVsHuman(player1Id: number, player2Id: number)
 	{
 		const gameId = crypto.randomUUID();
-		const gameInstance = new GameInstance("online", player1Id, player2Id, gameId);
+		const gameInstance = new GameInstance("online", player1Id, player2Id, gameId,
+			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId)
+		);
 		this.m_matches.add(gameInstance);
 		GameServer.Instance?.activeGames.set(gameId, gameInstance);
 
@@ -319,9 +383,35 @@ export class Lobby
 		this.m_state = LobbyState.FINISHED;
 		Logger.success(`${this.m_owner.name} tournament: TOURNAMENT END`);
 
-		const ids = this.getAllPlayerIds();
-		const winner = await getUserName(ids[0]);
-		this.broadcastChat(`The tournament is over! The winner is ${winner}! Congratulations!`);
+		if (this.m_playersLeft.length > 0)
+		{
+			const winnerId = this.m_playersLeft[0].id;
+
+			try
+			{
+				await this.m_contractAddress.finishTournament(this.m_blockchainId, winnerId);
+			}
+			catch (err)
+			{
+				Logger.error("Error updating tournament winner on blockchain:", err);
+			}
+		}
+
+		for (const player of this.m_players)
+		{
+			if (player.ws)
+			{
+				player.ws.removeAllListeners();
+				if (player.ws.readyState === player.ws.OPEN)
+				{
+					player.ws.close();
+				}
+			}
+		}
+
+		this.m_players.clear();
+		this.m_playersLeft = [];
+		this.m_matches.clear();
 	}
 }
 

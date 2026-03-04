@@ -4,16 +4,24 @@ import { WebSocket } from '@fastify/websocket';
 import { PublicLobby } from "./PublicLobby.js";
 import { Lobby, LobbyState } from 'modules/tournament/Lobby.js';
 import { log } from "console";
+import { BlockchainContract } from "modules/blockchain/blockChainTournament.js";
 
 
 export class TournamentManager
 {
 	private m_lobbies:	Lobby[] = [];
+	private contractAddress: BlockchainContract = new BlockchainContract();
 
 	constructor()
 	{
 		this.m_lobbies = [];
 		this.m_lobbies.push(new PublicLobby()); // default lobby for online games
+		this.contractAddress.init();
+	}
+
+	public getContractAddress(): BlockchainContract
+	{
+		return (this.contractAddress);
 	}
 
 	/**
@@ -22,6 +30,8 @@ export class TournamentManager
 	*/
 	public async createLobby(ownerId: number, ownerWs: WebSocket): Promise<DbResponse>
 	{
+		this.cleanupFinishedLobbies();
+
 		if (this.findPlayerInLobbies(ownerId))
 		{
 			return { code: 409, data: { message: "you can't create a lobby while in another one" }};
@@ -30,8 +40,19 @@ export class TournamentManager
 		if (ownerWs.readyState != ownerWs.OPEN)
 			return { code: 400, data: { message: "invalid websocket" }};
 
+		let blockchainTournamentId;
+		try
+		{
+			blockchainTournamentId = await this.contractAddress.createTournament();
+		}
+		catch (err)
+		{
+			Logger.error("Error creating lobby:", err);
+			return { code: 500, data: { message: "internal server error" }};
+		}
+
 		const id = crypto.randomUUID();
-		const lobby = new Lobby(id, ownerWs);
+		const lobby = new Lobby(id, ownerWs, blockchainTournamentId, this.contractAddress);
 		await lobby.init(ownerId);
 		this.m_lobbies.push(lobby);
 
@@ -45,6 +66,11 @@ export class TournamentManager
 	{
 		for (const lobby of this.m_lobbies)
 		{
+			if (lobby.state === LobbyState.FINISHED)
+			{
+				continue;
+			}
+			
 			for (const player of lobby.players)
 			{
 				if (player.id === id)
@@ -98,6 +124,8 @@ export class TournamentManager
 
 	public getActiveTournaments()
 	{
+		this.cleanupFinishedLobbies();
+		
 		const tournaments = [];
 
 		for (let i = 0; i < this.m_lobbies.length; i++)
@@ -120,8 +148,23 @@ export class TournamentManager
 		return { code: 200, data: tournaments };
 	}
 
+	private cleanupFinishedLobbies()
+	{
+		for (let i = this.m_lobbies.length - 1; i >= 0; i--)
+		{
+			const lobby = this.m_lobbies[i];
+			if (lobby.state === LobbyState.FINISHED && !(lobby instanceof PublicLobby))
+			{
+				Logger.log("Cleaning up finished lobby:", lobby.id);
+				this.m_lobbies.splice(i, 1);
+			}
+		}
+	}
+
 	public async addPlayerToLobby(id: number, ws: WebSocket | null, lobbyId: string): Promise<DbResponse>
 	{
+		this.cleanupFinishedLobbies();
+		
 		if (this.findPlayerInLobbies(id))
 		{
 			return { code: 409, data: { message: "you are already in a lobby" }};
@@ -137,7 +180,6 @@ export class TournamentManager
 
 		return { code: 404, data: { message: "[addPlayerToLobby] lobby not found" }};
 	}
-
 
 	/**
 	* create a new lobby

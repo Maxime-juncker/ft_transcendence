@@ -18,6 +18,7 @@ export class GameServer
 
 	public activeGames: Map<string, GameInstance> = new Map();
 	private bots: Map<string, Bot> = new Map();
+	private botsCreating: Set<string> = new Set();
 	private botId: number = 0;
 
 	constructor(private server: FastifyInstance)
@@ -169,6 +170,23 @@ export class GameServer
 				}
 				else if (mode === 'bot')
 				{
+					for (const [id, game] of this.activeGames)
+					{
+						if (game.mode === 'bot')
+						{
+							if ((game.player1Id == data.id || game.player2Id == data.id) && game.winner === null)
+							{
+								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
+								const playerSide = (game.player1Id == data.id) ? '1' : '2';
+								Logger.log(`Found existing bot game ${id} for: ${await getUserName(data.id)}`);
+								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
+									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+								return ;
+							}
+						}
+					}
+					
 					const gameId = crypto.randomUUID();
 					const botId = await getBotId();
 					const game = new GameInstance(mode, data.id, botId, gameId);
@@ -254,29 +272,19 @@ export class GameServer
 							}
 						}
 
-						if (!playerIdentified)
+						if (!playerIdentified && game.mode !== 'online')
 						{
-							if (game.mode !== 'online') 
+							if (!game.p1Ready)
 							{
-								if (!game.p1Ready)
-								{
-									game.p1Ready = true;
-								}
-								else if (!game.p2Ready)
-								{
-									game.p2Ready = true;
-								}
+								game.p1Ready = true;
+							}
+							else if (!game.p2Ready)
+							{
+								game.p2Ready = true;
 							}
 						}
 
-						if (game.mode === 'bot')
-						{
-							if (game.player1Id === this.botId) game.p1Ready = true;
-							if (game.player2Id === this.botId) game.p2Ready = true;
-						}
-
-						Logger.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
-						if (game.p1Ready && game.p2Ready)
+						if (game.p1Ready && game.p2Ready && !game.running)
 						{
 							Logger.log(`Game ${gameId} is now RUNNING`);
 							game.running = true;
@@ -294,14 +302,6 @@ export class GameServer
 					}
 
 					reply.status(200).send(game.state);
-
-					if (game.mode === 'bot' && game.reversedBuffer)
-					{
-						if (game.reversedBuffer)
-						{
-							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
-						}
-					}
 				}
 				else
 				{
@@ -335,11 +335,43 @@ export class GameServer
 					return ;
 				}
 
+				if (game.winner)
+				{
+					connection.send(JSON.stringify({ type: 'winner', winner: game.winner }));
+					connection.close();
+					return ;
+				}
+
 				if (!gameConnections.has(gameId))
 				{
 					gameConnections.set(gameId, new Map());
 				}
 				gameConnections.get(gameId)!.set(playerId, connection);
+
+				if (game.mode === 'bot' && game.reversedBuffer && playerId === '1')
+				{
+					if (!this.bots.has(gameId) && !this.botsCreating.has(gameId))
+					{
+						this.botsCreating.add(gameId);
+						this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+						this.botsCreating.delete(gameId);
+						
+						if (game.player1Id === this.botId)
+						{
+							game.p1Ready = true;
+						}
+						else if (game.player2Id === this.botId)
+						{
+							game.p2Ready = true;
+						}
+						
+						if (game.p1Ready && game.p2Ready && !game.running)
+						{
+							Logger.log(`Game ${gameId} is now RUNNING`);
+							game.running = true;
+						}
+					}
+				}
 
 				let time = Date.now();
 				const send = () =>
@@ -419,8 +451,17 @@ export class GameServer
 						{
 							const otherPlayerId = playerId === '1' ? '2' : '1';
 							const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
+							const loserId = playerId === '1' ? game.player1Id : game.player2Id;
 							game.winner = winnerId;
 							game.running = false;
+
+							if (game.onGameEndCallback && winnerId && loserId)
+							{
+								const winnerScore = playerId === '1' ? game.p2Score : game.p1Score;
+								const loserScore = playerId === '1' ? game.p1Score : game.p2Score;
+								game.onGameEndCallback(winnerId, loserId, winnerScore, loserScore);
+								game.onGameEndCallback = undefined;
+							}
 
 							const otherConnection = connections.get(otherPlayerId);
 							if (otherConnection)
