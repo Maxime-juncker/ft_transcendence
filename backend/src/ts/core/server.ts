@@ -23,16 +23,6 @@ export const rateLimitMed = {
 	timeWindow: '1 minute'
 }
 
-export const tokenSchema = {
-	body: {
-		type: "object",
-		properties: {
-			token: { type: "string" },
-		},
-		required: [ "token" ]
-	}
-}
-
 export const tokenHeader = 
 {
 	type: "object",

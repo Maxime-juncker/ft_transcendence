@@ -130,8 +130,9 @@ export function registerCmds(chat: Chat)
 		if (chat.user.gameRouter?.currentPage != "tournament-lobby")
 		{
 			chat.user.gameRouter.navigateTo('tournament-menu', '');
-			chat.displayMessage(serverReply("creating a tournament, please wait..."));
-			await chat.user.gameRouter.m_tournamentMenu?.createTournamentClickHandler();
+			chat.displayMessage(serverReply("invite only work in tournament lobby"));
+			chat.user.gameRouter.m_tournamentMenu?.createTournamentClickHandler();
+			return;
 		}
 		if (!chat.user.gameRouter.m_lobby || !chat.user.gameRouter.m_lobby.id)
 			return;

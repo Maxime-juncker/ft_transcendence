@@ -68,6 +68,7 @@ export class TournamentLobby
 	{
 		btn.classList.remove("btn-disable");
 		btn.disabled = false;
+		btn.style.display = 'block';
 	}
 
 	private disableBtn(btn: HTMLButtonElement)

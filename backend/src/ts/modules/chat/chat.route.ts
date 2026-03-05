@@ -2,19 +2,7 @@ import { core, chat, rateLimitMed, tournamentManager, getToken, tokenHeader } fr
 import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { getUserById, getUserByName, getBlockUser } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import { Logger } from 'modules/logger.js';
 import type WebSocket from 'ws';
-
-export const InviteSchema = {
-	body: {
-		type: "object",
-		properties: {
-			token: { type: "string" },
-
-		},
-		required: [ "token" ]
-	}
-}
 
 export async function chatRoutes(fastify: FastifyInstance)
 {

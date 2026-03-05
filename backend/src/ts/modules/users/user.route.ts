@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { core, tokenSchema, tokenHeader, getToken } from 'core/server.js';
+import { core, tokenHeader, getToken } from 'core/server.js';
 import * as user from 'modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';

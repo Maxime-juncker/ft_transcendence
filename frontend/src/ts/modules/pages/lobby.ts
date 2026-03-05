@@ -73,6 +73,7 @@ export class LobbyView extends ViewComponent
 		}
 
 		this.hideUserList();
+		await MainUser.Instance.refreshSelf();
 		MainUser.Instance.displayTutorial();
 
 		if (this.m_chat && !this.m_chat.isConnected)
@@ -126,7 +127,7 @@ export class LobbyView extends ViewComponent
 		userListParent.classList.add("hide");
 	}
 
-	private showListContainer(newState: ListState, chat: Chat, user: User)
+	private async showListContainer(newState: ListState, chat: Chat, user: User)
 	{
 		const userListParent = this.querySelector("#user-list-parent");
 		if (!userListParent) return;
@@ -145,7 +146,10 @@ export class LobbyView extends ViewComponent
 		if (this.state == ListState.USER && chat.conns)
 			this.fillUserList(chat.conns);
 		if (this.state == ListState.FRIEND)
-			this.fillUserList(user.friends);
+			{
+				await user.updateFriendList();
+				this.fillUserList(user.friends);
+			}
 	}
 
 	private fillUserList(users: User[])
@@ -159,7 +163,7 @@ export class LobbyView extends ViewComponent
 		text.style.color = "var(--color-white)";
 
 		users.forEach((conn: User) => {
-			if (conn.status == UserStatus.UNAVAILABLE)
+			if (conn.status == UserStatus.UNAVAILABLE && this.state != ListState.FRIEND)
 				return ;
 			const elt = new UserElement(conn, container, UserElementType.STANDARD, "user-template");
 			elt.updateHtml(conn);

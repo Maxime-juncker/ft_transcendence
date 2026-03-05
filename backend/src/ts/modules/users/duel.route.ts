@@ -1,4 +1,4 @@
-import { core, tokenSchema, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
+import { core, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
 import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';

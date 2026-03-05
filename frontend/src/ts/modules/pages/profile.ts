@@ -24,8 +24,7 @@ export class ProfileView extends ViewComponent
 		if (!MainUser.Instance)
 			return;
 
-		await MainUser.Instance.updateFriendList();
-		await MainUser.Instance.updateBlockList();
+		await MainUser.Instance.refreshSelf();
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
 
