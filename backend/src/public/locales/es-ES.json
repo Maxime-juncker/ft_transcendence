@@ -34,7 +34,7 @@
 		"confirm_2fa": "confirmación del código totp",
 		"chat": "ingrese un mensaje...",
 		"search": "investigar",
-		"type_confirm": "escriba confirmar para continuar",
+		"type_confirm": "escriba confirm para continuar",
 		"max_num": "número máximo de resultados",
 		"current_password": "contraseña actual...",
 		"new_password": "nueva contraseña..."
