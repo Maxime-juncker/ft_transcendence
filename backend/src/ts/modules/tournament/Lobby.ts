@@ -272,7 +272,7 @@ export class Lobby
 
 	public async nextRound()
 	{
-		this.broadcastChatLeft(`The next round is starting! ${this.m_playersLeft.length} remaining players. Get ready to fight!`);
+		this.broadcastChatLeft(`The next round is starting! ${this.m_playersLeft.length} players remains Get ready to fight!`);
 
 		const botsToRemove: number[] = [];
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)

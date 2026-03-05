@@ -51,6 +51,12 @@ export class TournamentManager
 			return { code: 500, data: { message: "internal server error" }};
 		}
 
+		if (ownerWs.readyState != ownerWs.OPEN)
+		{
+			Logger.warn("Websocket closed before lobby creation completed");
+			return { code: 400, data: { message: "invalid websocket" }};
+		}
+
 		const id = crypto.randomUUID();
 		const lobby = new Lobby(id, ownerWs, blockchainTournamentId, this.contractAddress);
 		await lobby.init(ownerId);
