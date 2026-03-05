@@ -80,7 +80,7 @@ export async function userRoutes(fastify: FastifyInstance)
 		)
 
 		fastify.post('/get_profile_token', {
-			schema: tokenSchema
+			schema: { headers: tokenHeader }
 		}, async (request: FastifyRequest, reply: FastifyReply) => {
 			const token = getToken(request.headers.authorization as string);
 			if (!token)
