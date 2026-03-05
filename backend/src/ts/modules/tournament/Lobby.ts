@@ -200,6 +200,14 @@ export class Lobby
 		}
 	}
 
+	private broadcastChatLeft(msg: string)
+	{
+		for (const p of this.m_players)
+		{
+			chat.sendTo(p.id, chat.serverMsg(msg));
+		}
+	}
+
 	public async registerWs(player: Player)
 	{
 		if (!player.ws)
@@ -251,7 +259,7 @@ export class Lobby
 		this.m_state = LobbyState.STARTED;
 		Logger.log(`${this.m_owner.name} tournament: STARTING`);
 
-		this.broadcastChat("The tournament is starting! Get ready to fight!");
+		this.broadcastChat("The tournament is starting! Good luck!");
 		this.nextRound();
 
 		return { code: 200, data: { message: "Success" }};
@@ -264,13 +272,7 @@ export class Lobby
 
 	public async nextRound()
 	{
-		if (this.m_playersLeft.length == 1)
-		{
-			this.tournamentEnd();
-			return ;
-		}
-
-		this.broadcastChat("The next round is starting! Get ready to fight!");
+		this.broadcastChatLeft(`The next round is starting! ${this.m_playersLeft.length} remaining players. Get ready to fight!`);
 
 		const botsToRemove: number[] = [];
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
@@ -344,12 +346,21 @@ export class Lobby
 
 		if (this.m_matches.size === 0 && this.m_playersLeft.length > 0)
 		{
-			Logger.log(`All matches completed, next round will start in 5 seconds...`);
-			this.broadcastChat("Round finished! Next round starting in 5 seconds...");
-			setTimeout(() => 
+			const nextRoundTime = 5;
+			Logger.log(`All matches completed for this round. Players left: ${this.m_playersLeft.length}`);
+
+			if (this.m_playersLeft.length > 1)
 			{
-				this.nextRound();
-			}, 5000);
+				this.broadcastChat(`Round finished! The next round is starting in ${nextRoundTime} seconds...`);
+				setTimeout(() => 
+				{
+					this.nextRound();
+				}, nextRoundTime * 1000);
+			}
+			else
+			{
+				this.tournamentEnd();
+			}
 		}
 	}
 
@@ -357,8 +368,8 @@ export class Lobby
 	{
 		const gameId = crypto.randomUUID();
 		const gameInstance = new GameInstance("bot", playerId, botId, gameId,
-			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId)
-		);
+			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId));
+
 		this.m_matches.add(gameInstance);
 		GameServer.Instance?.activeGames.set(gameId, gameInstance);
 
@@ -369,8 +380,8 @@ export class Lobby
 	{
 		const gameId = crypto.randomUUID();
 		const gameInstance = new GameInstance("online", player1Id, player2Id, gameId,
-			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId)
-		);
+			(winnerId, loserId, winnerScore, loserScore) => this.onMatchEnd(winnerId, loserId, winnerScore, loserScore, gameId));
+
 		this.m_matches.add(gameInstance);
 		GameServer.Instance?.activeGames.set(gameId, gameInstance);
 
@@ -385,11 +396,12 @@ export class Lobby
 
 		if (this.m_playersLeft.length > 0)
 		{
-			const winnerId = this.m_playersLeft[0].id;
+			const winner = this.m_playersLeft[0];
+			this.broadcastChat(`The tournament is over! Congratulations to ${winner.name} for winning!`);
 
 			try
 			{
-				await this.m_contractAddress.finishTournament(this.m_blockchainId, winnerId);
+				await this.m_contractAddress.finishTournament(this.m_blockchainId, winner.id);
 			}
 			catch (err)
 			{

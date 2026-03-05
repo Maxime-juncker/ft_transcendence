@@ -157,6 +157,16 @@ export class TournamentLobby
 				}
 				else if (data.message === "UPDATE")
 				{
+					this.lobby.loadingIndicator?.stopLoading();
+					if (this.startBtn && this.leaveBtn)
+					{
+						this.enableBtn(this.startBtn);
+						this.enableBtn(this.leaveBtn);
+					}
+					else
+					{
+						console.warn("missing btn");
+					}
 					await this.render(data);
 				}
 			}

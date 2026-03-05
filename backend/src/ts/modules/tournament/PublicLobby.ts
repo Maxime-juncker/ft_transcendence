@@ -106,8 +106,8 @@ export class PublicLobby extends Lobby
 	{
 		if (this.m_players.size <= 1)
 		{
-			Logger.log("not enought player to start public game");
-			return -2;
+			Logger.log("not enough player to start public game");
+			return 0;
 		}
 
 		const gameId = crypto.randomUUID();

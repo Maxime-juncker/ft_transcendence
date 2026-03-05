@@ -26,6 +26,7 @@ export class Parameters
 	public BALL_SPEED_INCREMENT: number = 0.05 / (this.FPS / 100);
 	public POINTS_TO_WIN: number = 11;
 	public MAX_ANGLE: number = 1.0;
+	public MAX_WALL_ANGLE: number = 0.65;
 
 	public MIN_Y_PADDLE: number = this.PADDLE_HEIGHT / 2;
 	public MAX_Y_PADDLE: number = 100 - this.MIN_Y_PADDLE;
@@ -54,6 +55,7 @@ export class Parameters
 		this.BALL_SPEED_INCREMENT = (process.env.BALL_SPEED_INCREMENT ? parseFloat(process.env.BALL_SPEED_INCREMENT) : 0.05) / (this.FPS / 100);
 		this.POINTS_TO_WIN = process.env.POINTS_TO_WIN ? parseFloat(process.env.POINTS_TO_WIN) : 11;
 		this.MAX_ANGLE = process.env.MAX_ANGLE ? parseFloat(process.env.MAX_ANGLE) : 1.0;
+		this.MAX_WALL_ANGLE = process.env.MAX_WALL_ANGLE ? parseFloat(process.env.MAX_WALL_ANGLE) : 0.65;
 
 		this.MIN_Y_PADDLE = this.PADDLE_HEIGHT / 2;
 		this.MAX_Y_PADDLE = 100 - this.MIN_Y_PADDLE;
@@ -150,7 +152,16 @@ export class GameInstance
 		else if (this.collideWall())
 		{
 			this._gameState.speedY = -this._gameState.speedY;
-			this.normalizeSpeed();
+			const maxSpeedY = this._speed * this.params.MAX_WALL_ANGLE;
+			if (Math.abs(this._gameState.speedY) > maxSpeedY)
+			{
+				this._gameState.speedY = maxSpeedY * Math.sign(this._gameState.speedY);
+				this._gameState.speedX = Math.sqrt(this._speed * this._speed - maxSpeedY * maxSpeedY) * Math.sign(this._gameState.speedX);
+			}
+			else
+			{
+				this.normalizeSpeed();
+			}
 		}
 	}
 
@@ -240,8 +251,18 @@ export class GameInstance
 
 	private collideWall(): boolean
 	{
-		return (this._gameState.ballY <= this.params.MIN_Y_BALL
-			|| this._gameState.ballY >= this.params.MAX_Y_BALL);
+		if (this._gameState.ballY < this.params.MIN_Y_BALL && this._gameState.speedY < 0)
+		{
+			this._gameState.ballY = this.params.MIN_Y_BALL;
+			return (true);
+		}
+		else if (this._gameState.ballY > this.params.MAX_Y_BALL && this._gameState.speedY > 0)
+		{
+			this._gameState.ballY = this.params.MAX_Y_BALL;
+			return (true);
+		}
+
+		return (false);
 	}
 
 	private collidePaddleLeft(): boolean

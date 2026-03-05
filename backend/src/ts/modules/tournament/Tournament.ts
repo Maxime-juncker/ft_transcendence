@@ -102,6 +102,7 @@ export class TournamentManager
 					Logger.log("Owner left lobby with id:", lobby.id, "assigning new owner");
 					const newOwner = Array.from(lobby.players)[0];
 					this.m_lobbies[i].owner = newOwner;
+					this.m_lobbies[i].broadcast(this.m_lobbies[i].getLobbyState());
 				}
 
 				return (result);
