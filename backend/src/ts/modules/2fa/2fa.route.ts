@@ -1,7 +1,7 @@
 import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp } from 'modules/2fa/totp.js'
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import { core, rateLimitMed } from 'core/server.js';
+import { core, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
 
 export async function totpRoutes(fastify: FastifyInstance)
 {
@@ -9,19 +9,28 @@ export async function totpRoutes(fastify: FastifyInstance)
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: {
-			body: {
+		schema:
+		{
+			headers: tokenHeader,
+			body:
+			{
 				type: 'object',
-				required: ['email', 'token'],
-				properties: {
-					token: { type: 'string' },
+				required: ['email'],
+				properties:
+				{
 					email: { type: 'string' },
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
 
-		const { email, token } = request.body as { email: string, token: string };
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+		{
+			return reply.status(400).send({ error: 'missing authorization header' });
+		}
+
+		const { email } = request.body as { email: string };
 
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
@@ -34,18 +43,17 @@ export async function totpRoutes(fastify: FastifyInstance)
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: {
-			body: {
-				type: 'object',
-				required: ['token'],
-				properties: {
-					token: { type: 'string' },
-				}
-			}
+		schema:
+		{
+			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
 
-		const { token } = request.body as { email: string, token: string };
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+		{
+			return reply.status(400).send({ error: 'missing authorization header' });
+		}
 
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
@@ -59,17 +67,22 @@ export async function totpRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['token', 'totp'],
+				required: ['totp'],
 				properties: {
-					token: { type: 'string' },
 					totp: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { totp, token } = request.body as { totp: string, token: string };
+		const { totp } = request.body as { totp: string };
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+		{
+			return reply.status(400).send({ error: 'missing authorization header' });
+		}
 
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)

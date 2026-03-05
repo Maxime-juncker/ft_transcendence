@@ -99,7 +99,7 @@ impl Game {
     ///Initiate websocket connection with game server
     async fn connect_wss(&self) -> Result<WsStream> {
         let url = format!(
-            "https://{}/api/start-game/{}",
+            "https://{}/api/start-game/{}", // TODO: token must be sent in header
             self.context.location, self.game_id
         );
         let mut body = std::collections::HashMap::new();

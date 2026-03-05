@@ -305,8 +305,7 @@ export class GameClient extends Utils
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ token: MainUser.Instance?.token })
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			});
 
 			if (!response.ok)

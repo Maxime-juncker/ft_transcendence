@@ -202,7 +202,7 @@ impl Infos {
         headers.insert("Content-Type", "application/json".parse()?);
         let token: &str = &self.authent.borrow().token.clone();
         map.insert("token", token);
-        let url = format!("https://{}/api/start-game/{}", self.context.location, game_id);
+        let url = format!("https://{}/api/start-game/{}", self.context.location, game_id); // TODO: token must be sent in header
         let res = self
             .context
             .client

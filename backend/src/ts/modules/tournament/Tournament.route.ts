@@ -1,4 +1,4 @@
-import { core, chat, tournamentManager, rateLimitMed, rateLimitHard } from 'core/server.js';
+import { core, chat, tournamentManager, rateLimitMed, rateLimitHard, tokenHeader } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
@@ -110,15 +110,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		{
 			schema:
 			{
-				headers:
-				{
-					type: "object",
-					properties:
-					{
-						authorization: { type: "string" }
-					},
-					required: ["authorization"]
-				},
+				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -161,15 +153,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 	fastify.post('/leave', {
 			schema:
 			{
-				headers:
-				{
-					type: "object",
-					properties:
-					{
-						authorization: { type: "string" }
-					},
-					required: ["authorization"]
-				},
+				headers: tokenHeader,
 				body:
 				{
 					type: "object",

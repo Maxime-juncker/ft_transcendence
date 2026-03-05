@@ -202,15 +202,7 @@ export class GameServer
 		{
 			schema:
 			{
-				body:
-				{
-					type: "object",
-					properties:
-					{
-						token: { type: "string" },
-					},
-					required: ["token"]
-				},
+				headers: tokenHeader,
 				params:
 				{
 					type: "object",
@@ -227,8 +219,11 @@ export class GameServer
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
-				const body = request.body as { token: string };
-				const token = body.token;
+				const token = getToken(request.headers.authorization as string);
+				if (!token)
+				{
+					return reply.status(400).send({ error: 'missing authorization header' });
+				}
 
 				const data: any = await jwtVerif(token, core.sessionKey);
 				if (!data)
