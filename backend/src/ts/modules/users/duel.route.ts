@@ -1,9 +1,10 @@
-import { core, tokenSchema, rateLimitMed } from 'core/server.js';
+import { core, tokenSchema, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
 import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
 const duelSchema = {
+	headers: tokenHeader,
 	body: {
 		type: 'object',
 		properties: {
@@ -16,15 +17,19 @@ const duelSchema = {
 
 export async function duelRoutes(fastify: FastifyInstance)
 {
-
 	fastify.post('/list', {
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: tokenSchema
+		schema:
+		{
+			headers: tokenHeader
+		}
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "invalid token" });
@@ -39,7 +44,10 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token, id } = request.body as { token: string, id: number };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+			const { id } = request.body as { id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "invalid token" });
@@ -54,7 +62,10 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token, id } = request.body as { token: string, id: number };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+			const { id } = request.body as { id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "invalid token" });
@@ -69,7 +80,10 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token, id } = request.body as { token: string, id: number };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+			const { id } = request.body as { id: number };
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "invalid token" });

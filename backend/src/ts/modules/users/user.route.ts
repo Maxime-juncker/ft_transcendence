@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { core, DbResponse, tokenSchema } from 'core/server.js';
+import { core, tokenSchema, tokenHeader, getToken } from 'core/server.js';
 import * as user from 'modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -13,8 +13,12 @@ export async function userRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/blocked_users', {
+		schema: { headers: tokenHeader }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "token is invalid" });
@@ -78,7 +82,9 @@ export async function userRoutes(fastify: FastifyInstance)
 		fastify.post('/get_profile_token', {
 			schema: tokenSchema
 		}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string};
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
 
 			const res = await mgmt.loginSession(token);
 			if (res.code != 200)
@@ -174,17 +180,12 @@ export async function userRoutes(fastify: FastifyInstance)
 		});
 
 	fastify.post('/complete_tutorial', {
-		schema: {
-			body: {
-				type: "object",
-				properties: {
-					token: { type: "string" }
-				},
-				required: ["token"]
-			}
-		}
+		schema: { headers: tokenHeader }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "invalid token" });
