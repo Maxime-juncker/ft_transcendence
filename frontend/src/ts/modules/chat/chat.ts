@@ -123,7 +123,7 @@ export class Chat
 		if (!this.m_chatInput || !MainUser.Instance || MainUser.Instance.id == -1)
 			return;
 
-		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat?userid=${MainUser.Instance.token}`);
+		this.m_ws = new WebSocket(`wss://${window.location.host}/api/chat`);
 		this.m_ws.onmessage = (event:any) => this.receiveMessage(event);
 		this.m_isConnected = true;
 	}
@@ -242,7 +242,7 @@ export class Chat
 		{
 			fetch("/api/chat/healthCallback", {
 				method: "POST",
-				headers: { 'content-type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 				body: JSON.stringify({
 					token: MainUser.Instance?.token
 				})

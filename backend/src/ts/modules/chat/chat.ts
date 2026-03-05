@@ -1,8 +1,6 @@
 import { core, DbResponse, tournamentManager } from 'core/server.js';
 import { getUserById, getBlockUser, getUserName } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
-import * as utils from 'utils.js';
-import { FastifyRequest } from 'fastify';
 import { Logger } from 'modules/logger.js';
 import { logoutUser } from 'modules/users/userManagment.js';
 import { clearDuel } from 'modules/users/duel.js';
@@ -208,12 +206,11 @@ export class Chat
 	 * connect user to chat
 	 * @param ws websocket of user
 	 */
-	public async chatSocket(ws: WebSocket, request: FastifyRequest)
+	public async chatSocket(ws: WebSocket, token: string)
 	{
 		try {
 			ws.send(this.serverMsg("welcome to room chat!"));
 
-			const token = utils.getUrlVar(request.url)["userid"];
 			const data: any = await jwtVerif(token, core.sessionKey);
 			if (!data)
 				throw new Error("invalid token");
