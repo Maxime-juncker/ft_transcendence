@@ -1,6 +1,5 @@
 import { AuthSource, MainUser } from "modules/user/User.js"
 import { HeaderSmall } from "./HeaderSmall.js";
-import { hashString } from "modules/utils/sha256.js";
 import { setPlaceHolderText } from "modules/utils/utils.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
 import { Router } from "modules/router/Router.js"
@@ -44,6 +43,7 @@ export class SettingsView extends ViewComponent
 		}
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
+		await MainUser.Instance.refreshSelf();
 
 		this.usernameInput = this.querySelector("#username-input") as HTMLInputElement;
 		this.emailInput = this.querySelector("#email-input") as HTMLInputElement;
@@ -185,10 +185,10 @@ export class SettingsView extends ViewComponent
 		const res = await fetch("/api/user/update/passw", {
 			method: "POST",
 			headers: {
-				'content-type': 'application/json'
+				'content-type': 'application/json',
+				'Authorization': `Bearer ${MainUser.Instance.token}`
 			},
 			body: JSON.stringify({
-				token: MainUser.Instance.token,
 				oldPass: oldPass,
 				newPass: newPassw
 			})
@@ -244,13 +244,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/name", {
 				method: "POST",
-				headers: {
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify({
-					token: MainUser.Instance.token,
-					name: this.usernameInput.value
-				})
+				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				body: JSON.stringify({ name: this.usernameInput.value })
 			});
 			const data = await res.json();
 			if (res.status != 200)
@@ -263,13 +258,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/email", {
 				method: "POST",
-				headers: {
-					'content-type': 'application/json'
-				},
-				body: JSON.stringify({
-					token: MainUser.Instance.token,
-					email: this.emailInput.value
-				})
+				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				body: JSON.stringify({ email: this.emailInput.value })
 			});
 			const data = await res.json();
 			if (res.status != 200)

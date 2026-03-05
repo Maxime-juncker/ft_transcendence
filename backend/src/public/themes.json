@@ -86,6 +86,20 @@
 		},
 
 		{
+			"name": "Catppuccin-Mocha",
+
+			"dark":		"#2a2b3d",
+			"darker":	"#1e1e2f",
+			"darkest":	"#11111b",
+			"red":		"#cba6f7",
+			"yellow":	"#f5c2e7",
+			"blue":		"#ca9ee6",
+			"white":	"#f2cdcd",
+			"green":	"#b4befe",
+			"purple":	"#ca9ee6"
+		},
+
+		{
 			"name": "Catppuccin-Macchiato",
 
 			"dark":		"#414559",

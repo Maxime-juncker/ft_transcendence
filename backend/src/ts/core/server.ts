@@ -2,10 +2,11 @@ import { initFastify } from 'core/init.js';
 import { Core } from './core.js';
 import { ServerSideRendering } from 'modules/ssr/ServerSideRendering.js';
 import { GameServer } from 'modules/game/GameServer.js';
-import { TournamentServer } from 'modules/tournament/TournamentServer.js';
 import { initVault } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
 import { Chat } from 'modules/chat/chat.js';
+import { TournamentManager } from 'modules/tournament/Tournament.js';
+
 
 export interface DbResponse {
 	code:	number;
@@ -22,14 +23,14 @@ export const rateLimitMed = {
 	timeWindow: '1 minute'
 }
 
-export const tokenSchema = {
-	body: {
-		type: "object",
-		properties: {
-			token: { type: "string" },
-		},
-		required: [ "token" ]
-	}
+export const tokenHeader = 
+{
+	type: "object",
+	properties:
+	{
+		authorization: { type: "string" }
+	},
+	required: ["authorization"]
 }
 
 export function getDateFormated()
@@ -37,10 +38,24 @@ export function getDateFormated()
 	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
 }
 
+export function getToken(authorization: string): string | null
+{
+	if (!authorization || !authorization.startsWith('Bearer '))
+	{
+		Logger.error("missing authorization header");
+		return null;
+	}
+	const token = authorization.replace('Bearer ', '');
+	return token;
+}
+
 export const core = new Core();
 export const chat = new Chat();
 
 await initVault();
+
+export const tournamentManager = new TournamentManager();
+
 
 await core.createServer();
 await initFastify();
@@ -57,11 +72,8 @@ const routes = [
 ]
 
 new ServerSideRendering(core.fastify, routes);
-const gameServer = new GameServer(core.fastify);
+export const gameServer = new GameServer(core.fastify);
 await gameServer.init();
-const tournamentServer = new TournamentServer(core.fastify);
-tournamentServer.setActiveGamesMap(gameServer.activeGames);
-await tournamentServer.init();
 
 const signals = ['SIGINT', 'SIGTERM'] as const;
 signals.forEach(signal => {

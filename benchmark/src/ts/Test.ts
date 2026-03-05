@@ -43,10 +43,7 @@ async function tokenExchange(i: number)
 
 	const res = await fetch(`${host}/api/user/get_profile_token`, {
 		method: "POST",
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({
-			token: user.token
-		})
+		headers: { 'Authorization': `Bearer ${user.token}` },
 	});
 	const data = await res.json();
 	if (res.status == 200)
@@ -142,10 +139,7 @@ async function logout(i: number): Promise<TestResult>
 
 	const res = await fetch(`${host}/api/user/logout`, {
 		method: "POST",
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({
-			token: user.token
-		})
+		headers: { 'Authorization': `Bearer ${user.token}` },
 	})
 	return { code: res.status, data: await res.json()}
 }
@@ -168,9 +162,8 @@ async function addFriends(i: number)
 
 		await fetch(`${host}/api/friends/send_request`, {
 			method: "POST",
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${user.token}` },
 			body: JSON.stringify({
-				token: user.token,
 				friend_id: player.id
 			})
 		});
@@ -199,7 +192,7 @@ async function acceptFriends(i: number)
 
 		var response = await fetch(`${host}/api/friends/accept`, {
 			method: "POST",
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${user.token}` },
 			body: JSON.stringify({
 				token: user.token,
 				friend_id: friendId

@@ -1,158 +1,213 @@
-import { AuthSource } from 'modules/oauth2/routes.js';
-import { getBot } from 'modules/users/userManagment.js';
+import { DbResponse } from "core/server.js";
+import { Logger } from "modules/logger.js";
+import { WebSocket } from '@fastify/websocket';
+import { PublicLobby } from "./PublicLobby.js";
+import { Lobby, LobbyState } from 'modules/tournament/Lobby.js';
+import { log } from "console";
+import { BlockchainContract } from "modules/blockchain/blockChainTournament.js";
 
-class Match
+
+export class TournamentManager
 {
-	constructor(public readonly _player1Id: number,
-		public readonly _player2Id: number,
-		public _score1: number = 0,
-		public _score2: number = 0,
-		private _winner: number | null = null) {}
+	private m_lobbies:	Lobby[] = [];
+	private contractAddress: BlockchainContract = new BlockchainContract();
 
-	public static isBot(id: number): boolean
+	constructor()
 	{
-		return (id === AuthSource.BOT);
+		this.m_lobbies = [];
+		this.m_lobbies.push(new PublicLobby()); // default lobby for online games
+		this.contractAddress.init();
 	}
 
-	set score1(score: number) { this._score1 = score; }
-	set score2(score: number) { this._score2 = score; }
-
-	public isBotVsBot(): boolean
+	public getContractAddress(): BlockchainContract
 	{
-		return (Match.isBot(this._player1Id) && Match.isBot(this._player2Id));
+		return (this.contractAddress);
 	}
 
-	public isHumanVsBot(): boolean
+	/**
+	* create a new lobby
+	* @param ownerId the owner id of the lobby
+	*/
+	public async createLobby(ownerId: number, ownerWs: WebSocket): Promise<DbResponse>
 	{
-		return (Match.isBot(this._player1Id) !== Match.isBot(this._player2Id));
+		this.cleanupFinishedLobbies();
+
+		if (this.findPlayerInLobbies(ownerId))
+		{
+			return { code: 409, data: { message: "you can't create a lobby while in another one" }};
+		}
+
+		if (ownerWs.readyState != ownerWs.OPEN)
+			return { code: 400, data: { message: "invalid websocket" }};
+
+		let blockchainTournamentId;
+		try
+		{
+			blockchainTournamentId = await this.contractAddress.createTournament();
+		}
+		catch (err)
+		{
+			Logger.error("Error creating lobby:", err);
+			return { code: 500, data: { message: "internal server error" }};
+		}
+
+		const id = crypto.randomUUID();
+		const lobby = new Lobby(id, ownerWs, blockchainTournamentId, this.contractAddress);
+		await lobby.init(ownerId);
+		this.m_lobbies.push(lobby);
+
+		const initialState = lobby.getLobbyState();
+		ownerWs.send(JSON.stringify({ ...initialState, message: "created", lobbyId: id}));
+		Logger.success(lobby.owner.name, "created tournament, id:", lobby.id);
+		return { code: 200, data: { message: "lobby created", id: id }};
 	}
 
-	public getBotPlayer(): number | null
+	private findPlayerInLobbies(id: number): boolean
 	{
-		if (Match.isBot(this._player1Id))
+		for (const lobby of this.m_lobbies)
 		{
-			return (this._player1Id);
-		}
-		else if (Match.isBot(this._player2Id))
-		{
-			return (this._player2Id);
-		}
-
-		return (null);
-	}
-
-	public getHumanPlayer(): number | null
-	{
-		if (!Match.isBot(this._player1Id))
-		{
-			return (this._player1Id);
-		}
-		else if (!Match.isBot(this._player2Id))
-		{
-			return (this._player2Id);
-		}
-		return (null);
-	}
-
-	get winner(): number | null { return (this._winner); }
-
-	set winner(winner: number)
-	{
-		if (this._winner !== null)
-		{
-			throw new Error('Winner has already been set for this match.');
-		}
-		else if (winner !== this._player1Id && winner !== this._player2Id)
-		{
-			throw new Error('Winner must be one of the players in the match.');
-		}
-
-		this._winner = winner;
-	}
-}
-
-export class Tournament
-{
-	private _players: Array<number> = [];
-	private _matches: Array<Match> = [];
-	private _next: Tournament | null = null;
-	public isFinished: boolean = false;
-
-	private constructor(players: Array<number>, public readonly _depth: number = 0)
-	{
-		this._players = players;
-		if (this._players.length > 1)
-		{
-			this.generateMatches();
-		}
-	}
-
-	private generateMatches(): void
-	{
-		for (let i = 0; i < this._players.length; i += 2)
-		{
-			this._matches.push(new Match(this._players[i], this._players[i + 1]));
-		}
-	}
-
-	public static async create(inputs: Set<number>, depth: number = 0): Promise<Tournament>
-	{
-		let players: Array<number>;
-
-		if (depth === 0)
-		{
-			const nbBot = this.calculateNbBot(inputs.size);
-			const bot = await getBot();
-			for (let i = 0; i < nbBot; i++)
+			if (lobby.state === LobbyState.FINISHED)
 			{
-				inputs.add(bot);
+				continue;
 			}
-			players = Tournament.shuffleArray(Array.from(inputs));
-		}
-		else
-		{
-			players = Array.from(inputs);
+			
+			for (const player of lobby.players)
+			{
+				if (player.id === id)
+				{
+					return (true);
+				}
+			}
 		}
 
-		return (new Tournament(players, depth));
+		return (false);
 	}
 
-	private static calculateNbBot(size: number): number
+	public async leaveLobby(userId: number, lobbyId: string): Promise<DbResponse>
 	{
-		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
-	}
-
-	private static shuffleArray<T>(array: T[]): T[]
-	{
-		for (let i = array.length - 1; i > 0; i--)
+		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			const j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]];
+			const lobby = this.m_lobbies[i];
+			if (lobby.id == lobbyId)
+			{
+				const result = await this.m_lobbies[i].leave(userId);
+
+				if (lobby.players.size == 0 && !(lobby instanceof PublicLobby))
+				{
+					Logger.log("Deleting lobby with id:", lobby.id);
+					this.m_lobbies.splice(i, 1);
+				}
+				else if (userId == lobby.owner.id && !(lobby instanceof PublicLobby))
+				{
+					Logger.log("Owner left lobby with id:", lobby.id, "assigning new owner");
+					const newOwner = Array.from(lobby.players)[0];
+					this.m_lobbies[i].owner = newOwner;
+					this.m_lobbies[i].broadcast(this.m_lobbies[i].getLobbyState());
+				}
+
+				return (result);
+			}
 		}
 
-		return (array);
+		return { code: 404, data: { message: "[leaveLobby] lobby not found" }};
 	}
 
-	get players(): Array<number>	{ return (this._players); }
-	get matches(): Array<Match>		{ return (this._matches); }
-	get next(): Tournament | null	{ return (this._next); }
-
-	set next(tournament: Tournament)
+	public getAllLobbyIds()
 	{
-		if (this._next)
-		{
-			throw new Error('Next tournament has already been set.');
-		}
+		var ids: string[] = [];
 
-		this._next = tournament;
+		for (let i = 0; i < this.m_lobbies.length; i++)
+		{
+			ids.push(this.m_lobbies[i].id);
+		}
+		return { code: 200, data: { message: "Success", ids: ids }};
 	}
 
-	public destroy(): void
+	public getActiveTournaments()
 	{
-		if (this._next)
+		this.cleanupFinishedLobbies();
+		
+		const tournaments = [];
+
+		for (let i = 0; i < this.m_lobbies.length; i++)
 		{
-			this._next!.destroy();
-			this._next = null;
+			const lobby = this.m_lobbies[i];
+			if (lobby.id === "0" || lobby.id === "" || lobby.state !== 0)
+			{
+				continue ;
+			}
+
+			tournaments.push
+			({
+				id: lobby.id,
+				ownerName: lobby.owner.name,
+				playerCount: lobby.players.size,
+				type: "tournament"
+			});
 		}
+
+		return { code: 200, data: tournaments };
+	}
+
+	private cleanupFinishedLobbies()
+	{
+		for (let i = this.m_lobbies.length - 1; i >= 0; i--)
+		{
+			const lobby = this.m_lobbies[i];
+			if (lobby.state === LobbyState.FINISHED && !(lobby instanceof PublicLobby))
+			{
+				Logger.log("Cleaning up finished lobby:", lobby.id);
+				this.m_lobbies.splice(i, 1);
+			}
+		}
+	}
+
+	public async addPlayerToLobby(id: number, ws: WebSocket | null, lobbyId: string): Promise<DbResponse>
+	{
+		this.cleanupFinishedLobbies();
+		
+		if (this.findPlayerInLobbies(id))
+		{
+			return { code: 409, data: { message: "you are already in a lobby" }};
+		}
+
+		for (let i = 0; i < this.m_lobbies.length; i++)
+		{
+			if (this.m_lobbies[i].id == lobbyId)
+			{
+				return (this.m_lobbies[i].addPlayer(id, ws));
+			}
+		}
+
+		return { code: 404, data: { message: "[addPlayerToLobby] lobby not found" }};
+	}
+
+	/**
+	* create a new lobby
+	* @param ownerId the owner id of the lobby
+	*/
+	public startLobby(id: number, lobbyId: string)
+	{
+		for (let i = 0; i < this.m_lobbies.length; i++)
+		{
+			const lobby = this.m_lobbies[i];
+			if (lobby.id == lobbyId)
+			{
+				if (lobby.state != LobbyState.WAITING)
+				{
+					return { code: 409, data: { message: "lobby has already started" }};
+				}
+
+				if (lobby.owner.id != id)
+				{
+					return { code: 403, data: { message: "you are not the owner of the tournament" }};
+				}
+
+				return (lobby.start(id)); //! COULD NEED AWAIT HERE
+			}
+		}
+
+		return { code: 404, data: { message: "[startLobby] lobby not found" }};
 	}
 }
+

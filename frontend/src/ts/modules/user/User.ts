@@ -176,11 +176,8 @@ export class User
 
 		var response = await fetch("/api/user/set_status", {
 			method: "POST",
-			headers: {
-				'content-type': 'application/json'
-			},
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				new_status: this.m_status.toString()
 			})
 		});
@@ -193,10 +190,7 @@ export class User
 			return;
 		const response = await fetch("/api/user/logout", {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				token: this.m_token,
-			})
+			headers: { 'Authorization': `Bearer ${this.m_token}` }
 		});
 		return response;
 	}
@@ -237,8 +231,7 @@ export class User
 		this.m_blockUsr = [];
 		const response = await fetch('/api/user/blocked_users', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ token: this.m_token })
+			headers: { 'Authorization': `Bearer ${this.m_token}` },
 		});
 		if (response.status != 200)
 			return response.status;
@@ -283,9 +276,8 @@ export class User
 	protected async addFriendToDB(friendId: number): Promise<number> {
 		var response = await fetch("/api/friends/send_request", {
 			method: "POST",
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				friend_id: friendId
 			})
 		});
@@ -298,7 +290,7 @@ export class User
 
 		var response = await fetch("/api/user/upload/avatar", {
 			method: "POST",
-			headers: { 'token': this.m_token },
+			headers: { 'Authorization': `Bearer ${this.m_token}` },
 			body: file
 		});
 		var data = await response.json();
@@ -381,10 +373,7 @@ export class MainUser extends User
 			tutorial.style.display = "none";
 			fetch('/api/user/complete_tutorial', {
 				method: "POST",
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					token: this.token
-				})
+				headers: { 'Authorization': `Bearer ${this.m_token}` }
 			});
 			this.finishedTutorial = false;
 		});
@@ -563,9 +552,8 @@ export class MainUser extends User
 		console.log("removing friend")
 		const response = await fetch('/api/friends/remove', {
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				friend_id: user.id
 			})
 		});
@@ -579,9 +567,8 @@ export class MainUser extends User
 		console.log("accepting friend")
 		const response = await fetch('/api/friends/accept', {
 			method: "POST",
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				friend_id: user.id
 			})
 		});
@@ -617,9 +604,8 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/reset", {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				email: this.email,
 			})
 			
@@ -635,10 +621,7 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/remove", {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				token: this.m_token
-			})
+			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			
 		});
 
@@ -652,9 +635,8 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/validate", {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			body: JSON.stringify({
-				token: this.m_token,
 				totp: totp,
 			})
 			
@@ -666,10 +648,7 @@ export class MainUser extends User
 	{
 		const res = await fetch ('api/user/delete', {
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				token: this.m_token
-			})
+			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 		});
 		this.logout();
 		return res.status;
@@ -679,10 +658,7 @@ export class MainUser extends User
 	{
 		const res = await fetch ('api/user/reset', {
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				token: this.m_token
-			})
+			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 		});
 		return res.status;
 	}
@@ -693,10 +669,7 @@ export class MainUser extends User
 			return -1;
 		const res = await fetch("/api/chat/removeQueue", { 
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				token: this.m_token
-			})
+			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 		});
 		return res.status;
 	}
@@ -705,9 +678,8 @@ export class MainUser extends User
 	{
 		const res = await fetch('/api/user/block', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			body: JSON.stringify({ 
-				token: this.m_token,
 				id: id
 			})
 		});
@@ -720,9 +692,8 @@ export class MainUser extends User
 		console.log("unblocking");
 		const res = await fetch('/api/user/unblock', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			body: JSON.stringify({ 
-				token: this.m_token,
 				id: id
 			})
 		});

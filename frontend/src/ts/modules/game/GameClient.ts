@@ -9,7 +9,7 @@ enum Params
 {
 	BACKGROUND_OPACITY = '0.4',
 	COLOR = 'var(--color-white)',
-	COUNTDOWN_START = 3,
+	COUNTDOWN_START = 0,
 	IPS = 60,
 }
 
@@ -71,6 +71,8 @@ export class GameClient extends Utils
 	private	m_prevP2Score:		number | null = null;
 	private m_router:			GameRouter;
 	private m_endTimeout:		any | null = null;
+	private m_chat:				Chat | null = null;
+	private m_gameFeedbackCb:	((json: any) => void) | null = null;
 
 	private paddleHeight: number = 15;
 	private paddleWidth: number = 2;
@@ -95,7 +97,9 @@ export class GameClient extends Utils
 		this.createPlayerHtml();
 		if (chat)
 		{
-			chat.onGameCreated((json) => this.createGameFeedback(json));
+			this.m_chat = chat;
+			this.m_gameFeedbackCb = (json: any) => this.createGameFeedback(json);
+			chat.onGameCreated(this.m_gameFeedbackCb);
 		}
 
 		if (this.isModeValid() && this.m_user)
@@ -119,12 +123,15 @@ export class GameClient extends Utils
 		return elt;
 	}
 
-	private createPlayerHtml()
+	private async createPlayerHtml()
 	{
 		if (!this.m_playerContainer || !this.m_user || !this.m_user2)
 		{
 			return ;
 		}
+
+		await MainUser.Instance?.updateSelf();
+
 		this.m_playerContainer.innerHTML = "";
 		this.m_player1 = this.initPlayerHtml(this.m_user);
 		this.m_player2 = this.initPlayerHtml(this.m_user2);
@@ -157,8 +164,6 @@ export class GameClient extends Utils
 			this.HTMLelements.set(element.id, element);
 			element.setAttribute('hidden', '');
 		});
-
-		this.setContent('searching-msg', Msgs.SEARCHING, true);
 	}
 
 	private async createGameFeedback(json: any)
@@ -199,12 +204,13 @@ export class GameClient extends Utils
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: this.mode, token: MainUser.Instance?.token }),
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify({ mode: this.mode }),
 			});
 
 			if (response.status == 202)
 			{
+				this.setContent('searching-msg', Msgs.SEARCHING, true);
 				return ;
 			}
 
@@ -296,13 +302,10 @@ export class GameClient extends Utils
 	{
 		if (!gameId)
 		{
-			if (!this.m_user) return;
-
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ token: MainUser.Instance?.token })
+				headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			});
 
 			if (!response.ok)
@@ -413,7 +416,7 @@ export class GameClient extends Utils
 		}
 	}
 
-	private updateGameState(data: string | ArrayBuffer): void
+	private async updateGameState(data: string | ArrayBuffer): Promise<void>
 	{
 		if (typeof data === 'string')
 		{
@@ -422,6 +425,8 @@ export class GameClient extends Utils
 			{
 				this.end = true;
 				this.showWinner(message.winner);
+				await new Promise(resolve => setTimeout(resolve, 5000));
+				this.m_router.navigateTo('home', '');
 			}
 		}
 		else
@@ -484,6 +489,7 @@ export class GameClient extends Utils
 				winnerName = usr.name;
 			}
 		}
+
 		await this.m_user?.updateSelf();
 		await this.m_user2?.updateSelf();
 		this.createPlayerHtml();
@@ -496,32 +502,6 @@ export class GameClient extends Utils
 
 		this.setInnerHTML('winner-msg', `${winnerName}<br>${Msgs.WIN}`);
 		this.setColor('winner-msg', Params.COLOR, undefined, true);
-
-		if (this.mode === 'online')
-		{
-			const isWinner = this.m_user && winner === this.m_user.id;
-			if (isWinner)
-			{
-				this.m_endTimeout = setTimeout(() =>
-				{
-					this.setInnerHTML('winner-msg', `${winnerName}<br>wins the tournament!`);
-					this.setColor('winner-msg', Params.COLOR, undefined, true);
-					
-					setTimeout(() =>
-					{
-						this.m_router.navigateTo('tournament-menu', '');
-					}, 5000);
-
-				}, 5000);
-			}
-			else
-			{
-				this.m_endTimeout = setTimeout(() =>
-				{
-					this.m_router.navigateTo('tournament-menu', '');
-				}, 3000);
-			}
-		}
 	}
 
 	private async removeQueue(): Promise<void>
@@ -534,9 +514,25 @@ export class GameClient extends Utils
 		await fetch("/api/chat/removeQueue",
 		{
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ token: this.m_user.token })
+			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 		});
+	}
+
+	private async leaveTournament(): Promise<void>
+	{
+		try
+		{
+			await fetch('/api/tournament/leave',
+			{
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				body: JSON.stringify({ lobbyId: this.m_router.currentTournamentId })
+			});
+		}
+		catch (e)
+		{
+			console.error('Failed to leave tournament:', e);
+		}
 	}
 
 	public async destroy(): Promise<void>
@@ -558,5 +554,13 @@ export class GameClient extends Utils
 		document.removeEventListener('keydown', this.keydownHandler);
 		document.removeEventListener('keyup', this.keyupHandler);
 		this.keysPressed.clear();
+		if (this.m_chat && this.m_gameFeedbackCb)
+			this.m_chat.removeOnGameCreated(this.m_gameFeedbackCb);
+
+		if (!this.end && this.m_router.currentTournamentId)
+		{
+			this.leaveTournament();
+			this.m_router.currentTournamentId = null;
+		}
 	}
 }

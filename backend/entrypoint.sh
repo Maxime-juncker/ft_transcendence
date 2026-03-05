@@ -8,7 +8,7 @@ mkdir -p public/avatars/
 cp /avatars/* /var/www/server/public/avatars/.
 
 cd /var/www/server
-npm install
+# npm install
 npx hardhat compile
 npm run build
 

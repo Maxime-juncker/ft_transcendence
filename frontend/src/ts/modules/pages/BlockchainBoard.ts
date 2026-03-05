@@ -27,12 +27,20 @@ export class BlockchainBoard
 
 		this.m_view?.loadingIndicator?.startLoading();
 		this.m_board.innerHTML = "";
-		let tournaments = await fetch('/api/blockchain/tournaments');
+
+		let tournaments = await fetch('/api/tournament/blockchain');
+
+		this.m_board.innerHTML = "";
+		this.m_view?.loadingIndicator?.stopLoading();
+
+		if (tournaments.status != 200)
+		{
+			console.warn("could not get blockchain data");
+			return ;
+		}
 		let json = await tournaments.json();
 		console.log("tournaments called with ", tournaments, " as a result");
 		console.log("after call");
-		this.m_board.innerHTML = "";
-		this.m_view?.loadingIndicator?.stopLoading();
 		json.forEach(async (data: any) => {
 			if (!this.m_board || !this.m_template)
 			{
@@ -49,7 +57,7 @@ export class BlockchainBoard
 			const user = await getUserFromId(data.winner);
 			const name = user?.name;
 			if (winner) {
-				winner.href = "/profile?username=" + name;
+				winner.addEventListener("click", () => Router.Instance?.navigateTo("/profile?username=" + name));
 				winner.innerText = "winner: " + name;
 			}
 			if (clone)

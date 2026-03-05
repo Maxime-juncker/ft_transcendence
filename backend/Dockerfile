@@ -19,5 +19,6 @@ RUN mkdir -p /var/www/server/public/avatars/
 COPY ./avatars/ /avatars
 
 WORKDIR /var/www/server
+RUN npm install
 
 CMD ["bash", "/entrypoint.sh"]

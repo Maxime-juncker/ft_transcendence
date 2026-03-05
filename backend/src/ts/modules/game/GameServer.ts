@@ -1,11 +1,12 @@
 import { GameInstance, Parameters } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { getUserByName, getUserName } from 'modules/users/user.js';
-import { core, chat } from 'core/server.js';
+import { addGameToHist, getUserByName, getUserName } from 'modules/users/user.js';
+import { core, chat, tournamentManager, tokenHeader, getToken, rateLimitMed } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import { getBot } from 'modules/users/userManagment.js';
+import { getBotId } from 'modules/users/userManagment.js';
+import { GameRes } from 'modules/users/user.js';
 
 export class GameServer
 {
@@ -18,6 +19,7 @@ export class GameServer
 
 	public activeGames: Map<string, GameInstance> = new Map();
 	private bots: Map<string, Bot> = new Map();
+	private botsCreating: Set<string> = new Set();
 	private botId: number = 0;
 
 	constructor(private server: FastifyInstance)
@@ -64,7 +66,7 @@ export class GameServer
 		await chat.notifyMatch(player1, player2, gameId, 1, "duel");
 		await chat.notifyMatch(player2, player1, gameId, 2, "duel");
 
-		this.activeGames.set(gameId, new GameInstance('online', player1, player2));
+		this.activeGames.set(gameId, new GameInstance('online', player1, player2, gameId));
 
 		Logger.log(`starting duel between: ${name1} and ${name2}`);
 		return gameId;
@@ -76,15 +78,16 @@ export class GameServer
 		{
 			schema:
 			{
+				rateLimit: rateLimitMed,
+				headers: tokenHeader,
 				body:
 				{
 					type: "object",
 					properties:
 					{
 						mode:	{ type: "string" },
-						token:	{ type: "string" },
 					},
-					required: ["mode", "token"]
+					required: ["mode"]
 				}
 			}
 		},
@@ -92,9 +95,12 @@ export class GameServer
 		{
 			try
 			{
+				const token = getToken(request.headers.authorization as string);
+				if (!token)
+					return reply.status(400).send({ error: 'missing authorization header' });
+
 				const body = request.body as { mode: string; token: string};
 				const mode = body.mode;
-				const token = body.token;
 				const params = new Parameters();
 
 				if (!params)
@@ -112,7 +118,7 @@ export class GameServer
 				{
 					const gameId = crypto.randomUUID();
 					const opponentId = 0;
-					const game = new GameInstance(mode, data.id, opponentId);
+					const game = new GameInstance(mode, data.id, opponentId, gameId);
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting local game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1',
@@ -137,7 +143,12 @@ export class GameServer
 						}
 					}
 
-					await chat.addPlayerToQueue(data.id, this);
+					const res = await tournamentManager.addPlayerToLobby(data.id, null, "0");
+					if (res.code != 200)
+					{
+						Logger.error(`could not create online game for player: ${data.id} cause: ${JSON.stringify(res, null, 2)}`);
+						return reply.code(res.code).send(res.data);
+					}
 					reply.status(202).send({ message: "added to queue", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
 						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
 				}
@@ -148,9 +159,26 @@ export class GameServer
 				}
 				else if (mode === 'bot')
 				{
+					for (const [id, game] of this.activeGames)
+					{
+						if (game.mode === 'bot')
+						{
+							if ((game.player1Id == data.id || game.player2Id == data.id) && game.winner === null)
+							{
+								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
+								const playerSide = (game.player1Id == data.id) ? '1' : '2';
+								Logger.log(`Found existing bot game ${id} for: ${await getUserName(data.id)}`);
+								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
+									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+								return ;
+							}
+						}
+					}
+					
 					const gameId = crypto.randomUUID();
-					const botId = await getBot();
-					const game = new GameInstance(mode, data.id, botId);
+					const botId = await getBotId();
+					const game = new GameInstance(mode, data.id, botId, gameId);
 					this.activeGames.set(gameId, game);
 					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);
 					reply.status(201).send({ gameId, opponentId: botId, playerSide: '1',
@@ -176,15 +204,8 @@ export class GameServer
 		{
 			schema:
 			{
-				body:
-				{
-					type: "object",
-					properties:
-					{
-						token: { type: "string" },
-					},
-					required: ["token"]
-				},
+				rateLimit: rateLimitMed,
+				headers: tokenHeader,
 				params:
 				{
 					type: "object",
@@ -201,12 +222,17 @@ export class GameServer
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
-				const body = request.body as { token: string };
-				const token = body.token;
+				const token = getToken(request.headers.authorization as string);
+				if (!token)
+				{
+					Logger.error('Missing authorization header for starting game');
+					return reply.status(400).send({ error: 'missing authorization header' });
+				}
 
 				const data: any = await jwtVerif(token, core.sessionKey);
 				if (!data)
 				{
+					Logger.error('Invalid token for starting game');
 					return reply.status(400).send({ error: 'Invalid token' });
 				}
 
@@ -233,29 +259,19 @@ export class GameServer
 							}
 						}
 
-						if (!playerIdentified)
+						if (!playerIdentified && game.mode !== 'online')
 						{
-							if (game.mode !== 'online') 
+							if (!game.p1Ready)
 							{
-								if (!game.p1Ready)
-								{
-									game.p1Ready = true;
-								}
-								else if (!game.p2Ready)
-								{
-									game.p2Ready = true;
-								}
+								game.p1Ready = true;
+							}
+							else if (!game.p2Ready)
+							{
+								game.p2Ready = true;
 							}
 						}
 
-						if (game.mode === 'bot')
-						{
-							if (game.player1Id === this.botId) game.p1Ready = true;
-							if (game.player2Id === this.botId) game.p2Ready = true;
-						}
-
-						Logger.log(`Game ${gameId} Ready Status: P1=${game.p1Ready}, P2=${game.p2Ready}`);
-						if (game.p1Ready && game.p2Ready)
+						if (game.p1Ready && game.p2Ready && !game.running)
 						{
 							Logger.log(`Game ${gameId} is now RUNNING`);
 							game.running = true;
@@ -265,18 +281,14 @@ export class GameServer
 					{
 						game.p1Ready = true;
 						game.p2Ready = true;
-						game.running = true;
-					}
-					
-					reply.status(200).send(game.state);
 
-					if (game.mode === 'bot' && game.reversedBuffer)
-					{
-						if (game.reversedBuffer)
+						if (!game.winner)
 						{
-							this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+							game.running = true;
 						}
 					}
+
+					reply.status(200).send(game.state);
 				}
 				else
 				{
@@ -310,11 +322,43 @@ export class GameServer
 					return ;
 				}
 
+				if (game.winner)
+				{
+					connection.send(JSON.stringify({ type: 'winner', winner: game.winner }));
+					connection.close();
+					return ;
+				}
+
 				if (!gameConnections.has(gameId))
 				{
 					gameConnections.set(gameId, new Map());
 				}
 				gameConnections.get(gameId)!.set(playerId, connection);
+
+				if (game.mode === 'bot' && game.reversedBuffer && playerId === '1')
+				{
+					if (!this.bots.has(gameId) && !this.botsCreating.has(gameId))
+					{
+						this.botsCreating.add(gameId);
+						this.bots.set(gameId, new Bot(gameId, game.reversedBuffer));
+						this.botsCreating.delete(gameId);
+						
+						if (game.player1Id === this.botId)
+						{
+							game.p1Ready = true;
+						}
+						else if (game.player2Id === this.botId)
+						{
+							game.p2Ready = true;
+						}
+						
+						if (game.p1Ready && game.p2Ready && !game.running)
+						{
+							Logger.log(`Game ${gameId} is now RUNNING`);
+							game.running = true;
+						}
+					}
+				}
 
 				let time = Date.now();
 				const send = () =>
@@ -387,24 +431,52 @@ export class GameServer
 				{
 					clearInterval(interval);
 
-					if (game.mode === 'online' || game.mode === 'duel')
+					if (game.mode === 'online' || game.mode === 'duel' || game.mode === 'bot')
 					{
 						const connections = gameConnections.get(gameId);
-						if (connections && game.winner === null)
+						if (connections && !game.winner)
 						{
 							const otherPlayerId = playerId === '1' ? '2' : '1';
-							const otherConnection = connections.get(otherPlayerId);
+							const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
+							const loserId = playerId === '1' ? game.player1Id : game.player2Id;
+							game.winner = winnerId;
+							game.running = false;
 
+							if (game.onGameEndCallback && winnerId && loserId)
+							{
+								const winnerScore = playerId === '1' ? game.p2Score : game.p1Score;
+								const loserScore = playerId === '1' ? game.p1Score : game.p2Score;
+								game.onGameEndCallback(winnerId, loserId, winnerScore, loserScore);
+								game.onGameEndCallback = undefined;
+							}
+
+							const otherConnection = connections.get(otherPlayerId);
 							if (otherConnection)
 							{
-								const winnerId = playerId === '1' ? game.player2Id : game.player1Id;
-								game.winner = winnerId;
-
 								Logger.log(`Player ${playerId} disconnected from game ${gameId}, declaring player ${otherPlayerId} (id: ${winnerId}) as winner`);
 
 								try
 								{
 									otherConnection.send(JSON.stringify({ type: 'winner', winner: winnerId }));
+
+									var gameRes: GameRes =
+									{
+										user1_id: game.player1Id,
+										user2_id: game.player2Id,
+										user1_score: game.p1Score,
+										user2_score: game.p2Score
+									};
+
+									if (gameRes.user1_id === game.winner)
+									{
+										gameRes.user1_score = game.parameters.POINTS_TO_WIN;
+									}
+									else
+									{
+										gameRes.user2_score = game.parameters.POINTS_TO_WIN;
+									}
+
+									addGameToHist(gameRes, core.db);
 								}
 								catch (err)
 								{

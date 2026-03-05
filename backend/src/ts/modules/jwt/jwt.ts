@@ -40,7 +40,7 @@ export async function jwtCreate(payload: any, secret: string): Promise<string>
  * @param secret secret used in jwtCreate
  * @returns a json containing data or null if jwt invalid
  */
-export async function jwtVerif(token: string, secret: string): Promise<string | null>
+export async function jwtVerif(token: string, secret: string): Promise<any | null>
 {
 	try
 	{

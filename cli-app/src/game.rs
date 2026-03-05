@@ -19,6 +19,7 @@ use tokio_tungstenite::{
     Connector, MaybeTlsStream, WebSocketStream, connect_async_tls_with_config,
     tungstenite::{Utf8Bytes, client::IntoClientRequest, protocol::Message},
 };
+use reqwest::header::HeaderMap;
 
 type GameChannel = (
     watch::Sender<(Option<Bytes>, Option<Utf8Bytes>)>,
@@ -99,17 +100,22 @@ impl Game {
     ///Initiate websocket connection with game server
     async fn connect_wss(&self) -> Result<WsStream> {
         let url = format!(
-            "https://{}/api/start-game/{}",
+            "https://{}/api/start-game/{}", // TODO: token must be sent in header
             self.context.location, self.game_id
         );
-        let mut body = std::collections::HashMap::new();
-        body.insert("token", self.auth.borrow().token.clone());
-        self.context.client.post(url).json(&body).send().await?;
-        let request = format!(
+        let mut header = HeaderMap::new();
+        header.insert("Authorization", format!("Bearer {}", self.auth.borrow().token.clone()).parse()?);
+        let response = self.context.client.post(url).headers(header).send().await?;
+        if response.status() != 200 && response.status() != 201 {
+            return Err(anyhow!("Error starting game"));
+        }
+        let url = format!(
             "wss://{}/api/game/{}/{}",
             self.context.location, self.game_id, self.player_side
-        )
-        .into_client_request()?;
+        );
+        let mut request = url.into_client_request()?;
+        let headers = request.headers_mut();
+        headers.insert("Cookie", format!("jwt_session={}", self.auth.borrow().token.clone()).parse()?);
         let connector = Connector::NativeTls(
             native_tls::TlsConnector::builder()
                 .danger_accept_invalid_certs(true)

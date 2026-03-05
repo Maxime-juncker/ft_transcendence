@@ -181,7 +181,7 @@ export async function login(email: string, passw: string, totp: string) : Promis
 		if (!row)
 			return { code: 404, data: { message: "email or password invalid"}};
 		else if (row.totp_enable == 1 && !check_totp(row.totp_seed, totp))
-			return { code: 404, data: { message: "totp invalid"}};
+			return { code: 404, data: { message: "totp invalid" }};
 		if (row.source == AuthSource.GUEST)
 			return { code: 404, data: { message: "cannot login as guest profile"}};
 
@@ -500,7 +500,7 @@ export async function updateEmail(user_id: number, email: string): Promise<DbRes
 	}
 }
 
-export async function getBot(): Promise<number>
+export async function getBotId(): Promise<number>
 {
     try
     {

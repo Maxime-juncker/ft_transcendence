@@ -197,18 +197,16 @@ impl Infos {
         Ok(())
     }
     async fn send_start_game(&mut self, game_id: &str) -> Result<()> {
-        let mut map = HashMap::new();
         let mut headers = HeaderMap::new();
-        headers.insert("Content-Type", "application/json".parse()?);
+        // headers.insert("Content-Type", "application/json".parse()?);
         let token: &str = &self.authent.borrow().token.clone();
-        map.insert("token", token);
-        let url = format!("https://{}/api/start-game/{}", self.context.location, game_id);
+        headers.insert("Authorization", format!("Bearer {}", token).parse()?);
+        let url = format!("https://{}/api/start-game/{}", self.context.location, game_id); // TODO: token must be sent in header
         let res = self
             .context
             .client
             .post(url)
             .headers(headers)
-            .json(&map)
             .send()
             .await?;
         if res.status() != 200 {
@@ -224,15 +222,22 @@ impl Infos {
             }
         };
         if let Some(checker) = &mut self.game.game_checker
-            && let Ok(true) = checker.has_changed()
+            && matches!(checker.has_changed(), Ok(true) | Err(_))
         {
             self.screen.set(crate::CurrentScreen::GameChoice);
+            return Ok(());
         };
         if let Some(Ok(err)) = self.game.server_checker.as_mut().map(|r| r.try_recv()) {
             return Err(anyhow!("{}", err));
         }
         if let Some(sender) = &self.game.game_sender {
-            let _ = timeout(Duration::from_millis(16), state_receiver.changed()).await;
+            match timeout(Duration::from_millis(16), state_receiver.changed()).await {
+                Ok(Err(_)) => {
+                    self.screen.set(crate::CurrentScreen::GameChoice);
+                    return Ok(());
+                }
+                _ => {}
+            }
             let (bytes, text) = state_receiver.borrow_and_update().clone();
             match (bytes, text) {
                 (Some(bytes), _none) => {
@@ -267,7 +272,7 @@ impl Infos {
         let id: &str = &self.authent.borrow().id.to_string();
         map.insert("id", id);
         let url = format!("https://{}/api/chat/removeQueue", self.context.location);
-        self.context
+        let response = self.context
             .client
             .delete(url)
             .headers(headers)
@@ -347,12 +352,12 @@ impl GameParams {
 }
 
 async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<GameParams> {
-    let mut map = HashMap::new();
+    let mut map: HashMap<&str, &str> = HashMap::new();
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
     map.insert("mode", mode);
     let token: &str = &game_main.authent.borrow().token.to_string();
-    map.insert("token", token);
+    headers.insert("Authorization", format!("Bearer {}", token).parse()?);
     let url = format!("https://{}/api/create-game", game_main.context.location);
     let res = game_main
         .context

@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { createUser, getBot, setIsLogin, setUserStatus } from 'modules/users/userManagment.js';
+import { createUser, getBotId, setIsLogin, setUserStatus } from 'modules/users/userManagment.js';
 import { Database } from 'sqlite';
 import fastifyStatic from '@fastify/static';
 import { FastifyRequest } from 'fastify';
@@ -13,6 +13,8 @@ import { userRoutes } from 'modules/users/user.route.js';
 import { chatRoutes } from 'modules/chat/chat.route.js';
 import { totpRoutes } from 'modules/2fa/2fa.route.js';
 import { duelRoutes } from 'modules/users/duel.route.js';
+import { tournamentRoutes } from 'modules/tournament/Tournament.route.js';
+
 
 import { core, DbResponse } from './server.js';
 import { Logger } from 'modules/logger.js';
@@ -62,6 +64,7 @@ export async function initFastify()
 	await core.fastify.register(friendsRoutes, { prefix: '/api/friends'});
 	await core.fastify.register(userRoutes, { prefix: '/api/user'});
 	await core.fastify.register(duelRoutes, { prefix: '/api/duel' });
+	await core.fastify.register(tournamentRoutes, { prefix: '/api/tournament' });
 	await core.fastify.register(chatRoutes);
 	await core.fastify.register(totpRoutes);
 
@@ -76,7 +79,7 @@ export async function initFastify()
 	// create account for bot
 	await createUser("", "", "bot", AuthSource.BOT, core.db);
 	await loadConfig("/config.json", core.db); // create default_users
-	const id = await getBot();
+	const id = await getBotId();
 	if (id != -1)
 	{
 		await setUserStatus(id, 0, core.db);

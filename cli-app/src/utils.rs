@@ -65,7 +65,7 @@ pub(crate) async fn get_name_from_id(context: Rc<Context>, id: u64) -> Result<St
     if let Some(result) = response["name"].as_str() {
         return Ok(result.to_string());
     }
-    Err(anyhow!("Opponent as no name"))
+    Err(anyhow!("Opponent has no name"))
 }
 
 pub(crate) async fn get_id_from_name(context: Rc<Context>, name: &String) -> Result<i64> {

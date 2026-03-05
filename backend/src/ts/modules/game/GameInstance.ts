@@ -26,6 +26,7 @@ export class Parameters
 	public BALL_SPEED_INCREMENT: number = 0.05 / (this.FPS / 100);
 	public POINTS_TO_WIN: number = 11;
 	public MAX_ANGLE: number = 1.0;
+	public MAX_WALL_ANGLE: number = 0.65;
 
 	public MIN_Y_PADDLE: number = this.PADDLE_HEIGHT / 2;
 	public MAX_Y_PADDLE: number = 100 - this.MIN_Y_PADDLE;
@@ -54,6 +55,7 @@ export class Parameters
 		this.BALL_SPEED_INCREMENT = (process.env.BALL_SPEED_INCREMENT ? parseFloat(process.env.BALL_SPEED_INCREMENT) : 0.05) / (this.FPS / 100);
 		this.POINTS_TO_WIN = process.env.POINTS_TO_WIN ? parseFloat(process.env.POINTS_TO_WIN) : 11;
 		this.MAX_ANGLE = process.env.MAX_ANGLE ? parseFloat(process.env.MAX_ANGLE) : 1.0;
+		this.MAX_WALL_ANGLE = process.env.MAX_WALL_ANGLE ? parseFloat(process.env.MAX_WALL_ANGLE) : 0.65;
 
 		this.MIN_Y_PADDLE = this.PADDLE_HEIGHT / 2;
 		this.MAX_Y_PADDLE = 100 - this.MIN_Y_PADDLE;
@@ -80,14 +82,22 @@ export class GameInstance
 	public p1Ready: boolean = false;
 	public p2Ready: boolean = false;
 	private params: Parameters;
+	private time: number = 0;
+	private _gameId: string;
+	public onGameEndCallback?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void;
 
-	constructor(gameMode: string, player1Id: number, player2Id: number)
+	get gameId(): string { return this._gameId; }
+	get parameters(): Parameters { return this.params; }
+
+	constructor(gameMode: string, player1Id: number, player2Id: number, gameId: string, onGameEnd?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void)
 	{
 		this.params = new Parameters();
-		this.params.reload();
+		this._scoreUpdated = true;
+		this._gameId = gameId;
 		this._gameMode = gameMode;
 		this._Player1Id = player1Id;
 		this._Player2Id = player2Id;
+		this.onGameEndCallback = onGameEnd;
 		this.initAndStart();
 	}
 
@@ -95,6 +105,7 @@ export class GameInstance
 	{
 		this._speed = this.params.BALL_SPEED;
 		this.normalizeSpeed();
+		this.time = Date.now() + 1000;
 		this.gameLoop();
 	}
 
@@ -107,7 +118,7 @@ export class GameInstance
 
 	private gameLoop = (): void =>
 	{
-		this._interval = setInterval(() =>
+		this._interval = setInterval(async () =>
 		{
 			if (this._isRunning && this.p1Ready && this.p2Ready)
 			{
@@ -119,6 +130,11 @@ export class GameInstance
 
 	private moveBall(): void
 	{
+		if (Date.now() < this.time)
+		{
+			return ;
+		}
+
 		this._gameState.ballX += this._gameState.speedX;
 		this._gameState.ballY += this._gameState.speedY;
 
@@ -137,7 +153,16 @@ export class GameInstance
 		else if (this.collideWall())
 		{
 			this._gameState.speedY = -this._gameState.speedY;
-			this.normalizeSpeed();
+			const maxSpeedY = this._speed * this.params.MAX_WALL_ANGLE;
+			if (Math.abs(this._gameState.speedY) > maxSpeedY)
+			{
+				this._gameState.speedY = maxSpeedY * Math.sign(this._gameState.speedY);
+				this._gameState.speedX = Math.sqrt(this._speed * this._speed - maxSpeedY * maxSpeedY) * Math.sign(this._gameState.speedX);
+			}
+			else
+			{
+				this.normalizeSpeed();
+			}
 		}
 	}
 
@@ -158,6 +183,11 @@ export class GameInstance
 			this.score((this._gameState.ballX > 100) ? 1 : 2);
 			this.resetBall();
 			this.scoreUpdated = true;
+
+			if (!this._winner)
+			{
+				this.time = Date.now() + 500;
+			}
 		}
 	}
 
@@ -179,11 +209,21 @@ export class GameInstance
 
 	private async getWinner(score: number, player: number | null): Promise<void>
 	{
-		if (score >= this.params.POINTS_TO_WIN)
+		if (score >= this.params.POINTS_TO_WIN && !this._winner)
 		{
 			this._winner = player ? player : 0;
 			this._isRunning = false;
 			Logger.log(`${await getUserName(this._winner)} won the game (mode: ${this.mode})`);
+			
+			if (this.onGameEndCallback && this._Player1Id && this._Player2Id)
+			{
+				const loserId = this._winner === this._Player1Id ? this._Player2Id : this._Player1Id;
+				const winnerScore = this._winner === this._Player1Id ? this._gameState.player1Score : this._gameState.player2Score;
+				const loserScore = this._winner === this._Player1Id ? this._gameState.player2Score : this._gameState.player1Score;
+				this.onGameEndCallback(this._winner, loserId, winnerScore, loserScore);
+				this.onGameEndCallback = undefined;
+			}
+			
 			if (this.mode == 'duel' || this.mode == 'online' || this.mode == 'bot')
 			{
 				if (!this._Player1Id || !this._Player2Id)
@@ -196,7 +236,7 @@ export class GameInstance
 					user1_score: this._gameState.player1Score,
 					user2_score: this._gameState.player2Score
 				};
-				addGameToHist(res, core.db);
+				await addGameToHist(res, core.db);
 			}
 		}
 	}
@@ -206,14 +246,24 @@ export class GameInstance
 		this._speed = this.params.BALL_SPEED;
 		this._gameState.speedY = (Math.random() - 0.5) * 0.4;
 		this.normalizeSpeed();
-		this._gameState.ballX = 50;
-		this._gameState.ballY = 50;
+		this._gameState.ballX = 50 - this.params.BALL_SIZE / 2;
+		this._gameState.ballY = 50 - this.params.BALL_SIZE / 2;
 	}
 
 	private collideWall(): boolean
 	{
-		return (this._gameState.ballY <= this.params.MIN_Y_BALL
-			|| this._gameState.ballY >= this.params.MAX_Y_BALL);
+		if (this._gameState.ballY < this.params.MIN_Y_BALL && this._gameState.speedY < 0)
+		{
+			this._gameState.ballY = this.params.MIN_Y_BALL;
+			return (true);
+		}
+		else if (this._gameState.ballY > this.params.MAX_Y_BALL && this._gameState.speedY > 0)
+		{
+			this._gameState.ballY = this.params.MAX_Y_BALL;
+			return (true);
+		}
+
+		return (false);
 	}
 
 	private collidePaddleLeft(): boolean

@@ -24,8 +24,7 @@ export class ProfileView extends ViewComponent
 		if (!MainUser.Instance)
 			return;
 
-		await MainUser.Instance.updateFriendList();
-		await MainUser.Instance.updateBlockList();
+		await MainUser.Instance.refreshSelf();
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
 
@@ -33,6 +32,9 @@ export class ProfileView extends ViewComponent
 		const usernameQuery = utils.getUrlVar().get("username");
 		if (usernameQuery)
 			this.m_user = await getUserFromName(usernameQuery);
+		else if (this.m_user === MainUser.Instance)
+			await MainUser.Instance.updateSelf();
+
 		if (!this.m_user || this.m_user.id == -1)
 		{
 			await this.setUnknowProfile();

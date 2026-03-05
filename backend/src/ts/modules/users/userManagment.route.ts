@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { core, chat, rateLimitMed, rateLimitHard } from 'core/server.js';
+import { core, chat, rateLimitMed, rateLimitHard, tokenHeader, getToken } from 'core/server.js';
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
@@ -94,17 +94,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/logout', {
-		schema: {
-			body: {
-				type: "object",
-				properties: {
-					token: { type: "string" },
-				},
-				required: ["token"]
-			}
-		}
+		schema: { headers: tokenHeader }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { token } = request.body as { token: string };
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+
 		const data: any = await jwt.jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send({ message: "invalid token" });
@@ -118,16 +113,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: { 
-			body: {
-				type: 'object',
-				properties: {
-					token: { type: 'string' }
-				},
-				required: ["token"],
-			}
+			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -140,18 +131,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: {
-			body: {
-				type: 'object',
-				required: ["token"],
-				properties: {
-					token: { type: 'string' }
-				}
-			}
-		}
+		schema: { headers: tokenHeader }
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.body as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -165,17 +150,20 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: "object",
 				properties: {
-					token: { type: "string" },
 					new_status: { type: "number" }
 				},
-				required: ["token", "new_status"]
+				required: [ "new_status" ]
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { token, new_status} = request.body as { token: string, new_status: number };
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+		const { new_status} = request.body as { new_status: number };
 		const data: any = await jwt.jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send({ message: "invalid token" });
@@ -184,21 +172,19 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		return reply.code(res.code).send(res.data);
 	})
 
+	// TODO: CHECK FRONT FOR AVATAR
 	fastify.post('/upload/avatar', {
 		config: { 
 			rateLimit: rateLimitHard
 		},
 		schema: {
-			headers: {
-				type: 'object',
-				properties: {
-					token: { type: 'string' }
-				},
-				required: ['token']
-			}
+			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token } = request.headers as { token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "token is invalid" });
@@ -216,18 +202,21 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['oldPass', 'newPass', 'token'],
+				required: ['oldPass', 'newPass' ],
 				properties: {
-					token:		{ type: 'string' },
 					oldPass:	{ type: 'string' },
 					newPass:	{ type: 'string' },
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { token, oldPass, newPass } = request.body as { token: string, oldPass: string, newPass: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+				return reply.status(400).send({ error: 'missing authorization header' });
+			const { oldPass, newPass } = request.body as { oldPass: string, newPass: string };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -241,17 +230,23 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['name', 'token'],
+				required: ['name'],
 				properties: {
 					name: { type: 'string' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { name, token } = request.body as { name: string, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { name } = request.body as { name: string };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -265,17 +260,23 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['email', 'token'],
+				required: ['email'],
 				properties: {
 					email: { type: 'string' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { email, token } = request.body as { email: string, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { email } = request.body as { email: string };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -291,15 +292,20 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		schema: {
 			body: {
 				type: 'object',
-				required: ['id', 'token'],
+				required: ['id'],
 				properties: {
 					id: { type: 'number' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { id, token } = request.body as { id: number, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { id } = request.body as { id: number };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -315,15 +321,20 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		schema: {
 			body: {
 				type: 'object',
-				required: ['id', 'token'],
+				required: ['id'],
 				properties: {
 					id: { type: 'number' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { id, token } = request.body as { id: number, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { id } = request.body as { id: number };
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "token is invalid" })

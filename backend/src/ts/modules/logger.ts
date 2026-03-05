@@ -15,6 +15,7 @@ const colors = {
 export class Logger
 {
 	private static readonly logPath = "/var/log/backend/ft_transcendence.log";
+	private static readonly showDebug = process.env.LOGGER_SHOW_DEBUG ? process.env.LOGGER_SHOW_DEBUG == "1" : false;
 
 	constructor() {}
 
@@ -86,6 +87,8 @@ export class Logger
 
 	public static debug(...args: any)
 	{
+		if (!Logger.showDebug)
+			return;
 		Logger.writeLog("DEBUG", args);
 		console.log(`${Logger.getTimeFormated()} ${colors.blue}[DEBUG]  ${colors.reset}`, ...args);
 	}

@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import { core } from 'core/server.js';
+import { core, tokenHeader, getToken } from 'core/server.js';
 import * as friends from 'modules/users/friends.js'
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
@@ -8,17 +8,21 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.delete('/remove', {
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
-					token: { type: 'string' },
 					friend_id: { type: 'number' }
 				},
-				required: ['token', 'friend_id']
+				required: ['friend_id']
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { token, friend_id } = request.body as { token: string, friend_id: number }
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+
+		const { friend_id } = request.body as { friend_id: number }
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send('token is invalid');
@@ -29,17 +33,20 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.post('/accept', {
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
-					token: { type: 'string' },
 					friend_id: { type: 'number' }
 				},
-				required: ['token', 'friend_id']
+				required: ['friend_id']
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const { token, friend_id } = request.body as { token: string, friend_id: number }
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+		const { friend_id } = request.body as { friend_id: number }
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send('token is invalid');
@@ -50,17 +57,20 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.post('/send_request', {
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
-					token: { type: 'string' },
 					friend_id: { type: 'number' }
 				},
-				required: ['token', 'friend_id']
+				required: ['friend_id']
 			}
 		}
-	}, async (request:any, reply:any) => {
-		const { token, friend_id } = request.body as { token: string, friend_id: number }
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+		const { friend_id } = request.body as { friend_id: number }
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
 			return reply.code(400).send('token is invalid');

@@ -10,6 +10,7 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Duration;
+use reqwest::header::HeaderMap;
 
 #[derive(Default)]
 pub(crate) struct Friends {
@@ -124,8 +125,10 @@ impl Friends {
     }
     async fn send_friend_request(&mut self) -> Result<()> {
         let mut map = HashMap::new();
+        let mut header = HeaderMap::new();
         let token = self.auth.borrow().token.to_string();
-        map.insert("token", &token);
+        header.insert("Authorization", format!("Bearer {}", &token).parse()?);
+        header.insert("content-type", "application/json".parse()?);
         let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
             .await?
             .to_string();
@@ -135,7 +138,7 @@ impl Friends {
             .context
             .client
             .post(url)
-            .header("content-type", "application/json")
+            .headers(header)
             .json(&map)
             .send()
             .await?;
@@ -155,8 +158,10 @@ impl Friends {
     }
     async fn send_delete_friend_request(&mut self) -> Result<()> {
         let mut map = HashMap::new();
+        let mut header = HeaderMap::new();
         let token = self.auth.borrow().token.to_string();
-        map.insert("token", &token);
+        header.insert("Authorization", format!("Bearer {}", &token).parse()?);
+        header.insert("content-type", "application/json".parse()?);
         let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
             .await?
             .to_string();
@@ -166,7 +171,7 @@ impl Friends {
             .context
             .client
             .delete(url)
-            .header("content-type", "application/json")
+            .headers(header)
             .json(&map)
             .send()
             .await?;
