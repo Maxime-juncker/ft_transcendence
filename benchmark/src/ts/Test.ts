@@ -43,7 +43,7 @@ async function tokenExchange(i: number)
 
 	const res = await fetch(`${host}/api/user/get_profile_token`, {
 		method: "POST",
-		headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+		headers: { 'Authorization': `Bearer ${user.token}` },
 	});
 	const data = await res.json();
 	if (res.status == 200)

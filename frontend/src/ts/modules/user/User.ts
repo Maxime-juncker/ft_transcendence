@@ -190,7 +190,7 @@ export class User
 			return;
 		const response = await fetch("/api/user/logout", {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` }
+			headers: { 'Authorization': `Bearer ${this.m_token}` }
 		});
 		return response;
 	}
@@ -231,7 +231,7 @@ export class User
 		this.m_blockUsr = [];
 		const response = await fetch('/api/user/blocked_users', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
+			headers: { 'Authorization': `Bearer ${this.m_token}` },
 		});
 		if (response.status != 200)
 			return response.status;
