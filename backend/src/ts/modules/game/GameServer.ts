@@ -2,7 +2,7 @@ import { GameInstance, Parameters } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { getUserByName, getUserName } from 'modules/users/user.js';
-import { core, chat, tournamentManager, tokenHeader, getToken } from 'core/server.js';
+import { core, chat, tournamentManager, tokenHeader, getToken, rateLimitMed } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { getBotId } from 'modules/users/userManagment.js';
@@ -77,6 +77,7 @@ export class GameServer
 		{
 			schema:
 			{
+				rateLimit: rateLimitMed,
 				headers: tokenHeader,
 				body:
 				{
@@ -202,6 +203,7 @@ export class GameServer
 		{
 			schema:
 			{
+				rateLimit: rateLimitMed,
 				headers: tokenHeader,
 				params:
 				{
@@ -428,7 +430,7 @@ export class GameServer
 				{
 					clearInterval(interval);
 
-					if (game.mode === 'online' || game.mode === 'duel')
+					if (game.mode === 'online' || game.mode === 'duel' || game.mode === 'bot')
 					{
 						const connections = gameConnections.get(gameId);
 						if (connections && !game.winner)
