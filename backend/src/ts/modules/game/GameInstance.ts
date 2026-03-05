@@ -87,6 +87,7 @@ export class GameInstance
 	public onGameEndCallback?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void;
 
 	get gameId(): string { return this._gameId; }
+	get parameters(): Parameters { return this.params; }
 
 	constructor(gameMode: string, player1Id: number, player2Id: number, gameId: string, onGameEnd?: (winnerId: number, loserId: number, winnerScore: number, loserScore: number) => void)
 	{
