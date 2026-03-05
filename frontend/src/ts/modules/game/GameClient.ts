@@ -161,8 +161,6 @@ export class GameClient extends Utils
 			this.HTMLelements.set(element.id, element);
 			element.setAttribute('hidden', '');
 		});
-
-		this.setContent('searching-msg', Msgs.SEARCHING, true);
 	}
 
 	private async createGameFeedback(json: any)
@@ -209,6 +207,7 @@ export class GameClient extends Utils
 
 			if (response.status == 202)
 			{
+				this.setContent('searching-msg', Msgs.SEARCHING, true);
 				return ;
 			}
 
@@ -300,12 +299,10 @@ export class GameClient extends Utils
 	{
 		if (!gameId)
 		{
-			if (!this.m_user) return;
-
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 			});
 
 			if (!response.ok)
@@ -514,8 +511,7 @@ export class GameClient extends Utils
 		await fetch("/api/chat/removeQueue",
 		{
 			method: "DELETE",
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ token: this.m_user.token })
+			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
 		});
 	}
 

@@ -3,22 +3,21 @@ import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
-const duelSchema = {
-	headers: tokenHeader,
-	body: {
-		type: 'object',
-		properties: {
-			token: { type: "string" },
-			id: { type: "number" }
-		},
-		required: ["token", "id"]
-	}
-}
-
 export async function duelRoutes(fastify: FastifyInstance)
 {
+	const duelSchema = {
+		headers: tokenHeader,
+		body: {
+			type: 'object',
+			properties: {
+				id: { type: "number" }
+			},
+			required: ["id"]
+		}
+	}
+
 	fastify.post('/list', {
-		config: { 
+		config: {
 			rateLimit: rateLimitMed
 		},
 		schema:

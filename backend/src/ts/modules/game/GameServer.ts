@@ -222,12 +222,14 @@ export class GameServer
 				const token = getToken(request.headers.authorization as string);
 				if (!token)
 				{
+					Logger.error('Missing authorization header for starting game');
 					return reply.status(400).send({ error: 'missing authorization header' });
 				}
 
 				const data: any = await jwtVerif(token, core.sessionKey);
 				if (!data)
 				{
+					Logger.error('Invalid token for starting game');
 					return reply.status(400).send({ error: 'Invalid token' });
 				}
 

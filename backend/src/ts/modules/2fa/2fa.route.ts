@@ -2,6 +2,7 @@ import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { core, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
+import { Logger } from 'modules/logger.js';
 
 export async function totpRoutes(fastify: FastifyInstance)
 {
@@ -52,12 +53,17 @@ export async function totpRoutes(fastify: FastifyInstance)
 		const token = getToken(request.headers.authorization as string);
 		if (!token)
 		{
+			Logger.error('missing authorization header');
 			return reply.status(400).send({ error: 'missing authorization header' });
 		}
 
 		const data: any = await jwtVerif(token, core.sessionKey);
 		if (!data)
+		{
+			Logger.error('token is invalid');
 			return reply.code(400).send({ message: "token is invalid" });
+		}
+
 		const res = await delTotp(data.id);
 		return reply.code(res.code).send(res.data);
 	})

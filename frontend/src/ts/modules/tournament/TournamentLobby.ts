@@ -72,6 +72,7 @@ export class TournamentLobby
 
 	private disableBtn(btn: HTMLButtonElement)
 	{
+		btn.style.display = 'none';
 		btn.classList.add("btn-disable");
 		btn.disabled = true;
 	}
@@ -84,8 +85,22 @@ export class TournamentLobby
 		this.leaveBtn = context.querySelector('#lobby-leave-btn') as HTMLButtonElement;
 		this.lobbyTitle = context.querySelector('#lobby-title') as HTMLElement;
 
-		this.disableBtn(this.startBtn);
-		this.disableBtn(this.leaveBtn);
+		if (this.playerList)
+		{
+			this.playerList.innerHTML = '';
+		}
+		if (this.lobbyTitle)
+		{
+			this.lobbyTitle.innerHTML = '';
+		}
+		if (this.startBtn)
+		{
+			this.disableBtn(this.startBtn);
+		}
+		if (this.leaveBtn)
+		{
+			this.disableBtn(this.leaveBtn);
+		}
 	}
 
 	private async init()

@@ -225,23 +225,28 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			return reply.code(res.code).send(res.data);
 		})
 
-	// TODO: ALEXIS RESUME HERE
 	fastify.post('/update/name', {
 		config: { 
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['name', 'token'],
+				required: ['name'],
 				properties: {
 					name: { type: 'string' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { name, token } = request.body as { name: string, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { name } = request.body as { name: string };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -255,17 +260,23 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
+			headers: tokenHeader,
 			body: {
 				type: 'object',
-				required: ['email', 'token'],
+				required: ['email'],
 				properties: {
 					email: { type: 'string' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { email, token } = request.body as { email: string, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { email } = request.body as { email: string };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -281,15 +292,20 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		schema: {
 			body: {
 				type: 'object',
-				required: ['id', 'token'],
+				required: ['id'],
 				properties: {
 					id: { type: 'number' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { id, token } = request.body as { id: number, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { id } = request.body as { id: number };
 
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
@@ -305,15 +321,20 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		schema: {
 			body: {
 				type: 'object',
-				required: ['id', 'token'],
+				required: ['id'],
 				properties: {
 					id: { type: 'number' },
-					token: { type: 'string' }
 				}
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const { id, token } = request.body as { id: number, token: string };
+			const token = getToken(request.headers.authorization as string);
+			if (!token)
+			{
+				return reply.status(400).send({ error: 'missing authorization header' });
+			}
+
+			const { id } = request.body as { id: number };
 			const data: any = await jwt.jwtVerif(token, core.sessionKey);
 			if (!data)
 				return reply.code(400).send({ message: "token is invalid" })
