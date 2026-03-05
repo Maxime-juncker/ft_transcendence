@@ -373,7 +373,7 @@ export class MainUser extends User
 			tutorial.style.display = "none";
 			fetch('/api/user/complete_tutorial', {
 				method: "POST",
-				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` }
+				headers: { 'Authorization': `Bearer ${this.m_token}` }
 			});
 			this.finishedTutorial = false;
 		});
