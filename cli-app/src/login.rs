@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use tokio::sync::mpsc;
 use tokio_tungstenite::{Connector, connect_async_tls_with_config, tungstenite::protocol::Message};
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 
 #[derive(Default, PartialEq)]
 pub(crate) enum Field {
@@ -196,13 +197,12 @@ pub(crate) async fn get_id_and_launch_chat(
     token: String,
 ) -> Result<(u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/get_profile_token", context.location);
-    let mut body = HashMap::new();
-    body.insert("token", &token);
+    let mut header = HeaderMap::new();
+    header.insert("Authorization", format!("Bearer {}", &token).parse()?);
     let res = context
         .client
         .post(apiloc)
-        .header("content-type", "application/json")
-        .json(&body)
+        .headers(header)
         .send()
         .await?;
     let value: serde_json::Value = res.json().await?;
@@ -240,8 +240,10 @@ async fn enter_chat_room(
             .build()?,
     );
     let (token_chat, location_chat) = (token.clone(), location.clone());
-    let request = format!("wss://{}/api/chat?userid={}", location, token);
-    let (ws_stream, _) =
+    let mut request = format!("wss://{}/api/chat", location).into_client_request()?;
+    let headers = request.headers_mut();
+    headers.insert("Cookie", format!("jwt_session={}", token_chat).parse()?);
+    let (ws_stream, response) =
         connect_async_tls_with_config(request, None, false, Some(connector)).await?;
     let (sender, receiver): (
         mpsc::Sender<serde_json::Value>,
@@ -258,8 +260,6 @@ async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, 
                 .danger_accept_invalid_certs(true)
                 .build()
                 .expect("Impossible to build new client, try again");
-        let mut body = HashMap::new();
-        body.insert("token", token);
         while let Some(msg) = ws_stream.next().await {
         let last_message = match msg {
             Ok(Message::Text(result)) => result,
@@ -274,10 +274,9 @@ async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, 
         match message["flag"].as_str() {
             Some(value) if value == "health" => {
                 let mut header = HeaderMap::new();
-                header.insert("content-type", "application/json".parse()?);
-                client.post(format!("https://{}/api/chat/healthCallback", &location))
+                header.insert("Authorization", format!("Bearer {}", token.clone()).parse()?);
+                let response = client.post(format!("https://{}/api/chat/healthCallback", &location))
                     .headers(header)
-                    .json(&body)
                     .send()
                     .await?;
             },
