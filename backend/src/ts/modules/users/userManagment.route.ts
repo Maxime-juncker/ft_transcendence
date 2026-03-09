@@ -124,7 +124,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			return reply.code(400).send({ message: "invalid token" });
 
 		chat.disconnectClientById(data.id);
-		return reply.code(200).send({ message: "Success"});
+		return reply.code(200).clearCookie('jwt_session', {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict'
+		}).send({ message: "Success"});
 	})
 
 	fastify.delete('/reset', {
