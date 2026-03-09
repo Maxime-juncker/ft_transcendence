@@ -23,7 +23,7 @@ export class Message
 	public async sendToAll(chat: Chat)
 	{
 		// const packet = { username: this.m_sender.name, message: this.m_msg, isCmd: false };
-		const packet = { token: this.m_sender.token, message: this.m_msg };
+		const packet = { message: this.m_msg };
 		chat.ws?.send(JSON.stringify(packet));
 	}
 
@@ -242,10 +242,8 @@ export class Chat
 		{
 			fetch("/api/chat/healthCallback", {
 				method: "POST",
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
-				body: JSON.stringify({
-					token: MainUser.Instance?.token
-				})
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' }
 			});
 			return ;
 		}

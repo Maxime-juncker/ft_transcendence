@@ -66,7 +66,6 @@ export class User
 
 	/* private vars */
 	protected m_id: number = -1;
-	protected m_token:		string = "";
 
 	private m_email:		string	= "";
 	private m_avatarPath:	string = "/public/avatars/default.webp";
@@ -82,13 +81,11 @@ export class User
 
 	private m_onStatusChanged: Array<(status: UserStatus) => void>;
 
-	constructor(token?: string)
+	constructor()
 	{
 		this.m_onStatusChanged = new Array<(status: UserStatus) => void>;
 		this.reset();
 
-		if (token) // token will be used for request needing permission
-			this.m_token = token;
 	}
 
 	public reset()
@@ -104,7 +101,6 @@ export class User
 		this.m_stats.gameWon = 0;
 		this.m_stats.gamePlayed = 0;
 		this.m_finishedTutorial = false;
-		this.m_token = "";
 		this.m_friends = [];
 		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
@@ -152,9 +148,7 @@ export class User
 	get	stats(): Stats						{ return this.m_stats; }
 	get	source(): AuthSource				{ return this.m_source; }
 	get finishedTutorial(): boolean			{ return this.m_finishedTutorial; }
-	get token(): string						{ return this.m_token; }
 	set finishedTutorial(value: boolean)	{ this.m_finishedTutorial = value; }
-	set token(token: string)				{ this.m_token = token; }
 
 	get winrate(): number
 	{
@@ -176,7 +170,8 @@ export class User
 
 		var response = await fetch("/api/user/set_status", {
 			method: "POST",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				new_status: this.m_status.toString()
 			})
@@ -190,7 +185,7 @@ export class User
 			return;
 		const response = await fetch("/api/user/logout", {
 			method: 'POST',
-			headers: { 'Authorization': `Bearer ${this.m_token}` }
+			credentials: 'include'
 		});
 		return response;
 	}
@@ -225,13 +220,11 @@ export class User
 
 	public async updateBlockList(): Promise<number>
 	{
-		if (!this.m_token)
-			return 0;
 
 		this.m_blockUsr = [];
 		const response = await fetch('/api/user/blocked_users', {
 			method: 'POST',
-			headers: { 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include'
 		});
 		if (response.status != 200)
 			return response.status;
@@ -276,7 +269,8 @@ export class User
 	protected async addFriendToDB(friendId: number): Promise<number> {
 		var response = await fetch("/api/friends/send_request", {
 			method: "POST",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: friendId
 			})
@@ -286,11 +280,10 @@ export class User
 
 	public async uploadAvatar(file: FormData): Promise<{ code: number, data: any }>
 	{
-		file.append('token', this.m_token);
 
 		var response = await fetch("/api/user/upload/avatar", {
 			method: "POST",
-			headers: { 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include',
 			body: file
 		});
 		var data = await response.json();
@@ -328,8 +321,7 @@ export class MainUser extends User
 
 	constructor()
 	{
-		const token = getCookie("jwt_session");
-		super(token);
+		super()
 
 		if (MainUser.m_instance === null)
 			MainUser.m_instance = this;
@@ -373,7 +365,7 @@ export class MainUser extends User
 			tutorial.style.display = "none";
 			fetch('/api/user/complete_tutorial', {
 				method: "POST",
-				headers: { 'Authorization': `Bearer ${this.m_token}` }
+				credentials: 'include',
 			});
 			this.finishedTutorial = false;
 		});
@@ -427,13 +419,9 @@ export class MainUser extends User
 
 	public async getUserFromToken(): Promise<number>
 	{
-		if (!this.m_token)
-		{
-			console.warn("token null");
-			return -1;
-		}
-
-		const response = await fetch("/api/user/get_session");
+		const response = await fetch("/api/user/get_session", {
+			credentials: 'include'
+		});
 		const data = await response.json();
 
 		if (response.status == 200)
@@ -447,11 +435,7 @@ export class MainUser extends User
 
 	public async loginSession()
 	{
-		const token = getCookie("jwt_session");
-		if (!token)
-			return;
 
-		this.m_token = token;
 		if (await this.getUserFromToken() != -1)
 		{
 			this.m_onLoginCb.forEach(cb => cb(this));
@@ -487,7 +471,6 @@ export class MainUser extends User
 		this.m_onLogoutCb.forEach(cb => cb(this));
 
 		this.reset();
-		setCookie("jwt_session", "", 0);
 	}
 
 	public async refreshSelf()
@@ -552,7 +535,8 @@ export class MainUser extends User
 		console.log("removing friend")
 		const response = await fetch('/api/friends/remove', {
 			method: "DELETE",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: user.id
 			})
@@ -567,7 +551,8 @@ export class MainUser extends User
 		console.log("accepting friend")
 		const response = await fetch('/api/friends/accept', {
 			method: "POST",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${this.m_token}` },
+			credentials: 'include',
+			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: user.id
 			})
@@ -604,7 +589,7 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/reset", {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				email: this.email,
 			})
@@ -621,8 +606,7 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/remove", {
 			method: 'POST',
-			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
-			
+			credentials: 'include'
 		});
 
 		return response.status;
@@ -635,7 +619,8 @@ export class MainUser extends User
 
 		var response = await fetch("/api/totp/validate", {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				totp: totp,
 			})
@@ -648,7 +633,7 @@ export class MainUser extends User
 	{
 		const res = await fetch ('api/user/delete', {
 			method: "DELETE",
-			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include',
 		});
 		this.logout();
 		return res.status;
@@ -658,18 +643,18 @@ export class MainUser extends User
 	{
 		const res = await fetch ('api/user/reset', {
 			method: "DELETE",
-			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include'
 		});
 		return res.status;
 	}
 
 	public async removeFromQueue(): Promise<number>
 	{
-		if (this.id == -1 || !this.m_token)
+		if (this.id == -1)
 			return -1;
 		const res = await fetch("/api/chat/removeQueue", { 
 			method: "DELETE",
-			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include'
 		});
 		return res.status;
 	}
@@ -678,7 +663,8 @@ export class MainUser extends User
 	{
 		const res = await fetch('/api/user/block', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ 
 				id: id
 			})
@@ -692,7 +678,8 @@ export class MainUser extends User
 		console.log("unblocking");
 		const res = await fetch('/api/user/unblock', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ 
 				id: id
 			})

@@ -1,4 +1,4 @@
-import { core, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
+import { core, rateLimitMed } from 'core/server.js';
 import * as duel from 'modules/users/duel.js';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -6,7 +6,6 @@ import { jwtVerif } from 'modules/jwt/jwt.js';
 export async function duelRoutes(fastify: FastifyInstance)
 {
 	const duelSchema = {
-		headers: tokenHeader,
 		body: {
 			type: 'object',
 			properties: {
@@ -22,11 +21,10 @@ export async function duelRoutes(fastify: FastifyInstance)
 		},
 		schema:
 		{
-			headers: tokenHeader
 		}
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 			const data: any = await jwtVerif(token, core.sessionKey);
@@ -43,7 +41,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 			const { id } = request.body as { id: number };
@@ -61,7 +59,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 			const { id } = request.body as { id: number };
@@ -79,7 +77,7 @@ export async function duelRoutes(fastify: FastifyInstance)
 		schema: duelSchema
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 			const { id } = request.body as { id: number };

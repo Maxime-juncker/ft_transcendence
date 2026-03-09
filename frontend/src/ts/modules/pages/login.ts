@@ -61,7 +61,6 @@ export class LoginView extends ViewComponent
 
 		if (vars.get("oauth_token"))
 		{
-			setCookie("jwt_session", vars.get("oauth_token"), 10);
 			window.history.replaceState({}, document.title, "/login");
 			await MainUser.Instance?.loginSession();
 			Router.Instance?.setView("/lobby");
@@ -118,7 +117,6 @@ export class LoginView extends ViewComponent
 		const { status, data } = await MainUser.Instance.login(emailInput.value, passwInput.value, totpInput.value);
 		if (status == 200)
 		{
-			setCookie("jwt_session", data.token, 10);
 			await MainUser.Instance.loginSession();
 			Router.Instance?.navigateTo("/lobby");
 			return ;
@@ -144,7 +142,6 @@ export class LoginView extends ViewComponent
 		const data = await res.json();
 		if (res.status == 200)
 		{
-			setCookie("jwt_session", data.token, 10);
 			await MainUser.Instance?.loginSession();
 		}
 	}
@@ -187,7 +184,6 @@ export class LoginView extends ViewComponent
 			const { status, data } = await MainUser.Instance.login(email, passw, "");
 			if (status == 200)
 			{
-				setCookie("jwt_session", data.token, 10);
 				MainUser.Instance.loginSession();
 				return ;
 			}

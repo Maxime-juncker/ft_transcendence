@@ -319,7 +319,8 @@ export class TournamentLobby
 			const res = await fetch('/api/tournament/start',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ lobbyId: this.tournamentId })
 			});
 
@@ -360,7 +361,8 @@ export class TournamentLobby
 			const res = await fetch('/api/tournament/leave',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify ({ lobbyId: this.tournamentId })
 			});
 

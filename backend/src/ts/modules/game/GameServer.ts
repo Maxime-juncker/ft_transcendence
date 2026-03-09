@@ -2,7 +2,7 @@ import { GameInstance, Parameters } from './GameInstance.js';
 import { Bot } from './Bot.js';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { addGameToHist, getUserByName, getUserName } from 'modules/users/user.js';
-import { core, chat, tournamentManager, tokenHeader, getToken, rateLimitMed } from 'core/server.js';
+import { core, chat, tournamentManager, rateLimitMed } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { getBotId } from 'modules/users/userManagment.js';
@@ -79,7 +79,6 @@ export class GameServer
 			schema:
 			{
 				rateLimit: rateLimitMed,
-				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -95,11 +94,11 @@ export class GameServer
 		{
 			try
 			{
-				const token = getToken(request.headers.authorization as string);
+				const token = request.cookies['jwt_session'];
 				if (!token)
-					return reply.status(400).send({ error: 'missing authorization header' });
+					return reply.status(400).send({ error: 'missing token' });
 
-				const body = request.body as { mode: string; token: string};
+				const body = request.body as { mode: string };
 				const mode = body.mode;
 				const params = new Parameters();
 
@@ -205,7 +204,6 @@ export class GameServer
 			schema:
 			{
 				rateLimit: rateLimitMed,
-				headers: tokenHeader,
 				params:
 				{
 					type: "object",
@@ -222,11 +220,11 @@ export class GameServer
 			try
 			{
 				const { gameId } = request.params as { gameId: string };
-				const token = getToken(request.headers.authorization as string);
+				const token = request.cookies['jwt_session'];
 				if (!token)
 				{
-					Logger.error('Missing authorization header for starting game');
-					return reply.status(400).send({ error: 'missing authorization header' });
+					Logger.error('Missing token');
+					return reply.status(400).send({ error: 'missing token' });
 				}
 
 				const data: any = await jwtVerif(token, core.sessionKey);
