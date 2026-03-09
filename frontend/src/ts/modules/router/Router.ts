@@ -16,6 +16,8 @@ export class Router
 
 	private m_prevView:		ViewComponent | null = null;
 	private m_activeView:	ViewComponent | null = null;
+
+	private channel: BroadcastChannel | null = null;
 	
 	public static get Instance(): Router | null { return Router.m_instance; }
 
@@ -155,7 +157,7 @@ export class Router
 			this.setView("*")
 			return;
 		}
-	
+
 		this.setView(matchRoute.path);
 	}
 

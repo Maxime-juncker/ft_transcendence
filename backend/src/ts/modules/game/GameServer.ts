@@ -116,6 +116,21 @@ export class GameServer
 
 				if (mode === 'local')
 				{
+					for (const [id, game] of this.activeGames)
+					{
+						if (game.mode === 'local')
+						{
+							if (game.player1Id == data.id && !game.winner)
+							{
+								Logger.log(`Found existing local game ${id} for: ${await getUserName(data.id)}`);
+								reply.status(201).send({ gameId: id, opponentId: game.player2Id, playerSide: '1',
+									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
+									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+								return ;
+							}
+						}
+					}
+
 					const gameId = crypto.randomUUID();
 					const opponentId = 0;
 					const game = new GameInstance(mode, data.id, opponentId, gameId);
@@ -131,7 +146,7 @@ export class GameServer
 					{
 						if (game.mode === 'online')
 						{
-							if ((game.player1Id == data.id || game.player2Id == data.id) && game.winner === null)
+							if ((game.player1Id == data.id || game.player2Id == data.id) && !game.winner)
 							{
 								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
 								const playerSide = (game.player1Id == data.id) ? '1' : '2';
@@ -333,7 +348,14 @@ export class GameServer
 				{
 					gameConnections.set(gameId, new Map());
 				}
-				gameConnections.get(gameId)!.set(playerId, connection);
+
+				const existingConnection = gameConnections.get(gameId)!.get(playerId);
+				if (existingConnection)
+				{
+					connection.send(JSON.stringify({ type: 'error', message: 'Already connected' }));
+					connection.close();
+					return ;
+				}
 
 				if (game.mode === 'bot' && game.reversedBuffer && playerId === '1')
 				{
@@ -391,10 +413,18 @@ export class GameServer
 					}
 
 					const winner = game?.winner;
-					if (winner !== null)
+					if (winner)
 					{
-						connection.send(JSON.stringify({ type: 'winner', winner }));
 						clearInterval(interval);
+
+						try
+						{
+							connection.send(JSON.stringify({ type: 'winner', winner }));
+						}
+						catch (e)
+						{
+							Logger.error('Failed to send winner message:', e);
+						}
 					}
 				};
 

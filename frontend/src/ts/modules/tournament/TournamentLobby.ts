@@ -340,39 +340,10 @@ export class TournamentLobby
 		}
 	}
 
-	private leaveRedirect = async (): Promise<void> =>
+	private leaveRedirect = (): void =>
 	{
-		await this.leaveTournament();
-		this.router.navigateTo('tournament-menu', '');
-	}
-
-	private leaveTournament = async (): Promise<void> =>
-	{
-		if (!this.tournamentId || this.tournamentId === "" || this.isLeaving)
-		{
-			return;
-		}
-
 		this.isLeaving = true;
-
-		try
-		{
-			const res = await fetch('/api/tournament/leave',
-			{
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
-				body: JSON.stringify ({ lobbyId: this.tournamentId })
-			});
-
-			if (!res.ok)
-			{
-				console.error('Failed to leave tournament:', await res.text());
-			}
-		}
-		catch (e)
-		{
-			console.error('Error leaving tournament:', e);
-		}
+		this.router.navigateTo('tournament-menu', '');
 	}
 
 	public async destroy(): Promise<void>
@@ -416,9 +387,5 @@ export class TournamentLobby
 			this.chat.removeOnGameCreated(this.matchListener);
 		}
 
-		if (!this.isLeaving && !this.matchStarted)
-		{
-			await this.leaveTournament();
-		}
 	}
 }

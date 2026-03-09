@@ -69,6 +69,7 @@ const routes = [
 	"/search.html",
 	"/about.html",
 	"/404.html",
+	"/409.html"
 ]
 
 new ServerSideRendering(core.fastify, routes);

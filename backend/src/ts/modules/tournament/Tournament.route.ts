@@ -13,7 +13,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 			websocket: true,
 			config:
 			{
-				rateLimit: rateLimitHard
+				rateLimit: rateLimitMed // Need to change to hard
 			}
 		},
 		async (socket: WebSocket, request: FastifyRequest) =>
@@ -38,13 +38,30 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 
 			const res = await tournamentManager.createLobby(data.id, socket);
 
-			const lobbyId = res.data?.id as string | undefined;
+			if (res.code === 202)
+			{
+				socket.once('close', () => tournamentManager.removePendingWs(data.id, socket));
+				return ;
+			}
+
+			let lobbyId = res.data?.id as string | undefined;
+			if (res.code === 409)
+			{
+				const reconnectRes = await tournamentManager.reconnectToLobby(data.id, socket);
+				lobbyId = reconnectRes.data?.id as string | undefined;
+				if (lobbyId)
+				{
+					Logger.log(`[tournament/create] player ${data.id} reconnected to existing lobby ${lobbyId}`);
+				}
+			}
+
 			if (lobbyId)
 			{
+				const capturedLobbyId = lobbyId;
 				socket.on('close', async () =>
 				{
-					Logger.log(`[tournament/create] socket closed for owner ${data.id}, leaving lobby ${lobbyId}`);
-					await tournamentManager.leaveLobby(data.id, lobbyId);
+					Logger.log(`[tournament/create] socket closed for owner ${data.id}, leaving lobby ${capturedLobbyId}`);
+					await tournamentManager.leaveLobby(data.id, capturedLobbyId);
 				});
 			}
 		});
@@ -96,10 +113,21 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 
 			const res = await tournamentManager.addPlayerToLobby(data.id, socket, lobbyId);
 
+			let effectiveLobbyId = lobbyId;
+			if (res.code === 409)
+			{
+				const reconnectRes = await tournamentManager.reconnectToLobby(data.id, socket);
+				if (reconnectRes.data?.id)
+				{
+					effectiveLobbyId = reconnectRes.data.id;
+					Logger.log(`[tournament/join] player ${data.id} reconnected to lobby ${effectiveLobbyId}`);
+				}
+			}
+
 			socket.on('close', async () =>
 			{
-				Logger.log(`[tournament/join] socket closed for user ${data.id}, leaving lobby ${lobbyId}`);
-				await tournamentManager.leaveLobby(data.id, lobbyId);
+				Logger.log(`[tournament/join] socket closed for user ${data.id}, leaving lobby ${effectiveLobbyId}`);
+				await tournamentManager.leaveLobby(data.id, effectiveLobbyId);
 			});
 		});
 	});

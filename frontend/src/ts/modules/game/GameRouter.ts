@@ -36,6 +36,7 @@ export class GameRouter
 	get view(): ViewComponent | null { return this.m_view; }
 	get lobby(): TournamentLobby | null { return this.m_lobby; }
 	get	tournamentMenu(): TournamentMenu | null { return this.m_tournamentMenu; }
+	get instance(): GameClient | null { return (this.gameInstance); }
 
 	constructor(user: User | null = null, chat: Chat | null = null, view: ViewComponent | null = null)
 	{

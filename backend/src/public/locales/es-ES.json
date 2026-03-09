@@ -14,7 +14,9 @@
 	"leaderboard": "clasificación",
 	"history": "historial",
 	"homepage": "página principal",
-	"404": "404 no encontrado",
+	"404": "404 - No Encontrado",
+	"409": "409 - Conflicto",
+	"conflict-text": "Ya tienes una pestaña abierta",
 	"loading-tournament": "creando torneo...",
 	"loading": "cargando",
 	"text": {
