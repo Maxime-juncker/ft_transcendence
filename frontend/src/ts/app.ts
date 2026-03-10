@@ -48,6 +48,9 @@ new ThemeController(themes, defaultTheme);
 
 const router = new Router(routes);
 await router.init();
+router.onPageshow(async (persisted: boolean) => {
+	await user.loginSession();
+})
 
 user.onLogout(() => Router.Instance?.navigateTo("/"));
 

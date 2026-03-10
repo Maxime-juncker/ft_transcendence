@@ -56,6 +56,19 @@ export class LobbyView extends ViewComponent
 	    
 		this.m_loading.stopLoading();
 		this.m_chat.Init(chatOutput, chatInput);
+
+		this.querySelector("#user-list-btn")?.addEventListener("click", () => {
+			if (!this.m_chat || !MainUser.Instance)
+					return;
+			this.showListContainer(ListState.USER, this.m_chat, MainUser.Instance);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
+		});
+		this.querySelector("#friend-list-btn")?.addEventListener("click", () => {
+			if (!this.m_chat || !MainUser.Instance)
+				return;
+			this.showListContainer(ListState.FRIEND, this.m_chat, MainUser.Instance);
+			window.dispatchEvent(new CustomEvent('pageChanged'));
+		});
 	}
 
 	public async enable()
@@ -95,16 +108,6 @@ export class LobbyView extends ViewComponent
 		if (container)
 			container.innerHTML = "";
 
-		this.addTrackListener(this.querySelector("#user-list-btn"), "click", () => {
-			if (!this.m_chat || !MainUser.Instance) return;
-			this.showListContainer(ListState.USER, this.m_chat, MainUser.Instance);
-			window.dispatchEvent(new CustomEvent('pageChanged'));
-		});
-		this.addTrackListener(this.querySelector("#friend-list-btn"), "click", () => {
-			if (!this.m_chat || !MainUser.Instance) return;
-			this.showListContainer(ListState.FRIEND, this.m_chat, MainUser.Instance);
-			window.dispatchEvent(new CustomEvent('pageChanged'));
-		});
 
 		new HeaderSmall(MainUser.Instance, this, "header-container");
 		setPlaceHolderText("");

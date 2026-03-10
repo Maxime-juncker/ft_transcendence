@@ -288,14 +288,13 @@ export class User
 	{
 		file.append('token', this.m_token);
 
-		var response = await fetch("/api/user/upload/avatar", {
+		var response = await fetch("/api/user/avatar/upload", {
 			method: "POST",
 			headers: { 'Authorization': `Bearer ${this.m_token}` },
 			body: file
 		});
 		var data = await response.json();
 		console.log(data);
-		// if (response.status == 200)
 		this.m_avatarPath = "/public/avatars/" + data.filename;
 
 		return { code: response.status, data: data };

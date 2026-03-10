@@ -220,6 +220,13 @@ export class Chat
 			if (res.code === 200)
 				login = res.data.name;
 
+			if (this.isUserConnected(data.id))
+			{
+				ws.send(this.serverMsg("already connected to chat"));
+				ws.close(1008);
+				return;
+			}
+
 			Logger.log(`${login} has connected to chat`);
 			this.m_connections.set(ws, data.id);
 

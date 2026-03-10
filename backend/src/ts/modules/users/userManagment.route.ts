@@ -3,7 +3,7 @@ import { core, chat, rateLimitMed, rateLimitHard, tokenHeader, getToken } from '
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
-import { uploadAvatar } from './avatars.js';
+import { uploadAvatar, resetAvatar } from './avatars.js';
 
 //
 // User managment
@@ -172,8 +172,21 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		return reply.code(res.code).send(res.data);
 	})
 
-	// TODO: CHECK FRONT FOR AVATAR
-	fastify.post('/upload/avatar', {
+	fastify.post('/avatar/reset', {
+		schema: { headers: tokenHeader }
+	}, async (request: FastifyRequest, reply: FastifyReply) => {
+		const token = getToken(request.headers.authorization as string);
+		if (!token)
+			return reply.status(400).send({ error: 'missing authorization header' });
+		const data: any = await jwt.jwtVerif(token, core.sessionKey);
+		if (!data)
+			return reply.code(400).send({ message: "token is invalid" });
+
+		const res = await resetAvatar(data.id);
+		return reply.code(res.code).send(res.data);
+	});
+
+	fastify.post('/avatar/upload', {
 		config: { 
 			rateLimit: rateLimitHard
 		},
