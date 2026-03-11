@@ -5,11 +5,12 @@ import { MainUser } from 'modules/user/User.js';
 
 export class LoginView extends ViewComponent
 {
-	private m_createBtn: HTMLButtonElement | null = null
-	private m_loginBtn: HTMLButtonElement | null = null
-	private m_fortytwoBtn: HTMLButtonElement | null = null
-	private m_githubBtn: HTMLButtonElement | null = null
-	private m_guestBtn: HTMLButtonElement | null = null
+	private m_createBtn: HTMLButtonElement | null = null;
+	private m_loginBtn: HTMLButtonElement | null = null;
+	private m_fortytwoBtn: HTMLButtonElement | null = null;
+	private m_githubBtn: HTMLButtonElement | null = null;
+	private m_guestBtn: HTMLButtonElement | null = null;
+	private m_lobbyNavBtn: HTMLButtonElement | null = null;
 
 	constructor()
 	{
@@ -32,6 +33,10 @@ export class LoginView extends ViewComponent
 		this.m_fortytwoBtn = this.querySelector("#forty_two_log_btn");
 		this.m_githubBtn = this.querySelector("#github_log_btn");
 		this.m_guestBtn = this.querySelector("#guest_log_btn");
+		this.m_lobbyNavBtn = this.querySelector("#lobby_btn");
+		this.m_lobbyNavBtn?.addEventListener("click", () => { 
+			Router.Instance?.navigateTo("/lobby");
+		});
 	}
 
 	public setBtn()
@@ -47,10 +52,46 @@ export class LoginView extends ViewComponent
 		this.m_fortytwoBtn?.classList.remove("btn-disable");
 		this.m_githubBtn?.classList.remove("btn-disable");
 		this.m_guestBtn?.classList.remove("btn-disable");
+
+		if (this.m_lobbyNavBtn)
+			this.m_lobbyNavBtn.style.display = "none";
+	}
+
+	private restoreDOM()
+	{
+		{
+			let	email = this.querySelector("#login_email") as HTMLInputElement;
+			let	passw = this.querySelector("#login_passw") as HTMLInputElement;
+			let totp = this.querySelector("#login_totp") as HTMLInputElement;
+
+			if (email)
+				email.value = "";
+			if (passw)
+				passw.value = "";
+			if (totp)
+				totp.value = "";
+		}
+
+		{
+			var		email = this.querySelector("#create_email") as HTMLInputElement;
+			var		passw = this.querySelector("#create_passw") as HTMLInputElement;
+			var		confirmPassw = this.querySelector("#confirm_passw") as HTMLInputElement;
+			var		username = this.querySelector("#create_username") as HTMLInputElement;
+
+			if (email)
+				email.value = "";
+			if (passw)
+				passw.value = "";
+			if (confirmPassw)
+				confirmPassw.value = "";
+			if (username)
+				username.value = "";
+		}
 	}
 
 	public async enable()
 	{
+		setPlaceHolderText("");
 		const vars = getUrlVar();
 
 		const error = vars.get("error");
@@ -90,11 +131,15 @@ export class LoginView extends ViewComponent
 		if (this.m_guestBtn)
 			this.m_guestBtn = this.disableBtn(this.m_guestBtn) as HTMLButtonElement;
 
+		if (this.m_lobbyNavBtn)
+			this.m_lobbyNavBtn.style.display = "block";
+
 		setPlaceHolderText("you already are login");
 	}
 
 	public async disable()
 	{
+		this.restoreDOM();
 		this.clearTrackListener();
 	}
 

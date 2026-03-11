@@ -249,14 +249,13 @@ export class User
 	public async uploadAvatar(file: FormData): Promise<{ code: number, data: any }>
 	{
 
-		var response = await fetch("/api/user/upload/avatar", {
+		var response = await fetch("/api/user/avatar/upload", {
 			method: "POST",
 			credentials: 'include',
 			body: file
 		});
 		var data = await response.json();
 		console.log(data);
-		// if (response.status == 200)
 		this.m_avatarPath = "/public/avatars/" + data.filename;
 
 		return { code: response.status, data: data };

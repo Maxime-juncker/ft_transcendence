@@ -154,6 +154,7 @@ async function logout(i: number): Promise<TestResult>
 		method: "POST",
 		headers: { 'Cookie': `jwt_session=${user.token}` },
 	})
+	user.ws?.close();
 	return { code: res.status, data: await res.json()}
 }
 

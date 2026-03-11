@@ -16,6 +16,7 @@ export class Router
 
 	private m_prevView:		ViewComponent | null = null;
 	private m_activeView:	ViewComponent | null = null;
+	private m_onPageshowCb:	Array<(restored: boolean) => Promise<void>>;
 	
 	public static get Instance(): Router | null { return Router.m_instance; }
 
@@ -34,6 +35,7 @@ export class Router
 
 		this.m_views = new Map<string, ViewComponent>();
 		this.m_routes = routes;
+		this.m_onPageshowCb = [];
 	}
 
 	public async init()
@@ -45,6 +47,15 @@ export class Router
 			this.loadInitialRoute();
 		});
 
+		window.addEventListener("pageshow", async (event) => {
+			for (let i = 0; i < this.m_onPageshowCb.length; i++)
+			{
+				await this.m_onPageshowCb[i](event.persisted);
+			}
+
+			this.loadInitialRoute();
+		});
+
 		// if url contain hash, browser will scroll to it which shift everything up
 		if (window.location.hash)
 		{
@@ -52,6 +63,11 @@ export class Router
 				window.scrollTo(0, 0);
 			}, 0);
 		}
+	}
+
+	public onPageshow(cb: (restored: boolean) => Promise<void>)
+	{
+		this.m_onPageshowCb.push(cb);
 	}
 
 	/**
@@ -161,6 +177,7 @@ export class Router
 
 	public navigateTo(path: string)
 	{
+		console.log("pushState:", path);
 		window.history.pushState({}, '', path);
 		this.loadRoute(path);
 	}
