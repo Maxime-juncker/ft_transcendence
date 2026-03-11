@@ -172,7 +172,7 @@ export async function setIsLogin(id: number, isLogin: number)
 
 export async function login(email: string, passw: string, totp: string) : Promise<DbResponse>
 {
-	var sql = 'GET * from users WHERE email = ? AND passw = ?';
+	var sql = 'SELECT * from users WHERE email = ? AND passw = ?';
 
 	const hash = await hashString(passw);
 
