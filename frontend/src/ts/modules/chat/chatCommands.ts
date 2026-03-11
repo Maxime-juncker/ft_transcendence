@@ -51,7 +51,8 @@ export function registerCmds(chat: Chat)
 			message = argv[2];
 		const res = await fetch("/api/chat/dm", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				username: argv[1],
 				msg: message
@@ -92,7 +93,7 @@ export function registerCmds(chat: Chat)
 		}
 		const res = await fetch("/api/chat/list", {
 			method: "POST",
-			headers: { 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
 		});
 		const json = await res.json();
 		var str = "+++ listing invites +++";
@@ -147,7 +148,8 @@ export function registerCmds(chat: Chat)
 		const json = await res.json();
 		res = await fetch("/api/chat/invite", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				lobbyId: chat.user.gameRouter.m_lobby.id,
 				userId: json.id
@@ -178,7 +180,8 @@ export function registerCmds(chat: Chat)
 
 		res = await fetch("/api/chat/accept", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				userId: json.id
 			})
@@ -217,7 +220,8 @@ export function registerCmds(chat: Chat)
 		const json = await res.json();
 		res = await fetch("/api/chat/decline", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				userId: json.id
 			})
@@ -236,7 +240,7 @@ export function registerCmds(chat: Chat)
 		}
 		const res = await fetch("/api/duel/list", {
 			method: "POST",
-			headers: { 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include'
 		});
 		const json = await res.json();
 		var str = "+++ listing duels +++";
@@ -277,7 +281,8 @@ export function registerCmds(chat: Chat)
 		const json = await res.json();
 		res = await fetch("/api/duel/invite", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				id: json.id
 			})
@@ -305,7 +310,8 @@ export function registerCmds(chat: Chat)
 
 		res = await fetch("/api/duel/accept", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				id: json.id
 			})
@@ -331,7 +337,8 @@ export function registerCmds(chat: Chat)
 		const json = await res.json();
 		res = await fetch("/api/duel/decline", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				id: json.id
 			})
@@ -370,7 +377,8 @@ export function registerCmds(chat: Chat)
 		const id = json.id;
 		response = await fetch("/api/friends/send_request", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: id
 			})
@@ -397,7 +405,8 @@ export function registerCmds(chat: Chat)
 		const id = json.id;
 		response = await fetch("/api/friends/remove", {
 			method: "DELETE",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: id
 			})
@@ -424,7 +433,8 @@ export function registerCmds(chat: Chat)
 		const id = json.id;
 		response = await fetch("/api/friends/accept", {
 			method: "POST",
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: id
 			})
@@ -442,7 +452,7 @@ export function registerCmds(chat: Chat)
 		}
 		const response = await fetch('/api/user/blocked_users', {
 			method: 'POST',
-			headers: { 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
 		});
 		displayResponse(chat, response);
 	});
@@ -464,7 +474,8 @@ export function registerCmds(chat: Chat)
 		}
 		response = await fetch('/api/user/block', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ 
 				id: json.id
 			})
@@ -490,7 +501,8 @@ export function registerCmds(chat: Chat)
 		}
 		response = await fetch('/api/user/unblock', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${chat.user?.token}` },
+			credentials: 'include',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ 
 				id: json.id
 			})

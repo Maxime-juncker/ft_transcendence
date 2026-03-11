@@ -161,19 +161,15 @@ export class Chat
 
 	private async validateMessage(json: any): Promise<DbResponse>
 	{
-		if (!json.token || !json.message)
-			return { code: 400, data: { message: "bad message, should be: { token: <token>, message: <message> }"}};
+		if (!json.message)
+			return { code: 400, data: { message: "bad message, should be: { message: <message> }"}};
 
 		if (json.message.length > core.maxChatMsgLen)
 			return { code: 403, data: { message: `message too long (max: ${core.maxChatMsgLen})`}};
 		if (json.message.length == 0)
 			return { code: 403, data: { message: `cannot send empty message`}};
 
-		const data: any = await jwtVerif(json.token, core.sessionKey);
-		if (!data)
-			return { code: 400, data: { message: "bad token" }};
-
-		return { code: 200, data: { id: data.id }};
+		return { code: 200 , data: ''};
 	}
 
 	private async onMessage(message: any, connection: WebSocket)

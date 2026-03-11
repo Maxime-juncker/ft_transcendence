@@ -184,9 +184,9 @@ export class SettingsView extends ViewComponent
 		console.log("updating password");
 		const res = await fetch("/api/user/update/passw", {
 			method: "POST",
+			credentials: 'include',
 			headers: {
 				'content-type': 'application/json',
-				'Authorization': `Bearer ${MainUser.Instance.token}`
 			},
 			body: JSON.stringify({
 				oldPass: oldPass,
@@ -244,7 +244,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/name", {
 				method: "POST",
-				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				credentials: 'include',
+				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ name: this.usernameInput.value })
 			});
 			const data = await res.json();
@@ -258,7 +259,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/email", {
 				method: "POST",
-				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				credentials: 'include',
+				headers: { 'content-type': 'application/json'},
 				body: JSON.stringify({ email: this.emailInput.value })
 			});
 			const data = await res.json();

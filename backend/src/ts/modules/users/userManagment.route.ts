@@ -1,9 +1,10 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { core, chat, rateLimitMed, rateLimitHard, tokenHeader, getToken } from 'core/server.js';
+import { core, chat, rateLimitMed, rateLimitHard } from 'core/server.js';
 import * as mgmt from 'modules/users/userManagment.js';
 import * as jwt from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
 import { uploadAvatar } from './avatars.js';
+
 
 //
 // User managment
@@ -11,7 +12,7 @@ import { uploadAvatar } from './avatars.js';
 export async function userManagmentRoutes(fastify: FastifyInstance)
 {
 	fastify.get('/get_session', { config: { rateLimit: rateLimitMed } }, async (request: FastifyRequest, reply) => {
-		const token = request.cookies.jwt_session;
+		const token = request.cookies['jwt_session'];
 		if (token)
 		{
 			const res = await mgmt.loginSession(token);
@@ -37,7 +38,13 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		if (res.code == 200)
 		{
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
-			return reply.code(200).send({ token: token });
+			return reply.code(200).setCookie('jwt_session', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'strict',
+				path: '/',
+				maxAge: 60 * 60 * 24 * 7,
+			}).send({ success: true });
 		}
 
 		return reply.code(res.code).send(res.data);
@@ -67,7 +74,13 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			return reply.code(res.code).send(res.data);
 
 		const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
-		return reply.code(res.code).send({ token: token });
+		return reply.code(res.code).setCookie('jwt_session', token, {
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			path: '/',
+			maxAge: 60 * 60 * 24 * 7,
+		}).send({ success: true });
 	})
 
 	fastify.post('/login', {
@@ -88,15 +101,21 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		{
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
 			Logger.log("creating new token:", token);
-			return reply.code(200).send({ token: token });
+			return reply.code(200).setCookie('jwt_session', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'strict',
+				path: '/',
+				maxAge: 60 * 60 * 24 * 7,
+			}).send({ success: true });
 		}
 		return reply.code(res.code).send(res.data);
 	})
 
 	fastify.post('/logout', {
-		schema: { headers: tokenHeader }
+		schema: { }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session'];
 		if (!token)
 			return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -105,7 +124,12 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			return reply.code(400).send({ message: "invalid token" });
 
 		chat.disconnectClientById(data.id);
-		return reply.code(200).send({ message: "Success"});
+		return reply.code(200).clearCookie('jwt_session', {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict'
+		}).send({ message: "Success"});
 	})
 
 	fastify.delete('/reset', {
@@ -113,10 +137,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: { 
-			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -131,10 +154,10 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: { headers: tokenHeader }
+		schema: { }
 	},
 		async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -150,7 +173,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: "object",
 				properties: {
@@ -160,7 +182,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session'];
 		if (!token)
 			return reply.status(400).send({ error: 'missing authorization header' });
 		const { new_status} = request.body as { new_status: number };
@@ -178,10 +200,9 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitHard
 		},
 		schema: {
-			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -202,7 +223,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				required: ['oldPass', 'newPass' ],
@@ -213,7 +233,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 			const { oldPass, newPass } = request.body as { oldPass: string, newPass: string };
@@ -230,7 +250,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				required: ['name'],
@@ -240,7 +259,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				return reply.status(400).send({ error: 'missing authorization header' });
@@ -260,7 +279,6 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				required: ['email'],
@@ -270,7 +288,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				return reply.status(400).send({ error: 'missing authorization header' });
@@ -299,7 +317,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				return reply.status(400).send({ error: 'missing authorization header' });
@@ -328,7 +346,7 @@ export async function userManagmentRoutes(fastify: FastifyInstance)
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				return reply.status(400).send({ error: 'missing authorization header' });

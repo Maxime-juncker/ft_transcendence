@@ -104,7 +104,6 @@ impl Game {
             self.context.location, self.game_id
         );
         let mut header = HeaderMap::new();
-        header.insert("Authorization", format!("Bearer {}", self.auth.borrow().token.clone()).parse()?);
         let response = self.context.client.post(url).headers(header).send().await?;
         if response.status() != 200 && response.status() != 201 {
             return Err(anyhow!("Error starting game"));

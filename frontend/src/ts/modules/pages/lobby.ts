@@ -37,8 +37,8 @@ export class LobbyView extends ViewComponent
 		if (!MainUser.Instance)
 			return;
 
-		console.warn(`wss://${window.location.host}/api/tournament/create?token=${MainUser.Instance.token}`)
-		this.gameWs = new WebSocket(`wss://${window.location.host}/api/tournament/create?token=${MainUser.Instance.token}`);
+		console.warn(`wss://${window.location.host}/api/tournament/create`)
+		this.gameWs = new WebSocket(`wss://${window.location.host}/api/tournament/create`);
 		this.gameWs.onmessage = (event: any) => {
 			const json = JSON.parse(event.data);
 			console.warn(json);

@@ -1,6 +1,6 @@
 use crate::Context;
 use crate::game::WsStream;
-use reqwest::{Client, header::HeaderMap};
+use reqwest::Client;
 use anyhow::{Result, anyhow};
 use futures_util::StreamExt;
 use std::collections::HashMap;
@@ -153,13 +153,15 @@ pub(crate) async fn signup(
         .json(&body)
         .send()
         .await?;
-    let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
-    if body["token"].as_str().is_some() {
+    if response.status() == 200 {
         login(context, (signup_infos.2, signup_infos.1, String::new())).await
-    } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!("Error signing up: {}", error))
     } else {
-        Err(anyhow!("Error signing up"))
+        let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
+        if let Some(error) = body["message"].as_str() {
+            Err(anyhow!("Error signing up: {}", error))
+        } else {
+            Err(anyhow!("Error signing up"))
+        }
     }
 }
 
@@ -181,28 +183,31 @@ pub(crate) async fn login(
         .json(&body)
         .send()
         .await?;
-    let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
-    if let Some(token) = body["token"].as_str() {
-        let (id, receiver) = get_id_and_launch_chat(context.clone(), token.to_string()).await?;
-        Ok((token.to_string(), id, receiver))
-    } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!("Error logging in: {}", error))
+    if response.status() == 200 {
+        let token = response
+            .cookies()
+            .find(|c| c.name() == "jwt_session")
+            .map(|c| c.value().to_string())
+            .ok_or_else(|| anyhow!("No jwt_session cookie in response"))?;
+        get_id_and_launch_chat(context, token).await
     } else {
-        Err(anyhow!("Error logging in"))
+        let body: serde_json::Value = response.json().await.map_err(|_| anyhow!("Server error"))?;
+        if let Some(error) = body["message"].as_str() {
+            Err(anyhow!("Error logging in: {}", error))
+        } else {
+            Err(anyhow!("Error logging in"))
+        }
     }
 }
 
 pub(crate) async fn get_id_and_launch_chat(
     context: Rc<Context>,
     token: String,
-) -> Result<(u64, mpsc::Receiver<serde_json::Value>)> {
+) -> Result<(String, u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/get_profile_token", context.location);
-    let mut header = HeaderMap::new();
-    header.insert("Authorization", format!("Bearer {}", &token).parse()?);
     let res = context
         .client
         .post(apiloc)
-        .headers(header)
         .send()
         .await?;
     let value: serde_json::Value = res.json().await?;
@@ -210,8 +215,8 @@ pub(crate) async fn get_id_and_launch_chat(
         Some(nbr) => nbr,
         _ => return Err(anyhow!("Error from server, no data received")),
     };
-    let receiver = enter_chat_room(&context.location, &token).await?;
-    Ok((player_id, receiver))
+    let receiver = enter_chat_room(&context.location, &token, context.client.clone()).await?;
+    Ok((token, player_id, receiver))
 }
 
 pub(crate) async fn create_guest_session(
@@ -219,12 +224,13 @@ pub(crate) async fn create_guest_session(
 ) -> Result<(String, u64, mpsc::Receiver<serde_json::Value>)> {
     let apiloc = format!("https://{}/api/user/create_guest", context.location);
     let res = context.client.post(apiloc).send().await?;
-    let body: serde_json::Value = res.json().await.map_err(|_| anyhow!("Server error"))?;
-    if let Some(token) = body["token"].as_str() {
-        let (id, receiver) = get_id_and_launch_chat(context, token.to_string()).await?;
-        Ok((token.to_string(), id, receiver))
-    } else if let Some(error) = body["message"].as_str() {
-        Err(anyhow!("Error creating guest session: {}", error))
+    if res.status() == 200 {
+        let token = res
+            .cookies()
+            .find(|c| c.name() == "jwt_session")
+            .map(|c| c.value().to_string())
+            .ok_or_else(|| anyhow!("No jwt_session cookie in response"))?;
+        get_id_and_launch_chat(context, token).await
     } else {
         Err(anyhow!("Error creating guest session"))
     }
@@ -233,6 +239,7 @@ pub(crate) async fn create_guest_session(
 async fn enter_chat_room(
     location: &String,
     token: &String,
+    client: Client,
 ) -> Result<mpsc::Receiver<serde_json::Value>> {
     let connector = Connector::NativeTls(
         native_tls::TlsConnector::builder()
@@ -243,23 +250,19 @@ async fn enter_chat_room(
     let mut request = format!("wss://{}/api/chat", location).into_client_request()?;
     let headers = request.headers_mut();
     headers.insert("Cookie", format!("jwt_session={}", token_chat).parse()?);
-    let (ws_stream, response) =
+    let (ws_stream, _) =
         connect_async_tls_with_config(request, None, false, Some(connector)).await?;
     let (sender, receiver): (
         mpsc::Sender<serde_json::Value>,
         mpsc::Receiver<serde_json::Value>,
     ) = mpsc::channel(1024);
     tokio::spawn(async move {
-        let _ = chat(ws_stream, sender, token_chat, location_chat).await;
+        let _ = chat(ws_stream, sender, client, location_chat).await;
     });
     Ok(receiver)
 }
 
-async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, token: String, location: String) -> Result<()> {
-        let client = Client::builder()
-                .danger_accept_invalid_certs(true)
-                .build()
-                .expect("Impossible to build new client, try again");
+async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, client: Client, location: String) -> Result<()> {
         while let Some(msg) = ws_stream.next().await {
         let last_message = match msg {
             Ok(Message::Text(result)) => result,
@@ -273,10 +276,7 @@ async fn chat(mut ws_stream: WsStream, sender: mpsc::Sender<serde_json::Value>, 
         };
         match message["flag"].as_str() {
             Some(value) if value == "health" => {
-                let mut header = HeaderMap::new();
-                header.insert("Authorization", format!("Bearer {}", token.clone()).parse()?);
                 client.post(format!("https://{}/api/chat/healthCallback", &location))
-                    .headers(header)
                     .send()
                     .await?;
             },

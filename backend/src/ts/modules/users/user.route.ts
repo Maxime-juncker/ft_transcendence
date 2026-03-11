@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { core, tokenHeader, getToken } from 'core/server.js';
+import { core } from 'core/server.js';
 import * as user from 'modules/users/user.js'
 import { GameRes } from 'modules/users/user.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
@@ -13,9 +13,9 @@ export async function userRoutes(fastify: FastifyInstance)
 	})
 
 	fastify.post('/blocked_users', {
-		schema: { headers: tokenHeader }
+		schema: {  }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -80,9 +80,9 @@ export async function userRoutes(fastify: FastifyInstance)
 		)
 
 		fastify.post('/get_profile_token', {
-			schema: { headers: tokenHeader }
+			schema: {  }
 		}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -180,9 +180,9 @@ export async function userRoutes(fastify: FastifyInstance)
 		});
 
 	fastify.post('/complete_tutorial', {
-		schema: { headers: tokenHeader }
+		schema: {  }
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-			const token = getToken(request.headers.authorization as string);
+			const token = request.cookies['jwt_session'];
 			if (!token)
 				return reply.status(400).send({ error: 'missing authorization header' });
 
