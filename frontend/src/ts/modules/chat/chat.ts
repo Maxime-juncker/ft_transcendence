@@ -146,7 +146,6 @@ export class Chat
 			if (this.m_chatbox)
 				this.m_chatbox.innerHTML = "";
 			
-			MainUser.Instance.removeFromQueue();
 			this.connect();
 		}
 	}
@@ -160,7 +159,6 @@ export class Chat
 	public disconnect()
 	{
 		console.log("disconnecting");
-		MainUser.Instance?.removeFromQueue();
 		this.m_ws?.close();
 		this.m_isConnected = false;
 		if (this.m_chatbox)

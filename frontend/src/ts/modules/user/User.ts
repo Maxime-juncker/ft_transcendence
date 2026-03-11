@@ -1,4 +1,3 @@
-import { setCookie, getCookie} from 'modules/utils/utils.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import { GameRouter } from 'modules/game/GameRouter';
 import { Router } from 'modules/router/Router.js';
@@ -75,9 +74,10 @@ export class User
 	private m_source:		AuthSource = AuthSource.INTERNAL;
 	private m_finishedTutorial:	boolean = false;
 
-	private m_blockUsr:		User[] = [];
 	private m_friends:		User[] = []; // accepted request
 	private m_pndgFriends = new Map<User, number>(); // pending requests (number == sender)
+
+	protected m_blockUsr:		User[] = [];
 
 	private m_onStatusChanged: Array<(status: UserStatus) => void>;
 
@@ -102,7 +102,6 @@ export class User
 		this.m_stats.gamePlayed = 0;
 		this.m_finishedTutorial = false;
 		this.m_friends = [];
-		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
 	}
 
@@ -120,7 +119,6 @@ export class User
 		this.m_stats.gamePlayed = json.games_played;
 		this.m_finishedTutorial = json.show_tutorial ? true : false;
 		this.m_friends = [];
-		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
 	}
 
@@ -131,7 +129,6 @@ export class User
 		this.m_avatarPath = avatar;
 		this.m_status = status;
 		this.m_friends = [];
-		this.m_blockUsr = [];
 		this.m_pndgFriends = new Map<User, number>();
 	}
 
@@ -187,6 +184,7 @@ export class User
 			method: 'POST',
 			credentials: 'include'
 		});
+		this.reset();
 		return response;
 	}
 
@@ -218,35 +216,6 @@ export class User
 		return 0;
 	}
 
-	public async updateBlockList(): Promise<number>
-	{
-
-		this.m_blockUsr = [];
-		const response = await fetch('/api/user/blocked_users', {
-			method: 'POST',
-			credentials: 'include'
-		});
-		if (response.status != 200)
-			return response.status;
-
-		const data = await response.json();
-
-		for (let i = 0; i < data.length; i++)
-		{
-			if (data[i].blocked_by != this.id)
-				continue ;
-			const id = data[i].user1_id == this.id ? data[i].user2_id : data[i].user1_id;
-			const tmp = await getUserFromId(id);
-			if (!tmp)
-			{
-				console.error("failed to get user from following id:", id);
-				return -1;
-			}
-			this.m_blockUsr.push(tmp);
-		}
-
-		return 0;
-	}
 
 	public async updateSelf(): Promise<number>
 	{
@@ -261,7 +230,6 @@ export class User
 		this.setUserJson(data);
 
 		await this.updateFriendList();
-		await this.updateBlockList();
 
 		return response.status;
 	}
@@ -478,6 +446,7 @@ export class MainUser extends User
 		if (this.id == -1)
 			return;
 		await this.getUserFromToken();
+		await this.updateBlockList();
 		if (this.m_userElement)
 			this.m_userElement.updateHtml(this);
 	}
@@ -646,6 +615,36 @@ export class MainUser extends User
 			credentials: 'include'
 		});
 		return res.status;
+	}
+
+	public async updateBlockList(): Promise<number>
+	{
+
+		this.m_blockUsr = [];
+		const response = await fetch('/api/user/blocked_users', {
+			method: 'POST',
+			credentials: 'include'
+		});
+		if (response.status != 200)
+			return response.status;
+
+		const data = await response.json();
+
+		for (let i = 0; i < data.length; i++)
+		{
+			if (data[i].blocked_by != this.id)
+				continue ;
+			const id = data[i].user1_id == this.id ? data[i].user2_id : data[i].user1_id;
+			const tmp = await getUserFromId(id);
+			if (!tmp)
+			{
+				console.error("failed to get user from following id:", id);
+				return -1;
+			}
+			this.m_blockUsr.push(tmp);
+		}
+
+		return 0;
 	}
 
 	public async removeFromQueue(): Promise<number>
