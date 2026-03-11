@@ -35,8 +35,6 @@ customElements.define('search-view', SearchView);
 customElements.define('about-view', AboutView);
 customElements.define('notfound-view', NotFoundView);
 
-console.log(document.cookie);
-
 const user = new MainUser();
 await user.loginSession();
 
