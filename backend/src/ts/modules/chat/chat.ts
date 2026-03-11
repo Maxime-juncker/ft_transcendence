@@ -2,7 +2,7 @@ import { core, DbResponse, tournamentManager } from 'core/server.js';
 import { getUserById, getBlockUser, getUserName } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import { Logger } from 'modules/logger.js';
-import { logoutUser } from 'modules/users/userManagment.js';
+import { logoutUser, setIsLogin } from 'modules/users/userManagment.js';
 import { clearDuel } from 'modules/users/duel.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
@@ -114,6 +114,7 @@ export class Chat
 			return ;
 		clearDuel(id);
 		this.clearInviteUser(id);
+		setIsLogin(id, 1);
 		this.m_connections.delete(ws);
 		logoutUser(id, core.db);
 		ws.close();
@@ -229,6 +230,8 @@ export class Chat
 
 			Logger.log(`${login} has connected to chat`);
 			this.m_connections.set(ws, data.id);
+
+			setIsLogin(data.id, 1);
 
 			if (this.m_connections.size == 1)
 			{
