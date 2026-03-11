@@ -59,13 +59,6 @@ export class LoginView extends ViewComponent
 			setPlaceHolderText(`error: ${decodeURIComponent(error)}`);
 		}
 
-		if (vars.get("oauth_token"))
-		{
-			window.history.replaceState({}, document.title, "/login");
-			await MainUser.Instance?.loginSession();
-			Router.Instance?.setView("/lobby");
-		}
-
 		if (MainUser.Instance?.id != -1)
 			this.disableBtns();
 		else
