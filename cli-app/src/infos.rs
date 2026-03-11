@@ -198,9 +198,6 @@ impl Infos {
     }
     async fn send_start_game(&mut self, game_id: &str) -> Result<()> {
         let mut headers = HeaderMap::new();
-        // headers.insert("Content-Type", "application/json".parse()?);
-        let token: &str = &self.authent.borrow().token.clone();
-        headers.insert("Authorization", format!("Bearer {}", token).parse()?);
         let url = format!("https://{}/api/start-game/{}", self.context.location, game_id); // TODO: token must be sent in header
         let res = self
             .context
@@ -356,8 +353,6 @@ async fn send_post_game_request(game_main: &Infos, mode: &str) -> Result<GamePar
     let mut headers = HeaderMap::new();
     headers.insert("Content-Type", "application/json".parse()?);
     map.insert("mode", mode);
-    let token: &str = &game_main.authent.borrow().token.to_string();
-    headers.insert("Authorization", format!("Bearer {}", token).parse()?);
     let url = format!("https://{}/api/create-game", game_main.context.location);
     let res = game_main
         .context

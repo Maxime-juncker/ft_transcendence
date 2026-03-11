@@ -14,6 +14,7 @@ impl Context {
         Context {
             location,
             client: Client::builder()
+                .cookie_store(true)
                 .danger_accept_invalid_certs(true)
                 .build()
                 .expect("Impossible to build new client, try again"),
