@@ -13,10 +13,21 @@ Chart.register(...registerables);
 export class ProfileView extends ViewComponent
 {
 	private m_user: User | null = null;
+	private m_refBtn: HTMLButtonElement | null = null;
+	private m_chart: Chart | null = null;
 
 	constructor()
 	{
 		super();
+	}
+
+	public async init()
+	{
+		this.m_refBtn = this.querySelector("#refresh-btn");
+		this.m_refBtn?.addEventListener('click', async () => {
+			console.log("refreshing page");
+			await this.enable();
+		});
 	}
 
 	public async enable()
@@ -25,7 +36,6 @@ export class ProfileView extends ViewComponent
 			return;
 
 		await MainUser.Instance.refreshSelf();
-
 		new HeaderSmall(MainUser.Instance, this, "header-container");
 
 		this.m_user = MainUser.Instance;
@@ -69,6 +79,8 @@ export class ProfileView extends ViewComponent
 	public async disable()
 	{
 		this.clearTrackListener();
+		this.m_chart?.destroy();
+		this.m_chart = null;
 		const userContainer = this.querySelector("#user-container") as HTMLElement;
 		const historyContainer = this.querySelector("#history-container") as HTMLElement;
 		if (!userContainer || !historyContainer) return;
@@ -211,6 +223,8 @@ export class ProfileView extends ViewComponent
 
 	private async addMatch(user: User)
 	{
+		this.m_chart?.destroy();
+		this.m_chart = null;
 		const eloData = new Map<string, number>()
 		eloData.set(user.created_at, 500);
 
@@ -254,7 +268,7 @@ export class ProfileView extends ViewComponent
 		const min = Math.min(...eloValues);
 		const max = Math.max(...eloValues);
 
-		new Chart(ctx, {
+		this.m_chart = new Chart(ctx, {
 			type: 'line',
 			data: {
 				labels: Array.from(eloData.keys()),

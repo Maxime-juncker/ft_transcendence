@@ -13,7 +13,7 @@ futures = "0.3.31"
 futures-util = "0.3.31"
 native-tls = "0.2.14"
 ratatui = "0.29.0"
-reqwest = {version = "0.12.24", features = ["json"]}
+reqwest = {version = "0.12.24", features = ["json", "cookies"]}
 serde_json = "1.0.145"
 terminal = "0.2.1"
 tokio = { version = "1", features = ["full"] }

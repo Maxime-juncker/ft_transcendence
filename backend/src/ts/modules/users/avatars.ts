@@ -94,3 +94,9 @@ export async function uploadAvatar(file: MultipartFile, id: number): Promise<DbR
 		return { code: 500, data: { message: "failed to process file" }};
 	}
 }
+
+export async function resetAvatar(id: number): Promise<DbResponse>
+{
+	await updateAvatarPath(id, 'default.webp');
+	return { code: 200, data: { message: "Success" }};
+}

@@ -7,6 +7,23 @@ the goal of this project is to recreate the famous pong game but with more featu
 
 test live [here](https://transcendence.flamby.ovh)
 
+## Table of contents
+
+- [FT\_TRANSCENDENCE](#ft_transcendence)
+	- [Table of contents](#table-of-contents)
+	- [Features](#features)
+	- [Installation](#installation)
+		- [Prerequisites](#prerequisites)
+		- [.env setup](#env-setup)
+		- [Run the project](#run-the-project)
+		- [Access Services](#access-services)
+		- [Project architecture](#project-architecture)
+			- [Boot order](#boot-order)
+			- [Networks](#networks)
+			- [Storages](#storages)
+		- [Screenshots](#screenshots)
+		- [Contributors](#contributors)
+
 ## Features
 
 Web:
@@ -45,7 +62,9 @@ Server-Side Pong:
 - Gameplay via CLI (rust app)
 
 ## Installation
+
 ### Prerequisites
+
 Before going further you will need these tools:
 - make
 - docker and docker compose plugin
@@ -57,6 +76,7 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 > you will need to register an app for the service (42 or github)
 
 ### .env setup
+
 |variable|description|
 |----|----|
 | HOST | hostname or IP used for redirection (leave to localhost if unsure)|
@@ -85,6 +105,7 @@ You will need to setup a .env (a .env-sample is provided just rename it .env)
 |BALL_SIZE| size of the ball in % of the game view (default: 2)|
 
 ### Run the project
+
 ```bash
 git clone https://github.com/Maxime-juncker/ft_transcendence.git
 cd ft_transcendence
@@ -94,6 +115,7 @@ make
 The first launch will last around ~3min.
 
 ### Access Services
+
 |service | link|
 |-------|-----|
 | Main pong site | https://localhost:8081 |
@@ -104,13 +126,28 @@ The first launch will last around ~3min.
 > Want to learn about the api ? \
 > [Click here](https://github.com/Maxime-juncker/ft_transcendence/wiki)
 
+### Project architecture
+
+#### Boot order
+
+![Boot order chart](./doc/boot%20order.svg)
+
+#### Networks
+
+![Networks chart](./doc/networks.svg)
+
+#### Storages
+
+![Storages chart](./doc/storages.svg)
+
 ### Screenshots
 
-![Description](https://i.imgur.com/DabIcir.png)
-![Description](https://imgur.com/8rKfhfs.png)
-![Description](https://imgur.com/NVfisSA.png)
+![Screenshot of the home screen](https://i.imgur.com/DabIcir.png)
+![Screenshoot of the game](https://imgur.com/8rKfhfs.png)
+![Screenshoot of the profile page](https://imgur.com/NVfisSA.png)
 
 ### Contributors
+
 [@abidolet](https://github.com/abidolet/) \
 [@ygille](https://github.com/Bluesmoothie/) \
 [@sithomas](https://github.com/Sths147) \

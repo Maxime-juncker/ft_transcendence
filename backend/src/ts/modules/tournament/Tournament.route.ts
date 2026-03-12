@@ -1,4 +1,4 @@
-import { core, chat, tournamentManager, rateLimitMed, rateLimitHard, tokenHeader } from 'core/server.js';
+import { core, chat, tournamentManager, rateLimitMed, rateLimitHard } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
@@ -13,12 +13,12 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 			websocket: true,
 			config:
 			{
-				rateLimit: rateLimitMed // Need to change to hard
+				rateLimit: rateLimitHard
 			}
 		},
 		async (socket: WebSocket, request: FastifyRequest) =>
 		{
-			const token = request.cookies.jwt_session;
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				socket.send(JSON.stringify({ error: 'missing token param' }));
@@ -91,7 +91,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		},
 		async (socket: WebSocket, request: FastifyRequest) =>
 		{
-			const token = request.cookies.jwt_session;
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				socket.send(JSON.stringify({ error: 'missing token param' }));
@@ -138,7 +138,6 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		{
 			schema:
 			{
-				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -156,15 +155,14 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		},
 		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
-			const authorization = request.headers.authorization as string | undefined;
-			if (!authorization || !authorization.startsWith('Bearer '))
+			const token = request.cookies['jwt_session'];
+			if (!token)
 			{
-				reply.status(400).send({ error: 'missing authorization header' });
-				Logger.error("missing authorization header");
+				reply.status(400).send({ error: 'missing token' });
+				Logger.error("missing token");
 				return ;
 			}
 
-			const token = authorization.replace('Bearer ', '');
 			const data = await jwtVerif(token, core.sessionKey);
 			if (!data)
 			{
@@ -181,7 +179,6 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 	fastify.post('/leave', {
 			schema:
 			{
-				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -193,11 +190,10 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 				}
 			},
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const authorization = request.headers.authorization as string | undefined;
-		if (!authorization || !authorization.startsWith('Bearer '))
-			return reply.code(400).send({ message: "missing authorization header" });
 		
-		const token = authorization.replace('Bearer ', '');
+		const token = request.cookies['jwt_session'];
+		if (!token)
+			return reply.code(400).send({ message: "missing token" });
 		const { lobbyId } = request.body as { lobbyId: string };
 		const data = await jwtVerif(token, core.sessionKey);
 		if (!data)

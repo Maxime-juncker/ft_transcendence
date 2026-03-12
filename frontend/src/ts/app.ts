@@ -51,6 +51,9 @@ new ThemeController(themes, defaultTheme);
 
 const router = new Router(routes);
 await router.init();
+router.onPageshow(async (persisted: boolean) => {
+	await user.loginSession();
+})
 
 const channel = new BroadcastChannel("app_channel");
 channel.postMessage("first");

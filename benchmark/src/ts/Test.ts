@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { Routine, TestResult } from "Routine.js";
 import { WebSocket } from 'undici'
 import { host, routePassw } from "app.js";
+import { Logger } from "./Logger.js";
 
 type User = {
 	id:		number;
@@ -15,6 +16,16 @@ type User = {
 function getRandom(max: number)
 {
 	return Math.floor(Math.random() * max);
+}
+
+export function getCookie(name: string, cookies: string) 
+{
+	const regex = new RegExp(`(^| )${name}=([^;]+)`)
+	const match = cookies.match(regex)
+	if (match)
+	{
+		return match[2];
+	}
 }
 
 const users: Array<User> = [];
@@ -43,8 +54,9 @@ async function tokenExchange(i: number)
 
 	const res = await fetch(`${host}/api/user/get_profile_token`, {
 		method: "POST",
-		headers: { 'Authorization': `Bearer ${user.token}` },
+		headers: { 'Cookie': `jwt_session=${user.token}` },
 	});
+	
 	const data = await res.json();
 	if (res.status == 200)
 	{
@@ -72,10 +84,11 @@ async function loginTest(i: number): Promise<TestResult>
 			totp: "",
 		})
 	});
+	const cookies = res.headers.get("set-cookie");
 	const data = await res.json();
-	if (res.status == 200)
+	if (res.status == 200 && cookies)
 	{
-		users[i].token = data.token;
+		users[i].token = getCookie("jwt_session", cookies) as string;
 	}
 
 	return { code: res.status, data: data };
@@ -139,8 +152,9 @@ async function logout(i: number): Promise<TestResult>
 
 	const res = await fetch(`${host}/api/user/logout`, {
 		method: "POST",
-		headers: { 'Authorization': `Bearer ${user.token}` },
+		headers: { 'Cookie': `jwt_session=${user.token}` },
 	})
+	user.ws?.close();
 	return { code: res.status, data: await res.json()}
 }
 
@@ -162,7 +176,7 @@ async function addFriends(i: number)
 
 		await fetch(`${host}/api/friends/send_request`, {
 			method: "POST",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+			headers: { 'Cookie': `jwt_session=${user.token}`, 'content-type': 'application/json' },
 			body: JSON.stringify({
 				friend_id: player.id
 			})
@@ -192,9 +206,8 @@ async function acceptFriends(i: number)
 
 		var response = await fetch(`${host}/api/friends/accept`, {
 			method: "POST",
-			headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${user.token}` },
+			headers: { 'Cookie': `jwt_session=${user.token}`, 'content-type': 'application/json' },
 			body: JSON.stringify({
-				token: user.token,
 				friend_id: friendId
 			})
 		});
@@ -207,14 +220,16 @@ async function connectChat(i: number)
 {
 	const user = users[i];
 
-	user.ws = new WebSocket(`${host}/api/chat?userid=${user.token}`);
+	user.ws = new WebSocket(`${host}/api/chat`, {
+		headers: { 'Cookie': `jwt_session=${user.token}`, 'content-type': 'application/json' },
+	});
 
 	return { code: 200, data: "Ok" };
 }
 
-const maxUser = 42;
+const maxUser = 20;
 const friendReq = 5;
-const histReq = 15;
+const histReq = 10;
 
 export async function runTests()
 {

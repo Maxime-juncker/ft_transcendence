@@ -204,7 +204,8 @@ export class GameClient extends Utils
 			const response = await fetch(`https://${window.location.host}/api/create-game`,
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ mode: this.mode }),
 			});
 
@@ -306,7 +307,7 @@ export class GameClient extends Utils
 			const response = await fetch(`https://${window.location.host}/api/start-game/${this.gameId}`,
 			{
 				method: 'POST',
-				headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
 			});
 
 			if (!response.ok)
@@ -515,7 +516,7 @@ export class GameClient extends Utils
 		await fetch("/api/chat/removeQueue",
 		{
 			method: "DELETE",
-			headers: { 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+			credentials: 'include',
 		});
 	}
 
@@ -526,7 +527,8 @@ export class GameClient extends Utils
 			await fetch('/api/tournament/leave',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ lobbyId: this.m_router.currentTournamentId })
 			});
 		}

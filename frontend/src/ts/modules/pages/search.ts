@@ -1,5 +1,4 @@
 import { ViewComponent } from 'modules/router/ViewComponent.js';
-import { Router } from 'modules/router/Router.js'
 import { AuthSource, MainUser, User } from 'modules/user/User.js';
 import { HeaderSmall } from './HeaderSmall.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';

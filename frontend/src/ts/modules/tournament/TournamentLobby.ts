@@ -293,7 +293,8 @@ export class TournamentLobby
 			const res = await fetch('/api/tournament/start',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance?.token}` },
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ lobbyId: this.tournamentId })
 			});
 
@@ -318,6 +319,36 @@ export class TournamentLobby
 	{
 		this.isLeaving = true;
 		this.router.navigateTo('tournament-menu', '');
+	}
+
+	private leaveTournament = async (): Promise<void> =>
+	{
+		if (!this.tournamentId || this.tournamentId === "" || this.isLeaving)
+		{
+			return;
+		}
+
+		this.isLeaving = true;
+
+		try
+		{
+			const res = await fetch('/api/tournament/leave',
+			{
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify ({ lobbyId: this.tournamentId })
+			});
+
+			if (!res.ok)
+			{
+				console.error('Failed to leave tournament:', await res.text());
+			}
+		}
+		catch (e)
+		{
+			console.error('Error leaving tournament:', e);
+		}
 	}
 
 	public async destroy(): Promise<void>
