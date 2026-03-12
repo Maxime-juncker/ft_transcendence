@@ -241,7 +241,6 @@ export class Chat
 			fetch("/api/chat/healthCallback", {
 				method: "POST",
 				credentials: 'include',
-				headers: { 'Content-Type': 'application/json' }
 			});
 			return ;
 		}

@@ -38,8 +38,6 @@ export async function chatRoutes(fastify: FastifyInstance)
 		config: { 
 			rateLimit: rateLimitMed
 		},
-		schema: {
-		}
 	},
 	async (request: FastifyRequest, reply: FastifyReply) => {
 		const token = request.cookies['jwt_session'];
