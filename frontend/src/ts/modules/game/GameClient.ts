@@ -219,6 +219,7 @@ export class GameClient extends Utils
 			if (!response.ok)
 			{
 				console.error('Failed to create game:', response.status, data);
+				this.m_router.navigateTo('home', '');
 				return ;
 			}
 

@@ -213,8 +213,14 @@ export class GameInstance
 		{
 			this._winner = player ? player : 0;
 			this._isRunning = false;
+
+			if (this._interval)
+			{
+				clearInterval(this._interval);
+			}
+
 			Logger.log(`${await getUserName(this._winner)} won the game (mode: ${this.mode})`);
-			
+
 			if (this.onGameEndCallback && this._Player1Id && this._Player2Id)
 			{
 				const loserId = this._winner === this._Player1Id ? this._Player2Id : this._Player1Id;
@@ -343,7 +349,11 @@ export class GameInstance
 
 	public destroy(): void
 	{
-		clearInterval(this._interval);
+		if (this._interval)
+		{
+			clearInterval(this._interval);
+		}
+
 		this._keysPressed.clear();
 	}
 }

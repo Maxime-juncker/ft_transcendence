@@ -12,6 +12,7 @@ import { ProfileView } from "modules/pages/profile.js"
 import { SearchView } from "modules/pages/search.js";
 import { AboutView } from "modules/pages/about.js"
 import { NotFoundView } from "modules/pages/404.js";
+import { ConflictView } from "modules/pages/409.js";
 import { MainUser } from "modules/user/User.js";
 
 const routes: Route[] = [
@@ -22,6 +23,7 @@ const routes: Route[] = [
 	{ path: "/settings",	viewName: "settings-view",	templateId: "settings-template" },
 	{ path: "/search",		viewName: "search-view",	templateId: "search-template" },
 	{ path: "/about",		viewName: "about-view",		templateId: "about-template" },
+	{ path: "/conflict",	viewName: "conflict-view",	templateId: "409-template" },
 	{ path: "*",			viewName: "notfound-view",	templateId: "notfound-template" },
 ]
 
@@ -34,6 +36,7 @@ customElements.define('profile-view', ProfileView);
 customElements.define('search-view', SearchView);
 customElements.define('about-view', AboutView);
 customElements.define('notfound-view', NotFoundView);
+customElements.define('conflict-view', ConflictView);
 
 const user = new MainUser();
 await user.loginSession();
@@ -52,9 +55,24 @@ router.onPageshow(async (persisted: boolean) => {
 	await user.loginSession();
 })
 
+const channel = new BroadcastChannel("app_channel");
+channel.postMessage("first");
+
+channel.onmessage = (event) =>
+{
+	if (event.data === "first")
+	{
+		channel.postMessage("second");
+	}
+	else if (event.data === "second")
+	{
+		console.error("Multiple ft_transcendence tabs detected. Please close all other tabs to continue.");
+		Router.Instance?.navigateTo("/conflict");
+	}
+}
+
 user.onLogout(() => Router.Instance?.navigateTo("/"));
 
 const state = utils.getCookie("crt_state");
 if (state)
 	utils.toggleCrtEffect(state === 'true');
-

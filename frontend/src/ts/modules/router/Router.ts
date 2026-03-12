@@ -16,8 +16,8 @@ export class Router
 
 	private m_prevView:		ViewComponent | null = null;
 	private m_activeView:	ViewComponent | null = null;
-	private m_onPageshowCb:	Array<(restored: boolean) => Promise<void>>;
-	
+	private m_onPageshowCb:	((restored: boolean) => Promise<void>)[];
+
 	public static get Instance(): Router | null { return Router.m_instance; }
 
 	get activeView(): ViewComponent | null { return this.m_activeView; }
@@ -171,7 +171,7 @@ export class Router
 			this.setView("*")
 			return;
 		}
-	
+
 		this.setView(matchRoute.path);
 	}
 

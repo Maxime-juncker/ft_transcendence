@@ -116,6 +116,16 @@ export class LobbyView extends ViewComponent
 
 	public async disable()
 	{
+		const gameRouter = MainUser.Instance?.gameRouter;
+		if (gameRouter)
+		{
+			const instance = gameRouter.instance;
+			if (instance && instance.destroy)
+			{
+				instance.destroy();
+			}
+		}
+
 		MainUser.Instance?.removeFromQueue();
 		this.clearTrackListener();
 	}
