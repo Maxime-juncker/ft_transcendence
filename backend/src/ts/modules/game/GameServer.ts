@@ -7,6 +7,7 @@ import { Logger } from 'modules/logger.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { getBotId } from 'modules/users/userManagment.js';
 import { GameRes } from 'modules/users/user.js';
+import { send } from 'process';
 
 export class GameServer
 {
@@ -97,7 +98,9 @@ export class GameServer
 			{
 				const token = getToken(request.headers.authorization as string);
 				if (!token)
+				{
 					return reply.status(400).send({ error: 'missing authorization header' });
+				}
 
 				const body = request.body as { mode: string; token: string};
 				const mode = body.mode;
@@ -116,46 +119,27 @@ export class GameServer
 
 				if (mode === 'local')
 				{
-					for (const [id, game] of this.activeGames)
+					const [id, game] = this.getGame(mode, data.id);
+					if (game)
 					{
-						if (game.mode === 'local')
-						{
-							if (game.player1Id == data.id && !game.winner)
-							{
-								Logger.log(`Found existing local game ${id} for: ${await getUserName(data.id)}`);
-								reply.status(201).send({ gameId: id, opponentId: game.player2Id, playerSide: '1',
-									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
-								return ;
-							}
-						}
+						Logger.log(`Found existing local game ${id} for: ${await getUserName(data.id)}`);
+						return (this.sendReply(reply, id, game.player2Id, '1', params));
 					}
 
 					const gameId = crypto.randomUUID();
 					const opponentId = 0;
-					const game = new GameInstance(mode, data.id, opponentId, gameId);
-					this.activeGames.set(gameId, game);
+					this.activeGames.set(gameId, new GameInstance(mode, data.id, opponentId, gameId));
 					Logger.log(`starting local game for: ${await getUserName(data.id)}`);
-					reply.status(201).send({ gameId, opponentId: opponentId, playerSide: '1',
-						paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+					return (this.sendReply(reply, gameId, opponentId, '1', params));
 				}
 				else if (mode === 'online')
 				{
-					for (const [id, game] of this.activeGames)
+					const [id, game] = this.getGame(mode, data.id);
+					if (game)
 					{
-						if (game.mode === 'online')
-						{
-							if ((game.player1Id == data.id || game.player2Id == data.id) && !game.winner)
-							{
-								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
-								const playerSide = (game.player1Id == data.id) ? '1' : '2';
-								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
-									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
-								return ;
-							}
-						}
+						const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
+						const playerSide = (game.player1Id == data.id) ? '1' : '2';
+						return (this.sendReply(reply, id, opponentId, playerSide, params));
 					}
 
 					const res = await tournamentManager.addPlayerToLobby(data.id, null, "0");
@@ -164,41 +148,29 @@ export class GameServer
 						Logger.error(`could not create online game for player: ${data.id} cause: ${JSON.stringify(res, null, 2)}`);
 						return reply.code(res.code).send(res.data);
 					}
-					reply.status(202).send({ message: "added to queue", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+
+					reply.status(202).send({ message: "added to queue", ...this.getGameParams(params) });
 				}
 				else if (mode === 'duel')
 				{
-					return (reply.status(202).send({ message: "waiting for opponent", paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE }));
+					return (reply.status(202).send({ message: "waiting for opponent", ...this.getGameParams(params) }));
 				}
 				else if (mode === 'bot')
 				{
-					for (const [id, game] of this.activeGames)
+					const [id, game] = this.getGame(mode, data.id);
+					if (game)
 					{
-						if (game.mode === 'bot')
-						{
-							if ((game.player1Id == data.id || game.player2Id == data.id) && game.winner === null)
-							{
-								const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
-								const playerSide = (game.player1Id == data.id) ? '1' : '2';
-								Logger.log(`Found existing bot game ${id} for: ${await getUserName(data.id)}`);
-								reply.status(201).send({ gameId: id, opponentId: opponentId, playerSide: playerSide,
-									paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-									paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
-								return ;
-							}
-						}
+						const opponentId = (game.player1Id == data.id) ? game.player2Id : game.player1Id;
+						const playerSide = (game.player1Id == data.id) ? '1' : '2';
+						Logger.log(`Found existing bot game ${id} for: ${await getUserName(data.id)}`);
+						return (this.sendReply(reply, id, opponentId, playerSide, params));
 					}
-					
+
 					const gameId = crypto.randomUUID();
-					const botId = await getBotId();
-					const game = new GameInstance(mode, data.id, botId, gameId);
-					this.activeGames.set(gameId, game);
+					const opponentId = await getBotId();
+					this.activeGames.set(gameId, new GameInstance(mode, data.id, opponentId, gameId));
 					Logger.log(`starting bot game for: ${await getUserName(data.id)}`);
-					reply.status(201).send({ gameId, opponentId: botId, playerSide: '1',
-						paddleHeight: params.PADDLE_HEIGHT, paddleWidth: params.PADDLE_WIDTH,
-						paddlePadding: params.PADDLE_PADDING, ballSize: params.BALL_SIZE });
+					return (this.sendReply(reply, gameId, opponentId, '1', params));
 				}
 				else
 				{
@@ -211,6 +183,34 @@ export class GameServer
 				reply.status(500).send({ error });
 			}
 		});
+	}
+
+	private getGame(mode: string, id: number): [string, GameInstance] | [null, null]
+	{
+		for (const [gameId, game] of this.activeGames)
+		{
+			if (game.mode === mode && ((game.player1Id == id || game.player2Id == id) && !game.winner))
+			{
+				return [gameId, game];
+			}
+		}
+
+		return [null, null];
+	}
+
+	private sendReply(reply: FastifyReply, gameId: string, opponentId: number, playerSide: string, params: Parameters): void
+	{
+		reply.status(201).send({ gameId, opponentId, playerSide, ...this.getGameParams(params) });
+	}
+
+	private getGameParams(params: Parameters): object
+	{
+		return {
+			paddleHeight: params.PADDLE_HEIGHT,
+			paddleWidth: params.PADDLE_WIDTH,
+			paddlePadding: params.PADDLE_PADDING,
+			ballSize: params.BALL_SIZE
+		};
 	}
 
 	private startGame(): void

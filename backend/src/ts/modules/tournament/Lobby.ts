@@ -120,7 +120,9 @@ export class Lobby
 	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
 		if (this.m_state != LobbyState.WAITING)
+		{
 			return { code: 403, data: { message: "cannot add to lobby" }};
+		}
 
 		const player = new Player(ws);
 		await player.init(id);
@@ -264,11 +266,14 @@ export class Lobby
 	{
 		try
 		{
-			ws.on('error', (error: any) =>
+			ws.on('error', async (error: any) =>
 			{
 				player.removeSocket(ws);
 				if (player.sockets.size === 0)
-					this.leave(player.id);
+				{
+					await this.leave(player.id);
+				}
+
 				Logger.error(`${player.name}: websocket error: ${error}`);
 			});
 
@@ -279,7 +284,7 @@ export class Lobby
 				if (player.sockets.size === 0)
 				{
 					Logger.log(`${player.name} has left the lobby (code: ${code})`);
-					this.leave(player.id);
+					await this.leave(player.id);
 				}
 				else
 				{

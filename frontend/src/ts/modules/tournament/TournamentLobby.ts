@@ -4,7 +4,6 @@ import { getUserFromId } from 'modules/user/User.js';
 import { UserElement, UserElementType } from 'modules/user/UserElement.js';
 import type { Chat } from 'modules/chat/chat.js';
 import { MainUser } from 'modules/user/User.js';
-import * as utils from 'modules/utils/utils.js'
 import { Router } from 'modules/router/Router.js';
 import { LobbyView } from 'modules/pages/lobby.js';
 
@@ -13,10 +12,8 @@ export class TournamentLobby
 	private playerList: HTMLDivElement | null = null;
 	private startBtn: HTMLButtonElement | null = null;
 	private leaveBtn: HTMLButtonElement | null = null;
-	private lobbyTitle: HTMLElement | null = null;
 	
 	private intervalId: number | null = null;
-	private isOwner: boolean = false;
 	private tournamentId: string | null = null;
 	private matchListener: ((json: any) => void) | null = null;
 	private matchStarted: boolean = false;
@@ -28,8 +25,6 @@ export class TournamentLobby
 
 	get id(): string | null { return this.tournamentId; }
 
-	private m_players: User[] = [];
-
 	constructor(private router: GameRouter, private user: User, private mode: string, private chat: Chat)
 	{
 		this.tournamentId = mode;
@@ -37,7 +32,6 @@ export class TournamentLobby
 		this.init();
 		this.setUpEventListeners();
 		this.setupMatchListener();
-		this.m_players = [];
 		this.lobby = Router.Instance?.activeView as LobbyView;
 
 		this.lobby.loadingIndicator?.startLoading();
@@ -66,14 +60,14 @@ export class TournamentLobby
 
 	private enableBtn(btn: HTMLButtonElement)
 	{
+		btn.removeAttribute('hidden');
 		btn.classList.remove("btn-disable");
 		btn.disabled = false;
-		btn.style.display = 'block';
 	}
 
 	private disableBtn(btn: HTMLButtonElement)
 	{
-		btn.style.display = 'none';
+		btn.setAttribute('hidden', '');
 		btn.classList.add("btn-disable");
 		btn.disabled = true;
 	}
@@ -84,15 +78,10 @@ export class TournamentLobby
 		this.playerList = context.querySelector('#lobby-player-list') as HTMLDivElement;
 		this.startBtn = context.querySelector('#lobby-start-btn') as HTMLButtonElement;
 		this.leaveBtn = context.querySelector('#lobby-leave-btn') as HTMLButtonElement;
-		this.lobbyTitle = context.querySelector('#lobby-title') as HTMLElement;
 
 		if (this.playerList)
 		{
 			this.playerList.innerHTML = '';
-		}
-		if (this.lobbyTitle)
-		{
-			this.lobbyTitle.innerHTML = '';
 		}
 		if (this.startBtn)
 		{
@@ -183,6 +172,7 @@ export class TournamentLobby
 					{
 						console.warn("missing btn");
 					}
+
 					await this.render(data);
 				}
 			}
@@ -214,55 +204,54 @@ export class TournamentLobby
 		if (!data || !data.players || !data.ownerId || !data.ownerName)
 		{
 			console.error('[TournamentLobby] Invalid render data:', data);
-			return;
+			return ;
 		}
 
-		this.isOwner = data.ownerId === this.user.id;
 		this.ownerName = data.ownerName;
-
-		if (this.lobbyTitle)
+		if (this.startBtn)
 		{
-			this.lobbyTitle.innerHTML = `<span data-i18n="tournament_of"></span> <span id="lobby-owner-name">${this.ownerName}</span>`;
+			if (data.ownerId !== MainUser.Instance?.id)
+			{
+				this.disableBtn(this.startBtn!);
+			}
+			else
+			{
+				this.enableBtn(this.startBtn!);
+			}
 		}
 
 		if (this.playerList)
 		{
-			this.m_players = [];
+			const players = new Set<User>();
 			for (let i = 0; i < data.players.length; i++)
 			{
-				const json: any = data.players[i];
+				const json: any = data.players[data.players.length - 1 - i];
 				const user = await getUserFromId(json.id);
-				if (!user)
+				if (user)
 				{
-					continue ;
+					players.add(user);
 				}
-
-				this.m_players.push(user);
 			}
 
-			this.m_players.sort((a: User, b: User) => { return Number(utils.levenshteinDistance(a.name, b.name)) })
-
 			this.playerList.innerHTML = '';
-			this.m_players.forEach((user: User) =>
+			players.forEach((user: User) =>
 			{
-
-				if (!this.playerList)
-				{
-					return ;
-				}
-
-				const elt = new UserElement(user, this.playerList, UserElementType.STANDARD, 'user-game-template');
+				const elt = new UserElement(user, this.playerList!, UserElementType.STANDARD, 'user-game-template');
 				const stats = elt.getElement("#stats");
 				if (stats)
 				{
-					stats.style.display = "none";
+					stats.setAttribute('hidden', '');
+				}
+
+				if (user.id === data.ownerId)
+				{
+					const nameElement = elt.getElement("#avatar-name");
+					if (nameElement)
+					{
+						nameElement.innerHTML = `👑 ${nameElement.textContent}`;
+					}
 				}
 			})
-		}
-
-		if (this.startBtn)
-		{
-			this.startBtn.style.display = this.isOwner ? 'block' : 'none';
 		}
 	}
 
@@ -290,27 +279,12 @@ export class TournamentLobby
 		}
 	}
 
-	private calculateNbBot(size: number): number
-	{
-		return (size === 1) ? 1 : Math.pow(2, Math.ceil(Math.log2(size))) - size;
-	}
-
 	private handleStart = async (): Promise<void> =>
 	{
 		if (!this.tournamentId)
 		{
 			console.error('[TournamentLobby] No tournament ID set');
 			return ;
-		}
-
-		const nbBot = this.calculateNbBot(this.m_players.length);
-		if (nbBot > 0)
-		{
-			const confirmed = confirm(`${nbBot} bot(s) will be added to fill the bracket. Start anyway?`);
-			if (!confirmed)
-			{
-				return;
-			}
 		}
 
 		try
