@@ -193,8 +193,6 @@ export class GameClient extends Utils
 		this.playerSide = json.playerSide;
 		this.createPlayerHtml();
 		this.m_player2?.updateHtml(this.m_user2);
-
-		this.launchCountdown();
 	}
 
 	public async createGame(): Promise<void>
