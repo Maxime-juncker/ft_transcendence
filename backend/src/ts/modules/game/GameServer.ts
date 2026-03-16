@@ -418,6 +418,7 @@ export class GameServer
 						try
 						{
 							connection.send(JSON.stringify({ type: 'winner', winner }));
+							connection.close();
 						}
 						catch (e)
 						{
