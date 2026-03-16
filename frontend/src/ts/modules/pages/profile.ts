@@ -152,7 +152,7 @@ export class ProfileView extends ViewComponent
 			return ;
 		}
 
-		await MainUser.Instance.updateSelf();
+		await MainUser.Instance.refreshSelf();
 		this.replaceBtn();
 		addBtn = this.querySelector("#main-btn-friend") as HTMLButtonElement;
 		blockBtn = this.querySelector("#main-btn-block") as HTMLButtonElement;

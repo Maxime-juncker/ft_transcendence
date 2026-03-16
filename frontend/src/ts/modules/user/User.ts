@@ -446,6 +446,7 @@ export class MainUser extends User
 			return;
 		await this.getUserFromToken();
 		await this.updateBlockList();
+		await this.updateFriendList();
 		if (this.m_userElement)
 			this.m_userElement.updateHtml(this);
 	}

@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS blocked_usr (
 	user2_id		INTEGER NOT NULL,
 	blocked_by		INTEGER NOT NULL,
 
-	PRIMARY KEY (user1_id, user2_id)
+	PRIMARY KEY (user1_id, user2_id, blocked_by)
 	CHECK(user1_id < user2_id)
 );
 
