@@ -2,7 +2,7 @@ import { core, DbResponse, tournamentManager } from 'core/server.js';
 import { getUserById, getBlockUser, getUserName } from 'modules/users/user.js';
 import { WebSocket } from '@fastify/websocket';
 import { Logger } from 'modules/logger.js';
-import { logoutUser } from 'modules/users/userManagment.js';
+import { logoutUser, setIsLogin } from 'modules/users/userManagment.js';
 import { clearDuel } from 'modules/users/duel.js';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
@@ -114,6 +114,7 @@ export class Chat
 			return ;
 		clearDuel(id);
 		this.clearInviteUser(id);
+		setIsLogin(id, 1);
 		this.m_connections.delete(ws);
 		logoutUser(id, core.db);
 		ws.close();
@@ -161,19 +162,15 @@ export class Chat
 
 	private async validateMessage(json: any): Promise<DbResponse>
 	{
-		if (!json.token || !json.message)
-			return { code: 400, data: { message: "bad message, should be: { token: <token>, message: <message> }"}};
+		if (!json.message)
+			return { code: 400, data: { message: "bad message, should be: { message: <message> }"}};
 
 		if (json.message.length > core.maxChatMsgLen)
 			return { code: 403, data: { message: `message too long (max: ${core.maxChatMsgLen})`}};
 		if (json.message.length == 0)
 			return { code: 403, data: { message: `cannot send empty message`}};
 
-		const data: any = await jwtVerif(json.token, core.sessionKey);
-		if (!data)
-			return { code: 400, data: { message: "bad token" }};
-
-		return { code: 200, data: { id: data.id }};
+		return { code: 200 , data: ''};
 	}
 
 	private async onMessage(message: any, connection: WebSocket)
@@ -220,8 +217,17 @@ export class Chat
 			if (res.code === 200)
 				login = res.data.name;
 
+			if (this.isUserConnected(data.id))
+			{
+				ws.send(this.serverMsg("already connected to chat"));
+				ws.close(1008);
+				return;
+			}
+
 			Logger.log(`${login} has connected to chat`);
 			this.m_connections.set(ws, data.id);
+
+			setIsLogin(data.id, 1);
 
 			if (this.m_connections.size == 1)
 			{

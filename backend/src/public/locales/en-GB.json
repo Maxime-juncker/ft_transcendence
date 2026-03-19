@@ -11,10 +11,13 @@
 		"contributors": "CONTRIBUTORS",
 		"welcome": "WELCOME TO FT_TRANSCENDENCE"
 	},
+	"reset_avatar": "reset avatar",
 	"leaderboard": "leaderboard",
 	"history": "history",
 	"homepage": "homepage",
-	"404": "404 - NOT FOUND",
+	"404": "404 - Not Found",
+	"409": "409 - Conflict",
+	"conflict-text": "You already have a tab opened",
 	"loading-tournament": "creating tournament...",
 	"loading": "loading",
 	"text": {

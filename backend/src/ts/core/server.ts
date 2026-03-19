@@ -6,6 +6,7 @@ import { initVault } from 'modules/vault/vault.js';
 import { Logger } from 'modules/logger.js';
 import { Chat } from 'modules/chat/chat.js';
 import { TournamentManager } from 'modules/tournament/Tournament.js';
+import { FastifyRequest } from 'fastify';
 
 
 export interface DbResponse {
@@ -23,30 +24,9 @@ export const rateLimitMed = {
 	timeWindow: '1 minute'
 }
 
-export const tokenHeader = 
-{
-	type: "object",
-	properties:
-	{
-		authorization: { type: "string" }
-	},
-	required: ["authorization"]
-}
-
 export function getDateFormated()
 {
 	return new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Paris"})).toISOString().slice(0, 19).replace('T', ' ');
-}
-
-export function getToken(authorization: string): string | null
-{
-	if (!authorization || !authorization.startsWith('Bearer '))
-	{
-		Logger.error("missing authorization header");
-		return null;
-	}
-	const token = authorization.replace('Bearer ', '');
-	return token;
 }
 
 export const core = new Core();
@@ -69,6 +49,7 @@ const routes = [
 	"/search.html",
 	"/about.html",
 	"/404.html",
+	"/409.html"
 ]
 
 new ServerSideRendering(core.fastify, routes);

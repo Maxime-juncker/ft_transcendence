@@ -54,8 +54,14 @@ export function fortyTwoOAuth2Routes (
 				return reply.redirect(`https://${process.env.HOST}:${process.env.PORT}/login?error=${encodeURIComponent(res.data.message)}`);
 
 			const token = await jwt.jwtCreate({ id: res.data.id }, core.sessionKey);
-			const url = `https://${process.env.HOST}:${process.env.PORT}/login?oauth_token=${token}`;
-			return reply.redirect(url);
+			const url = `https://${process.env.HOST}:${process.env.PORT}/lobby`;
+			return reply.setCookie('jwt_session', token, {
+				httpOnly: true,
+				secure: true,
+				sameSite: 'strict',
+				path: '/',
+				maxAge: 60 * 60 * 24 * 7,
+			}).redirect(url);
 		})
 	})
 	done();

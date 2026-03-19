@@ -126,8 +126,6 @@ impl Friends {
     async fn send_friend_request(&mut self) -> Result<()> {
         let mut map = HashMap::new();
         let mut header = HeaderMap::new();
-        let token = self.auth.borrow().token.to_string();
-        header.insert("Authorization", format!("Bearer {}", &token).parse()?);
         header.insert("content-type", "application/json".parse()?);
         let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
             .await?
@@ -159,8 +157,6 @@ impl Friends {
     async fn send_delete_friend_request(&mut self) -> Result<()> {
         let mut map = HashMap::new();
         let mut header = HeaderMap::new();
-        let token = self.auth.borrow().token.to_string();
-        header.insert("Authorization", format!("Bearer {}", &token).parse()?);
         header.insert("content-type", "application/json".parse()?);
         let id = get_id_from_name(self.context.clone(), &self.friend_tmp)
             .await?
@@ -195,7 +191,7 @@ impl Friends {
             self.context.location,
             self.auth.borrow().id
         );
-        let response = tokio::time::timeout(Duration::from_secs(5), self.context.client.get(url).send()).await??;
+        let response = tokio::time::timeout(Duration::from_secs(2), self.context.client.get(url).send()).await??;
         let mut result: Vec<(String, bool)> = vec![];
         match response.status().as_u16() {
             200 => {

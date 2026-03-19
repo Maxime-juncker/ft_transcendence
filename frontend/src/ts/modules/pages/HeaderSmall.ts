@@ -1,3 +1,4 @@
+import { GameRouter } from "modules/game/GameRouter";
 import { Router } from "modules/router/Router.js";
 import { ViewComponent } from "modules/router/ViewComponent.js";
 import { MainUser } from "modules/user/User.js";
@@ -29,7 +30,7 @@ export class HeaderSmall
 
 		view.addTrackListener(clone.querySelector("#banner"), "click", () => {
 			userMenuContainer?.classList.add("hide");
-			Router.Instance?.navigateTo("/")
+			Router.Instance?.navigateTo("/");
 		});
 
 		this.m_searchInput = clone.querySelector("#search-input");

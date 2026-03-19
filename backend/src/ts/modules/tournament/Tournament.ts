@@ -11,6 +11,8 @@ export class TournamentManager
 {
 	private m_lobbies:	Lobby[] = [];
 	private contractAddress: BlockchainContract = new BlockchainContract();
+	private m_creating: Set<number> = new Set();
+	private m_pendingWs: Map<number, WebSocket[]> = new Map();
 
 	constructor()
 	{
@@ -37,8 +39,22 @@ export class TournamentManager
 			return { code: 409, data: { message: "you can't create a lobby while in another one" }};
 		}
 
+		if (this.m_creating.has(ownerId))
+		{
+			if (!this.m_pendingWs.has(ownerId))
+			{
+				this.m_pendingWs.set(ownerId, []);
+			}
+
+			this.m_pendingWs.get(ownerId)!.push(ownerWs);
+			Logger.log(`[createLobby] player ${ownerId} queued while lobby creation is in progress`);
+			return { code: 202, data: { message: "queued" }};
+		}
+
 		if (ownerWs.readyState != ownerWs.OPEN)
 			return { code: 400, data: { message: "invalid websocket" }};
+
+		this.m_creating.add(ownerId);
 
 		let blockchainTournamentId;
 		try
@@ -47,8 +63,19 @@ export class TournamentManager
 		}
 		catch (err)
 		{
+			this.m_creating.delete(ownerId);
+			this.m_pendingWs.delete(ownerId);
 			Logger.error("Error creating lobby:", err);
 			return { code: 500, data: { message: "internal server error" }};
+		}
+
+		this.m_creating.delete(ownerId);
+
+		if (ownerWs.readyState != ownerWs.OPEN)
+		{
+			Logger.warn("Websocket closed before lobby creation completed");
+			this.m_pendingWs.delete(ownerId);
+			return { code: 400, data: { message: "invalid websocket" }};
 		}
 
 		const id = crypto.randomUUID();
@@ -59,7 +86,65 @@ export class TournamentManager
 		const initialState = lobby.getLobbyState();
 		ownerWs.send(JSON.stringify({ ...initialState, message: "created", lobbyId: id}));
 		Logger.success(lobby.owner.name, "created tournament, id:", lobby.id);
+
+		const pending = this.m_pendingWs.get(ownerId) ?? [];
+		this.m_pendingWs.delete(ownerId);
+		for (const ws of pending)
+		{
+			if (ws.readyState === ws.OPEN)
+			{
+				await lobby.reconnectPlayer(ownerId, ws);
+			}
+		}
+
 		return { code: 200, data: { message: "lobby created", id: id }};
+	}
+
+	public removePendingWs(ownerId: number, ws: WebSocket): void
+	{
+		const pending = this.m_pendingWs.get(ownerId);
+		if (!pending)
+		{
+			return;
+		}
+
+		const idx = pending.indexOf(ws);
+		if (idx !== -1)
+		{
+			pending.splice(idx, 1);
+		}
+	}
+
+	public findLobbyByPlayerId(id: number): Lobby | null
+	{
+		for (const lobby of this.m_lobbies)
+		{
+			if (lobby.state === LobbyState.FINISHED)
+			{
+				continue ;
+			}
+
+			for (const player of lobby.players)
+			{
+				if (player.id === id)
+				{
+					return (lobby);
+				}
+			}
+		}
+
+		return (null);
+	}
+
+	public async reconnectToLobby(id: number, ws: WebSocket): Promise<DbResponse>
+	{
+		const lobby = this.findLobbyByPlayerId(id);
+		if (!lobby)
+		{
+			return { code: 404, data: { message: "No active lobby found" }};
+		}
+
+		return (lobby.reconnectPlayer(id, ws));
 	}
 
 	private findPlayerInLobbies(id: number): boolean

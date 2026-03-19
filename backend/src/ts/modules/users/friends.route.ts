@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify'
-import { core, tokenHeader, getToken } from 'core/server.js';
+import { core } from 'core/server.js';
 import * as friends from 'modules/users/friends.js'
 import { jwtVerif } from 'modules/jwt/jwt.js';
 
@@ -8,7 +8,6 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.delete('/remove', {
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
@@ -18,7 +17,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session'];
 		if (!token)
 			return reply.status(400).send({ error: 'missing authorization header' });
 
@@ -33,7 +32,6 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.post('/accept', {
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
@@ -43,7 +41,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session'];
 		if (!token)
 			return reply.status(400).send({ error: 'missing authorization header' });
 		const { friend_id } = request.body as { friend_id: number }
@@ -57,7 +55,6 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 
 	fastify.post('/send_request', {
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				properties: {
@@ -67,7 +64,7 @@ export async function friendsRoutes(fastify: FastifyInstance, options: FastifyPl
 			}
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session'];
 		if (!token)
 			return reply.status(400).send({ error: 'missing authorization header' });
 		const { friend_id } = request.body as { friend_id: number }

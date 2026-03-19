@@ -5,6 +5,8 @@ import { User } from "modules/user/User.js";
 import { Chat } from 'modules/chat/chat';
 import { UserElement } from 'modules/user/UserElement.js';
 import { ViewComponent } from 'modules/router/ViewComponent.js';
+import { Router } from 'modules/router/Router.js';
+import { LobbyView } from 'modules/pages/lobby.js';
 
 export class GameRouter
 {
@@ -34,6 +36,7 @@ export class GameRouter
 	get view(): ViewComponent | null { return this.m_view; }
 	get lobby(): TournamentLobby | null { return this.m_lobby; }
 	get	tournamentMenu(): TournamentMenu | null { return this.m_tournamentMenu; }
+	get instance(): GameClient | null { return (this.gameInstance); }
 
 	constructor(user: User | null = null, chat: Chat | null = null, view: ViewComponent | null = null)
 	{
@@ -158,6 +161,8 @@ export class GameRouter
 	public navigateTo(page: string, mode: string): void
 	{
 		this.cleanupPlayerContainer();
+		const view = Router.Instance?.activeView as LobbyView;
+		view.loadingIndicator?.stopLoading();
 		this.showPage(page, mode);
 	}
 

@@ -25,6 +25,7 @@ export class SettingsView extends ViewComponent
 	private saveBtn:			HTMLButtonElement | null = null;
 	private crtCheckbox:		HTMLInputElement | null = null;
 	private themeSelect:		HTMLSelectElement | null = null;
+	private resetAvatarBtn:		HTMLButtonElement | null = null;
 	
 	constructor()
 	{
@@ -61,9 +62,9 @@ export class SettingsView extends ViewComponent
 		this.holderClose = this.querySelector("#holder-close-btn") as HTMLElement;
 		this.crtCheckbox = this.querySelector("#crt-checkbox") as HTMLInputElement;
 		this.themeSelect = this.querySelector("#theme-select") as HTMLSelectElement;
+		this.resetAvatarBtn = this.querySelector("#reset_avatar") as HTMLButtonElement;
 
 		this.saveBtn = this.querySelector("#save-btn") as HTMLButtonElement;
-
 
 		this.addTrackListener(this.request2faBtn, "click", () => { this.new_totp(); setPlaceHolderText("scan qrcode with auth app and confirm code") });
 		this.addTrackListener(this.logoutBtn, "click", () => MainUser.Instance?.logout());
@@ -75,6 +76,19 @@ export class SettingsView extends ViewComponent
 			const panel = this.querySelector("#panel-holder");
 			if (panel)
 				panel.innerHTML = "";
+		}));
+		this.addTrackListener(this.resetAvatarBtn, "click", () => this.showConfirmPanel(async () => {
+
+			await fetch("/api/user/avatar/reset", {
+				method: "POST",
+				credentials: 'include',
+			});
+			await MainUser.Instance?.refreshSelf();
+			setPlaceHolderText("avatar deleted")
+			const panel = this.querySelector("#panel-holder");
+			if (panel)
+				panel.innerHTML = "";
+			await MainUser.Instance?.refreshSelf();
 		}));
 		this.addTrackListener(this.deleteBtn, "click", () => this.showConfirmPanel(() => MainUser.Instance?.deleteUser()));
 		this.addTrackListener(this.resetBtn, "click", () => this.showConfirmPanel(async () => {
@@ -184,9 +198,9 @@ export class SettingsView extends ViewComponent
 		console.log("updating password");
 		const res = await fetch("/api/user/update/passw", {
 			method: "POST",
+			credentials: 'include',
 			headers: {
 				'content-type': 'application/json',
-				'Authorization': `Bearer ${MainUser.Instance.token}`
 			},
 			body: JSON.stringify({
 				oldPass: oldPass,
@@ -244,7 +258,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/name", {
 				method: "POST",
-				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				credentials: 'include',
+				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ name: this.usernameInput.value })
 			});
 			const data = await res.json();
@@ -258,7 +273,8 @@ export class SettingsView extends ViewComponent
 		{
 			const res = await fetch("/api/user/update/email", {
 				method: "POST",
-				headers: { 'content-type': 'application/json', 'Authorization': `Bearer ${MainUser.Instance.token}` },
+				credentials: 'include',
+				headers: { 'content-type': 'application/json'},
 				body: JSON.stringify({ email: this.emailInput.value })
 			});
 			const data = await res.json();
@@ -314,7 +330,6 @@ export class SettingsView extends ViewComponent
 		const confirmIn = clone.querySelector("#confirm-input") as HTMLInputElement;
 		if (!cancelBtn || !confirmIn)
 			return ;
-
 
 		cancelBtn.addEventListener("click", () => { holder.innerHTML = "" });
 		confirmIn.addEventListener("keypress", (e: KeyboardEvent) => {

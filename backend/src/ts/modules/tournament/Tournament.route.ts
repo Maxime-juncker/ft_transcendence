@@ -1,4 +1,4 @@
-import { core, chat, tournamentManager, rateLimitMed, rateLimitHard, tokenHeader } from 'core/server.js';
+import { core, chat, tournamentManager, rateLimitMed, rateLimitHard } from 'core/server.js';
 import { FastifyRequest, FastifyReply, FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
 import { Logger } from 'modules/logger.js';
@@ -18,7 +18,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		},
 		async (socket: WebSocket, request: FastifyRequest) =>
 		{
-			const token = request.cookies.jwt_session;
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				socket.send(JSON.stringify({ error: 'missing token param' }));
@@ -38,13 +38,30 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 
 			const res = await tournamentManager.createLobby(data.id, socket);
 
-			const lobbyId = res.data?.id as string | undefined;
+			if (res.code === 202)
+			{
+				socket.once('close', () => tournamentManager.removePendingWs(data.id, socket));
+				return ;
+			}
+
+			let lobbyId = res.data?.id as string | undefined;
+			if (res.code === 409)
+			{
+				const reconnectRes = await tournamentManager.reconnectToLobby(data.id, socket);
+				lobbyId = reconnectRes.data?.id as string | undefined;
+				if (lobbyId)
+				{
+					Logger.log(`[tournament/create] player ${data.id} reconnected to existing lobby ${lobbyId}`);
+				}
+			}
+
 			if (lobbyId)
 			{
+				const capturedLobbyId = lobbyId;
 				socket.on('close', async () =>
 				{
-					Logger.log(`[tournament/create] socket closed for owner ${data.id}, leaving lobby ${lobbyId}`);
-					await tournamentManager.leaveLobby(data.id, lobbyId);
+					Logger.log(`[tournament/create] socket closed for owner ${data.id}, leaving lobby ${capturedLobbyId}`);
+					await tournamentManager.leaveLobby(data.id, capturedLobbyId);
 				});
 			}
 		});
@@ -74,7 +91,7 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		},
 		async (socket: WebSocket, request: FastifyRequest) =>
 		{
-			const token = request.cookies.jwt_session;
+			const token = request.cookies['jwt_session'];
 			if (!token)
 			{
 				socket.send(JSON.stringify({ error: 'missing token param' }));
@@ -96,10 +113,21 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 
 			const res = await tournamentManager.addPlayerToLobby(data.id, socket, lobbyId);
 
+			let effectiveLobbyId = lobbyId;
+			if (res.code === 409)
+			{
+				const reconnectRes = await tournamentManager.reconnectToLobby(data.id, socket);
+				if (reconnectRes.data?.id)
+				{
+					effectiveLobbyId = reconnectRes.data.id;
+					Logger.log(`[tournament/join] player ${data.id} reconnected to lobby ${effectiveLobbyId}`);
+				}
+			}
+
 			socket.on('close', async () =>
 			{
-				Logger.log(`[tournament/join] socket closed for user ${data.id}, leaving lobby ${lobbyId}`);
-				await tournamentManager.leaveLobby(data.id, lobbyId);
+				Logger.log(`[tournament/join] socket closed for user ${data.id}, leaving lobby ${effectiveLobbyId}`);
+				await tournamentManager.leaveLobby(data.id, effectiveLobbyId);
 			});
 		});
 	});
@@ -110,7 +138,6 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		{
 			schema:
 			{
-				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -128,15 +155,14 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 		},
 		async (request: FastifyRequest, reply: FastifyReply) =>
 		{
-			const authorization = request.headers.authorization as string | undefined;
-			if (!authorization || !authorization.startsWith('Bearer '))
+			const token = request.cookies['jwt_session'];
+			if (!token)
 			{
-				reply.status(400).send({ error: 'missing authorization header' });
-				Logger.error("missing authorization header");
+				reply.status(400).send({ error: 'missing token' });
+				Logger.error("missing token");
 				return ;
 			}
 
-			const token = authorization.replace('Bearer ', '');
 			const data = await jwtVerif(token, core.sessionKey);
 			if (!data)
 			{
@@ -153,7 +179,6 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 	fastify.post('/leave', {
 			schema:
 			{
-				headers: tokenHeader,
 				body:
 				{
 					type: "object",
@@ -165,11 +190,10 @@ export async function tournamentRoutes(fastify: FastifyInstance)
 				}
 			},
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
-		const authorization = request.headers.authorization as string | undefined;
-		if (!authorization || !authorization.startsWith('Bearer '))
-			return reply.code(400).send({ message: "missing authorization header" });
 		
-		const token = authorization.replace('Bearer ', '');
+		const token = request.cookies['jwt_session'];
+		if (!token)
+			return reply.code(400).send({ message: "missing token" });
 		const { lobbyId } = request.body as { lobbyId: string };
 		const data = await jwtVerif(token, core.sessionKey);
 		if (!data)

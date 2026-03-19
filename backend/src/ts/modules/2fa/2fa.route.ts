@@ -1,7 +1,7 @@
 import { new_totp as newTotp, del_totp as delTotp, validate_totp as validateTotp } from 'modules/2fa/totp.js'
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { jwtVerif } from 'modules/jwt/jwt.js';
-import { core, rateLimitMed, tokenHeader, getToken } from 'core/server.js';
+import { core, rateLimitMed } from 'core/server.js';
 import { Logger } from 'modules/logger.js';
 
 export async function totpRoutes(fastify: FastifyInstance)
@@ -12,7 +12,6 @@ export async function totpRoutes(fastify: FastifyInstance)
 		},
 		schema:
 		{
-			headers: tokenHeader,
 			body:
 			{
 				type: 'object',
@@ -25,7 +24,7 @@ export async function totpRoutes(fastify: FastifyInstance)
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
 
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session']
 		if (!token)
 		{
 			return reply.status(400).send({ error: 'missing authorization header' });
@@ -46,11 +45,10 @@ export async function totpRoutes(fastify: FastifyInstance)
 		},
 		schema:
 		{
-			headers: tokenHeader
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
 
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session']
 		if (!token)
 		{
 			Logger.error('missing authorization header');
@@ -73,7 +71,6 @@ export async function totpRoutes(fastify: FastifyInstance)
 			rateLimit: rateLimitMed
 		},
 		schema: {
-			headers: tokenHeader,
 			body: {
 				type: 'object',
 				required: ['totp'],
@@ -84,7 +81,7 @@ export async function totpRoutes(fastify: FastifyInstance)
 		}
 	}, async (request: FastifyRequest, reply: FastifyReply) => {
 		const { totp } = request.body as { totp: string };
-		const token = getToken(request.headers.authorization as string);
+		const token = request.cookies['jwt_session']
 		if (!token)
 		{
 			return reply.status(400).send({ error: 'missing authorization header' });

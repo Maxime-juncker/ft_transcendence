@@ -17,23 +17,48 @@ export enum LobbyState
 
 export class Player
 {
-	private m_ws:	WebSocket | null;
-	private m_name:	string = "";
-	private m_id:	number = -1;
-	private m_elo:	number = -1; // use to match player with same skill level
+	private m_sockets:	Set<WebSocket> = new Set();
+	private m_name:		string = "";
+	private m_id:		number = -1;
+	private m_elo:		number = -1; // use to match player with same skill level
 
 	public matchmakingRetry = 0; // number of time player tried to find a match
 
-	get ws(): WebSocket | null	{ return this.m_ws; }
-	get name(): string			{ return this.m_name; }
-	get id(): number			{ return this.m_id; }
-	get elo(): number			{ return this.m_elo; }
+	/** Returns the first open socket, or null */
+	get ws(): WebSocket | null
+	{
+		for (const s of this.m_sockets)
+		{
+			if (s.readyState === s.OPEN)
+			{
+				return (s);
+			}
+		}
+		return ((this.m_sockets.size > 0) ? this.m_sockets.values().next().value! : null);
+	}
+	get sockets(): Set<WebSocket>	{ return this.m_sockets; }
+	get name(): string				{ return this.m_name; }
+	get id(): number				{ return this.m_id; }
+	get elo(): number				{ return this.m_elo; }
 
 	set name(value: string) { this.m_name = value; }
 
 	constructor(ws: WebSocket | null)
 	{
-		this.m_ws = ws;
+		if (ws)
+		{
+			this.m_sockets.add(ws);
+		}
+	}
+
+	public addSocket(ws: WebSocket): void
+	{
+		this.m_sockets.add(ws);
+	}
+
+	public removeSocket(ws: WebSocket): void
+	{
+		this.m_sockets.delete(ws);
 	}
 
 	public async init(id: number)
@@ -83,18 +108,28 @@ export class Lobby
 	public async init(ownerId: number)
 	{
 		await this.m_owner.init(ownerId);
-		this.registerWs(this.m_owner);
+		const ownerWs = this.m_owner.ws;
+		if (ownerWs)
+		{
+			this.registerWs(this.m_owner, ownerWs);
+		}
+
 		this.m_players.add(this.m_owner);
 	}
 
 	public async addPlayer(id: number, ws: WebSocket | null): Promise<DbResponse>
 	{
 		if (this.m_state != LobbyState.WAITING)
+		{
 			return { code: 403, data: { message: "cannot add to lobby" }};
+		}
 
 		const player = new Player(ws);
 		await player.init(id);
-		this.registerWs(player);
+		if (ws)
+		{
+			this.registerWs(player, ws);
+		}
 
 		this.m_players.add(player);
 		Logger.success(player.name, "was added to", this.m_owner.name, "lobby");
@@ -154,6 +189,24 @@ export class Lobby
 		});
 	}
 
+	public async reconnectPlayer(id: number, ws: WebSocket): Promise<DbResponse>
+	{
+		const player = this.findPlayerById(id);
+		if (!player)
+		{
+			return { code: 404, data: { message: "Player not found in lobby" }};
+		}
+
+		player.addSocket(ws);
+		this.registerWs(player, ws);
+
+		const state = this.getLobbyState();
+		ws.send(JSON.stringify({ ...state, lobbyId: this.m_id }));
+
+		Logger.log(`${player.name} opened a new tab in lobby ${this.m_id} (${player.sockets.size} active connection(s))`);
+		return { code: 200, data: { message: "reconnected", id: this.m_id }};
+	}
+
 	public async leave(id: number): Promise<DbResponse>
 	{
 		const player = this.findPlayerById(id);
@@ -164,13 +217,12 @@ export class Lobby
 		
 		if (this.m_state === LobbyState.WAITING)
 		{
-			if (player.ws)
+			for (const s of [...player.sockets])
 			{
-				player.ws.removeAllListeners();
-				if (player.ws.readyState === player.ws.OPEN)
-				{
-					player.ws.close();
-				}
+				s.removeAllListeners();
+				player.removeSocket(s);
+				if (s.readyState === s.OPEN)
+					s.close();
 			}
 			
 			this.m_players.delete(player);
@@ -183,11 +235,13 @@ export class Lobby
 
 	public broadcast(json: any)
 	{
+		const msg = JSON.stringify(json);
 		for (const p of this.m_players)
 		{
-			if (p.ws && p.ws.readyState == p.ws.OPEN)
+			for (const s of p.sockets)
 			{
-				p.ws.send(JSON.stringify(json));
+				if (s.readyState === s.OPEN)
+					s.send(msg);
 			}
 		}
 	}
@@ -208,25 +262,34 @@ export class Lobby
 		}
 	}
 
-	public async registerWs(player: Player)
+	public registerWs(player: Player, ws: WebSocket)
 	{
-		if (!player.ws)
-		{
-			return ;
-		}
-
 		try
 		{
-			player.ws.on('error', (error: any) => {
-				this.leave(player.id);
-				Logger.error(`${player.name}: websocket error: ${error}`);
-			})
+			ws.on('error', async (error: any) =>
+			{
+				player.removeSocket(ws);
+				if (player.sockets.size === 0)
+				{
+					await this.leave(player.id);
+				}
 
-			player.ws.on('close', async (code: any, reason: any) =>
+				Logger.error(`${player.name}: websocket error: ${error}`);
+			});
+
+			ws.on('close', async (code: any, reason: any) =>
 			{
 				void reason;
-				this.leave(player.id);
-				Logger.log(`${player.name} has left the lobby (code: ${code})`);
+				player.removeSocket(ws);
+				if (player.sockets.size === 0)
+				{
+					Logger.log(`${player.name} has left the lobby (code: ${code})`);
+					await this.leave(player.id);
+				}
+				else
+				{
+					Logger.log(`${player.name} closed a tab but still has ${player.sockets.size} active connection(s) (code: ${code})`);
+				}
 			});
 		}
 		catch (err)
@@ -272,7 +335,7 @@ export class Lobby
 
 	public async nextRound()
 	{
-		this.broadcastChatLeft(`The next round is starting! ${this.m_playersLeft.length} remaining players. Get ready to fight!`);
+		this.broadcastChatLeft(`The next round is starting! ${this.m_playersLeft.length} players remains Get ready to fight!`);
 
 		const botsToRemove: number[] = [];
 		for (let i = 0; i < this.m_playersLeft.length; i += 2)
